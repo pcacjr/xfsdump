@@ -2920,7 +2920,11 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		      ;
 		      p++ ) {
 			rv_t rv;
-			if ( (!p->bs_nlink || !p->bs_mode) && p->bs_ino != 0 ) {
+
+			if ( p->bs_ino == 0 )
+				continue;
+
+			if ( !p->bs_nlink || !p->bs_mode ) {
 				/* inode being modified, get synced data */
 				mlog( MLOG_NITTY,
 				      "ino %llu needs second bulkstat\n",
@@ -2930,7 +2934,18 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
                                 sbulkreq.icount = 1;
                                 sbulkreq.ubuffer = p;
                                 sbulkreq.ocount = NULL;
-                                ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq);
+                                if( ioctl( sc_fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
+					mlog( MLOG_WARNING, 
+					      "failed to get bulkstat information for inode %llu\n",
+					      p->bs_ino );
+					continue;
+                                }
+				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
+					mlog( MLOG_WARNING, 
+					      "failed to get valid bulkstat information for inode %llu\n",
+					      p->bs_ino );
+					continue;
+				}
 			}
 			if ( ( p->bs_mode & S_IFMT ) != S_IFDIR ) {
 				continue;

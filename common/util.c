@@ -165,10 +165,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	xfs_ino_t lastino;
 	intgen_t saved_errno;
         
-        xfs_fsop_bulkreq_t bulkreq;
-#ifdef XFS_IOC_FSBULKSTAT_SINGLE
-        xfs_fsop_bulkreq_t sbulkreq;
-#endif
+        xfs_fsop_bulkreq_t bulkreq, sbulkreq;
 
 	/* stat set with return from callback func
 	 */
@@ -213,8 +210,10 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 		for ( p = buf, endp = buf + buflenout ; p < endp ; p++ ) {
 			intgen_t rval;
 
-#ifdef XFS_IOC_FSBULKSTAT_SINGLE
-			if ( (!p->bs_nlink || !p->bs_mode) && p->bs_ino != 0 ) {
+			if ( p->bs_ino == 0 )
+				continue;
+
+			if ( !p->bs_nlink || !p->bs_mode ) {
 				/* inode being modified, get synced data */
 				mlog( MLOG_NITTY + 1,
 				      "ino %llu needed second bulkstat\n",
@@ -223,9 +222,19 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
                                 sbulkreq.icount = 1;
                                 sbulkreq.ubuffer = p;
                                 sbulkreq.ocount = NULL;
-                                ioctl(fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq);
+                                if( ioctl( fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
+					mlog( MLOG_WARNING,
+					      "failed to get bulkstat information for inode %llu\n",
+					      p->bs_ino );
+					continue;
+				}
+				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
+					mlog( MLOG_WARNING,
+					      "failed to get valid bulkstat information for inode %llu\n",
+					      p->bs_ino );
+					continue;
+				}
 			}
-#endif
 
 			if ( ( p->bs_mode & S_IFMT ) == S_IFDIR ) {
 				if ( ! ( selector & BIGSTAT_ITER_DIR )){
