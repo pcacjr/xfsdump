@@ -1,8 +1,8 @@
-xfsdump (2.2.24-1) unstable; urgency=low
+xfsdump (2.2.25-1) unstable; urgency=low
 
   * New upstream release
 
- -- Nathan Scott <nathans@debian.org>  Wed, 29 Sep 2004 11:28:20 +1000
+ -- Nathan Scott <nathans@debian.org>  Wed, 13 Oct 2004 10:17:53 +1000
 
 xfsdump (2.2.23-1) unstable; urgency=low
 
