@@ -9314,14 +9314,14 @@ display_dump_label( bool_t lockpr,
 	      _(" resumed")
 	      :
 	      "" );
-	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
-	      _("session label: ") );
 	mlog( mllevel | MLOG_NOLOCK,
+	      _("session label: ") );
+	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
 	      "\"%s\"\n",
 	      grhdrp->gh_dumplabel );
-	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
-	      _("media label: ") );
 	mlog( mllevel | MLOG_NOLOCK,
+	      _("media label: ") );
+	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
 	      "\"%s\"\n",
 	      mrhdrp->mh_medialabel );
 	mlog( mllevel | MLOG_NOLOCK,
