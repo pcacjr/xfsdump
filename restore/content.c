@@ -7398,17 +7398,6 @@ restore_reg( drive_t *drivep,
 			      strerror( errno ));
 		}
 
-		/* set the permissions/mode
-		 */
-		rval = fchmod( fd, ( mode_t )bstatp->bs_mode );
-		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "unable to set mode "
-			      "of %s: %s\n",
-			      path,
-			      strerror( errno ));
-		}
-
 		/* set the owner and group (if enabled)
 		 */
 		if ( persp->a.ownerpr ) {
@@ -7422,6 +7411,17 @@ restore_reg( drive_t *drivep,
 				      path,
 				      strerror( errno ));
 			}
+		}
+
+		/* set the permissions/mode
+		 */
+		rval = fchmod( fd, ( mode_t )bstatp->bs_mode );
+		if ( rval ) {
+			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			      "unable to set mode "
+			      "of %s: %s\n",
+			      path,
+			      strerror( errno ));
 		}
 
 		rval = close( fd );

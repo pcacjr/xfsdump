@@ -2446,13 +2446,6 @@ setdirattr( dah_t dah, char *path )
 		      strerror( errno ));
 	}
 	mode = dirattr_get_mode( dah );
-	rval = chmod( path, mode );
-	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_TREE,
-		      "chmod %s failed: %s\n",
-		      path,
-		      strerror( errno ));
-	}
 	if ( persp->p_ownerpr  ) {
 		rval = chown( path,
 			      dirattr_get_uid( dah ),
@@ -2465,6 +2458,13 @@ setdirattr( dah_t dah, char *path )
 			      path,
 			      strerror( errno ));
 		}
+	}
+	rval = chmod( path, mode );
+	if ( rval ) {
+		mlog( MLOG_NORMAL | MLOG_TREE,
+		      "chmod %s failed: %s\n",
+		      path,
+		      strerror( errno ));
 	}
 }
 

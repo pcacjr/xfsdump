@@ -400,6 +400,19 @@ xlate_bstat(bstat_t *bs1, bstat_t *bs2, int dir)
 
 	BXLATE(bs_uuid);
 	BXLATE(bs_pad1);
+
+	mlog(MLOG_NITTY, "xlate_bstat: pre-xlate\n"
+	     "\tbs_ino %llu\n"
+	     "\tbs_mode  %lo\n",
+	     ptr1->bs_ino,
+	     ptr1->bs_mode);
+
+	mlog(MLOG_NITTY, "xlate_bstat: post-xlate\n"
+	     "\tbs_ino %llu\n"
+	     "\tbs_mode  %lo\n",
+	     ptr2->bs_ino,
+	     ptr2->bs_mode);
+
 }
 
 /*
