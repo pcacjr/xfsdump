@@ -89,7 +89,7 @@ open_trwp( char *pathname )
 	fd = open( pathname, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
 	if ( fd < 0 ) {
 		mlog( MLOG_NORMAL,
-		      "could not create %s: %s\n",
+		      _("could not create %s: %s\n"),
 		      pathname,
 		      strerror( errno ));
 	}
@@ -104,8 +104,8 @@ open_erwp( char *pathname )
 
 	fd = open( pathname, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR );
 	if ( fd < 0 ) {
-		mlog( MLOG_DEBUG,
-		      "could not create %s: %s\n",
+		mlog( MLOG_NORMAL,
+		      _("could not create %s: %s\n"),
 		      pathname,
 		      strerror( errno ));
 	}

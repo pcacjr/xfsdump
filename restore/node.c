@@ -240,8 +240,8 @@ node_init( intgen_t fd,
 					    off );
 
 	if ( node_hdrp == (node_hdr_t *)-1 ) {
-	    mlog( MLOG_NORMAL | MLOG_ERROR,
-		  "unable to map node hdr of size %d: %s\n",
+	    mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		  "unable to map node hdr of size %d: %s\n"),
 		  NODE_HDRSZ,
 		  strerror( errno ));
 	    return BOOL_FALSE;
@@ -325,15 +325,15 @@ try_smaller:
 		     * Go for fitting into i number of maps.
 		     */
 		    nodesperseg = init_nodesperseg / i;
-		    mlog( MLOG_NORMAL | MLOG_NOTE,
+		    mlog( MLOG_NORMAL | MLOG_NOTE, _(
 			  "unable to map tree segment of size %lld: "
-			  "retry with smaller size\n",
+			  "retry with smaller size\n"),
 			  segsz);
 		    continue;
 		}
 		else {
-		    mlog( MLOG_NORMAL | MLOG_ERROR,
-			  "unable to map tree segment of size %d: %s\n",
+		    mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			  "unable to map tree segment of size %d: %s\n"),
 			  segsz,
 			  strerror( errno ));
 		    return BOOL_FALSE;
@@ -346,8 +346,8 @@ try_smaller:
 		 * just trying to find largest fitting seg size
 		 */
 		if (munmap(map, segsz) == -1) {
-		    mlog( MLOG_NORMAL | MLOG_ERROR,
-			  "unable to unmap tree segment of size %lld: %s\n",
+		    mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			  "unable to unmap tree segment of size %lld: %s\n"),
 			  segsz,
 			  strerror( errno ));
 		    return BOOL_FALSE;
@@ -387,8 +387,8 @@ try_smaller:
 			    +
 			    ( off64_t )node_hdrp->nh_segsz );
 	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "unable to autogrow first node segment: %s (%d)\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "unable to autogrow first node segment: %s (%d)\n"),
 		      strerror( errno ),
 		      errno );
 		return BOOL_FALSE;
@@ -442,8 +442,8 @@ node_sync( intgen_t fd, off64_t off )
 					    fd,
 					    off );
 	if ( node_hdrp == (node_hdr_t *)-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map node hdr of size %d: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map node hdr of size %d: %s\n"),
 		      NODE_HDRSZ,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -570,9 +570,9 @@ node_alloc( void )
 					    +
 					    ( off64_t )node_hdrp->nh_segsz );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 				      "unable to autogrow node segment %llu: "
-				      "%s (%d)\n",
+				      "%s (%d)\n"),
 				      node_hdrp->nh_virgsegreloff
 				      /
 				      ( off64_t )node_hdrp->nh_segsz,

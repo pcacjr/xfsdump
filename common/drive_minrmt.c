@@ -467,7 +467,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		      case GETOPT_BLOCKSIZE:
 			    if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-					"-%c argument missing\n",
+					_("-%c argument missing\n"),
 					optopt );
 				return -10;
 		    	    }
@@ -489,7 +489,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				return 20;
 		 	else 
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-					"Minimal rmt cannot be used without specifying blocksize. Use -%c\n",
+					_("Minimal rmt cannot be used without specifying blocksize. Use -%c\n"),
 					GETOPT_BLOCKSIZE );
 		}
 	} 
@@ -545,7 +545,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_RINGLEN:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				return BOOL_FALSE;
 			}
@@ -554,8 +554,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			     ||
 			     contextp->dc_ringlen > RINGLEN_MAX ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "-%c argument must be "
-				      "between %u and %u: ignoring %u\n",
+				      _("-%c argument must be "
+				      "between %u and %u: ignoring %u\n"),
 				      optopt,
 				      RINGLEN_MIN,
 				      RINGLEN_MAX,
@@ -579,39 +579,39 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_OVERWRITE:
 			contextp->dc_overwritepr = BOOL_TRUE;
 			mlog( MLOG_DEBUG | MLOG_DRIVE,
-	      			"Overwrite command line option \n" );
+	      			_("Overwrite command line option\n") );
 			break;
 		case GETOPT_SINGLEMFILE:
 			if (contextp->dc_filesz > 0) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c and -%c options cannot be used together\n",
+				      _("-%c and -%c options cannot be used together\n"),
 				      optopt,
 				      GETOPT_FILESZ );
 				return BOOL_FALSE;
 			}
 			contextp->dc_singlemfilepr = BOOL_TRUE;
 			mlog( MLOG_DEBUG | MLOG_DRIVE,
-	      			"Single media file command line option \n" );
+	      			_("Single media file command line option\n") );
 			break;
 		case GETOPT_FILESZ:
 			if (contextp->dc_singlemfilepr == BOOL_TRUE) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c and -%c options cannot be used together\n",
+				      _("-%c and -%c options cannot be used together\n"),
 				      optopt,
 				      GETOPT_SINGLEMFILE );
 				return BOOL_FALSE;
 			}
 			if ( ! optarg || optarg [ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				return BOOL_FALSE;
 			}
 			contextp->dc_filesz = (off64_t)atoi( optarg ) * 1024 * 1024;
 			if (contextp->dc_filesz <= 0) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c argument must be a "
-				      "positive number (MB): ignoring %u\n",
+				      _("-%c argument must be a "
+				      "positive number (MB): ignoring %u\n"),
 				      optopt,
 				      contextp->dc_filesz );
 				return BOOL_FALSE;
@@ -656,16 +656,16 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		if ( ! contextp->dc_ringp ) {
 			if ( rval == ENOMEM ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "unable to allocate memory "
-				      "for I/O buffer ring\n" );
+				      _("unable to allocate memory "
+				      "for I/O buffer ring\n") );
 			} else if ( rval == E2BIG ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "not enough physical memory "
-				      "to pin down I/O buffer ring\n" );
+				      _("not enough physical memory "
+				      "to pin down I/O buffer ring\n") );
 			} else if ( rval == EPERM ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "not allowed "
-				      "to pin down I/O buffer ring\n" );
+				      _("not allowed "
+				      "to pin down I/O buffer ring\n") );
 			} else {
 				ASSERT( 0 );
 			}
@@ -1215,9 +1215,9 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 				saved_errno = errno;
 				if ( rval ) {
 					mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-					      "could not forward space %d "
+					      _("could not forward space %d "
 					      "tape blocks: "
-					      "rval == %d, errno == %d (%s)\n",
+					      "rval == %d, errno == %d (%s)\n"),
 					      rval,
 					      saved_errno,
 					      strerror( saved_errno ));
@@ -1460,7 +1460,7 @@ readrecord:
 	trycnt++;
 	if ( trycnt > maxtrycnt ) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "unable to locate next mark in media file\n" );
+		      _("unable to locate next mark in media file\n") );
 		return DRIVE_ERROR_MEDIA;
 	}
 
@@ -1484,8 +1484,8 @@ validateread:
 	/* some other error
 	 */
 	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-	      "unexpected error attempting to read record: "
-	      "read returns %d, errno %s (%s)\n",
+	      _("unexpected error attempting to read record: "
+	      "read returns %d, errno %s (%s)\n"),
 	      nread,
 	      errno,
 	      strerror( errno ));
@@ -1511,7 +1511,7 @@ validatehdr:
 	contextp->dc_iocnt = contextp->dc_reccnt + 1;
 	if ( rechdrp->first_mark_offset < 0 ) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "valid record %lld but no mark\n",
+		      _("valid record %lld but no mark\n"),
 		      contextp->dc_iocnt - 1 );
 		goto readrecord;
 	}
@@ -1537,8 +1537,8 @@ alliswell:
 	contextp->dc_errorpr = BOOL_FALSE;
 
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "resynchronized at record %lld "
-	      "offset %u\n",
+	      _("resynchronized at record %lld "
+	      "offset %u\n"),
 	      contextp->dc_iocnt - 1,
 	      contextp->dc_nextp
 	      -
@@ -1551,8 +1551,8 @@ getbeyonderror:
 
 	if ( rval ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not forward space one tape block beyond "
-		      "read error: rval == %d, errno == %d (%s)\n",
+		      _("could not forward space one tape block beyond "
+		      "read error: rval == %d, errno == %d (%s)\n"),
 		      rval,
 		      saved_errno,
 		      strerror( saved_errno ));
@@ -2296,7 +2296,7 @@ do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 			 * 	ignore return code
 			 */
 			mlog( MLOG_VERBOSE | MLOG_DRIVE,
-			      "advancing tape to next media file\n");
+			      _("advancing tape to next media file\n") );
 
 			op_failed = 0;
 			ASSERT( contextp->dc_fd >= 0 );
@@ -2318,7 +2318,7 @@ do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 			 */
 			if ( --opcount < 0 ) {
 				mlog( MLOG_VERBOSE | MLOG_DRIVE,
-					"FSF tape command failed\n");
+					_("FSF tape command failed\n") );
 
 				*statp = DRIVE_ERROR_DEVICE;
 				return i;
@@ -2542,7 +2542,7 @@ do_display_metrics( drive_t *drivep )
 	if ( ringp ) {
 		if ( drivecnt > 1 ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_DRIVE,
-			      "drive %u ",
+			      _("drive %u "),
 			      drivep->d_index );
 		}
 		display_ring_metrics( drivep,
@@ -2626,7 +2626,7 @@ read_label( drive_t *drivep )
 	 */
 	if ( nread < 0 && saved_errno != ENOSPC ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not read from drive: %s (%d)\n",
+		      _("could not read from drive: %s (%d)\n"),
 		      strerror( errno ),
 		      errno );
 		return DRIVE_ERROR_DEVICE;
@@ -2638,12 +2638,11 @@ read_label( drive_t *drivep )
 	      ||            /* now handle SGI */
 	      (nread < 0 && saved_errno == ENOSPC )) { 
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "encountered EOD : "
 #ifdef DUMP
-		      "assuming blank media\n" );
+		      _("encountered EOD : assuming blank media\n") );
 #endif
 #ifdef RESTORE
-		      "end of data\n" );
+		      _("encountered EOD : end of data\n") );
 #endif
 		( void )rewind_and_verify( drivep );
 #ifdef DUMP
@@ -2697,7 +2696,7 @@ validate_media_file_hdr( drive_t *drivep )
 
 	if ( ! tape_rec_checksum_check( contextp, contextp->dc_recp )) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "tape record checksum error\n");
+		      _("tape record checksum error\n") );
 		return DRIVE_ERROR_CORRUPTION;
 
 	}
@@ -2823,9 +2822,9 @@ set_recommended_sizes( drive_t *drivep, int isQICpr )
 #ifdef DUMP
 #ifdef SIZEEST
 		if ( hdr_mfilesz > fsize ) {
-			mlog( MLOG_WARNING,
+			mlog( MLOG_WARNING, _(
 			      "recomended media file size of %llu Mb less than "
-			      "estimated file header size %llu Mb for %s\n",
+			      "estimated file header size %llu Mb for %s\n"),
 			      fsize / ( 1024 * 1024 ),
 			      hdr_mfilesz / ( 1024 * 1024 ),
 			      drivep->d_pathname );
@@ -2838,9 +2837,9 @@ set_recommended_sizes( drive_t *drivep, int isQICpr )
 	else {
 		/* override with minimum recommended file size */
 		if ( min_recmfilesz > fsize ) {
-			mlog( MLOG_NOTE,
+			mlog( MLOG_NOTE, _(
 			      "recommended media file size adjusted from "
-			      "%llu Mb to %llu Mb for %s",
+			      "%llu Mb to %llu Mb for %s\n"),
 			      min_recmfilesz / ( 1024 * 1024 ),
 			      fsize / ( 1024 * 1024 ),
 			      drivep->d_pathname );
@@ -2923,7 +2922,7 @@ mt_op(intgen_t fd, intgen_t sub_op, intgen_t param )
 #ifdef CLRMTAUD
 #ifdef MTAUD
 	case MTAUD:
-		printstr = "audio";
+		printstr = _("audio");
 		break;
 #endif /* MTAUD */
 #endif /* CLRMTAUD */
@@ -2969,7 +2968,7 @@ determine_write_error( int nwritten, int saved_errno )
 
 	if ( saved_errno == EACCES ) {
 		mlog(MLOG_NORMAL,
-			"tape is write protected\n");
+			_("tape is write protected\n") );
 
 		ret = DRIVE_ERROR_DEVICE;
 	} else if (
@@ -2981,10 +2980,10 @@ determine_write_error( int nwritten, int saved_errno )
 							write indicates EOM */
 		) {
 		mlog(MLOG_NORMAL,
-			"tape media error on write operation\n");
+			_("tape media error on write operation\n") );
 
 		mlog(MLOG_NORMAL,
-			"no more data can be written to this tape\n");
+			_("no more data can be written to this tape\n") );
 		
 		ret = DRIVE_ERROR_EOM;
 	} else if ( saved_errno != 0 ) {
@@ -3057,7 +3056,7 @@ dbgrmtopen( char *path, int flags )
 	int rval;
 	rval = rmtopen( path, flags );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n",
+	      _("RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n"),
 	      path,
 	      flags,
 	      rval,
@@ -3071,7 +3070,7 @@ dbgrmtclose( int fd )
 	int rval;
 	rval = rmtclose( fd );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTCLOSE( %d ) returns %d: errno=%d (%s)\n",
+	      _("RMTCLOSE( %d ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      rval,
 	      errno,
@@ -3084,7 +3083,7 @@ dbgrmtioctl( int fd, int op, void *arg )
 	int rval;
 	rval = rmtioctl( fd, op, arg );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n",
+	      _("RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      op,
 	      arg,
@@ -3099,7 +3098,7 @@ dbgrmtread( int fd, void *p, uint sz )
 	int rval;
 	rval = rmtread( fd, p, sz );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n",
+	      _("RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      p,
 	      sz,
@@ -3114,7 +3113,7 @@ dbgrmtwrite( int fd, void *p, uint sz )
 	int rval;
 	rval = rmtwrite( fd, p, sz );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n",
+	      _("RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      p,
 	      sz,
@@ -3135,9 +3134,9 @@ dbgrmtwrite( int fd, void *p, uint sz )
 static void
 display_access_failed_message( drive_t *drivep )
 {
-	mlog( MLOG_NORMAL | MLOG_DRIVE,
+	mlog( MLOG_NORMAL | MLOG_DRIVE, _(
 		"attempt to access/open remote "
-		"tape drive %s failed: %d (%s)\n",
+		"tape drive %s failed: %d (%s)\n"),
 		drivep->d_pathname,
 		errno,
 		strerror( errno ));
@@ -3173,7 +3172,7 @@ prepare_drive( drive_t *drivep )
 	ASSERT( contextp->dc_fd == -1 );
 
 	mlog( MLOG_VERBOSE | MLOG_DRIVE,
-	      "preparing drive\n" );
+	      _("preparing drive\n") );
 
 	/* determine if tape is present or write protected. try several times.
 	 * if not present or write-protected during dump, return.
@@ -3260,8 +3259,8 @@ prepare_drive( drive_t *drivep )
 		 */
 		if ( try > maxtries ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "giving up attempt to determining "
-			      "tape record size\n" );
+			      _("giving up attempt to determining "
+			      "tape record size\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 
@@ -3374,13 +3373,13 @@ prepare_drive( drive_t *drivep )
 		/* if we fell through the seive, code is wrong.
 		 * display useful info and abort
 		 */
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
 		      "unexpected tape error: "
 		      "errno %d "
 		      "nread %d "
 		      "blksz %d "
 		      "recsz %d "
-		      "\n",
+		      "\n"),
 		      saved_errno,
 		      nread,
 		      tape_blksz,
@@ -3397,9 +3396,9 @@ checkhdr:
 		if ( rval ) {
 			if ( rval == DRIVE_ERROR_VERSION ) {
 				global_hdr_t *grhdrp = drivep->d_greadhdrp;
-				mlog( MLOG_NORMAL | MLOG_DRIVE,
+				mlog( MLOG_NORMAL | MLOG_DRIVE, _(
 				      "media file header version (%d) "
-				      "invalid: advancing\n",
+				      "invalid: advancing\n"),
 				      grhdrp->gh_version );
 				continue;
 			} else {
@@ -3409,20 +3408,20 @@ checkhdr:
 					      MLOG_WARNING
 					      |
 					      MLOG_DRIVE,
-					      "may be an EFS dump at BOT\n" );
+					      _("may be an EFS dump at BOT\n"));
 				} else
 				/* Check if the tape was erased by us */
 				if  ( isxfsdumperasetape( drivep )) {
 					mlog( MLOG_NORMAL | MLOG_DRIVE,
-					      "This tape was erased earlier "
-					      "by xfsdump.\n" );
+					      _("This tape was erased earlier "
+					      "by xfsdump.\n") );
 					( void )rewind_and_verify( drivep );
 					return DRIVE_ERROR_BLANK;
 				} else {
 					mlog( MLOG_NORMAL | MLOG_DRIVE,
-					      "bad media file header at BOT "
+					      _("bad media file header at BOT "
 					      "indicates foreign or "
-					      "corrupted tape\n" );
+					      "corrupted tape\n") );
 				}
 				( void )rewind_and_verify( drivep );
 				ok = set_best_blk_and_rec_sz( drivep );
@@ -3447,11 +3446,11 @@ largersize:
 		 */
 		if ( changedblkszpr ) {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size "
-			      "after two tries\n" );
+			      _("cannot determine tape block size "
+			      "after two tries\n") );
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "assuming media is corrupt "
-				      "or contains non-xfsdump data\n" );
+				      _("assuming media is corrupt "
+				      "or contains non-xfsdump data\n") );
 				ok = set_best_blk_and_rec_sz( drivep );
 				if ( ! ok ) {
 					return DRIVE_ERROR_DEVICE;
@@ -3468,7 +3467,7 @@ largersize:
 			changedblkszpr = BOOL_TRUE;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size\n" );
+			      _("cannot determine tape block size\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 		continue;
@@ -3619,7 +3618,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 
 	if ( ! tape_rec_checksum_check( contextp, bufp )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: bad record checksum\n",
+		      _("record %lld corrupt: bad record checksum\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 
@@ -3629,7 +3628,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 
 	if ( rechdrp->magic != STAPE_MAGIC )  {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: bad magic number\n",
+		      _("record %lld corrupt: bad magic number\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3637,7 +3636,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	if ( uuid_is_null( rechdrp->dump_uuid )) {
 
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: null dump id\n",
+		      _("record %lld corrupt: null dump id\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3645,7 +3644,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	if (  uuid_compare( grhdrp->gh_dumpid,
 			   rechdrp->dump_uuid ) != 0) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: dump id mismatch\n",
+		      _("record %lld corrupt: dump id mismatch\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3655,8 +3654,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	 */
 #ifdef RECSZCHK
 	if ( ( size_t )rechdrp->recsize != tape_recsz ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: incorrect record size in header\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
+		      "record %lld corrupt: incorrect record size in header\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3670,8 +3669,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 
 	if ( rechdrp->file_offset % ( off64_t )tape_recsz ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: record offset in header "
-		      "not a multiple of record size\n",
+		      _("record %lld corrupt: record offset in header "
+		      "not a multiple of record size\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3682,8 +3681,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	     !=
 	     ( contextp->dc_iocnt - 1 ) * ( off64_t )tape_recsz ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: "
-		      "incorrect record offset in header (0x%llx)\n",
+		      _("record %lld corrupt: "
+		      "incorrect record offset in header (0x%llx)\n"),
 		      contextp->dc_iocnt - 1,
 		      rechdrp->file_offset );
 		return DRIVE_ERROR_CORRUPTION;
@@ -3693,8 +3692,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	     ||
 	     rechdrp->rec_used < STAPE_HDR_SZ ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: "
-		      "incorrect record padding offset in header\n",
+		      _("record %lld corrupt: "
+		      "incorrect record padding offset in header\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -3729,13 +3728,13 @@ read_record(  drive_t *drivep, char *bufp )
 		||            /* now handle SGI */
 	    (nread < 0 && saved_errno == ENOSPC )) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-			"read_record encountered EOD : "
 #ifdef DUMP
-			"assuming blank media\n" );
+		_("read_record encountered EOD : assuming blank media\n")
 #endif
 #ifdef RESTORE
-			"end of data\n" );
+		_("read_record encountered EOD : end of data\n")
 #endif
+			);
 #ifdef DUMP
 		return DRIVE_ERROR_BLANK;
 #endif
@@ -3748,7 +3747,7 @@ read_record(  drive_t *drivep, char *bufp )
 	 */
 	if ( saved_errno == EIO ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "unexpected EIO error attempting to read record \n");
+		      _("unexpected EIO error attempting to read record\n") );
 #ifdef RESTORE
 		return DRIVE_ERROR_EOM;
 #endif
@@ -3771,8 +3770,8 @@ read_record(  drive_t *drivep, char *bufp )
 	/* some other error
 	 */
 	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-	      "unexpected error attempting to read record %lld: "
-	      "read returns %d, errno %d (%s)\n",
+	      _("unexpected error attempting to read record %lld: "
+	      "read returns %d, errno %d (%s)\n"),
 	      contextp->dc_iocnt,
 	      nread,
 	      saved_errno,
@@ -3894,7 +3893,7 @@ ring_thread( void *clientctxp,
 	ok = cldmgr_create( entryp,
 			    CLONE_VM,
 			    drivep->d_index,
-			    "slave",
+			    _("slave"),
 			    ringctxp );
 	ASSERT( ok );
 }
@@ -3962,26 +3961,26 @@ display_ring_metrics( drive_t *drivep, intgen_t mlog_flags )
 		ASSERT( ! ( STAPE_MIN_MAX_BLKSZ % 0x400 ));
 		sprintf( bufszbuf, "%u", STAPE_MIN_MAX_BLKSZ / 0x400 );
 		ASSERT( strlen( bufszbuf ) < sizeof( bufszbuf ));
-		bufszsfxp = "KB";
+		bufszsfxp = _("KB");
 	} else if ( tape_recsz == STAPE_MAX_RECSZ ) {
 		ASSERT( ! ( STAPE_MAX_RECSZ % 0x100000 ));
 		sprintf( bufszbuf, "%u", STAPE_MAX_RECSZ / 0x100000 );
 		ASSERT( strlen( bufszbuf ) < sizeof( bufszbuf ));
-		bufszsfxp = "MB";
+		bufszsfxp = _("MB");
 	} else {
 		sprintf( bufszbuf, "%u", (unsigned int)(tape_recsz / 0x400) );
-		bufszsfxp = "KB";
+		bufszsfxp = _("KB");
 	}
 
-	mlog( mlog_flags,
+	mlog( mlog_flags, _(
 	      "I/O metrics: "
 	      "%u by %s%s %sring; "
 	      "%lld/%lld (%.0lf%%) records streamed; "
-	      "%.0lfB/s\n",
+	      "%.0lfB/s\n"),
 	      contextp->dc_ringlen,
 	      bufszbuf,
 	      bufszsfxp,
-	      contextp->dc_ringpinnedpr ? "pinned " : "",
+	      contextp->dc_ringpinnedpr ? _("pinned ") : "",
 	      ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,
 	      ringp->r_slave_msgcnt,
 	      percent64( ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,

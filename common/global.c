@@ -116,13 +116,13 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 	rval = gethostname( ghdrp->gh_hostname, GLOBAL_HDR_STRING_SZ );
 	if ( rval ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to determine hostname: %s\n",
+		      _("unable to determine hostname: %s\n"),
 		      strerror( errno ));
 		return 0;
 	}
 	if ( ! strlen( ghdrp->gh_hostname )) {
 		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "hostname length is zero\n" );
+		      _("hostname length is zero\n") );
 		return 0;
 	}
 
@@ -136,8 +136,8 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                 case GETOPT_DUMPLABEL:
                         if ( dumplabel ) {
                                 mlog( MLOG_NORMAL,
-                                      "too many -%c arguments: "
-                                      "\"-%c %s\" already given\n",
+                                      _("too many -%c arguments: "
+                                      "\"-%c %s\" already given\n"),
                                       optopt,
                                       optopt,
                                       dumplabel );
@@ -146,7 +146,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         }
                         if ( ! optarg || optarg[ 0 ] == '-' ) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
-                                      "-%c argument missing\n",
+                                      _("-%c argument missing\n"),
                                       optopt );
                                 usage( );
                                 return 0;
@@ -157,14 +157,14 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 		case GETOPT_SESSIONID:
                         if ( ! uuid_is_null( ghdrp->gh_dumpid )) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
-                                      "too many -%c arguments\n",
+                                      _("too many -%c arguments\n"),
                                       optopt );
                                 usage( );
                                 return 0;
                         }
                         if ( ! optarg || optarg[ 0 ] == '-' ) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
-                                      "-%c argument missing\n",
+                                      _("-%c argument missing\n"),
                                       optopt );
                                 usage( );
                                 return 0;
@@ -172,7 +172,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 			
 			if ( ! uuid_parse( optarg, ghdrp->gh_dumpid ) ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument not a valid uuid\n",
+				      _("-%c argument not a valid uuid\n"),
 				      optopt );
                                 usage( );
                                 return 0;
@@ -207,7 +207,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 #ifdef DUMP
 		if ( ! pipeline ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "no session label specified\n" );
+			      _("no session label specified\n") );
 		}
 #endif /* DUMP */
 		dumplabel = "";
@@ -298,7 +298,7 @@ prompt_label_cb( void *uctxp, dlog_pcbp_t pcb, void *pctxp )
 	/* query: ask for a dump label
 	 */
 	( * pcb )( pctxp,
-		   "please enter label for this dump session" );
+		   _("please enter label for this dump session") );
 }
 
 static char *
@@ -316,7 +316,7 @@ prompt_label( char *bufp, size_t bufsz )
 	ix_t responseix;
 
 	preamblecnt = 0;
-	fold_init( fold, "dump label dialog", '=' );
+	fold_init( fold, _("dump label dialog"), '=' );
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
@@ -335,11 +335,11 @@ prompt_label( char *bufp, size_t bufsz )
 					okix );   /* ok ix */
 	ackcnt = 0;
 	if ( responseix == okix ) {
-		ackstr[ ackcnt++ ] = "session label entered: \"";
+		ackstr[ ackcnt++ ] = _("session label entered: \"");
 		ackstr[ ackcnt++ ] = bufp;
 		ackstr[ ackcnt++ ] = "\"\n";
 	} else {
-		ackstr[ ackcnt++ ] = "session label left blank\n";
+		ackstr[ ackcnt++ ] = _("session label left blank\n");
 	}
 
 	ASSERT( ackcnt <= ACKMAX );
@@ -347,7 +347,7 @@ prompt_label( char *bufp, size_t bufsz )
 			 ackcnt );
 
 	postamblecnt = 0;
-	fold_init( fold, "end dialog", '-' );
+	fold_init( fold, _("end dialog"), '-' );
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";

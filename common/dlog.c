@@ -120,7 +120,7 @@ dlog_init( int argc, char *argv[ ] )
 		rval = fstat( dlog_ttyfd, &statbuf );
 		if ( rval ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "could not fstat stdin (fd %d): %s (%d)\n",
+			      _("could not fstat stdin (fd %d): %s (%d)\n"),
 			      dlog_ttyfd,
 			      strerror( errno ),
 			      errno );
@@ -224,7 +224,7 @@ dlog_multi_query( char *querystr[ ],
 		if ( ix == defaultix ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
 			      "%s",
-			      defaultstr ?  defaultstr : " (default)" );
+			      defaultstr ?  defaultstr : _(" (default)") );
 		}
 		if ( dlog_timeouts_flag
 		     &&
@@ -232,7 +232,7 @@ dlog_multi_query( char *querystr[ ],
 		     &&
 		     ix == timeoutix ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      " (timeout in %u sec)",
+			      _(" (timeout in %u sec)"),
 			      timeout );
 		}
 		mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
@@ -263,17 +263,17 @@ dlog_multi_query( char *querystr[ ],
 				return defaultix;
 			}
 			if ( strlen( buf ) != 1 ) {
-				prepromptstr =
+				prepromptstr = _(
 				    "please enter a single "
-				    "digit response (1 to %d)";
+				    "digit response (1 to %d)");
 				continue;
 			}
 			if ( buf[ 0 ] < '1'
 			     ||
 			     buf[ 0 ] >= '1' + ( u_char_t )choicecnt ) {
-				prepromptstr =
+				prepromptstr = _(
 				      "please enter a single digit "
-				      "between 1 and %d inclusive ";
+				      "between 1 and %d inclusive ");
 				continue;
 			}
 			return ( size_t )( buf[ 0 ] - '1' );
@@ -320,7 +320,7 @@ dlog_string_query( dlog_ucbp_t ucb, /* user's print func */
 	 */
 	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
 		mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-		      " (timeout in %u sec)\n",
+		      _(" (timeout in %u sec)\n"),
 		      timeout );
 	} else {
 		mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
@@ -407,7 +407,7 @@ promptinput( char *buf,
 #ifdef NOTYET
 	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
 		mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-		      "(timeout in %d sec)",
+		      _("(timeout in %d sec)"),
 		      timeout );
 	}
 #endif /* NOTYET */
@@ -488,29 +488,29 @@ promptinput( char *buf,
 	if ( nread < 0 ) {
 		if ( dlog_signo_received == SIGALRM ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "timeout\n" );
+			      _("timeout\n") );
 			*exceptionixp = timeoutix;
 		} else if ( dlog_signo_received == SIGINT ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "keyboard interrupt\n" );
+			      _("keyboard interrupt\n") );
 			mlog_exit_hint(RV_KBD_INTR);
 			*exceptionixp = sigintix;
 		} else if ( dlog_signo_received == SIGHUP ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "hangup\n" );
+			      _("hangup\n") );
 			*exceptionixp = sighupix;
 		} else if ( dlog_signo_received == SIGTERM ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "terminate\n" );
+			      _("terminate\n") );
 			*exceptionixp = sighupix;
 		} else if ( dlog_signo_received == SIGQUIT ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "keyboard quit\n" );
+			      _("keyboard quit\n") );
 			mlog_exit_hint(RV_KBD_INTR);
 			*exceptionixp = sigquitix;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
-			      "unknown signal during dialog: %d\n",
+			      _("unknown signal during dialog: %d\n"),
 			      dlog_signo_received );
 			*exceptionixp = sigquitix;
 		}

@@ -600,7 +600,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_RINGLEN:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				return BOOL_FALSE;
 			}
@@ -609,8 +609,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			     ||
 			     contextp->dc_ringlen > RINGLEN_MAX ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "-%c argument must be "
-				      "between %u and %u: ignoring %u\n",
+				      _("-%c argument must be "
+				      "between %u and %u: ignoring %u\n"),
 				      optopt,
 				      RINGLEN_MIN,
 				      RINGLEN_MAX,
@@ -633,7 +633,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_BLOCKSIZE:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 			    mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				    "-%c argument missing\n",
+				    _("-%c argument missing\n"),
 				    optopt );
 			    return -10;
 			}
@@ -646,7 +646,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_SINGLEMFILE:
 			if (contextp->dc_filesz > 0) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c and -%c options cannot be used together\n",
+				      _("-%c and -%c options cannot be used together\n"),
 				      optopt,
 				      GETOPT_FILESZ );
 			}
@@ -657,14 +657,14 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_FILESZ:
 			if (contextp->dc_singlemfilepr == BOOL_TRUE) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c and -%c options cannot be used together\n",
+				      _("-%c and -%c options cannot be used together\n"),
 				      optopt,
 				      GETOPT_SINGLEMFILE );
 				return BOOL_FALSE;
 			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				return BOOL_FALSE;
 			}
@@ -672,8 +672,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			contextp->dc_filesz = (off64_t)atoi( optarg ) * 1024 * 1024;
                         if (contextp->dc_filesz <= 0) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "-%c argument must be a "
-				      "positive number (Mb): ignoring %u\n",
+				      _("-%c argument must be a "
+				      "positive number (Mb): ignoring %u\n"),
 				      optopt,
 				      contextp->dc_filesz );
 				return BOOL_FALSE;
@@ -718,16 +718,16 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		if ( ! contextp->dc_ringp ) {
 			if ( rval == ENOMEM ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "unable to allocate memory "
-				      "for I/O buffer ring\n" );
+				      _("unable to allocate memory "
+				      "for I/O buffer ring\n") );
 			} else if ( rval == E2BIG ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "not enough physical memory "
-				      "to pin down I/O buffer ring\n" );
+				      _("not enough physical memory "
+				      "to pin down I/O buffer ring\n") );
 			} else if ( rval == EPERM ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "not allowed "
-				      "to pin down I/O buffer ring\n" );
+				      _("not allowed "
+				      "to pin down I/O buffer ring\n") );
 			} else {
 				ASSERT( 0 );
 			}
@@ -1300,9 +1300,9 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 				saved_errno = errno;
 				if ( rval ) {
 					mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-					      "could not forward space %d "
+					      _("could not forward space %d "
 					      "tape blocks: "
-					      "rval == %d, errno == %d (%s)\n",
+					      "rval == %d, errno == %d (%s)\n"),
 					      rval,
 					      saved_errno,
 					      strerror( saved_errno ));
@@ -1547,7 +1547,7 @@ readrecord:
 	trycnt++;
 	if ( trycnt > maxtrycnt ) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "unable to locate next mark in media file\n" );
+		      _("unable to locate next mark in media file\n") );
 		return DRIVE_ERROR_MEDIA;
 	}
 
@@ -1599,9 +1599,9 @@ validateread:
 
 	/* some other error
 	 */
-	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
 	      "unexpected error attempting to read record: "
-	      "read returns %d, errno %d (%s)\n",
+	      "read returns %d, errno %d (%s)\n"),
 	      nread,
 	      errno,
 	      strerror( errno ));
@@ -1627,7 +1627,7 @@ validatehdr:
 	contextp->dc_iocnt = contextp->dc_reccnt + 1;
 	if ( rechdrp->first_mark_offset < 0 ) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-		      "valid record %lld but no mark\n",
+		      _("valid record %lld but no mark\n"),
 		      contextp->dc_iocnt - 1 );
 		goto readrecord;
 	}
@@ -1653,8 +1653,7 @@ alliswell:
 	contextp->dc_errorpr = BOOL_FALSE;
 
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "resynchronized at record %lld "
-	      "offset %u\n",
+	      _("resynchronized at record %lld offset %u\n"),
 	      contextp->dc_iocnt - 1,
 	      contextp->dc_nextp
 	      -
@@ -1667,8 +1666,8 @@ getbeyonderror:
 
 	if ( rval ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not forward space one tape block beyond "
-		      "read error: rval == %d, errno == %d (%s)\n",
+		      _("could not forward space one tape block beyond "
+		      "read error: rval == %d, errno == %d (%s)\n"),
 		      rval,
 		      saved_errno,
 		      strerror( saved_errno ));
@@ -2452,7 +2451,7 @@ do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 			 * 	ignore return code
 			 */
 			mlog( MLOG_VERBOSE | MLOG_DRIVE,
-			      "advancing tape to next media file\n");
+			      _("advancing tape to next media file\n") );
 
 			op_failed = 0;
 			ASSERT( contextp->dc_fd >= 0 );
@@ -2479,7 +2478,7 @@ do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 			 */
 			if ( --opcount < 0 ) {
 				mlog( MLOG_VERBOSE | MLOG_DRIVE,
-					"FSF tape command failed\n");
+					_("FSF tape command failed\n") );
 
 				*statp = DRIVE_ERROR_DEVICE;
 				return i;
@@ -2753,7 +2752,7 @@ do_display_metrics( drive_t *drivep )
 	if ( ringp ) {
 		if ( drivecnt > 1 ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_DRIVE,
-			      "drive %u ",
+			      _("drive %u "),
 			      drivep->d_index );
 		}
 		display_ring_metrics( drivep,
@@ -2893,14 +2892,14 @@ read_label( drive_t *drivep )
 	 */
 	if ( IS_EOD( mtstat )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "file mark missing from tape (hit EOD)\n" );
+		      _("file mark missing from tape (hit EOD)\n") );
 #ifdef DUMP
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "writing file mark at EOD\n" );
+		      _("writing file mark at EOD\n") );
 		rval = mt_op( contextp->dc_fd, MTWEOF, 1 );
 		if ( rval ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "unable to write file mark at eod: %s (%d)\n",
+			      _("unable to write file mark at eod: %s (%d)\n"),
 			      strerror( errno ),
 			      errno );
 			return DRIVE_ERROR_MEDIA;
@@ -2917,7 +2916,7 @@ read_label( drive_t *drivep )
 	 */
 	if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "file mark missing from tape\n" );
+		      _("file mark missing from tape\n") );
 #ifdef DUMP
 		return DRIVE_ERROR_MEDIA;
 #endif
@@ -2956,7 +2955,7 @@ read_label( drive_t *drivep )
 	 */
 	if ( nread < 0 && saved_errno != ENOSPC ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not read from drive: %s (%d)\n",
+		      _("could not read from drive: %s (%d)\n"),
 		      strerror( errno ),
 		      errno );
 		return DRIVE_ERROR_DEVICE;
@@ -2966,8 +2965,8 @@ read_label( drive_t *drivep )
 	 */
 	if ( nread == 0 && wasatbotpr ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "unexpectedly encountered EOD at BOT: "
-		      "assuming corrupted media\n" );
+		      _("unexpectedly encountered EOD at BOT: "
+		      "assuming corrupted media\n") );
 		( void )rewind_and_verify( drivep );
 		return DRIVE_ERROR_MEDIA;
 	}
@@ -3016,8 +3015,8 @@ read_label( drive_t *drivep )
 	 */
 	if ( IS_FMK( mtstat )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "unexpectedly encountered a file mark: "
-		      "assuming corrupted media\n" );
+		      _("unexpectedly encountered a file mark: "
+		      "assuming corrupted media\n") );
 		( void )rewind_and_verify( drivep );
 		return DRIVE_ERROR_MEDIA;
 	}
@@ -3079,7 +3078,7 @@ validate_media_file_hdr( drive_t *drivep )
 	}
 
 	if ( ! tape_rec_checksum_check( contextp, contextp->dc_recp )) {
-		mlog( MLOG_NORMAL | MLOG_DRIVE,
+		mlog( MLOG_DEBUG | MLOG_DRIVE,
 		      "tape record checksum error\n");
 		return DRIVE_ERROR_CORRUPTION;
 
@@ -3224,7 +3223,7 @@ set_fixed_blksz( drive_t *drivep, size_t blksz )
 	}
 
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "unable to set block size to %d\n",
+	      _("unable to set block size to %d\n"),
 	      blksz );
 
 	return BOOL_FALSE;
@@ -3330,9 +3329,9 @@ set_recommended_sizes( drive_t *drivep )
 #ifdef DUMP
 #ifdef SIZEEST
 		if ( hdr_mfilesz > fsize ) {
-			mlog( MLOG_WARNING,
+			mlog( MLOG_WARNING, _(
 			      "recommended media file size of %llu Mb less than"
-			      " estimated file header size %llu Mb for %s\n",
+			      " estimated file header size %llu Mb for %s\n"),
 			      fsize / ( 1024 * 1024 ),
 			      hdr_mfilesz / ( 1024 * 1024 ),
 			      drivep->d_pathname );
@@ -3345,9 +3344,9 @@ set_recommended_sizes( drive_t *drivep )
 	else {
 		/* override with minimum recommended file size */
 		if ( min_recmfilesz > fsize ) {
-			mlog( MLOG_NOTE,
+			mlog( MLOG_NOTE, _(
 			      "recommended media file size adjusted "
-			      "from %llu Mb to %llu Mb for %s\n",
+			      "from %llu Mb to %llu Mb for %s\n"),
 			      min_recmfilesz / ( 1024 * 1024 ),
 			      fsize / ( 1024 * 1024 ),
 			      drivep->d_pathname );
@@ -3597,7 +3596,7 @@ determine_write_error( drive_t *drivep, int nwritten, int saved_errno )
 	} else if ( IS_WPROT(mtstat) && (saved_errno == EROFS)) {
 
 		mlog(MLOG_NORMAL,
-		     "tape is write protected\n");
+		     _("tape is write protected\n"));
 
 		ret = DRIVE_ERROR_DEVICE;
 	} else if ( (!IS_BOT(mtstat)) &&
@@ -3607,10 +3606,10 @@ determine_write_error( drive_t *drivep, int nwritten, int saved_errno )
 	} else if (saved_errno == EIO ) {
 
 		mlog(MLOG_NORMAL,
-		     "tape media error on write operation\n");
+		     _("tape media error on write operation\n"));
 
 		mlog(MLOG_NORMAL,
-		     "no more data can be written to this tape\n");
+		     _("no more data can be written to this tape\n"));
 
 		ret = DRIVE_ERROR_EOM;
 	} else if ( (saved_errno == 0) &&
@@ -3690,7 +3689,7 @@ dbgrmtopen( char *path, int flags )
 	int rval;
 	rval = rmtopen( path, flags );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n",
+	      _("RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n"),
 	      path,
 	      flags,
 	      rval,
@@ -3704,7 +3703,7 @@ dbgrmtclose( int fd )
 	int rval;
 	rval = rmtclose( fd );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTCLOSE( %d ) returns %d: errno=%d (%s)\n",
+	      _("RMTCLOSE( %d ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      rval,
 	      errno,
@@ -3717,7 +3716,7 @@ dbgrmtioctl( int fd, int op, void *arg )
 	int rval;
 	rval = rmtioctl( fd, op, arg );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n",
+	      _("RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      op,
 	      arg,
@@ -3732,7 +3731,7 @@ dbgrmtread( int fd, void *p, uint sz )
 	int rval;
 	rval = rmtread( fd, p, sz );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n",
+	      _("RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      p,
 	      sz,
@@ -3747,7 +3746,7 @@ dbgrmtwrite( int fd, void *p, uint sz )
 	int rval;
 	rval = rmtwrite( fd, p, sz );
 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	      "RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n",
+	      _("RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
 	      fd,
 	      p,
 	      sz,
@@ -3776,14 +3775,14 @@ display_access_failed_message( drive_t *drivep )
 
 	if ( contextp->dc_isrmtpr ) {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-			"attempt to access/open remote "
-			"tape drive %s failed: %d (%s)\n",
+			_("attempt to access/open remote "
+			"tape drive %s failed: %d (%s)\n"),
 			drivep->d_pathname,
 			errno,
 			strerror( errno ));
 	} else {
 		mlog( MLOG_NORMAL | MLOG_DRIVE,
-			"attempt to access/open device %s failed: %d (%s)\n",
+			_("attempt to access/open device %s failed: %d (%s)\n"),
 			drivep->d_pathname,
 			errno,
 			strerror( errno ));
@@ -3812,15 +3811,15 @@ status_failed_message( drive_t *drivep )
 	if ( contextp->dc_fd != -1 ) {
 		if ( contextp->dc_isrmtpr ) {
 		 	mlog( MLOG_NORMAL | MLOG_DRIVE,
-	 			"attempt to get status of remote "
-	 			"tape drive %s failed: %d (%s)\n",
+	 			_("attempt to get status of remote "
+	 			"tape drive %s failed: %d (%s)\n"),
 				drivep->d_pathname,
 				errno,
 				strerror( errno ));
 		} else {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-				"attempt to get status of "
-				"tape drive %s failed: %d (%s)\n",
+				_("attempt to get status of "
+				"tape drive %s failed: %d (%s)\n"),
 				drivep->d_pathname,
 				errno,
 				strerror( errno ));
@@ -3887,7 +3886,7 @@ retry:
 	ASSERT( contextp->dc_fd == -1 );
 
 	mlog( MLOG_VERBOSE | MLOG_DRIVE,
-	      "preparing drive\n" );
+	      _("preparing drive\n") );
 
 
 	/* determine if tape is present or write protected. try several times.
@@ -3936,7 +3935,7 @@ retry:
 #ifdef DUMP
 			if ( IS_WPROT( mtstat )) {
 				mlog(MLOG_NORMAL,
-				     "tape is write protected\n" );
+				     _("tape is write protected\n") );
 				return DRIVE_ERROR_MEDIA;
 			}
 #endif /* DUMP */
@@ -3971,16 +3970,16 @@ retry:
 			break;
 		} else if ( try >= maxtries ) {
 			mlog( MLOG_VERBOSE | MLOG_DRIVE,
-			      "giving up waiting for drive "
-			      "to indicate online\n" );
+			      _("giving up waiting for drive "
+			      "to indicate online\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 
 		/* drive is not ready. sleep for a while and try again
 		 */
 		mlog( MLOG_VERBOSE | MLOG_DRIVE,
-		      "tape drive %s is not ready (0x%x): "
-		      "retrying ...\n",
+		      _("tape drive %s is not ready (0x%x): "
+		      "retrying ...\n"),
 		      drivep->d_pathname,
 		      mtstat );
 
@@ -4000,9 +3999,9 @@ retry:
 	/* disallow access of QIC via variable
 	 */
 	if ( contextp->dc_isvarpr && contextp->dc_isQICpr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
 		      "use of QIC drives via variable blocksize device nodes "
-		      "is not supported\n" );
+		      "is not supported\n") );
 		return DRIVE_ERROR_INVAL;
 	}
 
@@ -4079,9 +4078,9 @@ retry:
 		/* bail out if we've tried too many times
 		 */
 		if ( try > maxtries ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
 			      "giving up attempt to determining "
-			      "tape record size\n" );
+			      "tape record size\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 
@@ -4139,7 +4138,7 @@ retry:
 		 */
 		if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "unable to backspace/rewind media\n" );
+			      _("unable to backspace/rewind media\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 		if ( IS_BOT( mtstat )) {
@@ -4165,7 +4164,7 @@ retry:
 			wasatbotpr = BOOL_FALSE;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "unable to backspace/rewind media\n" );
+			      _("unable to backspace/rewind media\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 
@@ -4463,7 +4462,7 @@ retry:
 		/* if we fell through the seive, code is wrong.
 		 * display useful info and abort
 		 */
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
 		      "unexpected tape error: "
 		      "errno %d "
 		      "nread %d "
@@ -4477,7 +4476,7 @@ retry:
 		      "onl %d "
 		      "wprot %d "
 		      "ew %d "
-		      "\n",
+		      "\n"),
 		      saved_errno,
 		      nread,
 		      tape_blksz,
@@ -4495,12 +4494,13 @@ retry:
 		/* Common Linux Problem */
 		if (errno == EOVERFLOW) {
 		    mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
-			"likely problem is that the block size, %d, "
-			"is too large for Linux\n", tape_blksz);
+			_("likely problem is that the block size, %d, "
+			"is too large for Linux\n"),
+			tape_blksz);
 		    mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
-			"either try using a smaller block size with "
+			_("either try using a smaller block size with "
 			"the -b option, or increase max_sg_segs for "
-			"the scsi tape driver\n"); 
+			"the scsi tape driver\n")); 
 		}
 
 
@@ -4513,8 +4513,8 @@ checkhdr:
 			if ( rval == DRIVE_ERROR_VERSION ) {
 				global_hdr_t *grhdrp = drivep->d_greadhdrp;
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "media file header version (%d) "
-				      "invalid: advancing\n",
+				      _("media file header version (%d) "
+				      "invalid: advancing\n"),
 				      grhdrp->gh_version );
 				continue;
 			} else if ( wasatbotpr ) {
@@ -4524,12 +4524,12 @@ checkhdr:
 					      MLOG_WARNING
 					      |
 					      MLOG_DRIVE,
-					      "may be an EFS dump at BOT\n" );
+					      _("may be an EFS dump at BOT\n"));
 				} else {
 					mlog( MLOG_NORMAL | MLOG_DRIVE,
-					      "bad media file header at BOT "
+					      _("bad media file header at BOT "
 					      "indicates foreign or "
-					      "corrupted tape\n" );
+					      "corrupted tape\n"));
 				}
 				( void )rewind_and_verify( drivep );
 				ok = set_best_blk_and_rec_sz( drivep );
@@ -4569,18 +4569,18 @@ newsize:
 		 */
 		if ( changedblkszpr ) {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size "
-			      "after two tries\n" );
+			      _("cannot determine tape block size "
+			      "after two tries\n") );
 			if ( ! wasatbotpr ) {
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "will rewind and try again\n" );
+				      _("will rewind and try again\n") );
 				( void )rewind_and_verify( drivep );
 				Close( drivep );
 				goto retry;
 			} else {
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "assuming media is corrupt "
-				      "or contains non-xfsdump data\n" );
+				      _("assuming media is corrupt "
+				      "or contains non-xfsdump data\n") );
 				( void )rewind_and_verify( drivep );
 				ok = set_best_blk_and_rec_sz( drivep );
 				if ( ! ok ) {
@@ -4597,7 +4597,7 @@ newsize:
 			changedblkszpr = BOOL_TRUE;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size\n" );
+			      _("cannot determine tape block size\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 		continue;
@@ -4608,18 +4608,18 @@ largersize:
 		 */
 		if ( changedblkszpr ) {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size "
-			      "after two tries\n" );
+			      _("cannot determine tape block size "
+			      "after two tries\n") );
 			if ( ! wasatbotpr ) {
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "will rewind and try again\n" );
+				      _("will rewind and try again\n") );
 				( void )rewind_and_verify( drivep );
 				Close( drivep );
 				goto retry;
 			} else {
 				mlog( MLOG_NORMAL | MLOG_DRIVE,
-				      "assuming media is corrupt "
-				      "or contains non-xfsdump data\n" );
+				      _("assuming media is corrupt "
+				      "or contains non-xfsdump data\n") );
 				( void )rewind_and_verify( drivep );
 				ok = set_best_blk_and_rec_sz( drivep );
 				if ( ! ok ) {
@@ -4638,7 +4638,7 @@ largersize:
 			changedblkszpr = BOOL_TRUE;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_DRIVE,
-			      "cannot determine tape block size\n" );
+			      _("cannot determine tape block size\n") );
 			return DRIVE_ERROR_MEDIA;
 		}
 		continue;
@@ -4794,8 +4794,8 @@ quick_backup( drive_t *drivep, drive_context_t *contextp, ix_t skipcnt )
 #ifdef HAVE_2WAYFMK
 			if ( ! IS_FMK( mtstat )) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "unable to backspace tape: "
-				      "assuming media error\n" );
+				      _("unable to backspace tape: "
+				      "assuming media error\n") );
 				return DRIVE_ERROR_MEDIA;
 			}
 #endif
@@ -4822,7 +4822,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 
 	if ( ! tape_rec_checksum_check( contextp, bufp )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: bad record checksum\n",
+		      _("record %lld corrupt: bad record checksum\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 
@@ -4832,7 +4832,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 
 	if ( rechdrp->magic != STAPE_MAGIC )  {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: bad magic number\n",
+		      _("record %lld corrupt: bad magic number\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -4840,7 +4840,7 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	if ( uuid_is_null( rechdrp->dump_uuid )) {
 
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: null dump id\n",
+		      _("record %lld corrupt: null dump id\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -4848,22 +4848,22 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	if ( uuid_compare( grhdrp->gh_dumpid,
 			   rechdrp->dump_uuid ) != 0) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: dump id mismatch\n",
+		      _("record %lld corrupt: dump id mismatch\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
 
 	if ( ( size_t )rechdrp->recsize != tape_recsz ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: incorrect record size in header\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
+		      "record %lld corrupt: incorrect record size in header\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
 
 	if ( rechdrp->file_offset % ( off64_t )tape_recsz ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: record offset in header "
-		      "not a multiple of record size\n",
+		      _("record %lld corrupt: record offset in header "
+		      "not a multiple of record size\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -4874,8 +4874,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	     !=
 	     ( contextp->dc_iocnt - 1 ) * ( off64_t )tape_recsz ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: "
-		      "incorrect record offset in header (0x%llx)\n",
+		      _("record %lld corrupt: "
+		      "incorrect record offset in header (0x%llx)\n"),
 		      contextp->dc_iocnt - 1,
 		      rechdrp->file_offset );
 		return DRIVE_ERROR_CORRUPTION;
@@ -4885,8 +4885,8 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 	     ||
 	     rechdrp->rec_used < STAPE_HDR_SZ ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "record %lld corrupt: "
-		      "incorrect record padding offset in header\n",
+		      _("record %lld corrupt: "
+		      "incorrect record padding offset in header\n"),
 		      contextp->dc_iocnt - 1 );
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -4973,9 +4973,9 @@ read_record(  drive_t *drivep, char *bufp )
 
 	/* some other error
 	 */
-	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
 	      "unexpected error attempting to read record %lld: "
-	      "read returns %d, errno %d (%s)\n",
+	      "read returns %d, errno %d (%s)\n"),
 	      contextp->dc_iocnt,
 	      nread,
 	      errno,
@@ -5180,15 +5180,15 @@ display_ring_metrics( drive_t *drivep, intgen_t mlog_flags )
 		bufszsfxp = "";
 	}
 
-	mlog( mlog_flags,
+	mlog( mlog_flags, _(
 	      "I/O metrics: "
 	      "%u by %s%s %sring; "
 	      "%lld/%lld (%.0lf%%) records streamed; "
-	      "%.0lfB/s\n",
+	      "%.0lfB/s\n"),
 	      contextp->dc_ringlen,
 	      bufszbuf,
 	      bufszsfxp,
-	      contextp->dc_ringpinnedpr ? "pinned " : "",
+	      contextp->dc_ringpinnedpr ? _("pinned ") : "",
 	      ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,
 	      ringp->r_slave_msgcnt,
 	      percent64( ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,

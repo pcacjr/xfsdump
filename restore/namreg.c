@@ -156,9 +156,9 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 		 */
 		ntp->nt_fd = open( ntp->nt_pathname, O_RDWR );
 		if ( ntp->nt_fd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not find name registry file %s: "
-			      "%s\n",
+			      "%s\n"),
 			      ntp->nt_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -172,16 +172,16 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 				   O_RDWR | O_CREAT | O_EXCL,
 				   S_IRUSR | S_IWUSR );
 		if ( ntp->nt_fd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not create name registry file %s: "
-			      "%s\n",
+			      "%s\n"),
 			      ntp->nt_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
 		}
 
-		/* reserve space for the backing store. try to use F_RESVSP64.
-		 * if doesn't work, try F_RESVSP64. the former is faster, since
+		/* reserve space for the backing store. try to use RESVSP64.
+		 * if doesn't work, try ALLOCSP64. the former is faster, as
 		 * it does not zero the space.
 		 */
 		{
@@ -189,10 +189,6 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 		intgen_t ioctlcmd;
 		intgen_t loglevel;
 		size_t trycnt;
-
-#ifndef F_RESVSP64
-#define F_RESVSP64 0
-#endif /* F_RESVSP64 */
 
 		for ( trycnt = 0,
 		      successpr = BOOL_FALSE,
@@ -221,17 +217,17 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 			rval = ioctl( ntp->nt_fd, ioctlcmd, &flock64 );
 			if ( rval ) {
 				if ( errno != ENOTTY ) {
-					mlog( loglevel | MLOG_NOTE,
+					mlog( loglevel | MLOG_NOTE, _(
 					      "attempt to reserve %lld bytes for %s "
 					      "using %s "
-					      "failed: %s (%d)\n",
+					      "failed: %s (%d)\n"),
 					      initsz,
 					      ntp->nt_pathname,
-					      ioctlcmd == F_RESVSP64
+					      ioctlcmd == XFS_IOC_RESVSP64
 					      ?
-					      "F_RESVSP64"
+					      "XFS_IOC_RESVSP64"
 					      :
-					      "F_ALLOCSP64",
+					      "XFS_IOC_ALLOCSP64",
 					      strerror( errno ),
 					      errno );
 				}
@@ -250,8 +246,8 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 				        ntp->nt_fd,
 				        ( off_t )0 );
 	if ( npp == ( namreg_pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map %s: %s\n"),
 		      ntp->nt_pathname,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -289,8 +285,8 @@ namreg_add( char *name, size_t namelen )
 		off64_t newoff;
 		newoff = lseek64( ntp->nt_fd, npp->np_appendoff, SEEK_SET );
 		if ( newoff == ( off64_t )-1 ) {
-			mlog( MLOG_NORMAL,
-			      "lseek of namreg failed: %s\n",
+			mlog( MLOG_NORMAL, _(
+			      "lseek of namreg failed: %s\n"),
 			      strerror( errno ));
 			ASSERT( 0 );
 			return NRH_NULL;
@@ -309,8 +305,8 @@ namreg_add( char *name, size_t namelen )
 	c = ( unsigned char )( namelen & 0xff );
 	nwritten = write( ntp->nt_fd, ( void * )&c, 1 );
 	if ( nwritten != 1 ) {
-		mlog( MLOG_NORMAL,
-		      "write of namreg failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "write of namreg failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 		return NRH_NULL;
@@ -320,8 +316,8 @@ namreg_add( char *name, size_t namelen )
 	 */
 	nwritten = write( ntp->nt_fd, ( void * )name, namelen );
 	if ( ( size_t )nwritten != namelen ) {
-		mlog( MLOG_NORMAL,
-		      "write of namreg failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "write of namreg failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 		return NRH_NULL;
@@ -401,8 +397,8 @@ namreg_get( nrh_t nrh,
 	newoff = lseek64( ntp->nt_fd, newoff, SEEK_SET );
 	if ( newoff == ( off64_t )-1 ) {
 		unlock( );
-		mlog( MLOG_NORMAL,
-		      "lseek of namreg failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "lseek of namreg failed: %s\n"),
 		      strerror( errno ));
 		return -3;
 	}
@@ -413,8 +409,8 @@ namreg_get( nrh_t nrh,
 	nread = read( ntp->nt_fd, ( void * )&c, 1 );
 	if ( nread != 1 ) {
 		unlock( );
-		mlog( MLOG_NORMAL,
-		      "read of namreg failed: %s (nread = %d)\n",
+		mlog( MLOG_NORMAL, _(
+		      "read of namreg failed: %s (nread = %d)\n"),
 		      strerror( errno ),
 		      nread );
 		return -3;
@@ -433,8 +429,8 @@ namreg_get( nrh_t nrh,
 	nread = read( ntp->nt_fd, ( void * )bufp, len );
 	if ( ( size_t )nread != len ) {
 		unlock( );
-		mlog( MLOG_NORMAL,
-		      "read of namreg failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "read of namreg failed: %s\n"),
 		      strerror( errno ));
 		return -3;
 	}

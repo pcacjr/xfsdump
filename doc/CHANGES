@@ -1,3 +1,6 @@
+xfsdump-2.2.6 (19 December 2002)
+	- add initial internationalisation support.
+
 xfsdump-2.2.5 (19 December 2002)
 	- fix build fallout from macro changes in XFS headers.
 	- add a configure check so that we don't attempt to build

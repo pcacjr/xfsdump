@@ -225,13 +225,13 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
                                 sbulkreq.ocount = NULL;
                                 if( ioctl( fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
 					mlog( MLOG_WARNING,
-					      "failed to get bulkstat information for inode %llu\n",
+					      _("failed to get bulkstat information for inode %llu\n"),
 					      p->bs_ino );
 					continue;
 				}
 				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
 					mlog( MLOG_TRACE,
-					      "failed to get valid bulkstat information for inode %llu\n",
+					      _("failed to get valid bulkstat information for inode %llu\n"),
 					      p->bs_ino );
 					continue;
 				}
@@ -265,7 +265,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	saved_errno = errno;
 
 	mlog( MLOG_NORMAL,
-	      "syssgi( SGI_FS_BULKSTAT ) on fsroot failed: %s\n",
+	      _("syssgi( SGI_FS_BULKSTAT ) on fsroot failed: %s\n"),
 	      strerror( saved_errno ));
 
 	return saved_errno;
@@ -350,7 +350,7 @@ diriter( jdm_fshandle_t *fshandlep,
 	fd = jdm_open( fshandlep, statp, O_RDONLY );
 	if ( fd < 0 ) {
 		mlog( MLOG_NORMAL,
-		      "WARNING: unable to open directory ino %llu: %s\n",
+		      _("WARNING: unable to open directory ino %llu: %s\n"),
 		      statp->bs_ino,
 		      strerror( errno ));
 		*cbrvalp = 0;
@@ -381,8 +381,8 @@ diriter( jdm_fshandle_t *fshandlep,
 		 */
 		if ( nread < 0 ) {
 			mlog( MLOG_NORMAL,
-			      "WARNING: unable to read dirents (%d) for "
-			      "directory ino %llu: %s\n",
+			      _("WARNING: unable to read dirents (%d) for "
+			      "directory ino %llu: %s\n"),
 			      gdcnt,
 			      statp->bs_ino,
 			      strerror( errno ));
@@ -430,8 +430,8 @@ diriter( jdm_fshandle_t *fshandlep,
 					      &statbuf );
 			if ( scrval ) {
 				mlog( MLOG_NORMAL,
-				      "WARNING: could not stat "
-				      "dirent %s ino %llu: %s\n",
+				      _("WARNING: could not stat "
+				      "dirent %s ino %llu: %s\n"),
 				      p->d_name,
 				      ( xfs_ino_t )p->d_ino,
 				      strerror( errno ));
@@ -445,8 +445,8 @@ diriter( jdm_fshandle_t *fshandlep,
 #ifndef __USE_LARGEFILE64
 			if ( statbuf.bs_ino > ( xfs_ino_t )INOMAX ) {
 				mlog( MLOG_NORMAL,
-				      "WARNING: unable to process dirent %s: "
-				      "ino %llu too large\n",
+				      _("WARNING: unable to process dirent %s: "
+				      "ino %llu too large\n"),
 				      p->d_name,
 				      ( xfs_ino_t )p->d_ino );
 				continue;
@@ -539,8 +539,8 @@ isinxfs( char *path )
 	fd = open( path, O_RDONLY );
 	if ( fd < 0 ) {
 		mlog( MLOG_NORMAL,
-		      "WARNING: could not open %s "
-		      "to determine fs type: assuming non-xfs\n",
+		      _("WARNING: could not open %s "
+		      "to determine fs type: assuming non-XFS\n"),
 		      path );
 		return BOOL_FALSE;
 	}

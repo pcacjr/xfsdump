@@ -1,0 +1,3558 @@
+msgid "THE FOLLOWING COPIES FAILED TO COMPLETE\n"
+msgstr ""
+
+msgid "write error"
+msgstr ""
+
+msgid "lseek64 error"
+msgstr ""
+
+#, c-format
+msgid " at offset %lld\n"
+msgstr ""
+
+msgid "All copies completed.\n"
+msgstr ""
+
+#, c-format
+msgid "See \"%s\" for more details.\n"
+msgstr ""
+
+#, c-format
+msgid "Check logfile \"%s\" for more details\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  could not write to logfile \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "%s message was -- %s:  %s\n"
+msgstr ""
+
+#, c-format
+msgid "Aborting XFS copy -- logfile error -- reason: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  write error on target %d \"%s\" at offset %lld\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  lseek64 error on target %d \"%s\" at offset %lld\n"
+msgstr ""
+
+#, c-format
+msgid "Aborting target %d - reason"
+msgstr ""
+
+msgid "Aborting XFS copy - no more targets.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  thread %d died unexpectedly, target \"%s\" incomplete\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  offset was probably %lld\n"
+msgstr ""
+
+#, c-format
+msgid "%s: UNKNOWN CHILD DIED - SHOULD NEVER HAPPEN!\n"
+msgstr ""
+
+msgid "Aborting XFS copy - reason"
+msgstr ""
+
+#, c-format
+msgid ""
+"Usage: %s [-d] fromdev|fromfile todev [todev todev ...]\n"
+"       %s [-d] fromdev|fromfile tofile\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  lseek64 failure at offset %lld\n"
+msgstr ""
+
+#, c-format
+msgid "assert error:  buf->length = %d, buf->size = %d\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  read failure at offset %lld\n"
+msgstr ""
+
+#, c-format
+msgid "%s: could not generate unique logfile name\n"
+msgstr ""
+
+#, c-format
+msgid "%s: check /usr/tmp for xfs_copy.log.* files\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't open log file \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't set up logfile stream\n"
+msgstr ""
+
+#, c-format
+msgid "%s version %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: number of targets exceeds maximum of %d\n"
+"Aborting XFS copy.\n"
+msgstr ""
+
+msgid "Couldn't allocate target name array\n"
+msgstr ""
+
+msgid "Couldn't allocate target position array\n"
+msgstr ""
+
+msgid "Couldn't allocate target pid array\n"
+msgstr ""
+
+msgid "Couldn't allocate target state array\n"
+msgstr ""
+
+msgid "Couldn't allocate target errno array\n"
+msgstr ""
+
+msgid "Couldn't allocate target error type array\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't malloc target fd array\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't register atexit function.\n"
+msgstr ""
+
+msgid "Aborting XFS copy -- reason"
+msgstr ""
+
+#, c-format
+msgid "%s:  couldn't open source \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  couldn't stat source \"%s\"\n"
+msgstr ""
+
+msgid "Couldn't close fd to set up direct i/o.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  couldn't re-open source \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s: ioctl on file \"%s\" failed.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  Warning -- a filesystem is mounted on the source device.\n"
+msgstr ""
+
+msgid "\t\tGenerated copies may be corrupt unless the source is\n"
+msgstr ""
+
+msgid "\t\tunmounted or mounted read-only.  Copy proceeding...\n"
+msgstr ""
+
+#, c-format
+msgid "%s: source \"%s\" not a raw device.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: cannot locate raw device for \"%s\"\n"
+"Aborting XFS copy.\n"
+msgstr ""
+
+msgid "Couldn't close raw device.\n"
+msgstr ""
+
+#, c-format
+msgid "%s: couldn't open source \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s: using \"%s\" instead.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  continuing...\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s:  couldn't initialize XFS library\n"
+"%s: Aborting.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s:  %s is not a valid filesystem.\n"
+"%s:  Aborting.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: %s has an external log.\n"
+"%s: Aborting.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s: %s has a real-time section.\n"
+"%s: Aborting.\n"
+msgstr ""
+
+msgid ""
+"Error:  filesystem block size is smaller than the disk sectorsize.\n"
+"Aborting XFS copy now.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  couldn't open target \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  couldn't stat target \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  target \"%s\" is a regular file.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s:  target device contains a mounted filesystem.\n"
+"%s cannot copy onto mounted filesystems.  Aborting.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  target \"%s\" is not a raw device.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  cannot locate raw device for \"%s\"\n"
+msgstr ""
+
+msgid "Aborting XFS copy.\n"
+msgstr ""
+
+msgid "Couldn't close fd to open raw device.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  using raw device \"%s\" instead\n"
+msgstr ""
+
+#, c-format
+msgid "Creating file %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s:  a filesystem is mounted on the target device.\n"
+"%s cannot copy to mounted filesystems.  Aborting\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  using raw device \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  ioctl on file \"%s\" failed.\n"
+msgstr ""
+
+msgid "Error setting up semaphore area"
+msgstr ""
+
+#, c-format
+msgid "%s:  cannot generate unique arena filename."
+msgstr ""
+
+#, c-format
+msgid "%s:  check /usr/tmp for xfs_copy.arena* files."
+msgstr ""
+
+#, c-format
+msgid "%s:  could not initialize arena."
+msgstr ""
+
+msgid "Couldn't initialize global thread mask\n"
+msgstr ""
+
+msgid "Error initializing wbuf 0\n"
+msgstr ""
+
+msgid "Error initializing btree buf 1\n"
+msgstr ""
+
+msgid "Error creating first semaphore.\n"
+msgstr ""
+
+msgid "Something's really wrong.\n"
+msgstr ""
+
+msgid "Couldn't malloc space for thread args\n"
+msgstr ""
+
+#, c-format
+msgid "error creating sproc semaphore %d\n"
+msgstr ""
+
+msgid "Try a smaller number of targets\n"
+msgstr ""
+
+#, c-format
+msgid "error creating sproc for target %d\n"
+msgstr ""
+
+msgid "WARNING:  source filesystem inconsistent.\n"
+msgstr ""
+
+msgid "  A leaf btree rec isn't a leaf.  Aborting now.\n"
+msgstr ""
+
+#, c-format
+msgid "%s:  cannot grow data section.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Usage: %s [opts] directory [directory ...]\n"
+"\t-b blocksize (fundamental filesystem blocksize)\n"
+"\t-i logsize (internal log size)\n"
+"\t-e logsize (external log size)\n"
+"\t-v prints more verbose messages\n"
+"\t-h prints this usage message\n"
+"\n"
+"Note:\tblocksize may have 'k' appended to indicate x1024\n"
+"\tlogsize may also have 'm' appended to indicate (1024 x 1024)\n"
+msgstr ""
+
+#, c-format
+msgid "blocksize %llu too small\n"
+msgstr ""
+
+#, c-format
+msgid "blocksize %llu too large\n"
+msgstr ""
+
+msgid "already have external log noted, can't have both\n"
+msgstr ""
+
+msgid "already have internal log noted, can't have both\n"
+msgstr ""
+
+msgid ""
+"directory                               bsize   blocks    megabytes    "
+"logsize\n"
+msgstr ""
+
+#, c-format
+msgid "dirsize=%llu\n"
+msgstr ""
+
+#, c-format
+msgid "fullblocks=%llu\n"
+msgstr ""
+
+#, c-format
+msgid "isize=%llu\n"
+msgstr ""
+
+#, c-format
+msgid "%llu regular files\n"
+msgstr ""
+
+#, c-format
+msgid "%llu symbolic links\n"
+msgstr ""
+
+#, c-format
+msgid "%llu directories\n"
+msgstr ""
+
+#, c-format
+msgid "%llu special files\n"
+msgstr ""
+
+#, c-format
+msgid "%s will take about %.1f megabytes\n"
+msgstr ""
+
+#, c-format
+msgid "%-39s %5llu %8llu %10.1fMB %10llu\n"
+msgstr ""
+
+#, c-format
+msgid "\twith the external log using %llu blocks "
+msgstr ""
+
+#, c-format
+msgid "or about %.1f megabytes\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Stats not yet supported for XFS\n"
+msgstr ""
+
+#, c-format
+msgid "%s: could not stat: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot read %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: char special not supported: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: cannot defragment: %s: Not XFS\n"
+msgstr ""
+
+#, c-format
+msgid "%s: not fsys dev, dir, or reg file, ignoring\n"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s [xfsfile] ...\n"
+msgstr ""
+
+#, c-format
+msgid "could not open mtab file: %s\n"
+msgstr ""
+
+#, c-format
+msgid "out of memory: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Skipping %s: not mounted rw\n"
+msgstr ""
+
+#, c-format
+msgid "out of memory on realloc: %s\n"
+msgstr ""
+
+#, c-format
+msgid "strdup(%s) failed\n"
+msgstr ""
+
+#, c-format
+msgid "no rw xfs file systems in mtab: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Found %d mounted, writable, XFS filesystems\n"
+msgstr ""
+
+#, c-format
+msgid "%s: open failed\n"
+msgstr ""
+
+#, c-format
+msgid "Can't use %s: mode=0%o own=%d nlink=%d\n"
+msgstr ""
+
+#, c-format
+msgid "could not read %s, starting with %s\n"
+msgstr ""
+
+#, c-format
+msgid "START: pass=%d ino=%llu %s %s\n"
+msgstr ""
+
+#, c-format
+msgid "Completed all %d passes\n"
+msgstr ""
+
+msgid "couldn't fork sub process:"
+msgstr ""
+
+#, c-format
+msgid "open(%s) failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "write(%s) failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s startpass %d, endpass %d, time %d seconds\n"
+msgstr ""
+
+#, c-format
+msgid "%s start inode=%llu\n"
+msgstr ""
+
+#, c-format
+msgid "unable to get handle: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Skipping %s: could not get XFS geometry\n"
+msgstr ""
+
+#, c-format
+msgid "could not open: inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "%s: Directory defragmentation not supported\n"
+msgstr ""
+
+#, c-format
+msgid "unable to construct sys handle for %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open sys handle for %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to get bstat on %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open handle %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to get geom on fs for: %s\n"
+msgstr ""
+
+#, c-format
+msgid "sync failed: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: zero size, ignoring\n"
+msgstr ""
+
+#, c-format
+msgid "locking check failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "mandatory lock: %s: ignoring\n"
+msgstr ""
+
+#, c-format
+msgid "unable to get fs stat on %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "insufficient freespace for: %s: size=%lld: ignoring\n"
+msgstr ""
+
+#, c-format
+msgid "failed to get attrs: %s\n"
+msgstr ""
+
+#, c-format
+msgid "cannot get realtime geometry for: %s\n"
+msgstr ""
+
+#, c-format
+msgid "low on realtime free space: %s: ignoring file\n"
+msgstr ""
+
+#, c-format
+msgid "cannot open: %s: Permission denied\n"
+msgstr ""
+
+#, c-format
+msgid "%s already fully defragmented.\n"
+msgstr ""
+
+#, c-format
+msgid "%s extents=%d can_save=%d tmp=%s\n"
+msgstr ""
+
+#, c-format
+msgid "could not open tmp as uid %d: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not set ATTR on tmp: %s:\n"
+msgstr ""
+
+#, c-format
+msgid "%s set temp attr\n"
+msgstr ""
+
+#, c-format
+msgid "could not get I/O info on tmp: %s\n"
+msgstr ""
+
+#, c-format
+msgid "realtime geometry not available for tmp: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not set realtime flag on tmp: %s\n"
+msgstr ""
+
+#, c-format
+msgid "DEBUG: fsize=%lld blsz_dio=%d d_min=%d d_max=%d pgsz=%d\n"
+msgstr ""
+
+#, c-format
+msgid "could not allocate buf: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not open fragfile: %s : %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not trunc tmp %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not pre-allocate tmp space: %s\n"
+msgstr ""
+
+#, c-format
+msgid "bad read of %d bytes from %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "bad write of %d bytes to %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "bad write2 of %d bytes to %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "bad copy to %s\n"
+msgstr ""
+
+#, c-format
+msgid "No improvement made: %s\n"
+msgstr ""
+
+#, c-format
+msgid "failed to fchown tmpfile %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: file type not supported\n"
+msgstr ""
+
+#, c-format
+msgid "%s: file modified defrag aborted\n"
+msgstr ""
+
+#, c-format
+msgid "%s: file busy\n"
+msgstr ""
+
+#, c-format
+msgid "XFS_IOC_SWAPEXT failed: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "extents before:%d after:%d %s %s\n"
+msgstr ""
+
+#, c-format
+msgid "tmp file name too long: %s\n"
+msgstr ""
+
+#, c-format
+msgid "malloc failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "failed reading extents: inode %llu"
+msgstr ""
+
+msgid "failed reading extents"
+msgstr ""
+
+#, c-format
+msgid "tmpdir already exists: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not create tmpdir: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "cannot create tmpdir: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not remove tmpdir: %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: [-ugV] <mntpnt>\n"
+msgstr ""
+
+#, c-format
+msgid "%s: no %s file\n"
+msgstr ""
+
+#, c-format
+msgid "%s: mount point %s is not in %s\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument missing\n"
+msgstr ""
+
+#, c-format
+msgid "unable to get status of -%c argument %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument %s is an invalid pathname\n"
+msgstr ""
+
+#, c-format
+msgid "cannot stat -%c argument %s (%s): %s\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument %s (%s) is not a directory\n"
+msgstr ""
+
+#, c-format
+msgid "too many -%c arguments: \"-%c %s\" already given\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument %s too long: max is %d\n"
+msgstr ""
+
+#, c-format
+msgid "too many -%c arguments\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument not a valid uuid\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument must be relative\n"
+msgstr ""
+
+#, c-format
+msgid "-%c unavailable: no /dev/tty\n"
+msgstr ""
+
+#, c-format
+msgid "-%c and -%c option cannot be used together\n"
+msgstr ""
+
+#, c-format
+msgid "destination directory %s invalid pathname\n"
+msgstr ""
+
+#, c-format
+msgid "cannot stat destination directory %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "specified destination %s is not a directory\n"
+msgstr ""
+
+#, c-format
+msgid "unable to construct a file system handle for %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"do not specify destination directory if contents only restore invoked (-%c "
+"option)\n"
+msgstr ""
+
+msgid "destination directory not specified\n"
+msgstr ""
+
+#, c-format
+msgid "unable to create %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not open/create persistent state file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not map persistent state file hdr %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "destination directory pathname too long: max is %d characters\n"
+msgstr ""
+
+#, c-format
+msgid "-%c option invalid: there is no interrupted restore to resume\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"-%c option invalid: there is no interrupted restore to force completion of\n"
+msgstr ""
+
+#, c-format
+msgid "must rm -rf %s prior to noncumulative restore\n"
+msgstr ""
+
+#, c-format
+msgid "-%c valid only when initiating cumulative restore\n"
+msgstr ""
+
+#, c-format
+msgid "-%c and -%c valid only when initiating cumulative restore\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"-%c option required to resume or -%c option required to force completion of "
+"previously interrupted restore session\n"
+msgstr ""
+
+#, c-format
+msgid "-%c option required to resume previously interrupted restore session\n"
+msgstr ""
+
+#, c-format
+msgid "-%c valid only when initiating restore\n"
+msgstr ""
+
+#, c-format
+msgid "-%c and -%c valid only when initiating restore\n"
+msgstr ""
+
+#, c-format
+msgid "-%c cannot reset flag from previous restore\n"
+msgstr ""
+
+#, c-format
+msgid "chdir %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "resuming restore previously begun %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not map persistent state file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not map persistent state file inv %s: %s (%d)\n"
+msgstr ""
+
+msgid "searching media for dump\n"
+msgstr ""
+
+msgid "found dump matching specified id:\n"
+msgstr ""
+
+msgid "found dump matching specified label:\n"
+msgstr ""
+
+msgid "dump description:\n"
+msgstr ""
+
+msgid "using online session inventory\n"
+msgstr ""
+
+msgid "searching media for directory dump\n"
+msgstr ""
+
+msgid "reading directories\n"
+msgstr ""
+
+msgid "directory post-processing\n"
+msgstr ""
+
+msgid "reading non-directory files\n"
+msgstr ""
+
+msgid "restoring non-directory files\n"
+msgstr ""
+
+#, c-format
+msgid "table of contents display complete: %ld seconds elapsed\n"
+msgstr ""
+
+#, c-format
+msgid "restore complete: %ld seconds elapsed\n"
+msgstr ""
+
+#, c-format
+msgid "table of contents display interrupted: %ld seconds elapsed\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"restore interrupted: %ld seconds elapsed: may resume later using -%c option\n"
+msgstr ""
+
+msgid ""
+"status at %02d:%02d:%02d: %llu/%llu directories reconstructed, %.1f%%%% "
+"complete, %llu directory entries processed, %ld seconds elapsed\n"
+msgstr ""
+
+msgid ""
+"status at %02d:%02d:%02d: %llu/%llu files restored, %.1f%%%% complete, %ld "
+"seconds elapsed\n"
+msgstr ""
+
+msgid "select a drive to acknowledge media change\n"
+msgstr ""
+
+#, c-format
+msgid "drive %u"
+msgstr ""
+
+msgid "display needed media objects"
+msgstr ""
+
+msgid "continue"
+msgstr ""
+
+msgid "media change acknowledged\n"
+msgstr ""
+
+msgid "continuing\n"
+msgstr ""
+
+#, c-format
+msgid "%llu directories and %llu entries processed\n"
+msgstr ""
+
+#, c-format
+msgid "subtree argument %s invalid\n"
+msgstr ""
+
+msgid ""
+"unable to resync media file: some portion of dump will NOT be restored\n"
+msgstr ""
+
+#, c-format
+msgid "resynchronization achieved at ino %llu offset %lld\n"
+msgstr ""
+
+msgid "rewinding\n"
+msgstr ""
+
+#, c-format
+msgid "examining media file %u\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"inventory session uuid (%s) does not match the media header's session uuid "
+"(%s)\n"
+msgstr ""
+
+msgid "seeking past portion of media file already restored\n"
+msgstr ""
+
+msgid "seeking past media file directory dump\n"
+msgstr ""
+
+msgid "media object not useful\n"
+msgstr ""
+
+msgid "media object empty\n"
+msgstr ""
+
+msgid "all media files examined, none selected for restoral\n"
+msgstr ""
+
+#, c-format
+msgid "please change media: type %s to confirm media change\n"
+msgstr ""
+
+#, c-format
+msgid "could not remap persistent state file inv %s: %d (%s)\n"
+msgstr ""
+
+msgid "on-media session inventory corrupt\n"
+msgstr ""
+
+msgid "incorporating on-media session inventory into online inventory\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"hit EOD at stream %u object %u, yet inventory indicates last object index is "
+"%u\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"hit next dump at stream %u object %u file %u, yet inventory indicates last "
+"object index is %u\n"
+msgstr ""
+
+msgid "unable to open inventory to validate dump\n"
+msgstr ""
+
+msgid "unable to find base dump in inventory to validate dump\n"
+msgstr ""
+
+msgid ""
+"cumulative restores must begin with an initial (not resumed) level 0 dump\n"
+msgstr ""
+
+msgid "cumulative restores must begin with a level 0 dump\n"
+msgstr ""
+
+msgid "selected resumed dump not a resumption of previously applied dump\n"
+msgstr ""
+
+msgid "selected dump not based on previously applied dump\n"
+msgstr ""
+
+msgid "change media dialog"
+msgstr ""
+
+#, c-format
+msgid "please change media in drive %u\n"
+msgstr ""
+
+msgid "please change media in drive\n"
+msgstr ""
+
+msgid "media change declined"
+msgstr ""
+
+msgid "display media inventory status"
+msgstr ""
+
+msgid "list needed media objects"
+msgstr ""
+
+msgid "media changed"
+msgstr ""
+
+msgid "examining new media\n"
+msgstr ""
+
+msgid "media change aborted\n"
+msgstr ""
+
+msgid "end dialog"
+msgstr ""
+
+msgid "keyboard interrupt\n"
+msgstr ""
+
+msgid "dump selection dialog"
+msgstr ""
+
+#, c-format
+msgid ""
+"the following dump has been found on drive %u\n"
+"\n"
+msgstr ""
+
+msgid ""
+"the following dump has been found\n"
+"\n"
+msgstr ""
+
+msgid ""
+"\n"
+"examine this dump?\n"
+msgstr ""
+
+msgid ""
+"\n"
+"interactively restore from this dump?\n"
+msgstr ""
+
+msgid ""
+"\n"
+"restore this dump?\n"
+msgstr ""
+
+msgid "skip"
+msgstr ""
+
+msgid "interactively restore\n"
+msgstr ""
+
+msgid "restore\n"
+msgstr ""
+
+msgid "this dump selected for interactive restoral\n"
+msgstr ""
+
+msgid "this dump selected for restoral\n"
+msgstr ""
+
+msgid "dump skipped\n"
+msgstr ""
+
+#, c-format
+msgid "ino %llu: unknown file type: %08x\n"
+msgstr ""
+
+#, c-format
+msgid "unable to unlink current file prior to linking %s to %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to link %s to %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s (offset %lld)\n"
+msgstr ""
+
+#, c-format
+msgid "open of %s failed: %s: discarding ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to stat %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to truncate %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attempt to set extended attributes (xflags 0x%x, extsize = 0x%x)of %s "
+"failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to set DMI attributes of %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to reopen_invis %s failed. The file will not be restored.\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set access and modification times of %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set owner and group of %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set mode of %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to close %s: %s\n"
+msgstr ""
+
+msgid "block special file"
+msgstr ""
+
+msgid "char special file"
+msgstr ""
+
+msgid "named pipe"
+msgstr ""
+
+msgid "XENIX named pipe"
+msgstr ""
+
+msgid "UNIX domain socket"
+msgstr ""
+
+#, c-format
+msgid "%s: unknown file type: mode 0x%x ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "unable to create %s ino %llu %s: %s: discarding\n"
+msgstr ""
+
+#, c-format
+msgid "pathname too long for bind of %s ino %llu %s: %s: discarding\n"
+msgstr ""
+
+#, c-format
+msgid "unable to bind %s ino %llu %s: %s: discarding\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set owner and group of %s %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to create symlink ino %llu %s: src too long: discarding\n"
+msgstr ""
+
+#, c-format
+msgid "unable to create symlink ino %llu %s: %s: discarding\n"
+msgstr ""
+
+msgid "corrupt file header\n"
+msgstr ""
+
+msgid "bad file header checksum\n"
+msgstr ""
+
+msgid "corrupt extent header\n"
+msgstr ""
+
+msgid "bad extent header checksum\n"
+msgstr ""
+
+msgid "corrupt directory entry header\n"
+msgstr ""
+
+msgid "bad directory entry header checksum\n"
+msgstr ""
+
+msgid "corrupt extattr header\n"
+msgstr ""
+
+msgid "bad extattr header checksum\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attempt to seek %s to %lld failed: %s: not restoring extent off %lld sz "
+"%lld\n"
+msgstr ""
+
+#, c-format
+msgid "dioinfo %s failed: %s: discarding ino %llu\n"
+msgstr ""
+
+msgid "end of media file"
+msgstr ""
+
+msgid "end of recorded data"
+msgstr ""
+
+msgid "end of media"
+msgstr ""
+
+msgid "media error or no media"
+msgstr ""
+
+msgid "dumping core"
+msgstr ""
+
+#, c-format
+msgid "attempt to read %u bytes failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"WARNING: attempt to write %u bytes to %s at offset %lld failed: only%d bytes "
+"written\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to write %u bytes to %s at offset %lld failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attempt to write %u bytes to %s at offset %lld failed: only %d bytes "
+"written\n"
+msgstr ""
+
+msgid "Failed to allocate extended attribute buffer\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set %s extended attribute for %s: %s (%d)\n"
+msgstr ""
+
+msgid "root"
+msgstr ""
+
+msgid "non-root"
+msgstr ""
+
+msgid "partial_reg: Out of records. Extended attributes applied early.\n"
+msgstr ""
+
+msgid "overwrites inhibited"
+msgstr ""
+
+msgid "too old"
+msgstr ""
+
+msgid "existing version is newer"
+msgstr ""
+
+msgid "session inventory unknown\n"
+msgstr ""
+
+msgid "session inventory display\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"\n"
+"media stream %u:\n"
+msgstr ""
+
+msgid ""
+"\n"
+"    media objects not yet identified\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"\n"
+"    media object %u:\n"
+"\n"
+msgstr ""
+
+msgid "    label: "
+msgstr ""
+
+msgid "    label is blank\n"
+msgstr ""
+
+#, c-format
+msgid "    id: %s\n"
+msgstr ""
+
+msgid "    label not identified\n"
+msgstr ""
+
+#, c-format
+msgid "    index within object of first media file: %u\n"
+msgstr ""
+
+#, c-format
+msgid "    index within stream of first media file: %u\n"
+msgstr ""
+
+#, c-format
+msgid "    now in drive %u\n"
+msgstr ""
+
+msgid "    now in drive\n"
+msgstr ""
+
+msgid "        media files not yet identified\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"\n"
+"        media file %u"
+msgstr ""
+
+#, c-format
+msgid "        size: %lld bytes\n"
+msgstr ""
+
+msgid "        used for directory restoral\n"
+msgstr ""
+
+#, c-format
+msgid "        first extent contained: ino %llu off %lld\n"
+msgstr ""
+
+#, c-format
+msgid "        next extent to restore: ino %llu off %lld\n"
+msgstr ""
+
+#, c-format
+msgid "        rollback mark %lld\n"
+msgstr ""
+
+msgid "        contains no selected non-directories\n"
+msgstr ""
+
+msgid "        non-directories done\n"
+msgstr ""
+
+msgid "        contains session inventory\n"
+msgstr ""
+
+msgid "        is stream terminator\n"
+msgstr ""
+
+msgid "        now reading\n"
+msgstr ""
+
+msgid ""
+"\n"
+"        may be additional unidentified media files\n"
+msgstr ""
+
+msgid ""
+"\n"
+"    may be additional unidentified media objects\n"
+"\n"
+msgstr ""
+
+#, c-format
+msgid "hostname: %s\n"
+msgstr ""
+
+#, c-format
+msgid "mount point: %s\n"
+msgstr ""
+
+#, c-format
+msgid "volume: %s\n"
+msgstr ""
+
+#, c-format
+msgid "session time: %s"
+msgstr ""
+
+#, c-format
+msgid "level: %s%s\n"
+msgstr ""
+
+msgid " resumed"
+msgstr ""
+
+msgid "session label: "
+msgstr ""
+
+msgid "media label: "
+msgstr ""
+
+#, c-format
+msgid "file system id: %s\n"
+msgstr ""
+
+#, c-format
+msgid "session id: %s\n"
+msgstr ""
+
+#, c-format
+msgid "media id: %s\n"
+msgstr ""
+
+msgid ""
+"the following media objects contain media files not yet tried for directory "
+"hierarchy restoral:\n"
+msgstr ""
+
+msgid "the following media objects are needed:\n"
+msgstr ""
+
+#, c-format
+msgid "%2u. label: "
+msgstr ""
+
+msgid "    id: "
+msgstr ""
+
+msgid ""
+"\n"
+"there are additional unidentified media objects containing media files not "
+"yet tried for directory hierarchy restoral:\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there are unidentified media objects containing media files not yet tried "
+"for directory hierarchy restoral:\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there are additional unidentified media objects not yet fully restored\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there are unidentified media objects not yet fully restored\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there may be additional unidentified media objects containing media files "
+"not yet tried for directory hierarchy restoral:\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there may be unidentified media objects containing media files not yet tried "
+"for directory hierarchy restoral:\n"
+msgstr ""
+
+msgid ""
+"\n"
+"there may be additional unidentified media objects not yet fully restored\n"
+msgstr ""
+
+msgid "\there may be unidentified media objects not yet fully restored\n"
+msgstr ""
+
+msgid "no additional media objects needed\n"
+msgstr ""
+
+#, c-format
+msgid "path_to_handle of %s failed:%s\n"
+msgstr ""
+
+#, c-format
+msgid "open_by_handle of %s failed:%s\n"
+msgstr ""
+
+#, c-format
+msgid "fssetdm_by_handle of %s failed %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s quota information written to '%s'\n"
+msgstr ""
+
+#, c-format
+msgid "could not find directory attributes file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not create directory attributes file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "unable to map %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "lseek of dirattr failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "write of dirattr failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not open/create directory extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "could not seek to into extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "could not read extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "could not seek to end of extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "could not write extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "could not write at end of extended attributes file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "update of dirattr failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "read of dirattr failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "flush of dirattr failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not open %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to map %s hdr: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not find name registry file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not create name registry file %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "lseek of namreg failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "write of namreg failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "read of namreg failed: %s (nread = %d)\n"
+msgstr ""
+
+#, c-format
+msgid "read of namreg failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to map node hdr of size %d: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to map tree segment of size %lld: retry with smaller size\n"
+msgstr ""
+
+#, c-format
+msgid "unable to map tree segment of size %d: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to unmap tree segment of size %lld: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to autogrow first node segment: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "unable to autogrow node segment %llu: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "%s already exists: rm -rf prior to initating restore\n"
+msgstr ""
+
+#, c-format
+msgid "unable to recreate %s: %s\n"
+msgstr ""
+
+msgid "noref debug"
+msgstr ""
+
+msgid "rmdir"
+msgstr ""
+
+#, c-format
+msgid "unable to rmdir %s: %s\n"
+msgstr ""
+
+msgid "tmp dir rename src"
+msgstr ""
+
+msgid "tmp dir rename dst"
+msgstr ""
+
+#, c-format
+msgid "unable to rename dir %s to dir %s: %s\n"
+msgstr ""
+
+msgid "tmp nondir rename src"
+msgstr ""
+
+msgid "tmp nondir rename dst"
+msgstr ""
+
+#, c-format
+msgid "unable to rename nondir %s to nondir %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to unlink nondir %s: %s\n"
+msgstr ""
+
+msgid "makedir"
+msgstr ""
+
+#, c-format
+msgid "mkdir %s failed: %s\n"
+msgstr ""
+
+msgid "rename dir"
+msgstr ""
+
+msgid "restore"
+msgstr ""
+
+#, c-format
+msgid "cannot restore %s (ino %llu gen %u): pathname contains %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to unlink current file prior to restore: %s: %s: discarding\n"
+msgstr ""
+
+#, c-format
+msgid "ino %llu salvaging file, placing in %s\n"
+msgstr ""
+
+#, c-format
+msgid "ino %llu gen %u not referenced: placing in orphanage\n"
+msgstr ""
+
+#, c-format
+msgid "node allocation failed when placing ino %llu in orphanage\n"
+msgstr ""
+
+msgid "orphan"
+msgstr ""
+
+msgid "set dir extattr"
+msgstr ""
+
+#, c-format
+msgid "tree_extattr_recurse: Could not convert node to path for %s\n"
+msgstr ""
+
+msgid "rename to"
+msgstr ""
+
+msgid "rename from"
+msgstr ""
+
+#, c-format
+msgid "unable to rename nondir %s to %s: %s\n"
+msgstr ""
+
+msgid "link"
+msgstr ""
+
+#, c-format
+msgid "unable to use %s as a hard link source\n"
+msgstr ""
+
+msgid "unlink"
+msgstr ""
+
+#, c-format
+msgid "unable to unlink %s: %s\n"
+msgstr ""
+
+msgid "set dirattr"
+msgstr ""
+
+#, c-format
+msgid "could not set access and modification times of %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "chown (uid=%d, gid=%d) %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "chmod %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to rmdir %s: not empty\n"
+msgstr ""
+
+msgid "subtree selection dialog"
+msgstr ""
+
+msgid "abort\n"
+msgstr ""
+
+msgid "Unmark and quit\n"
+msgstr ""
+
+#, c-format
+msgid "%s is not a directory\n"
+msgstr ""
+
+msgid "the following commands are available:\n"
+msgstr ""
+
+#, c-format
+msgid "parent of %s is not a directory\n"
+msgstr ""
+
+#, c-format
+msgid "%s above root\n"
+msgstr ""
+
+#, c-format
+msgid "%s not found\n"
+msgstr ""
+
+#, c-format
+msgid "failed to map in node (node handle: %u)\n"
+msgstr ""
+
+#, c-format
+msgid "unable %s ino %llu gen %u: relative pathname too long (partial %s)\n"
+msgstr ""
+
+msgid "attempt to disown child which has no parent!\n"
+msgstr ""
+
+msgid "attempt to disown child when parent has no children!\n"
+msgstr ""
+
+#, c-format
+msgid "unable to mmap hash array into %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "nh 0x%x np 0x%x hash link not null\n"
+msgstr ""
+
+#, c-format
+msgid "node %x %s %llu %u parent NULL\n"
+msgstr ""
+
+#, c-format
+msgid "node %x %s %llu %u parent mismatch: nodepar %x par %x\n"
+msgstr ""
+
+msgid "all map windows in use. Check virtual memory limits\n"
+msgstr ""
+
+#, c-format
+msgid "win_map(): unable to map a node segment of size %d at %d: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"cannot create %s thread for stream %u: too many child threads (max allowed "
+"is %d)\n"
+msgstr ""
+
+#, c-format
+msgid "sproc failed creating %s thread for stream %u: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not fstat stdin (fd %d): %s (%d)\n"
+msgstr ""
+
+msgid " (default)"
+msgstr ""
+
+#, c-format
+msgid " (timeout in %u sec)"
+msgstr ""
+
+#, c-format
+msgid "please enter a single digit response (1 to %d)"
+msgstr ""
+
+#, c-format
+msgid "please enter a single digit between 1 and %d inclusive "
+msgstr ""
+
+#, c-format
+msgid " (timeout in %u sec)\n"
+msgstr ""
+
+#, c-format
+msgid "(timeout in %d sec)"
+msgstr ""
+
+msgid "timeout\n"
+msgstr ""
+
+msgid "hangup\n"
+msgstr ""
+
+msgid "terminate\n"
+msgstr ""
+
+msgid "keyboard quit\n"
+msgstr ""
+
+#, c-format
+msgid "unknown signal during dialog: %d\n"
+msgstr ""
+
+#, c-format
+msgid "too many -%c arguments: maximum is %d when running in miniroot\n"
+msgstr ""
+
+msgid "cannot specify source files and stdout together\n"
+msgstr ""
+
+msgid "cannot specify source files and stdin together\n"
+msgstr ""
+
+msgid "no destination file(s) specified\n"
+msgstr ""
+
+msgid "no source file(s) specified\n"
+msgstr ""
+
+#, c-format
+msgid "using %s strategy\n"
+msgstr ""
+
+#, c-format
+msgid "Minimal rmt cannot be used without specifying blocksize. Use -%c\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument must be between %u and %u: ignoring %u\n"
+msgstr ""
+
+msgid "Overwrite command line option\n"
+msgstr ""
+
+#, c-format
+msgid "-%c and -%c options cannot be used together\n"
+msgstr ""
+
+msgid "Single media file command line option\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument must be a positive number (MB): ignoring %u\n"
+msgstr ""
+
+msgid "unable to allocate memory for I/O buffer ring\n"
+msgstr ""
+
+msgid "not enough physical memory to pin down I/O buffer ring\n"
+msgstr ""
+
+msgid "not allowed to pin down I/O buffer ring\n"
+msgstr ""
+
+#, c-format
+msgid "could not forward space %d tape blocks: rval == %d, errno == %d (%s)\n"
+msgstr ""
+
+msgid "unable to locate next mark in media file\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"unexpected error attempting to read record: read returns %d, errno %s (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "valid record %lld but no mark\n"
+msgstr ""
+
+#, c-format
+msgid "resynchronized at record %lld offset %u\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"could not forward space one tape block beyond read error: rval == %d, errno "
+"== %d (%s)\n"
+msgstr ""
+
+msgid "advancing tape to next media file\n"
+msgstr ""
+
+msgid "FSF tape command failed\n"
+msgstr ""
+
+#, c-format
+msgid "drive %u "
+msgstr ""
+
+#, c-format
+msgid "could not read from drive: %s (%d)\n"
+msgstr ""
+
+msgid "encountered EOD : assuming blank media\n"
+msgstr ""
+
+msgid "encountered EOD : end of data\n"
+msgstr ""
+
+msgid "tape record checksum error\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"recomended media file size of %llu Mb less than estimated file header size "
+"%llu Mb for %s\n"
+msgstr ""
+
+#, c-format
+msgid "recommended media file size adjusted from %llu Mb to %llu Mb for %s\n"
+msgstr ""
+
+msgid "audio"
+msgstr ""
+
+msgid "tape is write protected\n"
+msgstr ""
+
+msgid "tape media error on write operation\n"
+msgstr ""
+
+msgid "no more data can be written to this tape\n"
+msgstr ""
+
+#, c-format
+msgid "RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "RMTCLOSE( %d ) returns %d: errno=%d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to access/open remote tape drive %s failed: %d (%s)\n"
+msgstr ""
+
+msgid "preparing drive\n"
+msgstr ""
+
+msgid "giving up attempt to determining tape record size\n"
+msgstr ""
+
+#, c-format
+msgid "unexpected tape error: errno %d nread %d blksz %d recsz %d \n"
+msgstr ""
+
+#, c-format
+msgid "media file header version (%d) invalid: advancing\n"
+msgstr ""
+
+msgid "may be an EFS dump at BOT\n"
+msgstr ""
+
+msgid "This tape was erased earlier by xfsdump.\n"
+msgstr ""
+
+msgid "bad media file header at BOT indicates foreign or corrupted tape\n"
+msgstr ""
+
+msgid "cannot determine tape block size after two tries\n"
+msgstr ""
+
+msgid "assuming media is corrupt or contains non-xfsdump data\n"
+msgstr ""
+
+msgid "cannot determine tape block size\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: bad record checksum\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: bad magic number\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: null dump id\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: dump id mismatch\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: incorrect record size in header\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"record %lld corrupt: record offset in header not a multiple of record size\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: incorrect record offset in header (0x%llx)\n"
+msgstr ""
+
+#, c-format
+msgid "record %lld corrupt: incorrect record padding offset in header\n"
+msgstr ""
+
+msgid "read_record encountered EOD : assuming blank media\n"
+msgstr ""
+
+msgid "read_record encountered EOD : end of data\n"
+msgstr ""
+
+msgid "unexpected EIO error attempting to read record\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"unexpected error attempting to read record %lld: read returns %d, errno %d "
+"(%s)\n"
+msgstr ""
+
+msgid "slave"
+msgstr ""
+
+msgid "KB"
+msgstr ""
+
+msgid "MB"
+msgstr ""
+
+msgid ""
+"I/O metrics: %u by %s%s %sring; %lld/%lld (%.0lf%%) records streamed; "
+"%.0lfB/s\n"
+msgstr ""
+
+msgid "pinned "
+msgstr ""
+
+#, c-format
+msgid "-%c argument must be a positive number (Mb): ignoring %u\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"unexpected error attempting to read record: read returns %d, errno %d (%s)\n"
+msgstr ""
+
+msgid "file mark missing from tape (hit EOD)\n"
+msgstr ""
+
+msgid "writing file mark at EOD\n"
+msgstr ""
+
+#, c-format
+msgid "unable to write file mark at eod: %s (%d)\n"
+msgstr ""
+
+msgid "file mark missing from tape\n"
+msgstr ""
+
+msgid "unexpectedly encountered EOD at BOT: assuming corrupted media\n"
+msgstr ""
+
+msgid "unexpectedly encountered a file mark: assuming corrupted media\n"
+msgstr ""
+
+#, c-format
+msgid "unable to set block size to %d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"recommended media file size of %llu Mb less than estimated file header size "
+"%llu Mb for %s\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to access/open device %s failed: %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to get status of remote tape drive %s failed: %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to get status of tape drive %s failed: %d (%s)\n"
+msgstr ""
+
+msgid "giving up waiting for drive to indicate online\n"
+msgstr ""
+
+#, c-format
+msgid "tape drive %s is not ready (0x%x): retrying ...\n"
+msgstr ""
+
+msgid ""
+"use of QIC drives via variable blocksize device nodes is not supported\n"
+msgstr ""
+
+msgid "unable to backspace/rewind media\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"unexpected tape error: errno %d nread %d blksz %d recsz %d isvar %d wasatbot "
+"%d eod %d fmk %d eot %d onl %d wprot %d ew %d \n"
+msgstr ""
+
+#, c-format
+msgid "likely problem is that the block size, %d, is too large for Linux\n"
+msgstr ""
+
+msgid ""
+"either try using a smaller block size with the -b option, or increase "
+"max_sg_segs for the scsi tape driver\n"
+msgstr ""
+
+msgid "will rewind and try again\n"
+msgstr ""
+
+msgid "unable to backspace tape: assuming media error\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "stat of %s failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "cannot dump to %s file type %x\n"
+msgstr ""
+
+#, c-format
+msgid "cannot restore from %s file type %x\n"
+msgstr ""
+
+msgid "media file header checksum error\n"
+msgstr ""
+
+#, c-format
+msgid "media file header magic number mismatch: %s, %s\n"
+msgstr ""
+
+#, c-format
+msgid "unrecognized media file header version (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "unrecognized drive strategy ID (media says %d, expected %d)\n"
+msgstr ""
+
+#, c-format
+msgid "attempt to truncate %s failed: %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "could not save first mark: %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "write to %s failed: %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "could not rewind %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not rewind %s in prep for erase: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not erase %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "unable to determine uuid of fs mounted at %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Can't open %s for mount information\n"
+msgstr ""
+
+#, c-format
+msgid "unable to determine hostname: %s\n"
+msgstr ""
+
+msgid "hostname length is zero\n"
+msgstr ""
+
+msgid "no session label specified\n"
+msgstr ""
+
+msgid "please enter label for this dump session"
+msgstr ""
+
+msgid "dump label dialog"
+msgstr ""
+
+msgid "session label entered: \""
+msgstr ""
+
+msgid "session label left blank\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument (%s) invalid\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"specified minimum stack size is larger than maximum: min is 0x%llx,  max is "
+"0x%llx\n"
+msgstr ""
+
+#, c-format
+msgid "unable to determine current directory: %s\n"
+msgstr ""
+
+msgid "both /var/lib/xfsdump and /var/xfsdump exist - fatal\n"
+msgstr ""
+
+#, c-format
+msgid "version %s (dump format %d.%d)\n"
+msgstr ""
+
+msgid "effective user ID must be root\n"
+msgstr ""
+
+#, c-format
+msgid "version %s (dump format %d.%d)"
+msgstr ""
+
+msgid " - Running single-threaded\n"
+msgstr ""
+
+#, c-format
+msgid " - type %s for status and control\n"
+msgstr ""
+
+#, c-format
+msgid "child (pid %d) faulted: signal number %d (%s)\n"
+msgstr ""
+
+msgid "session interrupt timeout\n"
+msgstr ""
+
+msgid "session interrupt in progress: please wait\n"
+msgstr ""
+
+#, c-format
+msgid "initiating session interrupt (timeout in %d sec)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: usage: %s "
+msgstr ""
+
+msgid "(dump DMF dualstate files as offline)"
+msgstr ""
+
+msgid "<blocksize>"
+msgstr ""
+
+msgid "<media change alert program> "
+msgstr ""
+
+msgid "<dump media file size> "
+msgstr ""
+
+msgid "(allow files to be excluded)"
+msgstr ""
+
+msgid "<destination> ..."
+msgstr ""
+
+msgid "(help)"
+msgstr ""
+
+msgid "<level>"
+msgstr ""
+
+msgid "(force usage of minimal rmt)"
+msgstr ""
+
+msgid "(overwrite tape)"
+msgstr ""
+
+msgid "<seconds between progress reports>"
+msgstr ""
+
+msgid "<use QIC tape settings>"
+msgstr ""
+
+msgid "<subtree> ..."
+msgstr ""
+
+msgid "<verbosity {silent, verbose, trace}>"
+msgstr ""
+
+msgid "<maximum file size>"
+msgstr ""
+
+msgid "(don't dump extended file attributes)"
+msgstr ""
+
+msgid "<base dump session id>"
+msgstr ""
+
+msgid "(generate tape record checksums)"
+msgstr ""
+
+msgid "(pre-erase media)"
+msgstr ""
+
+msgid "(don't prompt)"
+msgstr ""
+
+msgid "<minimum thread stack size>"
+msgstr ""
+
+msgid "<maximum thread stack size>"
+msgstr ""
+
+msgid "(display dump inventory)"
+msgstr ""
+
+msgid "(inhibit inventory update)"
+msgstr ""
+
+msgid "<session label>"
+msgstr ""
+
+msgid "<media label> ..."
+msgstr ""
+
+msgid "(timestamp messages)"
+msgstr ""
+
+msgid "<options file>"
+msgstr ""
+
+msgid "(pin down I/O buffers)"
+msgstr ""
+
+msgid "(resume)"
+msgstr ""
+
+msgid "(generate single media file)"
+msgstr ""
+
+msgid "(don't timeout dialogs)"
+msgstr ""
+
+msgid "(unload media when change needed)"
+msgstr ""
+
+msgid "(show subsystem in messages)"
+msgstr ""
+
+msgid "(show verbosity in messages)"
+msgstr ""
+
+msgid "<I/O buffer ring length>"
+msgstr ""
+
+msgid "(miniroot restrictions)"
+msgstr ""
+
+msgid "- (stdout)"
+msgstr ""
+
+msgid "<source (mntpnt|device)>"
+msgstr ""
+
+msgid "<alt. workspace dir> ..."
+msgstr ""
+
+msgid "(don't overwrite existing files)"
+msgstr ""
+
+msgid "<source> ..."
+msgstr ""
+
+msgid "(interactive)"
+msgstr ""
+
+msgid "<file> (restore only if newer than)"
+msgstr ""
+
+msgid "(restore owner/group even if not root)"
+msgstr ""
+
+msgid "(cumulative restore)"
+msgstr ""
+
+msgid "(contents only)"
+msgstr ""
+
+msgid "(use small tree window)"
+msgstr ""
+
+msgid "(don't restore extended file attributes)"
+msgstr ""
+
+msgid "(restore root dir owner/permissions)"
+msgstr ""
+
+msgid "(restore DMAPI event settings)"
+msgstr ""
+
+msgid "(check tape record checksums)"
+msgstr ""
+
+msgid "(don't overwrite if changed)"
+msgstr ""
+
+msgid "(force interrupted session completion)"
+msgstr ""
+
+msgid "<session id>"
+msgstr ""
+
+msgid "<excluded subtree> ..."
+msgstr ""
+
+msgid "- (stdin)"
+msgstr ""
+
+msgid "<destination>"
+msgstr ""
+
+#, c-format
+msgid "-%c allowed only once\n"
+msgstr ""
+
+#, c-format
+msgid "cannot open option file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "cannot stat option file %s: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "given option file %s is not ordinary file\n"
+msgstr ""
+
+#, c-format
+msgid "read of option file %s failed: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "received signal %d (%s): cleanup and exit\n"
+msgstr ""
+
+msgid "please enter seconds between progress reports, or 0 to disable"
+msgstr ""
+
+msgid "please enter seconds between progress reports"
+msgstr ""
+
+msgid "status and control dialog"
+msgstr ""
+
+msgid ""
+"\n"
+"session interrupt in progress\n"
+msgstr ""
+
+msgid "please select one of the following operations\n"
+msgstr ""
+
+msgid "interrupt this session"
+msgstr ""
+
+msgid "change verbosity"
+msgstr ""
+
+msgid "display metrics"
+msgstr ""
+
+msgid "confirm media change"
+msgstr ""
+
+msgid "other controls"
+msgstr ""
+
+msgid "please confirm\n"
+msgstr ""
+
+msgid "interrupt request accepted\n"
+msgstr ""
+
+msgid "please select one of the following subsystems\n"
+msgstr ""
+
+msgid "all of the above"
+msgstr ""
+
+msgid "no change"
+msgstr ""
+
+msgid "no change\n"
+msgstr ""
+
+msgid ""
+"all subsystems selected\n"
+"\n"
+msgstr ""
+
+msgid "silent"
+msgstr ""
+
+msgid "verbose"
+msgstr ""
+
+msgid "trace"
+msgstr ""
+
+msgid "debug"
+msgstr ""
+
+msgid "nitty"
+msgstr ""
+
+msgid "nitty + 1"
+msgstr ""
+
+msgid " (current)"
+msgstr ""
+
+msgid "level changed\n"
+msgstr ""
+
+msgid "please select one of the following metrics\n"
+msgstr ""
+
+msgid "I/O"
+msgstr ""
+
+msgid "media inventory status"
+msgstr ""
+
+msgid "needed media objects"
+msgstr ""
+
+msgid "please select one of the following controls\n"
+msgstr ""
+
+msgid "change interval of or disable progress reports"
+msgstr ""
+
+msgid "enable progress reports"
+msgstr ""
+
+msgid "hide log message levels"
+msgstr ""
+
+msgid "show log message levels"
+msgstr ""
+
+msgid "hide log message subsystems"
+msgstr ""
+
+msgid "show log message subsystems"
+msgstr ""
+
+msgid "hide log message timestamps"
+msgstr ""
+
+msgid "show log message timestamps"
+msgstr ""
+
+msgid "changing progress report interval to "
+msgstr ""
+
+#, c-format
+msgid "%d seconds\n"
+msgstr ""
+
+msgid "enabling progress reports at "
+msgstr ""
+
+#, c-format
+msgid "%d second intervals\n"
+msgstr ""
+
+msgid "disabling progress reports\n"
+msgstr ""
+
+msgid "showing log message levels\n"
+msgstr ""
+
+msgid "hiding log message levels\n"
+msgstr ""
+
+msgid "showing log message subsystems\n"
+msgstr ""
+
+msgid "hiding log message subsystems\n"
+msgstr ""
+
+msgid "showing log message timestamps\n"
+msgstr ""
+
+msgid "hiding log message timestamps\n"
+msgstr ""
+
+#, c-format
+msgid "unable to raise stack size hard limit from 0x%llx to 0x%llx\n"
+msgstr ""
+
+#, c-format
+msgid "unable to raise stack size soft limit from 0x%llx to 0x%llx\n"
+msgstr ""
+
+#, c-format
+msgid "unable to lower stack size soft limit from 0x%llx to 0x%llx\n"
+msgstr ""
+
+msgid "no media strategy available for selected dump destination(s)\n"
+msgstr ""
+
+msgid "no media strategy available for selected restore source(s)\n"
+msgstr ""
+
+#, c-format
+msgid "%s: -%c argument missing\n"
+msgstr ""
+
+#, c-format
+msgid "%s: -%c argument invalid\n"
+msgstr ""
+
+#, c-format
+msgid "%s: -%c subsystem subargument %s requires a verbosity value\n"
+msgstr ""
+
+#, c-format
+msgid "%s: -%c argument does not require a value\n"
+msgstr ""
+
+#, c-format
+msgid "%s%s%s%s: drive %d: "
+msgstr ""
+
+#, c-format
+msgid "%s: %s Summary:\n"
+msgstr ""
+
+#, c-format
+msgid "%s:   stream %d (pid %d) %s %s (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "could not create %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to configure shared arena for auto unlink: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to allocate shared arena for thread locks: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to add thread to shared arena: %s\n"
+msgstr ""
+
+#, c-format
+msgid "lock already held: thrd %d pid %d ord %d map %x\n"
+msgstr ""
+
+#, c-format
+msgid "lock ordinal violation: thrd %d pid %d ord %d map %x\n"
+msgstr ""
+
+#, c-format
+msgid "unable to \"P\" semaphore: rval == %d, errno == %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "unable to \"V\" semaphore: rval == %d, errno == %d (%s)\n"
+msgstr ""
+
+#, c-format
+msgid "failed to get bulkstat information for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "failed to get valid bulkstat information for inode %llu\n"
+msgstr ""
+
+#, c-format
+msgid "syssgi( SGI_FS_BULKSTAT ) on fsroot failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: unable to open directory ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: unable to read dirents (%d) for directory ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: could not stat dirent %s ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: unable to process dirent %s: ino %llu too large\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: could not open %s to determine fs type: assuming non-XFS\n"
+msgstr ""
+
+msgid "rmtioctl: remote host type not supported for MTIOCTOP\n"
+msgstr ""
+
+msgid "rmtioctl: remote host type not supported for MTIOCGET\n"
+msgstr ""
+
+#, c-format
+msgid "rmtioctl: IRIX mtget structure of wrong size - got %d, wanted %d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"rmtioctl: Linux mtget structure of wrong size - got %d, wanted %d or %d\n"
+msgstr ""
+
+msgid "WARNING: "
+msgstr ""
+
+#, c-format
+msgid "rmtopen: failed to detect remote host type using \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "rmtopen: failed to detect remote host type reading \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "rmtopen: remote host type, \"%s\", is unknown to librmt\n"
+msgstr ""
+
+msgid "INV: put_fstab_entry failed.\n"
+msgstr ""
+
+msgid "INV: put_starttime failed.\n"
+msgstr ""
+
+#, c-format
+msgid "INV: cant create more than %d streams. Max'd out..\n"
+msgstr ""
+
+msgid "INV: idx_put_sesstime failed in inv_stream_close() \n"
+msgstr ""
+
+msgid "INV: Error in fstab\n"
+msgstr ""
+
+msgid "INV: Cant get inv-name for uuid\n"
+msgstr ""
+
+#, c-format
+msgid "INV: Open failed on %s\n"
+msgstr ""
+
+#, c-format
+msgid "INV: invalid sub-option %s for -I option\n"
+msgstr ""
+
+msgid "INV: Only one of mnt=,dev= and fsid=value can be used.\n"
+msgstr ""
+
+msgid "INV: Only one of mobjid= and mobjlabel= can be used.\n"
+msgstr ""
+
+#, c-format
+msgid "INV: open failed on mount point \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "INV: open failed on file system id \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "INV: checking fs \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "INV : Unknown version %d - Expected version %d\n"
+msgstr ""
+
+msgid "get_headers() - malloc(seshdrs)\n"
+msgstr ""
+
+msgid "Error in reading inventory record (lseek failed): "
+msgstr ""
+
+msgid "Error in reading inventory record :"
+msgstr ""
+
+msgid "Error in writing inventory record (lseek failed): "
+msgstr ""
+
+msgid "Error in writing inventory record :"
+msgstr ""
+
+msgid "INV: couldn't get fstab headers\n"
+msgstr ""
+
+msgid "INV: No recorded filesystems in inventory's fstab.\n"
+msgstr ""
+
+msgid ""
+"\n"
+"\n"
+"--------- fstab ------------\n"
+msgstr ""
+
+#, c-format
+msgid "Mount\t%s\n"
+msgstr ""
+
+#, c-format
+msgid "Dev\t%s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"FSid\t%s\n"
+"\n"
+msgstr ""
+
+#, c-format
+msgid "INV: Check %d failed.\n"
+msgstr ""
+
+#, c-format
+msgid "invidx (%d)\t%d - %d\n"
+msgstr ""
+
+#, c-format
+msgid "tm (%d)\t%d\n"
+msgstr ""
+
+#, c-format
+msgid "INV: Check %d out of %d succeeded\n"
+msgstr ""
+
+#, c-format
+msgid "%s created\n"
+msgstr ""
+
+msgid "INV: failed to find a different sh_time to split\n"
+msgstr ""
+
+msgid "INV: inv_put_session: unknown cookie\n"
+msgstr ""
+
+#, c-format
+msgid "INV: inv_put_session: unknown packed inventory version %d\n"
+msgstr ""
+
+msgid "Failed to get data from media file: possible file corruption\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument must be between 0 and %d\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument (subtree) must be a relative pathname\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument is not a valid file size\n"
+msgstr ""
+
+#, c-format
+msgid "-%c argument not a valid dump session id\n"
+msgstr ""
+
+#, c-format
+msgid "may not specify both -%c and -%c\n"
+msgstr ""
+
+msgid "source file system not specified\n"
+msgstr ""
+
+#, c-format
+msgid "%s does not identify a file system\n"
+msgstr ""
+
+#, c-format
+msgid "%s must be mounted to be dumped\n"
+msgstr ""
+
+#, c-format
+msgid "failed to save %s information, continuing\n"
+msgstr ""
+
+#, c-format
+msgid "could not find specified base dump (%s) in inventory\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"cannot select dump session %s as base for incremental dump: level must be "
+"less than %d\n"
+msgstr ""
+
+msgid "cannot calculate incremental dump: online inventory not available\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"most recent level %d dump was interrupted, but not resuming that dump since "
+"resume (-R) option not specified\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"most recent base for incremental dump was interrupted (level %u): must "
+"resume or redump at or below level %d\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u incremental subtree dump will be based on non-subtree level %u "
+"dump\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u incremental non-subtree dump will be based on subtree level %u "
+"dump\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u incremental subtree dump will be based on non-subtree level %u "
+"resumed dump\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u incremental non-subtree dump will be based on subtree level %u "
+"resumed dump\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u subtree dump will be based on non-subtree level %u resumed dump\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"level %u non-subtree dump will be based on subtree level %u resumed dump\n"
+msgstr ""
+
+#, c-format
+msgid "cannot find earlier dump to base level %d increment upon\n"
+msgstr ""
+
+#, c-format
+msgid "most recent base dump (level %d begun %s) was interrupted: aborting\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"resume (-R) option inappropriate: no interrupted level %d dump to resume\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"resuming level %d incremental dump of %s:%s begun %s (incremental base level "
+"%d begun %s)\n"
+msgstr ""
+
+#, c-format
+msgid "level %d incremental dump of %s:%s based on level %d dump begun %s\n"
+msgstr ""
+
+#, c-format
+msgid "resuming level %d dump of %s:%s begun %s\n"
+msgstr ""
+
+#, c-format
+msgid "level %d dump of %s:%s\n"
+msgstr ""
+
+#, c-format
+msgid "dump date: %s\n"
+msgstr ""
+
+#, c-format
+msgid "session label: \"%s\"\n"
+msgstr ""
+
+#, c-format
+msgid "could not stat %s\n"
+msgstr ""
+
+#, c-format
+msgid "estimated dump size: %llu bytes\n"
+msgstr ""
+
+#, c-format
+msgid "estimated dump size per stream: %llu bytes\n"
+msgstr ""
+
+#, c-format
+msgid "more -%c arguments than number of drives\n"
+msgstr ""
+
+#, c-format
+msgid "media labels given for only %d out of %d drives\n"
+msgstr ""
+
+msgid ""
+"media change timeout will be treated as a request to stop using drive: can "
+"resume later\n"
+msgstr ""
+
+msgid ""
+"media change decline will be treated as a request to stop using drive: can "
+"resume later\n"
+msgstr ""
+
+#, c-format
+msgid "creating dump session media file %u (media %u, file %u)\n"
+msgstr ""
+
+msgid "dumping ino map\n"
+msgstr ""
+
+msgid "dumping non-directory files\n"
+msgstr ""
+
+msgid "ending media file\n"
+msgstr ""
+
+#, c-format
+msgid "media file size %lld bytes\n"
+msgstr ""
+
+msgid "inventory media file put failed\n"
+msgstr ""
+
+msgid "waiting for synchronized session inventory dump\n"
+msgstr ""
+
+#, c-format
+msgid "ending stream: %ld seconds elapsed\n"
+msgstr ""
+
+#, c-format
+msgid "dump size (non-dir files) : %llu bytes\n"
+msgstr ""
+
+#, c-format
+msgid "unable to remove %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "dump complete: %ld seconds elapsed\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"dump interrupted: %ld seconds elapsed: may resume later using -%c option\n"
+msgstr ""
+
+#, c-format
+msgid "dump interrupted: %ld seconds elapsed\n"
+msgstr ""
+
+msgid "waiting for synchronized directory dump\n"
+msgstr ""
+
+msgid "dumping directories\n"
+msgstr ""
+
+#, c-format
+msgid "SGI_FS_BULKSTAT failed: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "unable to dump directory: ino %llu too large\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open directory: ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to read dirents (%d) for directory ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "encountered 0 ino (%s) in directory ino %llu: NOT dumping\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"could not stat dirent %s ino %llu: %s: using null generation count in "
+"directory entry\n"
+msgstr ""
+
+#, c-format
+msgid "could not get list of %s attributes for %s ino %llu: %s (%d)\n"
+msgstr ""
+
+msgid ""
+"ioctl returned EINVAL: disabling extended attribute operations (only one "
+"warning will be printed)\n"
+msgstr ""
+
+#, c-format
+msgid "HSM could not filter %s attribute %s for %s ino %llu\n"
+msgstr ""
+
+msgid "dir"
+msgstr ""
+
+msgid "nondir"
+msgstr ""
+
+#, c-format
+msgid "could not retrieve %s attributes for %s ino %llu: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"attr_multi indicates error while retrieving %s attribute [%s] for %s ino "
+"%llu: %s (%d)\n"
+msgstr ""
+
+#, c-format
+msgid "HSM could not add new %s attribute #%d for %s ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s extended attribute name for %s ino %llu too long: %u, max is %u: "
+"skipping\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s extended attribute value for %s ino %llu too long: %u, max is %u: "
+"skipping\n"
+msgstr ""
+
+#, c-format
+msgid "inomap inconsistency ino %llu: %s but is now non-dir: NOT dumping\n"
+msgstr ""
+
+#, c-format
+msgid "inomap inconsistency ino %llu: hsm detected error: NOT dumping\n"
+msgstr ""
+
+#, c-format
+msgid "don't know how to dump ino %llu: mode %08x\n"
+msgstr ""
+
+#, c-format
+msgid "could not open regular file ino %llu mode 0x%08x: %s: not dumped\n"
+msgstr ""
+
+#, c-format
+msgid "dump interrupted prior to ino %llu offset %lld\n"
+msgstr ""
+
+#, c-format
+msgid "locking check failed ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "dioinfo failed ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"getbmapx %d ino %lld mode 0x%08x offset %lld ix %d returns negative entry "
+"count\n"
+msgstr ""
+
+#, c-format
+msgid "getbmapx %d ino %lld mode 0x%08x offset %lld failed: %s\n"
+msgstr ""
+
+#, c-format
+msgid "hsm detected an extent map error in ino %lld, skipping\n"
+msgstr ""
+
+#, c-format
+msgid "can't lseek ino %llu\n"
+msgstr ""
+
+#, c-format
+msgid "can't read ino %llu at offset %d (act=%d req=%d) rt=%d\n"
+msgstr ""
+
+#, c-format
+msgid "unable to dump directory %llu entry %s (%llu): name too long\n"
+msgstr ""
+
+msgid "dumping session inventory\n"
+msgstr ""
+
+msgid "unable to get session inventory to dump\n"
+msgstr ""
+
+msgid "beginning inventory media file\n"
+msgstr ""
+
+msgid "media change timeout: session inventory not dumped\n"
+msgstr ""
+
+msgid "media change declined: session inventory not dumped\n"
+msgstr ""
+
+#, c-format
+msgid "media file %u (media %u, file %u)\n"
+msgstr ""
+
+msgid "ending inventory media file\n"
+msgstr ""
+
+#, c-format
+msgid "encountered EOM while writing inventory media file size %lld bytes\n"
+msgstr ""
+
+#, c-format
+msgid "inventory media file size %lld bytes\n"
+msgstr ""
+
+msgid "inventory session media file put failed\n"
+msgstr ""
+
+msgid "writing stream terminator\n"
+msgstr ""
+
+msgid "beginning media stream terminator\n"
+msgstr ""
+
+msgid "media change timeout: media stream terminator not written\n"
+msgstr ""
+
+msgid "media change declined: media stream terminator not written\n"
+msgstr ""
+
+msgid "ending media stream terminator\n"
+msgstr ""
+
+#, c-format
+msgid "encountered EOM while writing media stream terminator size %lld bytes\n"
+msgstr ""
+
+#, c-format
+msgid "media stream terminator size %lld bytes\n"
+msgstr ""
+
+#, c-format
+msgid "positioned at media file %u: dump %u, stream %u\n"
+msgstr ""
+
+msgid "cannot interleave dump streams: must supply a blank media object\n"
+msgstr ""
+
+msgid "media contains valid xfsdump but does not support append\n"
+msgstr ""
+
+msgid "stream terminator found\n"
+msgstr ""
+
+msgid "encountered media error attempting BSF\n"
+msgstr ""
+
+msgid ""
+"media contains non-xfsdump data or a corrupt xfsdump media file header at "
+"beginning of media\n"
+msgstr ""
+
+msgid "unable to overwrite\n"
+msgstr ""
+
+msgid "repositioning to overwrite\n"
+msgstr ""
+
+msgid "media may contain data. Overwrite option specified\n"
+msgstr ""
+
+msgid "at end of data\n"
+msgstr ""
+
+msgid ""
+"encountered EOD but expecting a media stream terminator: assuming full "
+"media\n"
+msgstr ""
+
+msgid "encountered EOM: media is full\n"
+msgstr ""
+
+msgid "encountered corrupt or foreign data: assuming corrupted media\n"
+msgstr ""
+
+msgid ""
+"encountered corrupt or foreign data but expecting a media stream terminator: "
+"assuming corrupted media\n"
+msgstr ""
+
+msgid ""
+"encountered corrupt or foreign data: unable to overwrite: assuming corrupted "
+"media\n"
+msgstr ""
+
+msgid "encountered corrupt or foreign data: repositioning to overwrite\n"
+msgstr ""
+
+#, c-format
+msgid "unexpected error from do_begin_read: %d\n"
+msgstr ""
+
+msgid "erasing media\n"
+msgstr ""
+
+msgid "no media label specified\n"
+msgstr ""
+
+msgid "encountered end of media while attempting to begin new media file\n"
+msgstr ""
+
+msgid "encountered end of media while ending media file\n"
+msgstr ""
+
+#, c-format
+msgid "drive does not support media erase: ignoring -%c option\n"
+msgstr ""
+
+#, c-format
+msgid "saving %s information for: %s\n"
+msgstr ""
+
+#, c-format
+msgid "overwriting: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s failed with exit status: %d\n"
+msgstr ""
+
+#, c-format
+msgid "open failed %s: %s\n"
+msgstr ""
+
+msgid "ino map phase 1: parsing subtree selections\n"
+msgstr ""
+
+msgid "ino map phase 1: skipping (no subtrees specified)\n"
+msgstr ""
+
+msgid "ino map phase 2: constructing initial dump list\n"
+msgstr ""
+
+#, c-format
+msgid "pruned %llu files: maximum size exceeded\n"
+msgstr ""
+
+#, c-format
+msgid "pruned %llu files: skip attribute set\n"
+msgstr ""
+
+msgid "ino map phase 3: pruning unneeded subtrees\n"
+msgstr ""
+
+msgid "ino map phase 3: skipping (no pruning necessary)\n"
+msgstr ""
+
+msgid "ino map phase 4: estimating dump size\n"
+msgstr ""
+
+msgid "ino map phase 4: skipping (size estimated in phase 2)\n"
+msgstr ""
+
+msgid "ino map phase 5: identifying stream starting points\n"
+msgstr ""
+
+msgid "ino map phase 5: skipping (only one dump stream)\n"
+msgstr ""
+
+#, c-format
+msgid "stream %u: ino %llu offset %lld to end\n"
+msgstr ""
+
+#, c-format
+msgid "stream %u: ino %llu offset %lld to ino %llu offset %lld\n"
+msgstr ""
+
+msgid "ino map construction complete\n"
+msgstr ""
+
+#, c-format
+msgid "maximum subtree pruning recursion depth: %u\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"subtree pruning recursion depth exceeds max (%d): some unselected subtrees "
+"may be included in dump\n"
+msgstr ""
+
+#, c-format
+msgid "map_add(%llu, %d): ino(%llu) <= last_ino(%llu)\n"
+msgstr ""
+
+msgid "subtree not present"
+msgstr ""
+
+msgid "invalid subtree specified"
+msgstr ""
+
+#, c-format
+msgid "could not open ino %llu to read extent map: %s\n"
+msgstr ""
+
+#, c-format
+msgid "could not read extent map for ino %llu: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unknown inode type: ino=%llu, mode=0x%04x 0%06o\n"
+msgstr ""
+
+#, c-format
+msgid "unable to chown %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to determine uuid of fs containing %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to get status of %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "unable to open directory %s\n"
+msgstr ""

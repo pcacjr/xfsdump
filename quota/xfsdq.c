@@ -38,16 +38,14 @@
 #include <sys/quota.h>
 #include <pwd.h>
 #include <grp.h>
-
-#ifdef linux
-#include <dqblk_xfs.h>
-#endif
+#include "dqblk_xfs.h"
+#include "config.h"
 
 static char *progname;
 
 static void usage(void)
 {
-	fprintf(stderr, "%s: [-ugV] <mntpnt>\n", progname);
+	fprintf(stderr, _("%s: [-ugV] <mntpnt>\n"), progname);
 	exit(2);
 }
 
@@ -81,6 +79,11 @@ int main(int argc, char **argv)
 	int		type = USRQUOTA;
 
 	progname = basename(argv[0]);
+
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	while ((c = getopt(argc, argv, "ugV")) != EOF) {
 		switch(c) {
 		case 'u':
@@ -90,7 +93,7 @@ int main(int argc, char **argv)
 			type = GRPQUOTA;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		default:
 			usage();
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
 		usage();
 
 	if ((mtab = setmntent(MOUNTED, "r")) == NULL) {
-		fprintf(stderr, "%s: no "MOUNTED" file\n", progname);
+		fprintf(stderr, _("%s: no %s file\n"), progname, MOUNTED);
 		exit(1);
 	}
 	while ((mntp = getmntent(mtab)) != NULL) {
@@ -127,8 +130,8 @@ int main(int argc, char **argv)
 	endmntent(mtab);
 
 	if (!found) {
-		fprintf(stderr, "%s: mount point %s is not in " MOUNTED,
-			progname, argv[optind]);
+		fprintf(stderr, _("%s: mount point %s is not in %s\n"),
+			progname, argv[optind], MOUNTED);
 		exit(1);
 	}
 	exit(0);

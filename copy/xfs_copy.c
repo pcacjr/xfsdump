@@ -38,8 +38,10 @@
 #undef ustat
 #include <sys/ustat.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 
 #include "locks.h"
+#include "config.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
@@ -174,31 +176,31 @@ check_errors(void)
 			if (first_error == 0)  {
 				first_error++;
 				fprintf(logerr,
-				"THE FOLLOWING COPIES FAILED TO COMPLETE.\n");
+				_("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
 				fprintf(stderr,
-				"THE FOLLOWING COPIES FAILED TO COMPLETE.\n");
+				_("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
 			}
 			fprintf(logerr, "    %s -- ", target_names[i]);
 			fprintf(stderr, "    %s -- ", target_names[i]);
 			if (target_err_types[i] == 0)  {
-				fprintf(logerr, "write error");
-				fprintf(stderr, "write error");
+				fprintf(logerr, _("write error"));
+				fprintf(stderr, _("write error"));
 			} else  {
-				fprintf(logerr, "lseek64 error");
-				fprintf(stderr, "lseek64 error");
+				fprintf(logerr, _("lseek64 error"));
+				fprintf(stderr, _("lseek64 error"));
 			}
 
 			fprintf(logerr,
-				" at offset %lld\n", target_positions[i]);
+				_(" at offset %lld\n"), target_positions[i]);
 			fprintf(stderr,
-				" at offset %lld\n", target_positions[i]);
+				_(" at offset %lld\n"), target_positions[i]);
 		}
 	}
 	if (first_error == 0)  {
-		fprintf(stdout, "All copies completed.\n");
+		fprintf(stdout, _("All copies completed.\n"));
 		fflush(NULL);
 	} else  {
-		fprintf(stderr, "See \"%s\" for more details.\n",
+		fprintf(stderr, _("See \"%s\" for more details.\n"),
 			logfile_name);
 		exit(1);
 	}
@@ -226,7 +228,7 @@ do_error2(char *prefix, int errornum, int finalmsg)
 		fprintf(stderr, "%s:  \"%s\"\n", prefix, errstring);
 		if (finalmsg)
 			fprintf(stderr,
-				"Check logfile \"%s\" for more details\n",
+				_("Check logfile \"%s\" for more details\n"),
 				logfile_name);
 		return;
 	}
@@ -234,14 +236,14 @@ do_error2(char *prefix, int errornum, int finalmsg)
 broken:
 	/* crap, logfile is broken, have to write to stderr */
 
-	fprintf(stderr, "%s:  could not write to logfile \"%s\".\n",
+	fprintf(stderr, _("%s:  could not write to logfile \"%s\".\n"),
 		progname, logfile_name);
-	fprintf(stderr, "%s message was -- %s:  %s\n",
+	fprintf(stderr, _("%s message was -- %s:  %s\n"),
 		progname, prefix, errstring);
 
 	errstring2 = strerror(errno);
 
-	fprintf(stderr, "Aborting XFS copy -- logfile error -- reason:  %s\n",
+	fprintf(stderr, _("Aborting XFS copy -- logfile error -- reason: %s\n"),
 		errstring2);
 	pthread_exit(NULL);
 }
@@ -346,22 +348,25 @@ handler()
 
 				if (target_err_types[i] == 0)  {
 					fprintf(logerr,
-		"%s:  write error on target %d \"%s\" at offset %lld\n",
+		_("%s:  write error on target %d \"%s\" at offset %lld\n"),
 						progname, i, target_names[i],
 						target_positions[i]);
 				} else  {
 					fprintf(logerr,
-		"%s:  lseek64 error on target %d \"%s\" at offset %lld\n",
+		_("%s:  lseek64 error on target %d \"%s\" at offset %lld\n"),
 						progname, i, target_names[i],
 						target_positions[i]);
 				}
 					
-				sprintf(buf, "Aborting target %d - reason", i);
+				sprintf(buf,
+					_("Aborting target %d - reason"), i);
 				do_error2(buf, target_errors[i], 0);
 
 				if (kids == 0)  {
-		fprintf(logerr, "Aborting XFS copy - no more targets.\n");
-		fprintf(stderr, "Aborting XFS copy - no more targets.\n");
+					fprintf(logerr,
+				_("Aborting XFS copy - no more targets.\n"));
+					fprintf(stderr,
+				_("Aborting XFS copy - no more targets.\n"));
 					check_errors();
 					pthread_exit(NULL);
 				}
@@ -372,11 +377,11 @@ handler()
 				/* it just croaked it bigtime, log it */
 
 				fprintf(logerr,
-		"%s:  thread %d died unexpectedly, target \"%s\" incomplete\n",
-						progname, i, target_names[i]);
+	_("%s:  thread %d died unexpectedly, target \"%s\" incomplete\n"),
+					progname, i, target_names[i]);
 
 				fprintf(logerr,
-					"%s:  offset was probably %lld\n",
+					_("%s:  offset was probably %lld\n"),
 					progname, target_positions[i]);
 				do_error2("Aborting XFS copy - reason",
 					target_errors[i], 1);
@@ -387,9 +392,10 @@ handler()
 
 	/* unknown child -- something very wrong */
 
-	fprintf(logerr, "%s: UNKNOWN CHILD DIED - THIS SHOULD NEVER HAPPEN!\n",
+	fprintf(logerr, _("%s: UNKNOWN CHILD DIED - SHOULD NEVER HAPPEN!\n"),
 		progname);
-	do_error("Aborting XFS copy - reason");
+	do_error(_("Aborting XFS copy - reason"));
+	exit(1);
 	pthread_exit(NULL);
 
 	sigset(SIGCLD, handler);
@@ -399,8 +405,8 @@ void
 usage(void)
 {
 	fprintf(stderr,
-		"Usage: %s [-d] fromdev|fromfile todev [todev todev ...]\n"
-		"       %s [-d] fromdev|fromfile tofile\n", progname, progname);
+		_("Usage: %s [-d] fromdev|fromfile todev [todev todev ...]\n"
+		"       %s [-d] fromdev|fromfile tofile\n"), progname,progname);
 	exit(1);
 }
 
@@ -417,7 +423,7 @@ char *bar[11] = {
 	" ... 70% ",
 	" ... 80% ",
 	" ... 90% ",
-	" ... 100%\nDone.\n",
+	" ... 100%\n\n",
 };
 
 void
@@ -450,7 +456,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 		lres = lseek64(fd, buf->position, SEEK_SET);
 		if (lres < 0LL)  {
 			fprintf(logerr,
-				"%s:  lseek64 failure at offset %lld\n",
+				_("%s:  lseek64 failure at offset %lld\n"),
 				progname, source_position);
 			do_error("Aborting XFS copy - reason");
 			exit(1);
@@ -467,14 +473,14 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 
 	if (buf->length > buf->size)  {
 		fprintf(stderr,
-			"assert error:  buf->length = %d, buf->size = %d\n",
+			_("assert error:  buf->length = %d, buf->size = %d\n"),
 			buf->length, buf->size);
 		killall();
 		abort();
 	}
 
 	if ((res = read(fd, buf->data, buf->length)) < 0)  {
-		fprintf(logerr, "%s:  read failure at offset %lld\n",
+		fprintf(logerr, _("%s:  read failure at offset %lld\n"),
 				progname, source_position);
 		do_error("Aborting XFS copy - reason");
 		exit(1);
@@ -611,29 +617,35 @@ main(int argc, char **argv)
 
 	progname = basename(argv[0]);
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	/* open up log file */
 	logfile_name = mktemp(LOGFILE_NAME);
 	if (*logfile_name == '\0')  {
-		fprintf(stderr, "%s: could not generate unique logfile name\n",
+		fprintf(stderr,
+			_("%s: could not generate unique logfile name\n"),
 			progname);
-		fprintf(stderr, "%s: check /usr/tmp for xfs_copy.log.* files\n",
+		fprintf(stderr,
+			_("%s: check /usr/tmp for xfs_copy.log.* files\n"),
 			progname);
-		perror("Aborting XFS copy - reason");
+		perror(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((logfd = open(logfile_name, O_CREAT|O_TRUNC|O_APPEND|O_WRONLY,
 				0644)) < 0)  {
-		fprintf(stderr, "%s: couldn't open log file \"%s\"\n",
+		fprintf(stderr, _("%s: couldn't open log file \"%s\"\n"),
 			progname, logfile_name);
-		perror("Aborting XFS copy - reason");
+		perror(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((logerr = fdopen(logfd, "w")) == NULL)  {
-		fprintf(stderr, "%s: couldn't set up logfile stream\n",
+		fprintf(stderr, _("%s: couldn't set up logfile stream\n"),
 			progname);
-		perror("Aborting XFS copy - reason");
+		perror(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
@@ -647,7 +659,7 @@ main(int argc, char **argv)
 			duplicate_uuids = 1;
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		case '?':
 			usage();
@@ -667,46 +679,49 @@ main(int argc, char **argv)
 	num_targets = argc - optind;
 
 	if (num_targets > MAX_TARGETS)  {
-		fprintf(logerr, "%s: number of targets exceeds maximum of %d\n"
-			"Aborting XFS copy.\n", progname, MAX_TARGETS);
-		fprintf(stderr, "%s: number of targets exceeds maximum of %d\n"
-			"Aborting XFS copy.\n", progname, MAX_TARGETS);
+		fprintf(logerr,
+			_("%s: number of targets exceeds maximum of %d\n"
+			"Aborting XFS copy.\n"), progname, MAX_TARGETS);
+		fprintf(stderr,
+			_("%s: number of targets exceeds maximum of %d\n"
+			"Aborting XFS copy.\n"), progname, MAX_TARGETS);
 		exit(1);
 	}
 
 	if ((target_names = malloc(sizeof(char *)*num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target name array\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't allocate target name array\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((target_positions = malloc(sizeof(xfs_off_t)*num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target position array\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't allocate target position array\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((target_pids = malloc(sizeof(pthread_t) * num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target pid array\n");
+		fprintf(logerr, _("Couldn't allocate target pid array\n"));
 		do_error("Aborting XFS copy - reason");
 		exit(1);
 	}
 
 	if ((target_states = malloc(sizeof(int) * num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target state array\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't allocate target state array\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((target_errors = malloc(sizeof(int) * num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target errno array\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't allocate target errno array\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((target_err_types = malloc(sizeof(int) * num_targets)) == NULL)  {
-		fprintf(logerr, "Couldn't allocate target error type array\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr,
+			_("Couldn't allocate target error type array\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
@@ -718,9 +733,9 @@ main(int argc, char **argv)
 	}
 
 	if ((target_fds = malloc(sizeof(int)*num_targets)) == NULL)  {
-		fprintf(logerr, "%s: couldn't malloc target fd array\n",
+		fprintf(logerr, _("%s: couldn't malloc target fd array\n"),
 			progname);
-		do_error("Aborting XFS copy - reason");
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
@@ -732,9 +747,9 @@ main(int argc, char **argv)
 	parent_pid = getpid();
 
 	if (atexit(killall))  {
-		fprintf(logerr, "%s: couldn't register atexit function.\n",
+		fprintf(logerr, _("%s: couldn't register atexit function.\n"),
 			progname);
-		do_error("Aborting XFS copy -- reason");
+		do_error(_("Aborting XFS copy -- reason"));
 		exit(1);
 	}
 
@@ -743,16 +758,16 @@ main(int argc, char **argv)
 	open_flags = O_RDONLY;
 
 	if ((source_fd = open(source_name, open_flags)) < 0)  {
-		fprintf(logerr, "%s:  couldn't open source \"%s\"\n",
+		fprintf(logerr, _("%s:  couldn't open source \"%s\"\n"),
 			progname, source_name);
-		do_error("Aborting XFS copy - reason");
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if (fstat64(source_fd, &statbuf) < 0)  {
-		fprintf(logerr, "%s:  couldn't stat source \"%s\"\n",
+		fprintf(logerr, _("%s:  couldn't stat source \"%s\"\n"),
 			progname, source_name);
-		do_error("Aborting XFS copy - reason");
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
@@ -764,24 +779,25 @@ main(int argc, char **argv)
 
 		if (close(source_fd) < 0)  {
 			fprintf(logerr,
-				"Couldn't close fd to set up direct i/o.\n");
-			do_error("Aborting XFS copy - reason");
+				_("Couldn't close fd to set up direct i/o.\n"));
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 
 		if ((source_fd = open(source_name, open_flags)) < 0)  {
-			fprintf(logerr, "%s:  couldn't re-open source \"%s\"\n",
+			fprintf(logerr,
+				_("%s:  couldn't re-open source \"%s\"\n"),
 				progname, source_name);
-			do_error("Aborting XFS copy - reason");
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 
 		/* set direct i/o parameters */
 
 		if (ioctl(source_fd, XFS_IOC_DIOINFO, &d_info) < 0)  {
-			fprintf(logerr, "%s: ioctl on file \"%s\" failed.\n",
+			fprintf(logerr, _("%s: ioctl on file \"%s\" failed.\n"),
 				progname, source_name);
-			do_error("Aborting XFS copy - reason");
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 
@@ -803,28 +819,35 @@ main(int argc, char **argv)
 		 */
 		if (ustat(statbuf.st_rdev, &ustat_buf) == 0)  {
 			fprintf(stderr,
-"%s:  Warning -- a filesystem is mounted on the source device.\n", progname);
+	_("%s:  Warning -- a filesystem is mounted on the source device.\n"),
+				progname);
 			fprintf(logerr,
-"%s:  Warning -- a filesystem is mounted on the source device.\n", progname);
+	_("%s:  Warning -- a filesystem is mounted on the source device.\n"),
+				progname);
 
-fprintf(stderr, "\t\tGenerated copies may be corrupt unless the source is\n");
-fprintf(logerr, "\t\tGenerated copies may be corrupt unless the source is\n");
-fprintf(stderr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
-fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
+			fprintf(stderr,
+	_("\t\tGenerated copies may be corrupt unless the source is\n"));
+			fprintf(logerr,
+	_("\t\tGenerated copies may be corrupt unless the source is\n"));
+			fprintf(stderr,
+	_("\t\tunmounted or mounted read-only.  Copy proceeding...\n"));
+			fprintf(logerr,
+	_("\t\tunmounted or mounted read-only.  Copy proceeding...\n"));
 		}
 		if (S_ISBLK(statbuf.st_mode))  {
-			fprintf(logerr, "%s: source \"%s\" not a raw device.\n",
+			fprintf(logerr,
+				_("%s: source \"%s\" not a raw device.\n"),
 				progname, source_name);
 
 			old_source_name = source_name;
 
 			source_name = findrawpath(old_source_name);
 			if (source_name == NULL)  {
-				fprintf(logerr, "%s: cannot locate raw device"
-					" for \"%s\"\nAborting XFS copy.\n",
+				fprintf(logerr, _("%s: cannot locate raw device"
+					" for \"%s\"\nAborting XFS copy.\n"),
 					progname, old_source_name);
-				fprintf(stderr, "%s: cannot locate raw device"
-					" for \"%s\"\nAborting XFS copy.\n",
+				fprintf(stderr, _("%s: cannot locate raw device"
+					" for \"%s\"\nAborting XFS copy.\n"),
 					progname, old_source_name);
 				exit(1);
 			}
@@ -832,21 +855,22 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			/* close and reopen raw device */
 
 			if (close(source_fd) < 0)  {
-				fprintf(logerr, "Couldn't close raw device.\n");
-				do_error("Aborting XFS copy - reason");
+				fprintf(logerr,
+					_("Couldn't close raw device.\n"));
+				do_error(_("Aborting XFS copy - reason"));
 				exit(1);
 			}
 
 			if ((source_fd = open(source_name, open_flags)) < 0)  {
-				fprintf(logerr, "%s: couldn't open source"
-					" \"%s\"\n", progname, source_name);
-				do_error("Aborting XFS copy - reason");
+				fprintf(logerr, _("%s: couldn't open source"
+					" \"%s\"\n"), progname, source_name);
+				do_error(_("Aborting XFS copy - reason"));
 				exit(1);
 			}
 
-			fprintf(logerr, "%s: using \"%s\" instead.\n",
+			fprintf(logerr, _("%s: using \"%s\" instead.\n"),
 				progname, source_name);
-			fprintf(logerr, "%s:  continuing...\n", progname);
+			fprintf(logerr, _("%s:  continuing...\n"), progname);
 		}
 	}
 
@@ -863,10 +887,10 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		xargs.volname = source_name;
 
 	if (!libxfs_init(&xargs))  {
-		fprintf(logerr, "%s:  couldn't initialize XFS library\n"
-			"%s: Aborting.\n", progname, progname);
-		fprintf(stderr, "%s:  couldn't initialize XFS library\n"
-			"%s: Aborting.\n", progname, progname);
+		fprintf(logerr, _("%s:  couldn't initialize XFS library\n"
+			"%s: Aborting.\n"), progname, progname);
+		fprintf(stderr, _("%s:  couldn't initialize XFS library\n"
+			"%s: Aborting.\n"), progname, progname);
 		exit(1);
 	}
 
@@ -879,19 +903,21 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
 
 	if (mp == NULL || mp->m_sb.sb_inprogress) {
-		fprintf(logerr, "%s:  %s is not a valid filesystem.\n"
-			"%s:  Aborting.\n", progname, source_name, progname);
-		fprintf(stderr, "%s:  %s is not a valid filesystem.\n"
-			"%s:  Aborting.\n", progname, source_name, progname);
+		fprintf(logerr, _("%s:  %s is not a valid filesystem.\n"
+			"%s:  Aborting.\n"), progname, source_name, progname);
+		fprintf(stderr, _("%s:  %s is not a valid filesystem.\n"
+			"%s:  Aborting.\n"), progname, source_name, progname);
 		exit(1);
 	}
 
 	if (mp->m_sb.sb_logstart == 0)  {
 		/* source has an external log */
 
-		fprintf(logerr, "%s: %s has an external log.\n%s: Aborting.\n",
+		fprintf(logerr,
+			_("%s: %s has an external log.\n%s: Aborting.\n"),
 			progname, source_name, progname);
-		fprintf(stderr, "%s: %s has an external log.\n%s: Aborting.\n",
+		fprintf(stderr,
+			_("%s: %s has an external log.\n%s: Aborting.\n"),
 			progname, source_name, progname);
 		exit(1);
 	}
@@ -899,10 +925,10 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	if (mp->m_sb.sb_rextents != 0)  {
 		/* source has a real-time section */
 
-		fprintf(logerr, "%s: %s has a real-time section.\n"
-			"%s: Aborting.\n", progname, source_name, progname);
-		fprintf(stderr, "%s: %s has a real-time section.\n"
-			"%s: Aborting.\n", progname, source_name, progname);
+		fprintf(logerr, _("%s: %s has a real-time section.\n"
+			"%s: Aborting.\n"), progname, source_name, progname);
+		fprintf(stderr, _("%s: %s has a real-time section.\n"
+			"%s: Aborting.\n"), progname, source_name, progname);
 		exit(1);
 	}
 
@@ -927,8 +953,8 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		first_residue = 0;
 	} else  {
 		fprintf(logerr,
-			"Error:  filesystem block size is smaller than the disk"
-			" sectorsize.\nAborting XFS copy now.\n");
+			_("Error:  filesystem block size is smaller than the"
+			" disk sectorsize.\nAborting XFS copy now.\n"));
 		exit(1);
 	}
 
@@ -953,25 +979,25 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			if ((target_fds[i] = open(target_names[i],
 						open_flags)) < 0)  {
 				fprintf(logerr,
-					"%s:  couldn't open target \"%s\"\n",
+					_("%s:  couldn't open target \"%s\"\n"),
 					progname, target_names[i]);
-				do_error("Aborting XFS copy - reason");
+				do_error(_("Aborting XFS copy - reason"));
 				exit(1);
 			}
 			if (fstat64(target_fds[i], &statbuf) < 0)  {
 				fprintf(logerr,
-					"%s:  couldn't stat target \"%s\"\n",
+					_("%s:  couldn't stat target \"%s\"\n"),
 					progname, target_names[i]);
-				do_error("Aborting XFS copy - reason");
+				do_error(_("Aborting XFS copy - reason"));
 				exit(1);
 			}
 
 			if (S_ISREG(statbuf.st_mode))  {
 				fprintf(logerr,
-				"%s:  target \"%s\" is a regular file.\n",
+				_("%s:  target \"%s\" is a regular file.\n"),
 					progname, target_names[i]);
 				fprintf(stderr,
-				"%s:  target \"%s\" is a regular file.\n",
+				_("%s:  target \"%s\" is a regular file.\n"),
 					progname, target_names[i]);
 				usage();
 			}
@@ -980,31 +1006,35 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			 * on the device
 			 */
 			if (ustat(statbuf.st_rdev, &ustat_buf) == 0)  {
-				fprintf(stderr, "%s:  target device contains a "
+				fprintf(stderr,
+					_("%s:  target device contains a "
 					"mounted filesystem.\n%s "
 					"cannot copy onto mounted filesystems."
-					"  Aborting.\n", progname, progname);
-				fprintf(logerr, "%s:  target device contains a "
+					"  Aborting.\n"), progname, progname);
+				fprintf(logerr,
+					_("%s:  target device contains a "
 					"mounted filesystem.\n%s "
 					"cannot copy onto mounted filesystems."
-					"  Aborting.\n", progname, progname);
+					"  Aborting.\n"), progname, progname);
 				exit(1);
 			}
 			if (S_ISBLK(statbuf.st_mode))  {
 				fprintf(logerr,
-			"%s:  target \"%s\" is not a raw device.\n",
+				_("%s:  target \"%s\" is not a raw device.\n"),
 					progname, target_names[i]);
 				tmp_name = target_names[i];
 				if ((target_names[i] = findrawpath(tmp_name))
 							== NULL)  {
 					fprintf(logerr,
-			"%s:  cannot locate raw device for \"%s\"\n",
+				_("%s:  cannot locate raw device for \"%s\"\n"),
 					progname, tmp_name);
 					fprintf(stderr,
-			"%s:  cannot locate raw device for \"%s\"\n",
+				_("%s:  cannot locate raw device for \"%s\"\n"),
 					progname, tmp_name);
-					fprintf(logerr, "Aborting XFS copy.\n");
-					fprintf(stderr, "Aborting XFS copy.\n");
+					fprintf(logerr,
+						_("Aborting XFS copy.\n"));
+					fprintf(stderr,
+						_("Aborting XFS copy.\n"));
 					exit(1);
 				}
 
@@ -1012,24 +1042,26 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 				if (close(target_fds[i]) < 0)  {
 					fprintf(logerr,
-			"Couldn't close fd to open raw device.\n");
-					do_error("Aborting XFS copy - reason");
+				_("Couldn't close fd to open raw device.\n"));
+					do_error(
+				_("Aborting XFS copy - reason"));
 					exit(1);
 				}
 
 				if ((target_fds[i] = open(target_names[i],
 							open_flags)) < 0)  {
 					fprintf(logerr,
-			"%s:  couldn't open target \"%s\"\n",
+				_("%s:  couldn't open target \"%s\"\n"),
 						progname, target_names[i]);
-					do_error("Aborting XFS copy - reason");
+					do_error(
+				_("Aborting XFS copy - reason"));
 					exit(1);
 				}
 
 				fprintf(logerr,
-				"%s:  using raw device \"%s\" instead\n",
+				_("%s:  using raw device \"%s\" instead\n"),
 					progname, target_names[0]);
-				fprintf(logerr, "%s:  continuing...\n",
+				fprintf(logerr, _("%s:  continuing...\n"),
 					progname);
 			}
 		}
@@ -1039,8 +1071,9 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		if (stat64(target_names[0], &statbuf) < 0)  {
 			/* ok, assume it's a file and create it */
 
-			printf("Creating file %s\n", target_names[0]);
-			fprintf(logerr, "Creating file %s\n", target_names[0]);
+			printf(_("Creating file %s\n"), target_names[0]);
+			fprintf(logerr, _("Creating file %s\n"),
+				target_names[0]);
 
 			open_flags |= O_CREAT|O_DIRECT;
 			write_last_block = 1;
@@ -1053,56 +1086,62 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			 * on the device
 			 */
 			if (ustat(statbuf.st_rdev, &ustat_buf) == 0)  {
-				fprintf(stderr, "%s:  a filesystem is mounted "
+				fprintf(stderr,
+					_("%s:  a filesystem is mounted "
 					"on the target device.\n"
 					"%s cannot copy to mounted filesystems."
-					"  Aborting\n", progname, progname);
-				fprintf(logerr, "%s:  a filesystem is mounted "
+					"  Aborting\n"), progname, progname);
+				fprintf(logerr,
+					_("%s:  a filesystem is mounted "
 					"on the target device.\n"
 					"%s cannot copy to mounted filesystems."
-					"  Aborting\n", progname, progname);
+					"  Aborting\n"), progname, progname);
 				exit(1);
 			}
 			if (S_ISBLK(statbuf.st_mode))  {
 				fprintf(logerr,
-				"%s:  target \"%s\" is not a raw device.\n",
+				_("%s:  target \"%s\" is not a raw device.\n"),
 					progname, target_names[0]);
 
 				tmp_name = target_names[0];
 				if ((target_names[0] = findrawpath(tmp_name))
 						== NULL)  {
 					fprintf(logerr,
-				"%s:  cannot locate raw device for \"%s\"\n",
+				_("%s:  cannot locate raw device for \"%s\"\n"),
 						progname, tmp_name);
 					fprintf(stderr,
-				"%s:  cannot locate raw device for \"%s\"\n",
+				_("%s:  cannot locate raw device for \"%s\"\n"),
 						progname, tmp_name);
-					fprintf(logerr, "Aborting XFS copy.\n");
-					fprintf(stderr, "Aborting XFS copy.\n");
+					fprintf(logerr,
+						_("Aborting XFS copy.\n"));
+					fprintf(stderr,
+						_("Aborting XFS copy.\n"));
 					exit(1);
 				}
 
-			fprintf(logerr, "%s:  using raw device \"%s\"\n",
-				progname, target_names[i]);
-			fprintf(logerr, "%s:  continuing...\n", progname);
+				fprintf(logerr,
+					_("%s:  using raw device \"%s\"\n"),
+					progname, target_names[i]);
+				fprintf(logerr,
+					_("%s:  continuing...\n"), progname);
 			}
 		}
 
 		if ((target_fds[0] = open(target_names[0],
 					open_flags, 0644)) < 0)  {
 			fprintf(logerr,
-				"%s:  couldn't open target \"%s\"\n",
+				_("%s:  couldn't open target \"%s\"\n"),
 				progname, target_names[0]);
-			do_error("Aborting XFS copy - reason");
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 
 		if (write_last_block)  {
 			if (ioctl(target_fds[0], XFS_IOC_DIOINFO, &d_info) < 0)  {
 				fprintf(logerr,
-				"%s:  ioctl on file \"%s\" failed.\n",
+				_("%s:  ioctl on file \"%s\" failed.\n"),
 					progname, target_names[0]);
-				do_error("Aborting XFS copy - reason");
+				do_error(_("Aborting XFS copy - reason"));
 				exit(1);
 			}
 
@@ -1117,45 +1156,47 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	/* initialize shared semaphore arena */
 #if 0 
 	if (usconfig(CONF_ARENATYPE, US_SHAREDONLY) < 0)  {
-		do_error("Error setting up semaphore area");
+		do_error(_("Error setting up semaphore area"));
 		exit(1);
 	}
 
 	if (usconfig(CONF_INITUSERS, MAX_THREADS) < 0)  {
-		do_error("Error setting up semaphore area");
+		do_error(_("Error setting up semaphore area"));
 		exit(1);
 	}
 
 	arena_name = mktemp(ARENA_NAME);
 
 	if (*arena_name == '\0')  {
-		fprintf(logerr, "%s:  cannot generate unique arena filename.",
+		fprintf(logerr,
+			_("%s:  cannot generate unique arena filename."),
 			progname);
 		fprintf(logerr,
-			"%s:  check /usr/tmp for xfs_copy.arena* files.",
+			_("%s:  check /usr/tmp for xfs_copy.arena* files."),
 			progname);
-		do_error("Aborting XFS copy - reason");
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if ((arena = usinit(arena_name)) == NULL)  {
-		fprintf(logerr, "%s:  could not initialize arena.", progname);
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("%s:  could not initialize arena."),
+			progname);
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 #endif
 	/* initialize locks and bufs */
 
 	if (thread_control_init(&glob_masks, num_targets+1) == NULL)  {
-		fprintf(logerr, "Couldn't initialize global thread mask\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't initialize global thread mask\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	if (wbuf_init(&w_buf, wbuf_size, wbuf_align,
 					wbuf_miniosize, 0) == NULL)  {
-		fprintf(logerr, "Error initializing wbuf 0\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Error initializing wbuf 0\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
@@ -1164,15 +1205,15 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	if (wbuf_init(&btree_buf, MAX(MAX(source_blocksize, source_sectorsize),
 					wbuf_miniosize), wbuf_align,
 					wbuf_miniosize, 1) == NULL)  {
-		fprintf(logerr, "Error initializing btree buf 1\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Error initializing btree buf 1\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
-	
-	if((ret = pthread_mutex_init(&mainwait,NULL) != 0)){
-		fprintf(logerr, "Error creating first semaphore.\n");
-		fprintf(logerr, "Something's really wrong.\n");
-		do_error("Aborting XFS copy - reason");
+
+	if ((ret = pthread_mutex_init(&mainwait,NULL) != 0)){
+		fprintf(logerr, _("Error creating first semaphore.\n"));
+		fprintf(logerr, _("Something's really wrong.\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 	/* need to start out blocking */
@@ -1186,17 +1227,17 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	/* make children */
 
 	if ((targ = malloc(num_targets * sizeof(t_args))) == NULL)  {
-		fprintf(logerr, "Couldn't malloc space for thread args\n");
-		do_error("Aborting XFS copy - reason");
+		fprintf(logerr, _("Couldn't malloc space for thread args\n"));
+		do_error(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
 		if((ret = pthread_mutex_init(&tcarg->wait, NULL) != 0)){
 			fprintf(logerr,
-				"error creating sproc semaphore %d\n", i);
-			fprintf(logerr, "Try a smaller number of targets\n");
-			do_error("Aborting XFS copy - reason");
+				_("error creating sproc semaphore %d\n"), i);
+			fprintf(logerr, _("Try a smaller number of targets\n"));
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 		/* need to start out blocking */
@@ -1218,8 +1259,8 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 		if (ret)  {
 			fprintf(logerr,
-				"error creating sproc for target %d\n", i);
-			do_error("Aborting XFS copy - reason");
+				_("error creating sproc for target %d\n"), i);
+			do_error(_("Aborting XFS copy - reason"));
 			exit(1);
 		}
 	}
@@ -1342,12 +1383,14 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 		for (;;) {
 			if (INT_GET(block->bb_level,ARCH_CONVERT) != 0)  {
-		fprintf(logerr, "WARNING:  source filesystem inconsistent.\n");
-		fprintf(stderr, "WARNING:  source filesystem inconsistent.\n");
-		fprintf(logerr,
-			"  A leaf btree rec isn't a leaf.  Aborting now.\n");
-		fprintf(stderr,
-			"  A leaf btree rec isn't a leaf.  Aborting now.\n");
+				fprintf(logerr,
+			_("WARNING:  source filesystem inconsistent.\n"));
+				fprintf(stderr,
+			_("WARNING:  source filesystem inconsistent.\n"));
+				fprintf(logerr,
+			_("  A leaf btree rec isn't a leaf.  Aborting now.\n"));
+				fprintf(stderr,
+			_("  A leaf btree rec isn't a leaf.  Aborting now.\n"));
 				exit(1);
 			}
 
@@ -1382,7 +1425,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 #if 0
 				if (w_buf.min_io_size != wbuf_miniosize)  {
 					fprintf(stderr,
-		"assert error:  w_buf.min_io_size = %d, wbuf_miniosize = %d\n",
+				"w_buf.min_io_size = %d, wbuf_miniosize = %d\n",
 						w_buf.min_io_size,
 						wbuf_miniosize);
 					killall();
@@ -1503,9 +1546,11 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		if (write_last_block)
 			if (ftruncate64(target_fds[0], mp->m_sb.sb_dblocks *
 						source_blocksize))  {
-		fprintf(logerr, "%s:  cannot grow data section.\n", progname);
-		fprintf(stderr, "%s:  cannot grow data section.\n", progname);
-				do_error("Aborting XFS copy - reason");
+				fprintf(logerr,
+			_("%s:  cannot grow data section.\n"), progname);
+				fprintf(stderr,
+			_("%s:  cannot grow data section.\n"), progname);
+				do_error(_("Aborting XFS copy - reason"));
 				pthread_exit(NULL);
 			}
 			

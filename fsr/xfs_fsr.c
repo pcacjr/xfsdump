@@ -219,6 +219,10 @@ main(int argc, char **argv)
 	setlinebuf(stdout);
 	progname = basename(argv[0]);
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	gflag = ! isatty(0);
 
 	while ((c = getopt(argc, argv, "C:p:e:MgsdnvTt:f:m:b:N:FV")) != -1 )
@@ -240,7 +244,8 @@ main(int argc, char **argv)
 			break;
 		case 's':		/* frag stats only */
 			/* sflag = 1; */
-			fprintf(stderr, "%s: Stats not yet supported for XFS\n",
+			fprintf(stderr,
+				_("%s: Stats not yet supported for XFS\n"),
 				progname);
 			usage(1);
 			break;
@@ -267,7 +272,7 @@ main(int argc, char **argv)
 			}
 			break;
 		case 'V':
-			printf("%s version %s\n", progname, VERSION);
+			printf(_("%s version %s\n"), progname, VERSION);
 			exit(0);
 		default:
 			usage(1);
@@ -287,7 +292,8 @@ main(int argc, char **argv)
 			argname = argv[optind];
 			mntp = NULL;
 			if (lstat(argname, &sb) < 0) {
-				fprintf(stderr, "%s: could not stat: %s: %s\n",
+				fprintf(stderr,
+					_("%s: could not stat: %s: %s\n"),
 					progname, argname, strerror(errno));
 				continue;
 			}
@@ -297,7 +303,7 @@ main(int argc, char **argv)
 			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
 				if ((mtabp = setmntent(mtab, "r")) == NULL) {
 					fprintf(stderr, 
-						"%s: failed reading mtab: %s\n",
+						_("%s: cannot read %s\n"),
 						progname, mtab);
 					exit(1);
 				}
@@ -316,8 +322,8 @@ main(int argc, char **argv)
 						cp = mntp->mnt_dir;
 						if (cp == NULL || 
 						    stat(cp, &sb2) < 0) {
-							fprintf(stderr, 
-						"%s: could not stat: %s: %s\n",
+							fprintf(stderr, _(
+						"%s: could not stat: %s: %s\n"),
 							progname, argname, 
 							strerror(errno));
 							continue;
@@ -330,8 +336,8 @@ main(int argc, char **argv)
 			if (mntp != NULL) {
 				fsrfs(mntp->mnt_dir, 0, 100);
 			} else if (S_ISCHR(sb.st_mode)) {
-				fprintf(stderr, 
-					"%s: char special not supported: %s\n",
+				fprintf(stderr, _(
+					"%s: char special not supported: %s\n"),
 				        progname, argname);
 				exit(1);
 			} else if (S_ISDIR(sb.st_mode) || S_ISREG(sb.st_mode)) {
@@ -339,8 +345,8 @@ main(int argc, char **argv)
 
 				statfs(argname, &fs);
 				if (fs.f_type != XFS_SB_MAGIC) {
-					fprintf(stderr, 
-				        "%s: cannot defragment: %s: Not XFS\n",
+					fprintf(stderr, _(
+				        "%s: cannot defragment: %s: Not XFS\n"),
 				        progname, argname);
 					continue;
 				}
@@ -350,7 +356,7 @@ main(int argc, char **argv)
 					fsrfile(argname, sb.st_ino);
 			} else {
 				printf(
-			"%s: not fsys dev, dir, or reg file, ignoring\n",
+			_("%s: not fsys dev, dir, or reg file, ignoring\n"),
 					argname);
 			}
 		}
@@ -364,7 +370,7 @@ main(int argc, char **argv)
 void
 usage(int ret) 
 {
-	fprintf(stderr, "Usage: %s [xfsfile] ...\n", progname);
+	fprintf(stderr, _("Usage: %s [xfsfile] ...\n"), progname);
 	exit(ret);
 }
 
@@ -382,13 +388,13 @@ initallfs(char *mtab)
 
 	fp = setmntent(mtab, "r");
 	if (fp == NULL) {
-		fsrprintf("could not open mtab file: %s\n", mtab);
+		fsrprintf(_("could not open mtab file: %s\n"), mtab);
 		exit(1);
 	}
 
 	/* malloc a number of descriptors, increased later if needed */
 	if ((fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t))) == NULL) {
-		fsrprintf("out of memory: %s\n", strerror(errno));
+		fsrprintf(_("out of memory: %s\n"), strerror(errno));
 		exit(1);
 	}
 	fsend = (fsbase + fsbufsize - 1);
@@ -411,7 +417,7 @@ initallfs(char *mtab)
 		} while ((cp = strtok(NULL, ",")) != NULL);
 		if (rw == 0) {
 			if (dflag)
-				fsrprintf("Skipping %s: not mounted rw\n",
+				fsrprintf(_("Skipping %s: not mounted rw\n"),
 					mp->mnt_fsname);
 			continue;
 		}
@@ -420,11 +426,12 @@ initallfs(char *mtab)
 			fsbufsize += NMOUNT;
 			if ((fsbase = (fsdesc_t *)realloc((char *)fsbase, 
 			              fsbufsize * sizeof(fsdesc_t))) == NULL) {
-				fsrprintf("out of memory: %s\n", strerror(errno));
+				fsrprintf(_("out of memory: %s\n"),
+					strerror(errno));
 				exit(1);
 			}
 			if (!fsbase) {
-				fsrprintf("out of memory on realloc: %s\n", 
+				fsrprintf(_("out of memory on realloc: %s\n"),
 				          strerror(errno));
 				exit(1);
 			}
@@ -435,7 +442,7 @@ initallfs(char *mtab)
 		fs->mnt = strdup(mp->mnt_dir);
 
 		if (fs->mnt == NULL || fs->mnt == NULL) {
-			fsrprintf("strdup(%s) failed\n",mp->mnt_fsname);
+			fsrprintf(_("strdup(%s) failed\n"), mp->mnt_fsname);
 			exit(1);
 		}
 		mi++;
@@ -445,11 +452,11 @@ initallfs(char *mtab)
 	fsend = (fsbase + numfs);
 	endmntent(fp);
 	if (numfs == 0) {
-		fsrprintf("no rw xfs file systems in mtab: %s\n", mtab);
+		fsrprintf(_("no rw xfs file systems in mtab: %s\n"), mtab);
 		exit(0);
 	}
 	if (vflag || dflag) {
-		fsrprintf("Found %d mounted, writable, XFS filesystems\n", 
+		fsrprintf(_("Found %d mounted, writable, XFS filesystems\n"),
 		           numfs);
 		if (dflag)
 			for (fs = fsbase; fs < fsend; fs++)
@@ -479,7 +486,7 @@ fsrallfs(int howlong, char *leftofffile)
 	/* where'd we leave off last time? */
 	if (lstat64(leftofffile, &sb) == 0) {
 		if ( (fd = open(leftofffile, O_RDONLY)) == -1 ) {
-			fsrprintf("%s: open failed\n", leftofffile);
+			fsrprintf(_("%s: open failed\n"), leftofffile);
 		}
 		else if ( fstat64(fd, &sb2) == 0) {
 			/*
@@ -494,8 +501,8 @@ fsrallfs(int howlong, char *leftofffile)
 			     (sb2.st_nlink != 1)
 			   )
 			{
-				fsrprintf( "Can't use %s: mode=0%o own=%d"
-					" nlink=%d\n",
+				fsrprintf(_("Can't use %s: mode=0%o own=%d"
+					" nlink=%d\n"),
 					leftofffile, sb.st_mode, 
 					sb.st_uid, sb.st_nlink);
 				close(fd);
@@ -514,9 +521,8 @@ fsrallfs(int howlong, char *leftofffile)
 	if (fd != NULLFD) {
 		if (read(fd, buf, SMBUFSZ) == -1) {
 			fs = fsbase;
-			fsrprintf("could not read %s, starting with %s\n",
+			fsrprintf(_("could not read %s, starting with %s\n"),
 				leftofffile, *fs->dev);
-			
 		} else {
 			for (fs = fsbase; fs < fsend; fs++) {
 				fsname = fs->dev;
@@ -554,7 +560,7 @@ fsrallfs(int howlong, char *leftofffile)
 	}
 
 	if (vflag) {
-		fsrprintf("START: pass=%d ino=%llu %s %s\n", 
+		fsrprintf(_("START: pass=%d ino=%llu %s %s\n"),
 			  fs->npass, (unsigned long long)startino,
 			  fs->dev, fs->mnt);
 	}
@@ -571,7 +577,7 @@ fsrallfs(int howlong, char *leftofffile)
 		if (fs == fsend)
 			fs = fsbase;
 		if (fs->npass == npasses) {
-			fsrprintf("Completed all %d passes\n", npasses);
+			fsrprintf(_("Completed all %d passes\n"), npasses);
 			break;
 		}
 		if (npasses > 1 && !fs->npass)
@@ -581,7 +587,7 @@ fsrallfs(int howlong, char *leftofffile)
 		pid = fork();
 		switch(pid) {
 		case -1:
-			fsrprintf("couldn't fork sub process:");
+			fsrprintf(_("couldn't fork sub process:"));
 			exit(1);
 			break;
 		case 0:
@@ -618,22 +624,23 @@ fsrall_cleanup(int timeout)
 	unlink(leftofffile);
 	fd = open(leftofffile, O_WRONLY|O_CREAT|O_EXCL, 0644);
 	if (fd == -1)
-		fsrprintf("open(%s) failed: %s\n", 
+		fsrprintf(_("open(%s) failed: %s\n"),
 		          leftofffile, strerror(errno));
 	else {
 		if (timeout) {
 			ret = sprintf(buf, "%s %d %llu\n", fs->dev, 
 			        fs->npass, (unsigned long long)leftoffino);
 			if (write(fd, buf, ret) < strlen(buf))
-				fsrprintf("write(%s) failed: %s\n", leftofffile,
-						strerror(errno));
+				fsrprintf(_("write(%s) failed: %s\n"),
+					leftofffile, strerror(errno));
 			close(fd);
 		}
 	}
 
 	if (timeout)
-		fsrprintf("xfs_fsr startpass %d, endpass %d, time %d seconds\n",
-			startpass, fs->npass, time(0) - endtime + howlong);
+		fsrprintf(_("%s startpass %d, endpass %d, time %d seconds\n"),
+			progname, startpass, fs->npass,
+			time(0) - endtime + howlong);
 }
 
 /*
@@ -653,23 +660,24 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 	jdm_fshandle_t	*fshandlep;
 	xfs_ino_t	lastino = startino;
 
-	fsrprintf("%s startino=%llu\n", mntdir, (unsigned long long)startino);
+	fsrprintf(_("%s start inode=%llu\n"), mntdir,
+		(unsigned long long)startino);
 
 	fshandlep = jdm_getfshandle( mntdir );
 	if ( ! fshandlep ) {
-		fsrprintf("unable to get handle: %s: %s\n", 
+		fsrprintf(_("unable to get handle: %s: %s\n"),
 		          mntdir, strerror( errno ));
 		return -1;
 	}
 
 	if ((fsfd = open(mntdir, O_RDONLY)) < 0) {
-		fsrprintf("unable to open: %s: %s\n", 
+		fsrprintf(_("unable to open: %s: %s\n"),
 		          mntdir, strerror( errno ));
 		return -1;
 	}
 
 	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
-		fsrprintf("Skipping %s: could not get XFS geom\n",
+		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
 			  mntdir);
 		return -1;
 	}
@@ -700,8 +708,8 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 				 * it.  Just quietly ignore this file.
 				 */
 				if (dflag)
-					fsrprintf("could not open: ino %llu\n",
-						  p->bs_ino);
+					fsrprintf(_("could not open: "
+						"inode %llu\n"), p->bs_ino);
 				continue;
 			}
 
@@ -754,7 +762,7 @@ cmp(const void *s1, const void *s2)
 static void
 fsrdir(char *dirname)
 {
-	fsrprintf("%s: Directory defragmentation not supported\n", dirname);
+	fsrprintf(_("%s: Directory defragmentation not supported\n"), dirname);
 }
 
 /*
@@ -773,9 +781,8 @@ fsrfile(char *fname, xfs_ino_t ino)
 
 	fshandlep = jdm_getfshandle(getparent (fname) );
 	if (! fshandlep) {
-		fsrprintf(
-		  "unable to construct sys handle for %s: %s\n",
-		  fname, strerror(errno));
+		fsrprintf(_("unable to construct sys handle for %s: %s\n"),
+			fname, strerror(errno));
 		return -1;
 	}
 
@@ -785,32 +792,29 @@ fsrfile(char *fname, xfs_ino_t ino)
 	 */
 	fsfd = open(getparent(fname), O_RDONLY);
 	if (fsfd < 0) {
-		fsrprintf(
-		  "unable to open sys handle for %s: %s\n",
-		  fname, strerror(errno));
+		fsrprintf(_("unable to open sys handle for %s: %s\n"),
+			fname, strerror(errno));
 		return -1;
 	}
 	
 	if ((xfs_bulkstat_single(fsfd, &ino, &statbuf)) < 0) {
-		fsrprintf(
-		  "unable to get bstat on %s: %s\n",
-		  fname, strerror(errno));
+		fsrprintf(_("unable to get bstat on %s: %s\n"),
+			fname, strerror(errno));
 		close(fsfd);
 		return -1;
 	}
 		
 	fd = jdm_open( fshandlep, &statbuf, O_RDWR);
 	if (fd < 0) {
-		fsrprintf(
-		  "unable to open handle %s: %s\n",
-		  fname, strerror(errno));
+		fsrprintf(_("unable to open handle %s: %s\n"),
+			fname, strerror(errno));
 		close(fsfd);
 		return -1;
 	}
 
 	/* Get the fs geometry */
 	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
-		fsrprintf("Unable to get geom on fs for: %s\n", fname);
+		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
 		close(fsfd);
 		return -1;
 	}
@@ -860,13 +864,13 @@ fsrfile_common(
 		fsrprintf("%s\n", fname);
 
 	if (fsync(fd) < 0) {
-		fsrprintf("sync failed: %s: %s\n", fname, strerror(errno));
+		fsrprintf(_("sync failed: %s: %s\n"), fname, strerror(errno));
 		return -1;
 	}
 
 	if (statp->bs_size == 0) {
 		if (vflag)
-			fsrprintf("%s: zero size, ignoring\n", fname);
+			fsrprintf(_("%s: zero size, ignoring\n"), fname);
 		return(0);
 	}
 
@@ -885,54 +889,54 @@ fsrfile_common(
 		fl.l_len = 0;
 		if ((fcntl(fd, F_GETLK, &fl)) < 0 ) {
 			if (vflag)
-				fsrprintf("locking check failed: %s\n", fname);
+				fsrprintf(_("locking check failed: %s\n"),
+					fname);
 			return(-1);
 		}
 		if (fl.l_type != F_UNLCK) {
 			/* Mandatory lock is set */
 			if (vflag)
-				fsrprintf("mandatory lock: %s: ignoring\n",
-					  fname);
+				fsrprintf(_("mandatory lock: %s: ignoring\n"),
+					fname);
 			return(-1);
 		}
 	}
 
 	/* Check if there is room to copy the file */
 	if ( statvfs64( (fsname == NULL ? fname : fsname), &vfss) < 0) {
-		fsrprintf(
-		  "unable to get fs stat on %s: %s\n",
-		  fname, strerror(errno));
+		fsrprintf(_("unable to get fs stat on %s: %s\n"),
+			fname, strerror(errno));
 		return (-1);
 	}
 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
 
 	if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
-		fsrprintf(
-		  "insufficient freespace for: %s: size=%lld: ignoring\n",
-		  fname, statp->bs_size);
+		fsrprintf(_("insufficient freespace for: %s: "
+			"size=%lld: ignoring\n"), fname, statp->bs_size);
 		return 1;
 	}
 
 	/* Check realtime info */
 	if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-		fsrprintf("failed to get attrs: %s\n", fname);
+		fsrprintf(_("failed to get attrs: %s\n"), fname);
 		return(-1);
 	}
 	if (fsx.fsx_xflags == XFS_XFLAG_REALTIME) {
 		if (xfs_getrt(fd, &vfss) < 0) {
-			fsrprintf("could not get rt geom for: %s\n", fname);
+			fsrprintf(_("cannot get realtime geometry for: %s\n"),
+				fname);
 			return(-1);
 		}
 		if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
-			fsrprintf("low on rt free space: %s: ignoring file\n",
-			          fname);
+			fsrprintf(_("low on realtime free space: %s: "
+				"ignoring file\n"), fname);
 			return(-1);
 		}
 		do_rt = 1;
 	}
 
 	if ((RealUid != ROOT) && (RealUid != statp->bs_uid)) {
-		fsrprintf("cannot open: %s: Permission denied\n", fname);
+		fsrprintf(_("cannot open: %s: Permission denied\n"), fname);
 		return -1;
 	}
 
@@ -986,18 +990,18 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 
 	if ( cur_nextents == 1 || cur_nextents <= nextents ) {
 		if (vflag)
-			fsrprintf("%s already fully defragmented.\n", fname);
+			fsrprintf(_("%s already fully defragmented.\n"), fname);
 		return 1; /* indicates no change/no error */
 	}
 
 	if (dflag)
-		fsrprintf("%s extents=%d can_save=%d tmp=%s\n", 
+		fsrprintf(_("%s extents=%d can_save=%d tmp=%s\n"),
 		          fname, cur_nextents, (cur_nextents - nextents), 
 		          tname);
 
 	if ((tfd = open(tname, openopts, 0666)) < 0) {
 		if (vflag)
-			fsrprintf("could not open tmp as uid %d: %s: %s\n",
+			fsrprintf(_("could not open tmp as uid %d: %s: %s\n"),
 				   statp->bs_uid,tname, strerror(errno));
 		return -1;
 	}
@@ -1006,16 +1010,16 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	/* Setup extended attributes */
 	if( statp->bs_xflags & XFS_XFLAG_HASATTR ) {
 		if (attr_setf(tfd, "X", "X", 1, ATTR_CREATE) != 0) {
-			fsrprintf("could not set ATTR on tmp: %s:\n", tname);
+			fsrprintf(_("could not set ATTR on tmp: %s:\n"), tname);
 			close(tfd);
 			return -1;
 		}
 		if (dflag)
-			fsrprintf("%s set temp attr\n", tname);
+			fsrprintf(_("%s set temp attr\n"), tname);
 	}
 
 	if ((ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
-		fsrprintf("could not get I/O info on tmp: %s\n", tname);
+		fsrprintf(_("could not get I/O info on tmp: %s\n"), tname);
 		close(tfd);
 		return -1;
 	}
@@ -1025,13 +1029,15 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		tfsx.fsx_xflags = XFS_XFLAG_REALTIME;
 
 		if ((tfsx.fsx_extsize = rt_textsize) <= 0 ) {
-			fsrprintf("realtime geom not avail for tmp: %s\n", fname);
+			fsrprintf(_("realtime geometry not available for "
+				"tmp: %s\n"), fname);
 			close(tfd);
 			return -1;
 		}
 
 		if (ioctl( tfd,  XFS_IOC_FSSETXATTR, &tfsx) < 0) {
-			fsrprintf("could not set rt on tmp: %s\n", tname);
+			fsrprintf(_("could not set realtime flag on tmp: %s\n"),
+				tname);
 			close(tfd);
 			return -1;
 		}
@@ -1048,13 +1054,15 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	}
 
 	if (dflag) {
-	    fsrprintf("DEBUG: fsize=%lld blsz_dio=%d d_min=%d d_max=%d pgsz=%d\n",
-	    statp->bs_size, blksz_dio, dio.d_miniosz, dio.d_maxiosz, pagesize);
+		fsrprintf(_("DEBUG: "
+			"fsize=%lld blsz_dio=%d d_min=%d d_max=%d pgsz=%d\n"),
+			statp->bs_size, blksz_dio, dio.d_miniosz,
+			dio.d_maxiosz, pagesize);
 	}
 
 	/* Malloc a buffer */
 	if (! (fbuf = (char *)memalign(dio.d_mem, blksz_dio))) {
-		fsrprintf("could not allocate buf: %s\n", tname);
+		fsrprintf(_("could not allocate buf: %s\n"), tname);
 		close(tfd);
 		return -1;
 	}
@@ -1064,9 +1072,8 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		sprintf(ffname, "%s.frag", tname);
 
 		/* Open the new file for sync writes */
-		if ((ffd = open(ffname, openopts, 0666)) 
-		    < 0) {
-			fsrprintf("could not open fragfile: %s : %s\n",
+		if ((ffd = open(ffname, openopts, 0666)) < 0) {
+			fsrprintf(_("could not open fragfile: %s : %s\n"),
 				   ffname, strerror(errno));
 			return -1;
 		}
@@ -1081,7 +1088,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			space.l_start = pos;
 			space.l_len = outmap[extent].bmv_length;
 			if (ioctl(tfd, XFS_IOC_UNRESVSP64, &space) < 0) {
-				fsrprintf("could not trunc tmp %s\n", 
+				fsrprintf(_("could not trunc tmp %s\n"),
 					   tname);
 			}
 			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
@@ -1097,8 +1104,8 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			space.l_len = outmap[extent].bmv_length;
 
 			if (ioctl(tfd, XFS_IOC_RESVSP64, &space) < 0) {
-				fsrprintf("could not pre-alloc tmp space: %s\n",
-					  tname);
+				fsrprintf(_("could not pre-allocate tmp space:"
+					" %s\n"), tname);
 				close(tfd);
 				free(fbuf);
 				return -1;
@@ -1131,11 +1138,13 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			wc_b4 = wc;
 			if (ct < 0 || ((wc = write(tfd, fbuf, wc)) != wc_b4)) {
 				if (ct < 0)
-				fsrprintf("bad read of %d bytes from %s:%s\n",
-				           wc_b4, fname, strerror(errno));
+					fsrprintf(_("bad read of %d bytes "
+						"from %s: %s\n"), wc_b4,
+						fname, strerror(errno));
 				else if (wc < 0)
-				fsrprintf("bad write of %d bytes to %s: %s\n",
-					   wc_b4, tname, strerror(errno));
+					fsrprintf(_("bad write of %d bytes "
+						"to %s: %s\n"), wc_b4,
+						tname, strerror(errno));
 				else {
 					/*
 					 * Might be out of space
@@ -1149,13 +1158,14 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 						/* worked on second attempt? */
 						continue;
 					}
-					else
-					if (wc < 0) {
-				fsrprintf("bad write2 of %d bytes to %s: %s\n",
-				           resid, tname, strerror(errno));
+					else if (wc < 0) {
+						fsrprintf(_("bad write2 of %d "
+							"bytes to %s: %s\n"),
+							resid, tname,
+							strerror(errno));
 					} else {
-						fsrprintf("bad copy to %s\n",
-					           tname);
+						fsrprintf(_("bad copy to %s\n"),
+							tname);
 					}
 				}
 				free(fbuf);
@@ -1165,9 +1175,9 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 				/* Do a matching write to the tmp file */
 				wc = wc_b4;
 				if (((wc = write(ffd, fbuf, wc)) != wc_b4)) {
-					fsrprintf("bad write of %d bytes "
-						  "to %s: %s\n",
-					   wc_b4, ffname, strerror(errno));
+					fsrprintf(_("bad write of %d bytes "
+						"to %s: %s\n"),
+						wc_b4, ffname, strerror(errno));
 				}
 			}
 		}
@@ -1189,7 +1199,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	new_nextents = getnextents(tfd);
 	if (cur_nextents <= new_nextents) {
 		if (vflag)
-			fsrprintf("No improvement made: %s\n", fname);
+			fsrprintf(_("No improvement made: %s\n"), fname);
 		close(tfd);
 		return 1; /* no change/no error */
 	}
@@ -1197,7 +1207,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	/* switch to the owner's id, to keep quota in line */
         if (fchown(tfd, statp->bs_uid, statp->bs_gid) < 0) {
                 if (vflag)
-                        fsrprintf("failed to fchown tmpfile %s: %s\n",
+                        fsrprintf(_("failed to fchown tmpfile %s: %s\n"),
                                    tname, strerror(errno));
 		close(tfd);
                 return -1;
@@ -1208,18 +1218,18 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	if (srval < 0) {
 		if (errno == ENOTSUP) {
 			if (vflag || dflag) 
-			   fsrprintf("%s: file type not supported\n", fname);
+			   fsrprintf(_("%s: file type not supported\n"), fname);
 		} else if (errno == EFAULT) {
 			/* The file has changed since we started the copy */
 			if (vflag || dflag)
-			   fsrprintf("%s:file modified defrag aborted\n", 
+			   fsrprintf(_("%s: file modified defrag aborted\n"),
 				     fname);
 		} else if (errno == EBUSY) {
 			/* Timestamp has changed or mmap'ed file */
 			if (vflag || dflag)
-			   fsrprintf("%s: file busy \n", fname);
+			   fsrprintf(_("%s: file busy\n"), fname);
 		} else {
-			fsrprintf("XFS_IOC_SWAPEXT failed: %s: %s\n", 
+			fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
 				  fname, strerror(errno));
 		}
 		close(tfd);
@@ -1228,7 +1238,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 
 	/* Report progress */
 	if (vflag)
-		fsrprintf("extents before:%d after:%d %s %s\n",
+		fsrprintf(_("extents before:%d after:%d %s %s\n"),
 			  cur_nextents, new_nextents, 
 			  (new_nextents <= nextents ? "DONE" : "    " ),
 		          fname);
@@ -1254,7 +1264,7 @@ gettmpname(char *fname)
 	}
 
 	if ((strlen(buf) + strlen (sbuf)) > PATH_MAX) {
-		fsrprintf("tmp file name too long: %s\n", fname);
+		fsrprintf(_("tmp file name too long: %s\n"), fname);
 		return(NULL);
 	}
 
@@ -1303,7 +1313,7 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 		outmap = (struct getbmap *)realloc(outmap, \
 		                           outmap_size*sizeof(*outmap)); \
 		if (outmap == NULL) { \
-			fsrprintf("realloc failed: %s\n", \
+			fsrprintf(_("realloc failed: %s\n"), \
 				strerror(errno)); \
 			exit(1); \
 		} \
@@ -1316,7 +1326,7 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 		outmap_size = OUTMAP_SIZE_INCREMENT; /* Initial size */
 		outmap = (struct getbmap *)malloc(outmap_size*sizeof(*outmap));
 		if (!outmap) {
-			fsrprintf("malloc failed: %s\n",
+			fsrprintf(_("malloc failed: %s\n"),
 				strerror(errno));
 			exit(1);
 		}
@@ -1346,7 +1356,7 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 
 	do {
 		if (ioctl(fd, XFS_IOC_GETBMAP, map) < 0) {
-			fsrprintf("failed reading extents: inode %llu",
+			fsrprintf(_("failed reading extents: inode %llu"),
 			         (unsigned long long)sin->bs_ino);
 			exit(1);
 		}
@@ -1396,7 +1406,7 @@ getnextents(int fd)
 
 	do {
 		if (ioctl(fd,XFS_IOC_GETBMAP, map) < 0) {
-			fsrprintf("failed reading extents");
+			fsrprintf(_("failed reading extents"));
 			exit(1);
 		}
 
@@ -1505,10 +1515,11 @@ tmp_init(char *mnt)
 	if (mkdir(buf, 0777) < 0) {
 		if (errno == EEXIST) {
 			if (dflag)
-				fsrprintf("tmpdir already exists: %s\n", buf);
+				fsrprintf(_("tmpdir already exists: %s\n"),
+						buf);
 		} else {
-			fsrprintf("could not create tmpdir: %s: %s\n", 
-			       buf, strerror(errno));
+			fsrprintf(_("could not create tmpdir: %s: %s\n"),
+					buf, strerror(errno));
 			exit(-1);
 		}
 	}
@@ -1517,9 +1528,10 @@ tmp_init(char *mnt)
 		if (mkdir(buf, 0777) < 0) {
 			if (errno == EEXIST) {
 				if (dflag)
-				   fsrprintf("tmpdir already exists: %s\n",buf);
+					fsrprintf(
+					_("tmpdir already exists: %s\n"), buf);
 			} else {
-				fsrprintf("could not create tmpdir: %s: %s\n", 
+				fsrprintf(_("cannot create tmpdir: %s: %s\n"),
 				       buf, strerror(errno));
 				exit(-1);
 			}
@@ -1556,15 +1568,16 @@ tmp_close(char *mnt)
 		sprintf(buf, "%s/.fsr/ag%d", mnt, i);
 		if (rmdir(buf) < 0) {
 			if (errno != ENOENT) {
-			    fsrprintf("could not remove tmpdir: %s: %s\n",
-			              buf, strerror(errno));
+				fsrprintf(
+					_("could not remove tmpdir: %s: %s\n"),
+			 		buf, strerror(errno));
 			}
 		}
 	}
 	sprintf(buf, "%s/.fsr", mnt);
 	if (rmdir(buf) < 0) {
 		if (errno != ENOENT) {
-			fsrprintf("could not remove tmpdir: %s: %s\n",
+			fsrprintf(_("could not remove tmpdir: %s: %s\n"),
 			          buf, strerror(errno));
 		}
 	}

@@ -90,6 +90,6 @@ _rmt_msg(int level, const char *msg, ...)
 	vsprintf(msg_str, msg, arg);
 	va_end(arg);
 
-	fprintf(stderr, "%s%s", level==RMTWARN ? "WARNING: ":"", msg_str);
+	fprintf(stderr, "%s%s", level==RMTWARN ? _("WARNING: "):"", msg_str);
     }
 }

@@ -189,7 +189,9 @@ static int _rmt_open (char *path, int oflag, int mode)
 
 	    rmt_f = popen(cmd, "r");
 	    if (rmt_f < 0) {
-		_rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type using \"%s\"\n", cmd);
+		_rmt_msg(RMTWARN, _(
+		"rmtopen: failed to detect remote host type using \"%s\"\n"),
+			cmd);
 		RMTHOST(i) = UNAME_UNDEFINED;
 		goto do_rmt;
 	    }
@@ -199,7 +201,9 @@ static int _rmt_open (char *path, int oflag, int mode)
 	        pclose(rmt_f);
 
 		if (c < 0) {
-		    _rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type reading \"%s\"\n", cmd);
+		    _rmt_msg(RMTWARN, _(
+		"rmtopen: failed to detect remote host type reading \"%s\"\n"),
+			cmd);
 		    RMTHOST(i) = UNAME_UNDEFINED;
 		    goto do_rmt;
 		}
@@ -214,7 +218,9 @@ static int _rmt_open (char *path, int oflag, int mode)
 	    }
 	    if (p->name == 0) {
 		RMTHOST(i) = UNAME_UNKNOWN;
-		_rmt_msg(RMTWARN, "rmtopen: remote host type, \"%s\", is unknown to librmt\n", uname); 
+		_rmt_msg(RMTWARN, _(
+		"rmtopen: remote host type, \"%s\", is unknown to librmt\n"),
+			uname); 
 	    }
 	    else {
 		RMTHOST(i) = p->id;

@@ -951,16 +951,16 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_NEWER:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( stat( optarg, &statbuf )) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "unable to get status of -%c argument %s:"
-				      " %s\n",
+				      " %s\n"),
 				      optopt,
 				      optarg,
 				      strerror( errno ));
@@ -977,8 +977,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_WORKSPACE:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -987,9 +987,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				tranp->t_hkdir = path_reltoabs( optarg,
 								homedir );
 				if ( ! tranp->t_hkdir ) {
-					mlog( MLOG_NORMAL | MLOG_ERROR,
+					mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					      "-%c argument %s is an "
-					      "invalid pathname\n",
+					      "invalid pathname\n"),
 					      optopt,
 					      optarg );
 					usage( );
@@ -1005,8 +1005,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			}
 			rval = stat( tranp->t_hkdir, &statbuf );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "cannot stat -%c argument %s (%s): %s\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "cannot stat -%c argument %s (%s): %s\n"),
 				      optopt,
 				      optarg,
 				      tranp->t_hkdir,
@@ -1015,9 +1015,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				return BOOL_FALSE;
 			}
 			if ( ( statbuf.st_mode & S_IFMT ) != S_IFDIR ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument %s (%s) "
-				      "is not a directory\n",
+				      "is not a directory\n"),
 				      optopt,
 				      optarg,
 				      tranp->t_hkdir );
@@ -1028,9 +1028,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_DUMPLABEL:
 			if ( tranp->t_reqdumplabvalpr ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "too many -%c arguments: "
-				      "\"-%c %s\" already given\n",
+				      "\"-%c %s\" already given\n"),
 				      optopt,
 				      optopt,
 				      tranp->t_reqdumplab );
@@ -1038,8 +1038,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				return BOOL_FALSE;
 			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -1047,8 +1047,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( strlen( optarg )
 			     >
 			     sizeofmember( pers_t, s.dumplab )) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument %s too long: max is %d\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument %s too long: max is %d\n"),
 				      optopt,
 				      optarg,
 				      sizeofmember( pers_t, s.dumplab ));
@@ -1060,22 +1060,22 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_SESSIONID:
 			if ( tranp->t_reqdumpidvalpr ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "too many -%c arguments\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "too many -%c arguments\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if (uuid_parse( optarg, tranp->t_reqdumpid ) < 0 ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument not a valid uuid\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument not a valid uuid\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -1089,15 +1089,15 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			     optarg[ 0 ] == 0
 			     ||
 			     optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( optarg[ 0 ] == '/' ) {
-				mlog( MLOG_NORMAL,
-				      "-%c argument must be relative\n",
+				mlog( MLOG_NORMAL, _(
+				      "-%c argument must be relative\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -1120,8 +1120,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_INTERACTIVE:
 			if ( ! dlog_allowed( )) {
-				mlog( MLOG_NORMAL,
-				      "-%c unavailable: no /dev/tty\n",
+				mlog( MLOG_NORMAL, _(
+				      "-%c unavailable: no /dev/tty\n"),
 				      GETOPT_INTERACTIVE );
 				return BOOL_FALSE;
 			}
@@ -1135,8 +1135,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 		case GETOPT_ALERTPROG:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-					"-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+					"-%c argument missing\n"),
 					optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -1165,16 +1165,16 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	/* command line option error checking
 	 */
 	if ( cumpr && tranp->t_toconlypr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "-%c and -%c option cannot be used together\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "-%c and -%c option cannot be used together\n"),
 		      GETOPT_TOC,
 		      GETOPT_CUMULATIVE );
 		usage( );
 		return BOOL_FALSE;
 	}
 	if ( resumepr && tranp->t_toconlypr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "-%c and -%c option cannot be used together\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "-%c and -%c option cannot be used together\n"),
 		      GETOPT_TOC,
 		      GETOPT_RESUME );
 		usage( );
@@ -1202,9 +1202,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				dstdir = path_reltoabs( argv[ optind ],
 							homedir );
 				if ( ! dstdir ) {
-					mlog( MLOG_NORMAL | MLOG_ERROR,
+					mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					      "destination directory %s "
-					      "invalid pathname\n",
+					      "invalid pathname\n"),
 					      argv[ optind ] );
 					usage( );
 					return BOOL_FALSE;
@@ -1219,18 +1219,18 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			}
 			rval = stat( dstdir, &statbuf );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "cannot stat destination directory %s: "
-				      "%s\n",
+				      "%s\n"),
 				      dstdir,
 				      strerror( errno ));
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( ( statbuf.st_mode & S_IFMT ) != S_IFDIR ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "specified destination %s "
-				      "is not a directory\n",
+				      "is not a directory\n"),
 				      dstdir );
 				usage( );
 				return BOOL_FALSE;
@@ -1245,8 +1245,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				size_t	fshlen;
 
 				if(path_to_fshandle(dstdir, &fshanp, &fshlen)) {
-					mlog( MLOG_NORMAL,
-					      "unable to construct a file system handle for %s: %s\n",
+					mlog( MLOG_NORMAL, _(
+					      "unable to construct a file "
+					      "system handle for %s: %s\n"),
 					      dstdir,
 					      strerror( errno ));
 					return BOOL_FALSE;
@@ -1258,9 +1259,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		}
 	} else {
 		if ( optind < argc ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "do not specify destination directory "
-			      "if contents only restore invoked (-%c option)\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "do not specify destination directory if "
+			      "contents only restore invoked (-%c option)\n"),
 			      GETOPT_TOC );
 			usage( );
 			return BOOL_FALSE;
@@ -1281,9 +1282,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			tranp->t_hkdir = homedir;
 		} else {
 			if ( ! dstdir ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "destination directory "
-				      "not specified\n" );
+				      "not specified\n") );
 				usage( );
 				return BOOL_FALSE;
 			} else {
@@ -1310,8 +1311,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	 */
 	rval = mkdir( tranp->t_hkdir, S_IRWXU );
 	if ( rval && errno != EEXIST ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to create %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to create %s: %s\n"),
 		      tranp->t_hkdir,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1328,8 +1329,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				O_CREAT | O_RDWR,
 				S_IRUSR | S_IWUSR );
 	if ( tranp->t_persfd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "could not open/create persistent state file %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "could not open/create persistent state file %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1342,40 +1343,40 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	persp = ( pers_t * ) mmap_autogrow(perssz, tranp->t_persfd, 0);
 
 	if ( persp == ( pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "could not map persistent state file hdr %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "could not map persistent state file hdr %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
 	}
 	if ( ! persp->a.valpr ) {
 		if ( ! dstdir ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "destination directory not specified\n" );
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "destination directory not specified\n") );
 			usage( );
 			return BOOL_FALSE;
 		}
 		if ( strlen( dstdir ) >= sizeofmember( pers_t, a.dstdir )) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "destination directory pathname too long: "
-			      "max is %d characters\n",
+			      "max is %d characters\n"),
 			      sizeofmember( pers_t, a.dstdir ) - 1 );
 			usage( );
 			return BOOL_FALSE;
 		}
 		if ( resumepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
-			      "interrupted restore to resume\n",
+			      "interrupted restore to resume\n"),
 			      GETOPT_RESUME );
 			usage( );
 			return BOOL_FALSE;
 		}
 #ifdef SESSCPLT
 		if ( sesscpltpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
-			      "interrupted restore to force completion of\n",
+			      "interrupted restore to force completion of\n"),
 			      GETOPT_SESSCPLT );
 			usage( );
 			return BOOL_FALSE;
@@ -1383,61 +1384,61 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 #endif /* SESSCPLT */
 	} else if ( ! persp->s.valpr ) {
 		if ( ! cumpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "must rm -rf %s prior to noncumulative restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "must rm -rf %s prior to noncumulative restore\n"),
 			      tranp->t_hkdir );
 			return BOOL_FALSE;
 		}
 		if ( resumepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
-			      "interrupted restore to resume\n",
+			      "interrupted restore to resume\n"),
 			      GETOPT_RESUME );
 			usage( );
 			return BOOL_FALSE;
 		}
 #ifdef SESSCPLT
 		if ( sesscpltpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
-			      "interrupted restore to force completion of\n",
+			      "interrupted restore to force completion of\n"),
 			      GETOPT_SESSCPLT );
 			usage( );
 			return BOOL_FALSE;
 		}
 #endif /* SESSCPLT */
 		if ( existpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating "
-			      "cumulative restore\n",
+			      "cumulative restore\n"),
 			      GETOPT_EXISTING );
 			return BOOL_FALSE;
 		}
 		if ( newerpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating "
-			      "cumulative restore\n",
+			      "cumulative restore\n"),
 			      GETOPT_NEWER );
 			return BOOL_FALSE;
 		}
 		if ( changepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating "
-			      "cumulative restore\n",
+			      "cumulative restore\n"),
 			      GETOPT_CHANGED );
 			return BOOL_FALSE;
 		}
 		if ( ownerpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating "
-			      "cumulative restore\n",
+			      "cumulative restore\n"),
 			      GETOPT_OWNER );
 			return BOOL_FALSE;
 		}
 		if ( stcnt ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c and -%c valid only when initiating "
-			      "cumulative restore\n",
+			      "cumulative restore\n"),
 			      GETOPT_SUBTREE,
 			      GETOPT_NOSUBTREE );
 			return BOOL_FALSE;
@@ -1445,70 +1446,70 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	} else {
 #ifdef SESSCPLT
 		if ( ! resumepr && ! sesscpltpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option required to resume "
 			      "or "
 			      "-%c option required to force completion of "
 			      "previously "
-			      "interrupted restore session\n",
+			      "interrupted restore session\n"),
 			      GETOPT_RESUME,
 			      GETOPT_SESSCPLT );
 			return BOOL_FALSE;
 		}
 #else /* SESSCPLT */
 		if ( ! resumepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option required to resume previously "
-			      "interrupted restore session\n",
+			      "interrupted restore session\n"),
 			      GETOPT_RESUME );
 			return BOOL_FALSE;
 		}
 #endif /* SESSCPLT */
 		if ( tranp->t_reqdumplabvalpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_DUMPLABEL );
 			return BOOL_FALSE;
 		}
 		if ( tranp->t_reqdumpidvalpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_SESSIONID );
 			return BOOL_FALSE;
 		}
 		if ( existpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_EXISTING );
 			return BOOL_FALSE;
 		}
 		if ( newerpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_NEWER );
 			return BOOL_FALSE;
 		}
 		if ( changepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_CHANGED );
 			return BOOL_FALSE;
 		}
 		if ( ownerpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_OWNER );
 			return BOOL_FALSE;
 		}
 		if ( interpr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "-%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
 			      GETOPT_INTERACTIVE );
 			return BOOL_FALSE;
 		}
 		if ( stcnt ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			     "-%c and -%c valid only when initiating restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			     "-%c and -%c valid only when initiating restore\n"),
 			      GETOPT_SUBTREE,
 			      GETOPT_NOSUBTREE );
 			return BOOL_FALSE;
@@ -1517,16 +1518,16 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 
 	if ( persp->a.valpr ) {
 		if ( restoredmpr && persp->a.restoredmpr != restoredmpr) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			     "-%c cannot reset flag from previous restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			     "-%c cannot reset flag from previous restore\n"),
 			      GETOPT_SETDM );
 			return BOOL_FALSE;
 		}
 #ifdef EXTATTR
 		if ( ! restoreextattrpr && 
 		       persp->a.restoreextattrpr != restoreextattrpr) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			     "-%c cannot reset flag from previous restore\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			     "-%c cannot reset flag from previous restore\n"),
 			      GETOPT_NOEXTATTR );
 			return BOOL_FALSE;
 		}
@@ -1554,8 +1555,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		ASSERT( persp->s.valpr );
 		rval = chdir( persp->a.dstdir );
 		if ( rval ) {
-			mlog( MLOG_NORMAL,
-			      "chdir %s failed: %s\n",
+			mlog( MLOG_NORMAL, _(
+			      "chdir %s failed: %s\n"),
 			      persp->a.dstdir,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -1624,8 +1625,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		newstpgcnt = stpgcnt;
 		descpgcnt = persp->s.descpgcnt;
 		ASSERT( resumepr );
-		mlog( MLOG_VERBOSE,
-		      "resuming restore previously begun %s\n",
+		mlog( MLOG_VERBOSE, _(
+		      "resuming restore previously begun %s\n"),
 		      ctimennl( &persp->s.begintime ));
 		persp->s.begintime = time( 0 );
 	}
@@ -1644,8 +1645,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	persp = ( pers_t * ) mmap_autogrow( perssz + stpgcnt * pgsz,
 				   tranp->t_persfd, 0);
 	if ( persp == ( pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "could not map persistent state file %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "could not map persistent state file %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1742,9 +1743,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 						+
 						( off_t )( stpgcnt * pgsz ));
 		if ( descp == ( pers_desc_t * )-1 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not map persistent state file inv %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      perspath,
 			      strerror( errno ),
 			      errno );
@@ -1873,8 +1874,8 @@ content_stream_restore( ix_t thrdix )
 	 */
 	rval = chdir( persp->a.dstdir );
 	if ( rval ) {
-		mlog( MLOG_NORMAL,
-		      "chdir %s failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "chdir %s failed: %s\n"),
 		      persp->a.dstdir,
 		      strerror( errno ));
 		return EXIT_ERROR;
@@ -1938,8 +1939,8 @@ content_stream_restore( ix_t thrdix )
 	}
 	uuid_clear(lastdumprejectedid);
 	if ( tranp->t_sync2 != SYNC_DONE ) {
-		mlog( MLOG_VERBOSE,
-		      "searching media for dump\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "searching media for dump\n") );
 	}
 	while ( tranp->t_sync2 != SYNC_DONE ) {
 		bool_t matchpr;
@@ -2010,9 +2011,9 @@ content_stream_restore( ix_t thrdix )
 					 grhdrp->gh_dumpid) == 0) {
 				matchpr = BOOL_TRUE;
 				display_dump_label( BOOL_TRUE, /* lock */
-						    MLOG_VERBOSE,
-						    "found dump "
-						    "matching specified id:\n",
+						    MLOG_VERBOSE, _(
+						    "found dump matching "
+						    "specified id:\n"),
 						    grhdrp,
 						    mrhdrp,
 						    crhdrp,
@@ -2024,9 +2025,9 @@ content_stream_restore( ix_t thrdix )
 					sizeof( grhdrp->gh_dumplabel ))) {
 				matchpr = BOOL_TRUE;
 				display_dump_label( BOOL_TRUE, /* lock */
-						    MLOG_VERBOSE,
-						    "found dump "
-						  "matching specified label:\n",
+						    MLOG_VERBOSE,  _(
+						    "found dump matching "
+						    "specified label:\n"),
 						    grhdrp,
 						    mrhdrp,
 						    crhdrp,
@@ -2055,9 +2056,9 @@ content_stream_restore( ix_t thrdix )
 				} else {
 					matchpr = BOOL_TRUE;
 					display_dump_label( BOOL_TRUE,/* lock */
-							    MLOG_VERBOSE,
+							    MLOG_VERBOSE, _(
 							    "dump "
-							    "description: \n",
+							    "description:\n"),
 							    grhdrp,
 							    mrhdrp,
 							    crhdrp,
@@ -2101,8 +2102,8 @@ content_stream_restore( ix_t thrdix )
 			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
 						     &sessp );
 			if ( ok && sessp ) {
-				mlog( MLOG_VERBOSE,
-				      "using online session inventory\n" );
+				mlog( MLOG_VERBOSE, _(
+				      "using online session inventory\n") );
 				persp->s.fullinvpr = pi_transcribe( sessp );
 				inv_free_session( &sessp );
 			}
@@ -2134,8 +2135,8 @@ content_stream_restore( ix_t thrdix )
 		tranp->t_sync3 = SYNC_DONE;
 	}
 	if ( tranp->t_sync3 != SYNC_DONE ) {
-		mlog( MLOG_VERBOSE,
-		      "searching media for directory dump\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "searching media for directory dump\n") );
 	}
 	while ( tranp->t_sync3 != SYNC_DONE ) {
 		rv = Media_mfile_next( Mediap,
@@ -2181,7 +2182,8 @@ content_stream_restore( ix_t thrdix )
 			    static int count[STREAM_MAX] = {0};
 			    intgen_t streamix = stream_getix( getpid() );
 			    if (++(count[streamix]) == 30) {
-				mlog( MLOG_NORMAL, "still waiting for dirs to be restored\n");
+				mlog( MLOG_TRACE,
+					"still waiting for dirs to be restored\n");
 				count[streamix] = 0;
 			    }
 			}
@@ -2268,8 +2270,8 @@ content_stream_restore( ix_t thrdix )
 		persp->s.valpr = BOOL_TRUE;
 		persp->a.valpr = BOOL_TRUE;
 
-		mlog( MLOG_VERBOSE,
-		      "reading directories\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "reading directories\n") );
 		win_locks_off(); /* we are single threaded here */
 		rv = applydirdump( drivep, fileh, scrhdrp, &fhdr );
 		win_locks_on();
@@ -2319,7 +2321,8 @@ content_stream_restore( ix_t thrdix )
 			static int count[STREAM_MAX] = {0};
 			intgen_t streamix = stream_getix( getpid() );
 			    if (++(count[streamix]) == 30) {
-				mlog( MLOG_NORMAL, "still waiting for dirs post-processing\n");
+				mlog( MLOG_NORMAL,
+				      "still waiting for dirs post-processing\n");
 				count[streamix] = 0;
 			    }
 			}
@@ -2337,8 +2340,8 @@ content_stream_restore( ix_t thrdix )
 		}
 		tranp->t_sync4 = SYNC_BUSY;
 		unlock( );
-		mlog( MLOG_VERBOSE,
-		      "directory post-processing\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "directory post-processing\n") );
 		win_locks_off(); /* we are single threaded here */
 		rv = treepost( path1, path2 );
 		win_locks_on();
@@ -2416,11 +2419,11 @@ content_stream_restore( ix_t thrdix )
 		dcaps = drivep->d_capabilities;
 		ASSERT( fileh > DH_NULL );
 		if ( tranp->t_toconlypr ) {
-			mlog( MLOG_VERBOSE,
-			      "reading non-directory files\n" );
+			mlog( MLOG_VERBOSE, _(
+			      "reading non-directory files\n") );
 		} else {
-			mlog( MLOG_VERBOSE,
-			      "restoring non-directory files\n" );
+			mlog( MLOG_VERBOSE, _(
+			      "restoring non-directory files\n") );
 		}
 		mlog( MLOG_TRACE,
 		      "media file %u in "
@@ -2543,33 +2546,33 @@ content_complete( void )
 
 	if ( completepr ) {
 		if ( tranp->t_toconlypr ) {
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "table of contents display complete"
 			      ": %ld seconds elapsed"
-			      "\n",
+			      "\n"),
 			      elapsed );
 		} else {
 			quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE);
 			quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE);
 
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "restore complete"
 			      ": %ld seconds elapsed"
-			      "\n",
+			      "\n"),
 			      elapsed );
 		}
 	} else if ( tranp->t_toconlypr ) {
-		mlog( MLOG_VERBOSE | MLOG_NOTE,
+		mlog( MLOG_VERBOSE | MLOG_NOTE, _(
 		      "table of contents display interrupted"
 		      ": %ld seconds elapsed"
-		      "\n",
+		      "\n"),
 		      elapsed );
 	} else {
-		mlog( MLOG_VERBOSE | MLOG_NOTE,
+		mlog( MLOG_VERBOSE | MLOG_NOTE, _(
 		      "restore interrupted"
 		      ": %ld seconds elapsed"
 		      ": may resume later using -%c option"
-		      "\n",
+		      "\n"),
 		      elapsed,
 		      GETOPT_RESUME );
 	}
@@ -2636,12 +2639,12 @@ content_statline( char **linespp[ ] )
 			  /
 			  ( double )tranp->t_dircnt;
 		percent *= 100.0;
-		sprintf( statline[ 0 ],
+		sprintf( statline[ 0 ], _(
 			 "status at %02d:%02d:%02d: "
 			 "%llu/%llu directories reconstructed, "
 			 "%.1f%%%% complete, "
 			 "%llu directory entries processed, "
-			 "%ld seconds elapsed\n",
+			 "%ld seconds elapsed\n"),
 			 tmp->tm_hour,
 			 tmp->tm_min,
 			 tmp->tm_sec,
@@ -2679,10 +2682,10 @@ content_statline( char **linespp[ ] )
 
 	/* format the status line in a local static buffer (non-re-entrant!)
 	 */
-	sprintf( statline[ 0 ],
+	sprintf( statline[ 0 ], _(
 		 "status at %02d:%02d:%02d: %llu/%llu files restored, "
 		 "%.1f%%%% complete, "
-		 "%ld seconds elapsed\n",
+		 "%ld seconds elapsed\n"),
 		 tmp->tm_hour,
 		 tmp->tm_min,
 		 tmp->tm_sec,
@@ -2756,14 +2759,15 @@ content_mediachange_query( void )
 	ix_t thrdix;
 
 	infoix = querycnt = 0;
-	querystr[ querycnt++ ] = "select a drive to acknowledge media change\n";
+	querystr[ querycnt++ ] =
+		_("select a drive to acknowledge media change\n");
 	choicecnt = 0;
 	maxdrvchoiceix = 0;
 	for ( thrdix = 0 ; thrdix < STREAM_SIMMAX ; thrdix++ ) {
 		if ( mcflag[ thrdix ] ) {
 			choicetothrdmap[ choicecnt ].thrdix = thrdix;
 			sprintf( choicetothrdmap[ choicecnt ].choicestr,
-				 "drive %u",
+				 _("drive %u"),
 				 (unsigned int)thrdix );
 			choicestr[ choicecnt ] =
 					choicetothrdmap[ choicecnt ].choicestr;
@@ -2773,10 +2777,10 @@ content_mediachange_query( void )
 	}
 	if ( persp->s.valpr ) {
 		infoix = choicecnt;
-		choicestr[ choicecnt++ ] = "display needed media objects";
+		choicestr[ choicecnt++ ] = _("display needed media objects");
 	}
 	nochangeix = choicecnt;
-	choicestr[ choicecnt++ ] = "continue";
+	choicestr[ choicecnt++ ] = _("continue");
 	ASSERT( choicecnt <= CHOICEMAX );
 	responseix = dlog_multi_query( querystr,
 				       querycnt,
@@ -2793,7 +2797,7 @@ content_mediachange_query( void )
 				       nochangeix);/* sigquit ix */
 	if ( responseix <= maxdrvchoiceix ) {
 		clr_mcflag( choicetothrdmap[ responseix ].thrdix );
-		return "media change acknowledged\n";
+		return _("media change acknowledged\n");
 	}
 	if ( responseix == infoix ) {
 		bool_t knownholespr = BOOL_FALSE;
@@ -2816,7 +2820,7 @@ content_mediachange_query( void )
 		querycnt = 0;
 		choicecnt = 0;
 		nochangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "continue";
+		choicestr[ choicecnt++ ] = _("continue");
 		ASSERT( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
@@ -2831,10 +2835,10 @@ content_mediachange_query( void )
 					       nochangeix, /* sigint ix */
 					       nochangeix, /* sighup ix */
 					       nochangeix);/* sigquit ix */
-		return "continuing\n";
+		return _("continuing\n");
 	}
 	ASSERT( responseix == nochangeix );
-	return "continuing\n";
+	return _("continuing\n");
 }
 
 /* definition of locally defined static functions ****************************/
@@ -3025,7 +3029,7 @@ applydirdump( drive_t *drivep,
 		persp->s.dirdonepr = BOOL_TRUE;
 	}
 
-	mlog( MLOG_VERBOSE, "%llu directories and %llu entries processed\n",
+	mlog( MLOG_VERBOSE, _("%llu directories and %llu entries processed\n"),
 		tranp->t_dirdonecnt, tranp->t_direntcnt);
 
 	return RV_OK;
@@ -3252,8 +3256,8 @@ treepost( char *path1, char *path2 )
 			ok = tree_subtree_parse( stdescp->std_sensepr,
 						 stdescp->std_path );
 			if ( ! ok ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "subtree argument %s invalid\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "subtree argument %s invalid\n"),
 				      stdescp->std_path );
 				return RV_ERROR;
 			}
@@ -3364,10 +3368,10 @@ applynondirdump( drive_t *drivep,
 			case RV_CORRUPT:
 				rval = ( * dop->do_next_mark )( drivep );
 				if ( rval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "unable to resync media file: "
 					      "some portion of dump will NOT "
-					      "be restored\n" );
+					      "be restored\n") );
 					return RV_OK;  /* treat as EOD */
 				}
 				resyncpr = BOOL_TRUE;
@@ -3391,10 +3395,10 @@ applynondirdump( drive_t *drivep,
 		case RV_CORRUPT:
 			rval = ( * dop->do_next_mark )( drivep );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "unable to resync media file: "
 				      "some portion of dump will NOT "
-				      "be restored\n" );
+				      "be restored\n") );
 				return RV_OK;  /* treat as EOD */
 			}
 			resyncpr = BOOL_TRUE;
@@ -3446,10 +3450,10 @@ extattrbypass:
 			case RV_CORRUPT:
 				rval = ( * dop->do_next_mark )( drivep );
 				if ( rval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "unable to resync media file: "
 					      "some portion of dump will NOT "
-					      "be restored\n" );
+					      "be restored\n") );
 					return RV_OK;  /* treat as EOD */
 				}
 				resyncpr = BOOL_TRUE;
@@ -3458,9 +3462,9 @@ extattrbypass:
 			}
 
 			if ( resyncpr && rv == RV_OK ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "resynchronization achieved at "
-				      "ino %llu offset %lld\n",
+				      "ino %llu offset %lld\n"),
 				      fhdrp->fh_stat.bs_ino,
 				      fhdrp->fh_offset );
 				resyncpr = BOOL_FALSE;
@@ -3638,8 +3642,8 @@ Inv_validate_cmdline( void )
 			return BOOL_ERROR;
 		}
 
-		mlog( MLOG_VERBOSE,
-		      "using online session inventory\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "using online session inventory\n") );
 		persp->s.fullinvpr = pi_transcribe( sessp );
 		if ( persp->s.fullinvpr ) {
 			strncpyterm( persp->s.dumplab,
@@ -3906,8 +3910,8 @@ Media_mfile_next( Media_t *Mediap,
 			if ( ! ( dcaps & DRIVE_CAP_REWIND )) {
 				goto newmedia;
 			}
-			mlog( MLOG_VERBOSE | MLOG_MEDIA,
-			      "rewinding\n" );
+			mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+			      "rewinding\n") );
 			( * drivep->d_opsp->do_rewind )( drivep );
 			Mediap->M_pos = POS_UNKN;
 			if ( cldmgr_stop_requested( )) {
@@ -3931,8 +3935,8 @@ Media_mfile_next( Media_t *Mediap,
 		switch ( rval ) {
 		case 0:
 			mlog_lock( );
-			mlog( MLOG_VERBOSE | MLOG_NOLOCK | MLOG_MEDIA,
-			      "examining media file %u\n",
+			mlog( MLOG_VERBOSE | MLOG_NOLOCK | MLOG_MEDIA, _(
+			      "examining media file %u\n"),
 			      mrhdrp->mh_mediafileix );
 			mlog( MLOG_TRACE | MLOG_NOLOCK | MLOG_MEDIA,
 			      "file %u in "
@@ -4103,9 +4107,9 @@ validate:
 
 		    uuid_unparse( grhdrp->gh_dumpid, gh_string_uuid);
 		    uuid_unparse( persp->s.dumpid, inv_string_uuid);
-		    mlog( MLOG_VERBOSE | MLOG_MEDIA,
+		    mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 		          "inventory session uuid (%s) does not match "
-		          "the media header's session uuid (%s)\n",
+		          "the media header's session uuid (%s)\n"),
 			  inv_string_uuid, gh_string_uuid );
 		}
 
@@ -4185,8 +4189,8 @@ validate:
 			Mediap->M_pos = POS_UNKN;
 			fileh = DH_NULL;
 			if ( dcaps & DRIVE_CAP_REWIND ) {
-				mlog( MLOG_VERBOSE | MLOG_MEDIA,
-				  "rewinding\n" );
+				mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+				  "rewinding\n") );
 				( * drivep->d_opsp->do_rewind )( drivep );
 				continue;
 			} else {
@@ -4296,8 +4300,8 @@ validate:
 			     &&
 			     ( dcaps & DRIVE_CAP_REWIND )) {
 				pi_note_underhead( objh, DH_NULL );
-				mlog( MLOG_VERBOSE | MLOG_MEDIA,
-				  "rewinding\n" );
+				mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+					"rewinding\n") );
 				( * drivep->d_opsp->do_rewind )( drivep );
 				continue;
 			}
@@ -4329,8 +4333,8 @@ validate:
 				     &&
 				     ( dcaps & DRIVE_CAP_REWIND )) {
 					pi_note_underhead( objh, DH_NULL );
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
-					  "rewinding\n" );
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+						"rewinding\n") );
 					( * drivep->d_opsp->do_rewind )(drivep);
 					continue;
 				}
@@ -4394,8 +4398,8 @@ validate:
 				     &&
 				     ( dcaps & DRIVE_CAP_REWIND )) {
 					pi_note_underhead( objh, DH_NULL );
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
-					  "rewinding\n" );
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+						"rewinding\n") );
 					( * drivep->d_opsp->do_rewind )(drivep);
 					continue;
 				}
@@ -4441,9 +4445,9 @@ validate:
 		case POS_ATHDR:
 		case POS_INDIR:
 			if ( resumepr ) {
-			    mlog( MLOG_VERBOSE | MLOG_MEDIA,
+			    mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 				  "seeking past portion of media file "
-				  "already restored\n" );
+				  "already restored\n") );
 			    rval = ( * dop->do_seek_mark )( drivep,
 							    &chkpnt );
 			    if ( ! rval ) {
@@ -4460,9 +4464,9 @@ validate:
 				    }
 			    }
 			} else if ( canseeknextpr ) {
-			    mlog( MLOG_VERBOSE | MLOG_MEDIA,
+			    mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 				  "seeking past media file "
-				  "directory dump\n" );
+				  "directory dump\n") );
 			    rval = ( * dop->do_next_mark )( drivep);
 			    if ( ! rval ) {
 				    rv_t rv;
@@ -4479,9 +4483,9 @@ validate:
 				    }
 			    }
 			} else if ( Mediap->M_pos == POS_ATHDR ) {
-			    mlog( MLOG_VERBOSE | MLOG_MEDIA,
+			    mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 				  "seeking past media file "
-				  "directory dump\n" );
+				  "directory dump\n") );
 			    rv = eatdirdump( drivep,
 					     fileh,
 					     scrhdrp,
@@ -4547,8 +4551,8 @@ validate:
 			     &&
 			     ( dcaps & DRIVE_CAP_REWIND )) {
 				pi_note_underhead( objh, DH_NULL );
-				mlog( MLOG_VERBOSE | MLOG_MEDIA,
-				  "rewinding\n" );
+				mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+					"rewinding\n") );
 				( * drivep->d_opsp->do_rewind )(drivep);
 				continue;
 			}
@@ -4638,15 +4642,15 @@ newmedia:
 			intgen_t dcaps = drivep->d_capabilities;
 			if ( purp == PURP_SEARCH ) {
 				if ( Mediap->M_pos == POS_USELESS ) {
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
-					      "media object not useful\n" );
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+					      "media object not useful\n") );
 				} else if ( Mediap->M_pos == POS_BLANK ) {
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
-					      "media object empty\n" );
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+					      "media object empty\n") );
 				} else {
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 					      "all media files examined, "
-					      "none selected for restoral\n" );
+					      "none selected for restoral\n") );
 				}
 			}
 			if ( dcaps & DRIVE_CAP_EJECT ) {
@@ -4683,9 +4687,9 @@ newmedia:
 					bagp = 0;
 				}
 				ASSERT( sistr );
-				mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_MEDIA, _(
 				      "please change media: "
-				      "type %s to confirm media change\n",
+				      "type %s to confirm media change\n"),
 				      sistr );
 				set_mcflag( thrdix );
 				while ( mcflag[ thrdix ] ) {
@@ -4834,9 +4838,9 @@ pi_allocdesc( dh_t *deschp )
 						( off_t )( stpgcnt * pgsz ));
 		if ( descp == ( pers_desc_t * )( -1 )) {
 			pi_unlock( );
-			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA,
+			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA, _(
 			      "could not remap persistent state file "
-			      "inv %s: %d (%s)\n",
+			      "inv %s: %d (%s)\n"),
 			      perspath,
 			      errno,
 			      strerror( errno ));
@@ -5353,19 +5357,19 @@ pi_addfile( Media_t *Mediap,
 			    }
 			}
 			if ( ! ok || ! sessp ) {
-				mlog( MLOG_DEBUG | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_DEBUG | MLOG_WARNING | MLOG_MEDIA, _(
 				      "on-media session "
-				      "inventory corrupt\n" );
+				      "inventory corrupt\n") );
 			} else {
 				/* if root, update online inventory.
 				 */
 				if ( ! geteuid( )
 				     &&
 				     ! tranp->t_noinvupdatepr ) {
-					mlog( MLOG_VERBOSE | MLOG_MEDIA,
+					mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 					      "incorporating on-media session "
 					      "inventory into online "
-					      "inventory\n" );
+					      "inventory\n") );
 					inv_put_sessioninfo( &sessinfo ); 
 				}
 
@@ -6346,9 +6350,9 @@ pi_hiteod( ix_t strmix, ix_t objix )
 	 * other media objects beyond this one.
 	 */
 	if ( objix != lastobjix ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 		      "hit EOD at stream %u object %u, "
-		      "yet inventory indicates last object index is %u\n",
+		      "yet inventory indicates last object index is %u\n"),
 		      strmix,
 		      objix,
 		      lastobjix );
@@ -6412,9 +6416,9 @@ pi_hitnextdump( ix_t strmix, ix_t objix, ix_t lastfileix )
 	 * other media objects beyond this one.
 	 */
 	if ( objix != lastobjix ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 		      "hit next dump at stream %u object %u file %u, "
-		      "yet inventory indicates last object index is %u\n",
+		      "yet inventory indicates last object index is %u\n"),
 		      strmix,
 		      objix,
 		      lastfileix,
@@ -6694,8 +6698,8 @@ askinvforbaseof( uuid_t baseid, inv_session_t *sessp )
 			   INV_SEARCH_ONLY,
 			   ( void * )&sessp->s_fsid );
 	if ( invtok == INV_TOKEN_NULL ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
-		      "unable to open inventory to validate dump\n" );
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
+		      "unable to open inventory to validate dump\n") );
 		return BOOL_FALSE;
 	}
 
@@ -6711,9 +6715,9 @@ askinvforbaseof( uuid_t baseid, inv_session_t *sessp )
 						     &basesessp );
 	}
 	if ( ! ok ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 		      "unable to find base dump in inventory "
-		      "to validate dump\n" );
+		      "to validate dump\n") );
 		return BOOL_FALSE;
 	}
 
@@ -6740,18 +6744,18 @@ dumpcompat( bool_t resumepr, ix_t level, uuid_t baseid, bool_t logpr )
 		if ( persp->a.dumpcnt == 0 ) {
 			if ( resumepr ) {
 				if ( logpr ) {
-				    mlog( MLOG_NORMAL | MLOG_ERROR,
+				    mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					  "cumulative restores must begin with "
 					  "an initial (not resumed) "
-					  "level 0 dump\n" );
+					  "level 0 dump\n") );
 				}
 				return BOOL_FALSE;
 			}
 			if ( level > 0 ) {
 				if ( logpr ) {
-				    mlog( MLOG_NORMAL | MLOG_ERROR,
+				    mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					  "cumulative restores must begin with "
-					  "a level 0 dump\n" );
+					  "a level 0 dump\n") );
 				}
 				return BOOL_FALSE;
 			}
@@ -6760,10 +6764,10 @@ dumpcompat( bool_t resumepr, ix_t level, uuid_t baseid, bool_t logpr )
 				if ( uuid_compare( persp->a.lastdumpid,
 						   baseid) != 0) {
 					if ( logpr ) {
-					    mlog( MLOG_NORMAL | MLOG_ERROR,
+					    mlog( MLOG_NORMAL | MLOG_ERROR, _(
 						  "selected resumed dump "
 						  "not a resumption of "
-						  "previously applied dump\n" );
+						  "previously applied dump\n"));
 					}
 					return BOOL_FALSE;
 				}
@@ -6771,9 +6775,9 @@ dumpcompat( bool_t resumepr, ix_t level, uuid_t baseid, bool_t logpr )
 				if ( uuid_compare( persp->a.lastdumpid,
 						   baseid) != 0) {
 					if ( logpr ) {
-					    mlog( MLOG_NORMAL | MLOG_ERROR,
+					    mlog( MLOG_NORMAL | MLOG_ERROR, _(
 						  "selected dump not based on "
-						  "previously applied dump\n" );
+						  "previously applied dump\n"));
 					}
 					return BOOL_FALSE;
 				}
@@ -6815,7 +6819,7 @@ Media_prompt_change( drive_t *drivep,
 	ix_t sigintix;
 
 retry:
-	fold_init( fold, "change media dialog", '=' );
+	fold_init( fold, _("change media dialog"), '=' );
 	preamblecnt = 0;
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
@@ -6826,32 +6830,32 @@ retry:
 	/* query: ask if media changed or declined
 	 */
 	if ( drivecnt > 1 ) {
-		sprintf( question,
+		sprintf( question, _(
 			 "please change media in "
-			 "drive %u\n",
+			 "drive %u\n"),
 			 (unsigned int)drivep->d_index );
 	} else {
-		sprintf( question,
+		sprintf( question, _(
 			 "please change media in "
-			 "drive\n" );
+			 "drive\n") );
 	}
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
 	ASSERT( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	dontix = choicecnt;
-	choicestr[ choicecnt++ ] = "media change declined";
+	choicestr[ choicecnt++ ] = _("media change declined");
 	if ( purp != PURP_SEARCH ) {
 		invstatix = choicecnt;
-		choicestr[ choicecnt++ ] = "display media inventory status";
+		choicestr[ choicecnt++ ] = _("display media inventory status");
 		neededix = choicecnt;
-		choicestr[ choicecnt++ ] = "list needed media objects";
+		choicestr[ choicecnt++ ] = _("list needed media objects");
 	} else {
 		invstatix = IXMAX;
 		neededix = IXMAX;
 	}
 	doix = choicecnt;
-	choicestr[ choicecnt++ ] = "media changed";
+	choicestr[ choicecnt++ ] = _("media changed");
 	ASSERT( choicecnt <= CHOICEMAX );
 	sigintix = IXMAX - 1;
 
@@ -6870,9 +6874,9 @@ retry:
 				       dontix );	/* sigquit ix */
 	ackcnt = 0;
 	if ( responseix == doix ) {
-		ackstr[ ackcnt++ ] = "examining new media\n";
+		ackstr[ ackcnt++ ] = _("examining new media\n");
 	} else if ( responseix == dontix ) {
-		ackstr[ ackcnt++ ] = "media change aborted\n";
+		ackstr[ ackcnt++ ] = _("media change aborted\n");
 	} else if ( responseix == invstatix ) {
 		ackstr[ ackcnt++ ] = "\n";
 		ASSERT( ackcnt <= ACKMAX );
@@ -6880,7 +6884,7 @@ retry:
 				ackcnt );
 		pi_show_nomloglock( );
 		postamblecnt = 0;
-		fold_init( fold, "end dialog", '-' );
+		fold_init( fold, _("end dialog"), '-' );
 		postamblestr[ postamblecnt++ ] = "\n";
 		postamblestr[ postamblecnt++ ] = fold;
 		postamblestr[ postamblecnt++ ] = "\n\n";
@@ -6908,7 +6912,7 @@ retry:
 		goto retry;
 	} else {
 		ASSERT( responseix == sigintix );
-		ackstr[ ackcnt++ ] = "keyboard interrupt\n";
+		ackstr[ ackcnt++ ] = _("keyboard interrupt\n");
 	}
 
 	ASSERT( ackcnt <= ACKMAX );
@@ -6916,7 +6920,7 @@ retry:
 			ackcnt );
 
 	postamblecnt = 0;
-	fold_init( fold, "end dialog", '-' );
+	fold_init( fold, _("end dialog"), '-' );
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
@@ -6942,6 +6946,7 @@ retry:
 
 	return responseix == doix;
 }
+
 /* prompts the operator, asking if the current media file header describes
  * the dump to be restored
  */
@@ -6971,7 +6976,7 @@ promptdumpmatch( ix_t thrdix,
 
 retry:
 	preamblecnt = 0;
-	fold_init( fold, "dump selection dialog", '=' );
+	fold_init( fold, _("dump selection dialog"), '=' );
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
@@ -6981,15 +6986,15 @@ retry:
 	/* display vital stats and ask if this one should be restored
 	 */
 	if ( drivecnt > 0 ) {
-		sprintf( introstring,
+		sprintf( introstring, _(
 			 "the following dump has been found"
 			 " on drive %u"
-			 "\n\n",
+			 "\n\n"),
 			 (unsigned int)thrdix );
 	} else {
-		sprintf( introstring,
+		sprintf( introstring, _(
 			 "the following dump has been found"
-			 "\n\n" );
+			 "\n\n") );
 	}
 	ASSERT( strlen( introstring ) < sizeof( introstring ));
 	display_dump_label( BOOL_FALSE,
@@ -7002,18 +7007,19 @@ retry:
 
 	querycnt = 0;
 	if ( tranp->t_toconlypr ) {
-		querystr[ querycnt++ ] = "\nexamine this dump?\n";
+		querystr[ querycnt++ ] = _("\nexamine this dump?\n");
 	} else {
-		querystr[ querycnt++ ] = (persp->a.interpr) ? "\ninteractively restore from this dump?\n"
-                                          : "\nrestore this dump?\n";
+		querystr[ querycnt++ ] = (persp->a.interpr) ?
+			_("\ninteractively restore from this dump?\n")
+				: _("\nrestore this dump?\n");
 	}
 	ASSERT( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	dontix = choicecnt;
-	choicestr[ choicecnt++ ] = "skip";
+	choicestr[ choicecnt++ ] = _("skip");
 	doix = choicecnt;
-	choicestr[ choicecnt++ ] = (persp->a.interpr) ? "interactively restore\n"
-				    : "restore\n";
+	choicestr[ choicecnt++ ] = (persp->a.interpr) ?
+				_("interactively restore\n") : _("restore\n");
 	ASSERT( choicecnt <= CHOICEMAX );
 	sigintix = IXMAX - 1;
 
@@ -7032,13 +7038,14 @@ retry:
 				       dontix );	/* sigquit ix */
 	ackcnt = 0;
 	if ( responseix == doix ) {
-		ackstr[ ackcnt++ ] = (persp->a.interpr) ? "this dump selected for interactive restoral\n"
-				      : "this dump selected for restoral\n";
+		ackstr[ ackcnt++ ] = (persp->a.interpr) ?
+			_("this dump selected for interactive restoral\n")
+			      : _("this dump selected for restoral\n");
 	} else if ( responseix == dontix ) {
-		ackstr[ ackcnt++ ] = "dump skipped\n";
+		ackstr[ ackcnt++ ] = _("dump skipped\n");
 	} else {
 		ASSERT( responseix == sigintix );
-		ackstr[ ackcnt++ ] = "keyboard interrupt\n";
+		ackstr[ ackcnt++ ] = _("keyboard interrupt\n");
 	}
 
 	ASSERT( ackcnt <= ACKMAX );
@@ -7177,8 +7184,8 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 					      ehcs );
 			return ok;
 		default:
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "ino %llu: unknown file type: %08x\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "ino %llu: unknown file type: %08x\n"),
 			      bstatp->bs_ino,
 			      bstatp->bs_mode );
 			return BOOL_FALSE;
@@ -7192,21 +7199,21 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 		      path2 );
 		rval = unlink( path2 );
 		if ( rval && errno != ENOENT ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "unable to unlink "
 			      "current file prior to linking "
 			      "%s to %s:"
-			      " %s\n",
+			      " %s\n"),
 			      path1,
 			      path2,
 			      strerror( errno ));
 		} else {
 			rval = link( path1, path2 );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "attempt to "
 				      "link %s to %s failed:"
-				      " %s\n",
+				      " %s\n"),
 				      path1,
 				      path2,
 				      strerror( errno ));
@@ -7258,8 +7265,8 @@ restore_reg( drive_t *drivep,
 				      path,
 				      offset );
 			} else {
-				mlog( MLOG_NORMAL | MLOG_BARE,
-				      "%s (offset %lld)\n",
+				mlog( MLOG_NORMAL | MLOG_BARE, _(
+				      "%s (offset %lld)\n"),
 				      path,
 				      offset );
 			}
@@ -7292,9 +7299,9 @@ restore_reg( drive_t *drivep,
 			
 			fd = open( path, oflags, S_IRUSR | S_IWUSR );
 			if ( fd < 0 ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "open of %s failed: "
-				      "%s: discarding ino %llu\n",
+				      "%s: discarding ino %llu\n"),
 				      path,
 				      strerror( errno ),
 				      fhdrp->fh_stat.bs_ino );
@@ -7302,9 +7309,9 @@ restore_reg( drive_t *drivep,
 			} else {
 				rval = fstat64( fd, &stat );
 				if ( rval != 0 ) {
-					mlog( MLOG_VERBOSE | MLOG_WARNING,
+					mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 					      "attempt to stat %s "
-					      "failed: %s\n",
+					      "failed: %s\n"),
 					      path,
 					      strerror( errno ));
 				} else {
@@ -7323,9 +7330,9 @@ restore_reg( drive_t *drivep,
 						       bstatp->bs_size);
 						if ( rval != 0 ) {
 						mlog( MLOG_VERBOSE|MLOG_WARNING,
-						      "attempt"
+						      _("attempt"
 						      " to truncate %s"
-						      " failed: %s\n",
+						      " failed: %s\n"),
 						      path,
 						     strerror( errno ));
 						}
@@ -7353,15 +7360,14 @@ restore_reg( drive_t *drivep,
 						     (void *)&fsxattr);
 					if ( rval < 0 ) {
 						mlog(MLOG_NORMAL | MLOG_WARNING,
-						      "attempt to set "
-						      "extended "
-						      "attributes "
+						      _("attempt to set "
+						      "extended attributes "
 						      "(xflags 0x%x, "
 						      "extsize = 0x%x)"
 						      "of %s failed: "
-						      "%s\n",
+						      "%s\n"),
 						      bstatp->bs_xflags,
-						     bstatp->bs_extsize,
+						      bstatp->bs_extsize,
 						      path,
 						      strerror(errno));
 					}
@@ -7385,9 +7391,9 @@ restore_reg( drive_t *drivep,
 						      &fssetdm );
 					if ( rval ) {
 						mlog(MLOG_NORMAL | MLOG_WARNING,
-						     "attempt to set DMI "
+						     _("attempt to set DMI "
 						     "attributes of %s failed: "
-						     "%s\n",
+						     "%s\n"),
 						     path,
 						     strerror( errno ));
 					}
@@ -7398,8 +7404,8 @@ restore_reg( drive_t *drivep,
 					fd = reopen_invis(path, oflags);
 					if (fd < 0) {
 						mlog(MLOG_NORMAL | MLOG_WARNING,
-							"attempt to reopen_invis %s failed."
-							" The file will not be restored.\n",
+							_("attempt to reopen_invis %s failed."
+							" The file will not be restored.\n"),
 							path);
 					}
 					/* If fd < 0, we will not restore the file. */
@@ -7514,9 +7520,9 @@ restore_reg( drive_t *drivep,
 			    ( time32_t )bstatp->bs_mtime.tv_sec;
 		rval = utime( path, &utimbuf );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "unable to set access and modification"
-			      " times of %s: %s\n",
+			      " times of %s: %s\n"),
 			      path,
 			      strerror( errno ));
 		}
@@ -7528,9 +7534,9 @@ restore_reg( drive_t *drivep,
 				       ( uid_t )bstatp->bs_uid,
 				       ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "unable to set owner and group "
-				      "of %s: %s\n",
+				      "of %s: %s\n"),
 				      path,
 				      strerror( errno ));
 			}
@@ -7540,18 +7546,16 @@ restore_reg( drive_t *drivep,
 		 */
 		rval = fchmod( fd, ( mode_t )bstatp->bs_mode );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "unable to set mode "
-			      "of %s: %s\n",
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+			      "unable to set mode of %s: %s\n"),
 			      path,
 			      strerror( errno ));
 		}
 
 		rval = close( fd );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "unable to close "
-			      "%s: %s\n",
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+			      "unable to close %s: %s\n"),
 			      path,
 			      strerror( errno ));
 		}
@@ -7575,27 +7579,27 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 
 	switch ( bstatp->bs_mode & S_IFMT ) {
 	case S_IFBLK:
-		printstr = "block special file";
+		printstr = _("block special file");
 		break;
 	case S_IFCHR:
-		printstr = "char special file";
+		printstr = _("char special file");
 		break;
 	case S_IFIFO:
-		printstr = "named pipe";
+		printstr = _("named pipe");
 		break;
 #ifdef S_IFNAM
 	case S_IFNAM:
-		printstr = "XENIX named pipe";
+		printstr = _("XENIX named pipe");
 		break;
 #endif
 #ifdef DOSOCKS
 	case S_IFSOCK:
-		printstr = "UNIX domain socket";
+		printstr = _("UNIX domain socket");
 		break;
 #endif /* DOSOCKS */
 	default:
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-		      "%s: unknown file type: mode 0x%x ino %llu\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		      "%s: unknown file type: mode 0x%x ino %llu\n"),
 		      path,
 		      bstatp->bs_mode,
 		      fhdrp->fh_stat.bs_ino );
@@ -7623,9 +7627,9 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 
 			sockfd = socket( AF_UNIX, SOCK_STREAM, 0 );
 			if ( sockfd < 0 ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "unable to create "
-				      "%s ino %llu %s: %s: discarding\n",
+				      "%s ino %llu %s: %s: discarding\n"),
 				      printstr,
 				      fhdrp->fh_stat.bs_ino,
 				      path,
@@ -7635,9 +7639,9 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 			memset( ( void * )&addr, 0, sizeof( addr ));
 			addr.sun_family = AF_UNIX;
 			if ( strlen( path ) >= sizeof( addr.sun_path )) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "pathname too long for bind of "
-				      "%s ino %llu %s: %s: discarding\n",
+				      "%s ino %llu %s: %s: discarding\n"),
 				      printstr,
 				      fhdrp->fh_stat.bs_ino,
 				      path );
@@ -7652,9 +7656,9 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 				     ( struct sockaddr * )&addr,
 				     ( int )addrlen );
 			if ( rval < 0 ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "unable to bind "
-				      "%s ino %llu %s: %s: discarding\n",
+				      "%s ino %llu %s: %s: discarding\n"),
 				      printstr,
 				      fhdrp->fh_stat.bs_ino,
 				      path,
@@ -7673,9 +7677,9 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 			      ( mode_t )bstatp->bs_mode,
 			      ( dev_t )IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
 		if ( rval && rval != EEXIST ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "unable to create %s "
-			      "ino %llu %s: %s: discarding\n",
+			      "ino %llu %s: %s: discarding\n"),
 			      printstr,
 			      fhdrp->fh_stat.bs_ino,
 			      path,
@@ -7693,9 +7697,9 @@ sockbypass:
 				      ( uid_t )bstatp->bs_uid,
 				      ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "unable to set owner and group of %s %s: "
-				      "%s\n",
+				      "%s\n"),
 				      printstr,
 				      path,
 				      strerror( errno ));
@@ -7706,9 +7710,8 @@ sockbypass:
 		 */
 		rval = chmod( path, ( mode_t )fhdrp->fh_stat.bs_mode );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "unable to set mode "
-			      "of %s: %s\n",
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+			      "unable to set mode of %s: %s\n"),
 			      path,
 			      strerror( errno ));
 		}
@@ -7719,9 +7722,9 @@ sockbypass:
 		utimbuf.modtime = ( time32_t )bstatp->bs_mtime.tv_sec;
 		rval = utime( path, &utimbuf );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "unable to set access and modification "
-			      "times of %s: %s\n",
+			      "times of %s: %s\n"),
 			      path,
 			      strerror( errno ));
 		}
@@ -7808,9 +7811,9 @@ restore_symlink( drive_t *drivep,
 	ASSERT( ( off64_t )nread == ehdr.eh_sz );
 	if ( ! scratch ) {
 		if ( path ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      "unable to create "
-			      "symlink ino %llu %s: src too long: discarding\n",
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+			      "unable to create symlink ino %llu "
+			      "%s: src too long: discarding\n"),
 			      bstatp->bs_ino,
 			      path );
 		}
@@ -7832,9 +7835,9 @@ restore_symlink( drive_t *drivep,
 		umask( oldumask );
 
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "unable to create "
-			      "symlink ino %llu %s: %s: discarding\n",
+			      "symlink ino %llu %s: %s: discarding\n"),
 			      bstatp->bs_ino,
 			      path,
 			      strerror( errno ));
@@ -7848,9 +7851,9 @@ restore_symlink( drive_t *drivep,
 				       ( uid_t )bstatp->bs_uid,
 				       ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "unable to set owner and group "
-				      "of %s: %s\n",
+				      "of %s: %s\n"),
 				      path,
 				      strerror( errno ));
 			}
@@ -7924,14 +7927,14 @@ read_filehdr( drive_t *drivep, filehdr_t *fhdrp, bool_t fhcs )
 #ifdef FILEHDR_CHECKSUM
 	if ( fhcs ) {
 		if ( ! ( fhdrp->fh_flags & FILEHDR_FLAGS_CHECKSUM )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "corrupt file header\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "corrupt file header\n") );
 			return RV_CORRUPT;
 		}
 		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
 		if ( sum ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "bad file header checksum\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "bad file header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
@@ -7991,14 +7994,14 @@ read_extenthdr( drive_t *drivep, extenthdr_t *ehdrp, bool_t ehcs )
 #ifdef EXTENTHDR_CHECKSUM
 	if ( ehcs ) {
 		if ( ! ( ehdrp->eh_flags & EXTENTHDR_FLAGS_CHECKSUM )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "corrupt extent header\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "corrupt extent header\n") );
 			return RV_CORRUPT;
 		}
 		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
 		if ( sum ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "bad extent header checksum\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "bad extent header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
@@ -8063,14 +8066,14 @@ read_dirent( drive_t *drivep,
 #ifdef DIRENTHDR_CHECKSUM
 	if ( dhcs ) {
 		if ( dhdrp->dh_sz == 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "corrupt directory entry header\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "corrupt directory entry header\n") );
 			return RV_CORRUPT;
 		}
 		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
 		if ( sum ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "bad directory entry header checksum\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "bad directory entry header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
@@ -8179,14 +8182,14 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 #ifdef EXTATTRHDR_CHECKSUM
 	if ( ahcs ) {
 		if ( ! ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "corrupt extattr header\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "corrupt extattr header\n") );
 			return RV_CORRUPT;
 		}
 		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
 		if ( sum ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "bad extattr header checksum\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "bad extattr header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
@@ -8255,9 +8258,9 @@ restore_extent( filehdr_t *fhdrp,
 		ASSERT( ( off & ( off64_t )( BBSIZE - 1 )) == 0 );
 		new_off = lseek64(  fd, off, SEEK_SET );
 		if ( new_off < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "attempt to seek %s to %lld failed: %s: "
-			      "not restoring extent off %lld sz %lld\n",
+			      "not restoring extent off %lld sz %lld\n"),
 			      path,
 			      off,
 			      strerror( errno ),
@@ -8270,9 +8273,9 @@ restore_extent( filehdr_t *fhdrp,
 	}
 	if ( (fd != -1) && (bstatp->bs_xflags & XFS_XFLAG_REALTIME) ) {
 		if ( (ioctl(fd, XFS_IOC_DIOINFO, &da) < 0) ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "dioinfo %s failed: "
-			      "%s: discarding ino %llu\n",
+			      "%s: discarding ino %llu\n"),
 			      path,
 			      strerror( errno ),
 			      fhdrp->fh_stat.bs_ino );
@@ -8299,36 +8302,36 @@ restore_extent( filehdr_t *fhdrp,
 			switch( rval ) {
 			case DRIVE_ERROR_EOF:
 				rv = RV_EOD;
-				reasonstr = "end of media file";
+				reasonstr = _("end of media file");
 				break;
 			case DRIVE_ERROR_EOD:
 				rv = RV_EOD;
-				reasonstr = "end of recorded data";
+				reasonstr = _("end of recorded data");
 				break;
 			case DRIVE_ERROR_EOM:
 				rv = RV_EOD;
-				reasonstr = "end of media";
+				reasonstr = _("end of media");
 				break;
 			case DRIVE_ERROR_MEDIA:
 				rv = RV_EOD;
-				reasonstr = "media error or no media";
+				reasonstr = _("media error or no media");
 				break;
 			case DRIVE_ERROR_CORRUPTION:
 				rv = RV_CORRUPT;
-				reasonstr = "end of media file";
+				reasonstr = _("end of media file");
 				break;
 			case DRIVE_ERROR_DEVICE:
 				rv = RV_DRIVE;
-				reasonstr = "end of media file";
+				reasonstr = _("end of media file");
 				break;
 			case DRIVE_ERROR_CORE:
 			default:
 				rv = RV_CORE;
-				reasonstr = "dumping core";
+				reasonstr = _("dumping core");
 				break;
 			}
-			mlog( MLOG_NORMAL,
-			      "attempt to read %u bytes failed: %s\n",
+			mlog( MLOG_NORMAL, _(
+			      "attempt to read %u bytes failed: %s\n"),
 			      req_bufsz,
 			      reasonstr );
 			return rv;
@@ -8395,11 +8398,11 @@ restore_extent( filehdr_t *fhdrp,
 					}
 					ASSERT( ( size_t )rval <= remaining );
 					if ( ( size_t )rval < remaining ) {
-						mlog( MLOG_NORMAL,
+						mlog( MLOG_NORMAL, _(
 						      "WARNING: attempt to "
 						      "write %u bytes to %s at "
-						      "offset %lld failed: "
-						      "only %d bytes written\n",
+						      "offset %lld failed: only"
+						      "%d bytes written\n"),
 						      remaining,
 						      path,
 						      tmp_off,
@@ -8421,19 +8424,19 @@ restore_extent( filehdr_t *fhdrp,
 		( * dop->do_return_read_buf )( drivep, bufp, sup_bufsz );
 		if ( ( size_t )nwritten != ntowrite ) {
 			if ( nwritten < 0 ) {
-				mlog( MLOG_NORMAL,
+				mlog( MLOG_NORMAL, _(
 				      "attempt to write %u bytes to %s "
-				      "at offset %lld failed: %s\n",
+				      "at offset %lld failed: %s\n"),
 				      ntowrite,
 				      path,
 				      off,
 				      strerror( errno ));
 			} else {
 				ASSERT( ( size_t )nwritten < ntowrite );
-				mlog( MLOG_NORMAL,
+				mlog( MLOG_NORMAL, _(
 				      "attempt to write %u bytes to %s at "
 				      "offset %lld failed: only %d bytes "
-				      "written\n",
+				      "written\n"),
 				      ntowrite,
 				      path,
 				      off,
@@ -8471,8 +8474,8 @@ extattr_init( size_t drivecnt )
 
 	extattrbufp = memalign( EXTATTRHDR_ALIGN, extattrbufsz * drivecnt );
 	if (extattrbufp == NULL) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "Failed to allocate extended attribute buffer\n");
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "Failed to allocate extended attribute buffer\n") );
 		return BOOL_FALSE;
 	}
 
@@ -8687,14 +8690,14 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 			 :
 			 ATTR_DONTFOLLOW );
 	if ( rval ) {
-		mlog( MLOG_VERBOSE | MLOG_WARNING,
+		mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 		      "unable to set %s extended attribute for %s: "
-		      "%s (%d)\n",
+		      "%s (%d)\n"),
 		      isrootpr
 		      ?
-		      "root"
+		      _("root")
 		      :
-		      "non-root",
+		      _("non-root"),
 		      path,
 		      strerror( errno ),
 		      errno );
@@ -8765,8 +8768,9 @@ partial_reg( ix_t d_index,
 
 		/* Should never get here. */
 		pi_unlock();
-		mlog( MLOG_NORMAL | MLOG_WARNING, 
-		  "partial_reg: Out of records. Extend attrs applied early.\n");
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		     "partial_reg: Out of records. "
+		     "Extended attributes applied early.\n") );
 		return;  
 	}
 
@@ -8972,7 +8976,7 @@ content_overwrite_ok( char *path,
 	/* if overwrites absolutely inhibited, disallow
 	 */
 	if ( persp->a.existpr ) {
-		*reasonstrp = "overwrites inhibited";
+		*reasonstrp = _("overwrites inhibited");
 		return BOOL_FALSE;
 	}
 
@@ -8980,7 +8984,7 @@ content_overwrite_ok( char *path,
 	 */
 	if ( persp->a.newerpr ) {
 		if ( ( time32_t )ctime < persp->a.newertime ) {
-			*reasonstrp = "too old";
+			*reasonstrp = _("too old");
 			return BOOL_FALSE;
 		}
 	}
@@ -8989,7 +8993,7 @@ content_overwrite_ok( char *path,
 	 */
 	if ( persp->a.changepr ) {
 		if ( statbuf.st_ctime >= ( time32_t )ctime ) {
-			*reasonstrp = "existing version is newer";
+			*reasonstrp = _("existing version is newer");
 			return BOOL_FALSE;
 		}
 	}
@@ -9068,13 +9072,13 @@ pi_show_nomloglock( void )
 	/* no point in proceeding if pi not begun
 	 */
 	if ( persp->s.strmheadh == DH_NULL ) {
-		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-		      "session inventory unknown\n" );
+		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA, _(
+		      "session inventory unknown\n") );
 		return;
 	}
 
-	mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-	      "session inventory display\n" );
+	mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA, _(
+	      "session inventory display\n") );
 
 	/* iterate over all streams
 	 */
@@ -9087,11 +9091,11 @@ pi_show_nomloglock( void )
 		intgen_t objix;
 
 		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-		      "\nmedia stream %u:\n",
+		      _("\nmedia stream %u:\n"),
 		      strmix );
 		if ( DH2S( strmh )->s_cldh == DH_NULL ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-			      "\n    media objects not yet identified\n" );
+			      _("\n    media objects not yet identified\n") );
 			continue;
 		}
 		/* iterate over all objects
@@ -9105,57 +9109,59 @@ pi_show_nomloglock( void )
 			ix_t fileix;
 
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-			      "\n    media object %u:\n\n",
+			      _("\n    media object %u:\n\n"),
 			      objix );
 			if ( DH2O( objh )->o_idlabvalpr ) {
 				if ( strlen( DH2O( objh )->o_lab )) {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "    label: \"%s\"\n",
+				      _("    label: ") );
+				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
+					"\"%s\"\n",
 				      DH2O( objh )->o_lab );
 				} else {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "    label is blank\n" );
+				      _("    label is blank\n") );
 				}
 				if ( ! uuid_is_null( DH2O( objh )->o_id)) {
 				    char media_string_uuid[UUID_STR_LEN + 1];
 				    uuid_unparse( DH2O( objh )->o_id,
 						    media_string_uuid);
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "    id: %s\n",
+					  _("    id: %s\n"),
 					  media_string_uuid );
 				}
 			} else {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "    label not identified\n" );
+				      _("    label not identified\n") );
 			}
 			if ( DH2O( objh )->o_fmfmixvalpr ) {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "    index within object "
-				      "of first media file: %u\n",
+				      _("    index within object "
+				      "of first media file: %u\n"),
 				      DH2O( objh )->o_fmfmix );
 			}
 			if ( DH2O( objh )->o_fmfsixvalpr ) {
 				mlog( MLOG_DEBUG | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "    index within stream "
-				      "of first media file: %u\n",
+				      _("    index within stream "
+				      "of first media file: %u\n"),
 				      DH2O( objh )->o_fmfsix );
 			}
 
 			if ( DH2O( objh )->o_indrivepr ) {
 				if ( drivecnt > 1 ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "    now in drive %u\n",
+					  _("    now in drive %u\n"),
 					  DH2O( objh )->o_indriveix );
 				} else {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "    now in drive\n" );
+					  _("    now in drive\n") );
 				}
 			}
 
 			if ( DH2O( objh )->o_cldh == DH_NULL ) {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "        media files not yet "
-				      "identified\n" );
+				      _("        media files not yet "
+				      "identified\n") );
 				continue;
 			}
 
@@ -9167,7 +9173,7 @@ pi_show_nomloglock( void )
 			      ;
 			      fileh = DH2F( fileh )->f_nexth, fileix++ ) {
 			    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				  "\n        media file %u",
+				  _("\n        media file %u"),
 				  fileix );
 			    if ( DH2O( objh )->o_fmfmixvalpr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
@@ -9179,63 +9185,63 @@ pi_show_nomloglock( void )
 			    }
 			    if ( DH2F( fileh )->f_szvalpr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					 "        size: "
-					 "%lld bytes\n",
+					 _("        size: "
+					 "%lld bytes\n"),
 					 DH2F( fileh )->f_sz );
 			    }
 			    if ( DH2F( fileh )->f_dirtriedpr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					 "        used for directory "
-					 "restoral\n" );
+					 _("        used for directory "
+					 "restoral\n") );
 			    }
 			    if ( DH2F( fileh )->f_valpr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					 "        first extent contained: "
-					 "ino %llu off %lld\n",
+					 _("        first extent contained: "
+					 "ino %llu off %lld\n"),
 					 DH2F( fileh )->f_firstegrp.eg_ino,
 					 DH2F( fileh )->f_firstegrp.eg_off );
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					 "        next extent to restore: "
-					 "ino %llu off %lld\n",
+					 _("        next extent to restore: "
+					 "ino %llu off %lld\n"),
 					 DH2F( fileh )->f_curegrp.eg_ino,
 					 DH2F( fileh )->f_curegrp.eg_off );
 				    mlog( MLOG_DEBUG | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					 "        rollback mark %lld\n",
+					 _("        rollback mark %lld\n"),
 					 DH2F( fileh )->f_curmark );
 			    }
 			    if ( DH2F( fileh )->f_nondirskippr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "        contains no selected "
-					  "non-directories\n" );
+					  _("        contains no selected "
+					  "non-directories\n") );
 			    }
 			    if ( DH2F( fileh )->f_nondirdonepr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "        non-directories done\n" );
+					  _("        non-directories done\n") );
 			    }
 			    if ( DH2F( fileh )->f_flags & PF_INV ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "        contains session "
-					  "inventory\n" );
+					  _("        contains session "
+					  "inventory\n") );
 			    }
 			    if ( DH2F( fileh )->f_flags & PF_TERM ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "        is stream terminator\n" );
+					  _("        is stream terminator\n") );
 			    }
 			    if ( DH2F( fileh )->f_underheadpr ) {
 				    mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-					  "        now reading\n" );
+					  _("        now reading\n") );
 			    }
 			}
 			if ( ! DH2O( objh )->o_lmfknwnpr ) {
 				mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-				      "\n        may be additional "
-				      "unidentified media files\n" );
+				      _("\n        may be additional "
+				      "unidentified media files\n") );
 			}
 		}
 		if ( ! DH2S( strmh )->s_lastobjknwnpr ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
-			      "\n    may be "
-			      "additional unidentified media objects\n\n" );
+			      _("\n    may be "
+			      "additional unidentified media objects\n\n") );
 		}
 	}
 }
@@ -9289,39 +9295,43 @@ display_dump_label( bool_t lockpr,
 	      "%s",
 	      introstr );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "hostname: %s\n",
+	      _("hostname: %s\n"),
 	      grhdrp->gh_hostname );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "mount point: %s\n",
+	      _("mount point: %s\n"),
 	      crhdrp->ch_mntpnt );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "volume: %s\n",
+	      _("volume: %s\n"),
 	      crhdrp->ch_fsdevice );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "session time: %s",
+	      _("session time: %s"),
 	      ctime_r( &gh_timestamp, dateline ));
 	mlog( mllevel | MLOG_NOLOCK,
-	      "level: %s%s\n",
+	      _("level: %s%s\n"),
 	      level_string,
 	      ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_RESUME )
 	      ?
-	      " resumed"
+	      _(" resumed")
 	      :
 	      "" );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "session label: \"%s\"\n",
+	      _("session label: ") );
+	mlog( mllevel | MLOG_NOLOCK,
+	      "\"%s\"\n",
 	      grhdrp->gh_dumplabel );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "media label: \"%s\"\n",
+	      _("media label: ") );
+	mlog( mllevel | MLOG_NOLOCK,
+	      "\"%s\"\n",
 	      mrhdrp->mh_medialabel );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "file system id: %s\n",
+	      _("file system id: %s\n"),
 	      fs_string_uuid );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "session id: %s\n",
+	      _("session id: %s\n"),
 	      dump_string_uuid );
 	mlog( mllevel | MLOG_NOLOCK,
-	      "media id: %s\n",
+	      _("media id: %s\n"),
 	      media_string_uuid );
 
 	if ( lockpr ) {
@@ -9340,15 +9350,15 @@ display_needed_objects( purp_t purp,
 		bagiter_t iter;
 		bagobj_t *bagobjp;
 		if ( purp == PURP_DIR ) {
-			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
+			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK, _(
 			      "the following media objects "
 			      "contain media files not yet tried "
-			      "for directory hierarchy restoral:\n" );
+			      "for directory hierarchy restoral:\n") );
 		}
 		if ( purp == PURP_NONDIR ) {
-			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
+			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK, _(
 			      "the following media objects "
-			      "are needed:\n" );
+			      "are needed:\n") );
 		}
 		bagiter_init( bagp, &iter );
 		bagobjp = 0; /* keep lint happy */
@@ -9360,11 +9370,15 @@ display_needed_objects( purp_t purp,
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
 			      "\n" );
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "%2u. label: \"%s\"\n",
-			      ix,
+			      _("%2u. label: "),
+			      ix );
+			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
+			      "\"%s\"\n",
 			      bagobjp->label );
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "    id: \"%s\"\n",
+			      _("    id: ") );
+			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
+			      "\"%s\"\n",
 			      uuidstr );
 			if ( bagobjp->indrivepr ) {
 				if ( drivecnt > 1 ) {
@@ -9373,7 +9387,7 @@ display_needed_objects( purp_t purp,
 					      MLOG_BARE
 					      |
 					      MLOG_NOLOCK,
-					      "    now in drive %u\n",
+					      _("    now in drive %u\n"),
 					      bagobjp->indriveix );
 				} else {
 					mlog( MLOG_NORMAL
@@ -9381,7 +9395,7 @@ display_needed_objects( purp_t purp,
 					      MLOG_BARE
 					      |
 					      MLOG_NOLOCK,
-					      "    now in drive\n" );
+					      _("    now in drive\n") );
 				}
 			}
 			ix++;
@@ -9391,40 +9405,51 @@ display_needed_objects( purp_t purp,
 	if ( knownholespr ) {
 		if ( purp == PURP_DIR ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "\nthere are %sunidentified "
-			      "media objects "
-			      "containing media files not yet tried "
-			      "for directory hierarchy restoral:\n",
-			      bagp ? "additional " : "" );
+			      bagp ? 
+			      _("\nthere are additional unidentified media "
+			      "objects containing media files not yet tried "
+			      "for directory hierarchy restoral:\n")
+				:
+			      _("\nthere are unidentified media "
+			      "objects containing media files not yet tried "
+			      "for directory hierarchy restoral:\n") );
 		}
 		if ( purp == PURP_NONDIR ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "\nthere are %sunidentified "
-			      "media objects "
-			      "not yet fully restored\n",
-			      bagp ? "additional " : "" );
+			      bagp ?
+			      _("\nthere are additional unidentified media "
+			      "objects not yet fully restored\n")
+				:
+			      _("\nthere are unidentified media objects "
+			      "not yet fully restored\n") );
 		}
 	} else if ( maybeholespr ) {
 		if ( purp == PURP_DIR ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "\nthere may be %sunidentified "
-			      "media objects "
-			      "containing media files not yet tried "
-			      "for directory hierarchy restoral:\n",
-			      bagp ? "additional " : "" );
+			      bagp ?
+			      _("\nthere may be additional unidentified media "
+			      "objects containing media files not yet tried "
+			      "for directory hierarchy restoral:\n")
+				:
+			      _("\nthere may be unidentified media "
+			      "objects containing media files not yet tried "
+			      "for directory hierarchy restoral:\n") );
+			      
 		}
 		if ( purp == PURP_NONDIR ) {
 			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-			      "\nthere may be %sunidentified "
-			      "media objects "
-			      "not yet fully restored\n",
-			      bagp ? "additional " : "" );
+			      bagp ?
+			      _("\nthere may be additional unidentified media "
+			      "objects not yet fully restored\n")
+				:
+			      _("\there may be unidentified media "
+			      "objects not yet fully restored\n") );
 		}
 	}
 
 	if ( ! bagp && ! knownholespr && ! maybeholespr ) {
 		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
-		      "no additional media objects needed\n" );
+		      _("no additional media objects needed\n") );
 	}
 }
 
@@ -9453,16 +9478,16 @@ reopen_invis(char *path, int oflags)
 	
 	oflags &= ~(O_EXCL|O_CREAT);
 	if (path_to_handle(path, &hanp, &hlen)) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-			"path_to_handle of %s failed:%s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"path_to_handle of %s failed:%s\n"),
 			path, strerror( errno ));
 		return -1;
 	}
 	
 	fd = open_by_handle(hanp, hlen, oflags);
 	if (fd < 0) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-			"open_by_handle of %s failed:%s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"open_by_handle of %s failed:%s\n"),
 			path, strerror( errno ));
 		free_handle(hanp, hlen);
 		return -1;
@@ -9481,8 +9506,8 @@ do_fssetdm_by_handle(
 	int		rc;
 
 	if (path_to_handle(path, &hanp, &hlen)) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-			"path_to_handle of %s failed:%s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"path_to_handle of %s failed:%s\n"),
 			path, strerror( errno ));
 		return -1;
 	}
@@ -9490,8 +9515,8 @@ do_fssetdm_by_handle(
 	rc = fssetdm_by_handle(hanp, hlen, fdmp);
 	free_handle(hanp, hlen);
 	if (rc) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-			"fssetdm_by_handle of %s failed %s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"fssetdm_by_handle of %s failed %s\n"),
 			path, strerror( errno ));
 	}
 	return rc;
@@ -9510,8 +9535,8 @@ quotafilecheck(char *type, char *dstdir, char *quotafile)
 		 quotafile );
 
 	if ( stat (buf, &s ) >= 0 && S_ISREG(s.st_mode)) {
-		mlog(MLOG_NORMAL,
-		     "%s quota information written to \'%s\'\n",
+		mlog(MLOG_NORMAL, _(
+		     "%s quota information written to '%s'\n"),
 		     type,
 		     buf );
 		return 1;

@@ -170,7 +170,7 @@ invmgr_query_all_sessions (
 		return BOOL_TRUE;
 	}
 	if ( fd < 0 || numfs <= 0 ) {
-		mlog( MLOG_NORMAL | MLOG_INV, "INV: Error in fstab\n" );
+		mlog( MLOG_NORMAL | MLOG_INV, _("INV: Error in fstab\n") );
 		return BOOL_FALSE;
 	}
 	
@@ -180,16 +180,16 @@ invmgr_query_all_sessions (
 		if ( fstab_get_fname( &arr[i].ft_uuid, fname, 
 				     (inv_predicate_t)INV_BY_UUID,
 				     forwhat) < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV,
-			     "INV: Cant get inv-name for uuid\n"
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			     "INV: Cant get inv-name for uuid\n")
 			     );
 			return BOOL_FALSE;
 		}
 		strcat( fname, INV_INVINDEX_PREFIX );
 		invfd = open( fname, INV_OFLAG(forwhat) );
 		if ( invfd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV,
-			     "INV: Open failed on %s\n", 
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			     "INV: Open failed on %s\n"),
 			     fname
 			     );
 			return BOOL_FALSE;
@@ -468,19 +468,18 @@ invmgr_inv_check(
 		
 		if ((iarr[i].ie_timeperiod.tp_start != harr[0].sh_time) ||
 		    (iarr[i].ie_timeperiod.tp_end != harr[nsess-1].sh_time)) {
-			printf("INV: Check %d failed.\n", i+1);
-			printf("invidx (%d)\t%d - %d\n",
+			printf(_("INV: Check %d failed.\n"), i+1);
+			printf(_("invidx (%d)\t%d - %d\n"),
 			       i+1,
 			       iarr[i].ie_timeperiod.tp_start,
 			       iarr[i].ie_timeperiod.tp_end);
 			for( s = 0; s < nsess; s++ ) {
-				printf("tm (%d)\t%d\n", s, harr[s].sh_time);
+				printf(_("tm (%d)\t%d\n"), s, harr[s].sh_time);
 			}
 		}
 		else {
-			printf("INV: Check %d out of %d succeeded\n", 
+			printf(_("INV: Check %d out of %d succeeded\n"),
 			       i+1, nindices);
-
 		}
 		INVLOCK( fd, LOCK_UN );
 		close( fd );
@@ -600,7 +599,7 @@ insert_session( invt_sessinfo_t *s)
 				  &tok ) ) < 0 ) {
 		if ( tok == INV_TOKEN_NULL ) {
 #ifdef INVT_DEBUG
-			mlog( MLOG_NORMAL | MLOG_INV, "INV: insert_session: init_db "
+			mlog( MLOG_DEBUG | MLOG_INV, "INV: insert_session: init_db "
 			      "failed\n" );
 #endif
 			return BOOL_FALSE;
@@ -696,7 +695,7 @@ make_invdirectory( inv_oflag_t forwhat )
 		}
 	}
 
-	mlog( MLOG_VERBOSE | MLOG_INV, "%s created\n", path );
+	mlog( MLOG_VERBOSE | MLOG_INV, _("%s created\n"), path );
 	return 1;
 }
 
@@ -741,11 +740,4 @@ invmgr_unlock( void )
 }
 
 #endif
-
-
-
-
-
-
-
 

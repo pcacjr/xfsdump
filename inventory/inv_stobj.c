@@ -150,8 +150,8 @@ stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time32_t tm )
 	   really possible, but either way, we split at the last entry.
 	   This will impact the guarantee that invindex tries to give - that
 	   there's always a unique stobj for every session. */
-	mlog( MLOG_VERBOSE | MLOG_INV,
-	      "INV: failed to find a different sh_time to split\n"
+	mlog( MLOG_VERBOSE | MLOG_INV, _(
+	      "INV: failed to find a different sh_time to split\n")
 	     );
 	      
 	return ns - 1;
@@ -972,7 +972,9 @@ stobj_delete_mobj(int fd,
 		for ( j = 0; j < nmfiles; j++ ) {
 			mf = &mfiles[j];
 			if ( !uuid_compare( mf->mf_moid, *moid ) ) {
+#ifdef INVT_DEBUG
 				printf(" found one\n" );
+#endif
 
 /*                                dirty = BOOL_TRUE;	
 
@@ -1024,7 +1026,8 @@ stobj_unpack_sessinfo(
 	/* first make sure that the magic cookie at the beginning is right.
 	   this isn't null-terminated */
 	if (strncmp( p, INVTSESS_COOKIE, strlen( INVTSESS_COOKIE ) ) != 0) {
-		mlog( MLOG_NORMAL | MLOG_INV,"INV: inv_put_session: unknown cookie\n");
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+			"INV: inv_put_session: unknown cookie\n") );
 		return BOOL_FALSE;
 	}
 	/* skip the cookie */
@@ -1063,8 +1066,9 @@ stobj_unpack_sessinfo(
 		/* At this point , don't care about the INV_VERSION. Maybe in future */
 		p += sizeof( inv_version_t ); /* skip the inventory version */
 	} else {
-	        mlog( MLOG_NORMAL | MLOG_INV,"INV: inv_put_session: unknown packed inventory version"
-		      " %d\n", *( inv_version_t *) p);
+	        mlog( MLOG_NORMAL | MLOG_INV, _(
+		      "INV: inv_put_session: unknown packed inventory version"
+		      " %d\n"), *( inv_version_t *) p);
 		return BOOL_FALSE;
 	} 
 
@@ -1268,8 +1272,9 @@ stobj_copy_invsess(int fd,
 				stobj_convert_mfile( &ises->s_streams[i].st_mediafiles[j],
 						&mf);
 			} else {
-				mlog(MLOG_ERROR, "Failed to get data from media file: "
-						"possible file corruption\n");
+				mlog(MLOG_ERROR, _(
+					"Failed to get data from media file: "
+					"possible file corruption\n") );
 				mlog_exit_hint(RV_CORRUPT);
 				return -1;
 			}

@@ -621,17 +621,17 @@ content_init( intgen_t argc,
 		switch ( c ) {
 		case GETOPT_LEVEL:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			sc_level = ( ix_t )atoi( optarg );
 			if ( sc_level > LEVEL_MAX ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument must be "
-				      "between 0 and %d\n",
+				      "between 0 and %d\n"),
 				      optopt,
 				      LEVEL_MAX );
 				usage( );
@@ -640,16 +640,16 @@ content_init( intgen_t argc,
 			break;
 		case GETOPT_SUBTREE:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( optarg[ 0 ] == '/' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument (subtree) "
-				      "must be a relative pathname\n",
+				      "must be a relative pathname\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -658,8 +658,8 @@ content_init( intgen_t argc,
 			break;
 		case GETOPT_MAXDUMPFILESIZE:
 			if ( ! optarg || optarg [ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -668,8 +668,8 @@ content_init( intgen_t argc,
 			if ( maxdumpfilesize == 0 ||
 			     maxdumpfilesize > ULONGLONG_MAX / 1024 ||
 			     ( maxdumpfilesize == ULONGLONG_MAX && errno == ERANGE ) ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument is not a valid file size\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument is not a valid file size\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -690,8 +690,8 @@ content_init( intgen_t argc,
 			break;
 		case GETOPT_ALERTPROG:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-					"-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+					"-%c argument missing\n"),
 				    optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -712,8 +712,8 @@ content_init( intgen_t argc,
 #ifdef BASED
 		case GETOPT_BASED:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
-				      "-%c argument missing\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
+				      "-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -721,9 +721,9 @@ content_init( intgen_t argc,
 			baseuuidstr = optarg;
 			
 			if ( uuid_parse( baseuuidstr, baseuuid ) < 0 ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument not a valid "
-				      "dump session id\n",
+				      "dump session id\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -735,8 +735,8 @@ content_init( intgen_t argc,
 
 #ifdef BASED
 	if ( resumereqpr && baseuuidvalpr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "may not specify both -%c and -%c\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "may not specify both -%c and -%c\n"),
 		      GETOPT_BASED,
 		      GETOPT_RESUME );
 		return BOOL_FALSE;
@@ -755,9 +755,9 @@ content_init( intgen_t argc,
 	 * device pathname of the file system to be dumped.
 	 */
 	if ( optind >= argc ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		      "source file system "
-		      "not specified\n" );
+		      "not specified\n") );
 		usage( );
 		return BOOL_FALSE;
 	}
@@ -806,8 +806,8 @@ content_init( intgen_t argc,
 			&fsid,
 			srcname )) {
 
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "%s does not identify a file system\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "%s does not identify a file system\n"),
 		      srcname );
 		usage( );
 		return BOOL_FALSE;
@@ -818,8 +818,8 @@ content_init( intgen_t argc,
 	 * if it is not currently mounted.
 	 */
 	if ( ! fs_mounted( fstype, fsdevice, mntpnt, &fsid )) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "%s must be mounted to be dumped\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "%s must be mounted to be dumped\n"),
 		      srcname );
 		return BOOL_FALSE;
 	}
@@ -870,8 +870,8 @@ content_init( intgen_t argc,
 					sc_savequotas = BOOL_TRUE;
 					quotas[i].savequotas = BOOL_TRUE;
 				} else {
-					mlog( MLOG_NORMAL | MLOG_ERROR,
-					      "failed to save %s information, continuing\n",
+					mlog( MLOG_NORMAL | MLOG_ERROR, _(
+					      "failed to save %s information, continuing\n"),
 					      quotas[i].desc );
 				}
 			}
@@ -922,9 +922,9 @@ content_init( intgen_t argc,
 
 		ok = inv_get_session_byuuid( &baseuuid, &sessp );
 		if ( ! ok ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not find specified base dump (%s) "
-			      "in inventory\n",
+			      "in inventory\n"),
 			      baseuuidstr );
 			return BOOL_FALSE;
 		}
@@ -995,10 +995,10 @@ content_init( intgen_t argc,
 			}
 		} else {
 			if ( sessp->s_level >= LEVEL_MAX ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "cannot select dump session %s as base "
 				      "for incremental dump: "
-				      "level must be less than %d\n",
+				      "level must be less than %d\n"),
 				      LEVEL_MAX );
 				return BOOL_FALSE;
 			}
@@ -1026,9 +1026,9 @@ content_init( intgen_t argc,
 	underfoundpr = BOOL_FALSE;
 	if ( sc_level > 0 ) {
 		if ( inv_idbt == INV_TOKEN_NULL ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "cannot calculate incremental dump: "
-			      "online inventory not available\n" );
+			      "online inventory not available\n") );
 			return BOOL_FALSE;
 		}
 		ok = inv_lastsession_level_lessthan( inv_idbt,
@@ -1155,11 +1155,11 @@ baseuuidbypass:
 	}
 	if ( samefoundpr && ! resumereqpr ) {
 		if ( ! underfoundpr || undertime <= sametime ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "most recent level %d dump "
 			      "was interrupted, "
 			      "but not resuming that dump since "
-			      "resume (-R) option not specified\n",
+			      "resume (-R) option not specified\n"),
 			      sc_level );
 		}
 		free( ( void * )sc_resumerangep );
@@ -1172,31 +1172,31 @@ baseuuidbypass:
 		if ( samefoundpr ) {
 			if ( undertime >= sametime ) {
 				if ( underinterruptedpr ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "most recent base for "
 					      "incremental dump was "
 					      "interrupted (level %u): "
 					      "must resume or redump "
-					      "at or below level %d\n",
+					      "at or below level %d\n"),
 					      underlevel,
 					      sc_level );
 					return BOOL_FALSE;
 				}
 				if ( subtreecnt && ! underpartialpr ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "level %u incremental "
 					      "subtree dump "
 					      "will be based on non-subtree "
-					      "level %u dump\n",
+					      "level %u dump\n"),
 					      sc_level,
 					      underlevel );
 				}
 				if ( ! subtreecnt && underpartialpr ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "level %u incremental "
 					      "non-subtree dump "
 					      "will be based on subtree "
-					      "level %u dump\n",
+					      "level %u dump\n"),
 					      sc_level,
 					      underlevel );
 				}
@@ -1210,20 +1210,20 @@ baseuuidbypass:
 				sc_resumerangep = 0;
 			} else {
 				if ( subtreecnt && ! samepartialpr ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "level %u incremental "
 					      "subtree dump "
 					      "will be based on non-subtree "
-					      "level %u resumed dump\n",
+					      "level %u resumed dump\n"),
 					      sc_level,
 					      sc_level );
 				}
 				if ( ! subtreecnt && samepartialpr ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "level %u incremental "
 					      "non-subtree dump "
 					      "will be based on subtree "
-					      "level %u resumed dump\n",
+					      "level %u resumed dump\n"),
 					      sc_level,
 					      sc_level );
 				}
@@ -1238,31 +1238,31 @@ baseuuidbypass:
 			}
 		} else {
 			if ( underinterruptedpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "most recent base for "
 				      "incremental dump was "
 				      "interrupted (level %u): "
 				      "must resume or redump "
-				      "at or below level %d\n",
+				      "at or below level %d\n"),
 				      underlevel,
 				      sc_level );
 				return BOOL_FALSE;
 			}
 			if ( subtreecnt && ! underpartialpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "level %u incremental "
 				      "subtree dump "
 				      "will be based on non-subtree "
-				      "level %u dump\n",
+				      "level %u dump\n"),
 				      sc_level,
 				      underlevel );
 			}
 			if ( ! subtreecnt && underpartialpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "level %u incremental "
 				      "non-subtree dump "
 				      "will be based on subtree "
-				      "level %u dump\n",
+				      "level %u dump\n"),
 				      sc_level,
 				      underlevel );
 			}
@@ -1277,20 +1277,20 @@ baseuuidbypass:
 		if ( samefoundpr ) {
 			ASSERT( sametime );
 			if ( subtreecnt && ! samepartialpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "level %u "
 				      "subtree dump "
 				      "will be based on non-subtree "
-				      "level %u resumed dump\n",
+				      "level %u resumed dump\n"),
 				      sc_level,
 				      sc_level );
 			}
 			if ( ! subtreecnt && samepartialpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "level %u "
 				      "non-subtree dump "
 				      "will be based on subtree "
-				      "level %u resumed dump\n",
+				      "level %u resumed dump\n"),
 				      sc_level,
 				      sc_level );
 			}
@@ -1304,9 +1304,9 @@ baseuuidbypass:
 			sc_resumepr = BOOL_FALSE;
 			ASSERT( ! sc_resumerangep );
 			if ( sc_level > 0 ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR,
+				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "cannot find earlier dump "
-				      "to base level %d increment upon\n",
+				      "to base level %d increment upon\n"),
 				      sc_level );
 				return BOOL_FALSE;
 			}
@@ -1316,9 +1316,9 @@ baseuuidbypass:
 	/* don't allow interrupted dumps of a lesser level to be bases
 	 */
 	if ( sc_incrpr && underinterruptedpr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		      "most recent base dump (level %d begun %s) "
-		      "was interrupted: aborting\n",
+		      "was interrupted: aborting\n"),
 		      sc_incrbaselevel,
 		      ctimennl( &sc_incrbasetime ));
 		return BOOL_FALSE;
@@ -1327,9 +1327,9 @@ baseuuidbypass:
 	/* reject if resume (-R) specified, but base was not interrupted
 	 */
 	if ( ! sc_resumepr && resumereqpr ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		      "resume (-R) option inappropriate: "
-		      "no interrupted level %d dump to resume\n",
+		      "no interrupted level %d dump to resume\n"),
 		      sc_level );
 		return BOOL_FALSE;
 	}
@@ -1346,10 +1346,10 @@ baseuuidbypass:
 			strcpy( incrtimestr, ctimennl( &sc_incrbasetime ));
 			ASSERT( strlen( incrtimestr ) < sizeof( incrtimestr ));
 
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "resuming level %d incremental dump of %s:%s "
 			      "begun %s "
-			      "(incremental base level %d begun %s)\n",
+			      "(incremental base level %d begun %s)\n"),
 			      sc_level,
 			      gwhdrtemplatep->gh_hostname,
 			      mntpnt,
@@ -1357,9 +1357,9 @@ baseuuidbypass:
 			      sc_incrbaselevel,
 			      incrtimestr );
 		} else {
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "level %d incremental dump of %s:%s "
-			      "based on level %d dump begun %s\n",
+			      "based on level %d dump begun %s\n"),
 			      sc_level,
 			      gwhdrtemplatep->gh_hostname,
 			      mntpnt,
@@ -1368,15 +1368,15 @@ baseuuidbypass:
 		}
 	} else {
 		if ( sc_resumepr ) {
-			mlog( MLOG_VERBOSE,
-			      "resuming level %d dump of %s:%s begun %s\n",
+			mlog( MLOG_VERBOSE, _(
+			      "resuming level %d dump of %s:%s begun %s\n"),
 			      sc_level,
 			      gwhdrtemplatep->gh_hostname,
 			      mntpnt,
 			      ctimennl( &sc_resumebasetime ));
 		} else {
-			mlog( MLOG_VERBOSE,
-			      "level %d dump of %s:%s\n",
+			mlog( MLOG_VERBOSE, _(
+			      "level %d dump of %s:%s\n"),
 			      sc_level,
 			      gwhdrtemplatep->gh_hostname,
 			      mntpnt );
@@ -1389,8 +1389,8 @@ baseuuidbypass:
 
 	/* announce the dump time
 	 */
-	mlog( MLOG_VERBOSE,
-	      "dump date: %s\n",
+	mlog( MLOG_VERBOSE, _(
+	      "dump date: %s\n"),
 	      ctimennl( &gwhdrtemplatep->gh_timestamp ));
 
 	/* display the session UUID
@@ -1398,15 +1398,15 @@ baseuuidbypass:
 	{
 		char string_uuid[UUID_STR_LEN + 1];
 		uuid_unparse( gwhdrtemplatep->gh_dumpid, string_uuid );
-		mlog( MLOG_VERBOSE,
-		      "session id: %s\n",
+		mlog( MLOG_VERBOSE, _(
+		      "session id: %s\n"),
 		      string_uuid );
 	}
 
 	/* display the session label
 	 */
-	mlog( MLOG_VERBOSE,
-	      "session label: \"%s\"\n",
+	mlog( MLOG_VERBOSE, _(
+	      "session label: \"%s\"\n"),
 	      gwhdrtemplatep->gh_dumplabel );
 
 	/* get a file descriptor for the file system. any file
@@ -1415,8 +1415,8 @@ baseuuidbypass:
 	 */
 	sc_fsfd = open( mntpnt, O_RDONLY );
 	if ( sc_fsfd < 0 ) {
-		mlog( MLOG_NORMAL,
-		      "unable to open %s: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "unable to open %s: %s\n"),
 		      mntpnt,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1430,8 +1430,8 @@ baseuuidbypass:
 		struct stat64 rootstat;
 		rval = fstat64( sc_fsfd, &rootstat );
 		if ( rval ) {
-			mlog( MLOG_NORMAL,
-			      "could not stat %s\n",
+			mlog( MLOG_NORMAL, _(
+			      "could not stat %s\n"),
 			      mntpnt );
 			return BOOL_FALSE;
 		}
@@ -1446,8 +1446,8 @@ baseuuidbypass:
 	 */
 	sc_fshandlep = jdm_getfshandle( mntpnt );
 	if ( ! sc_fshandlep ) {
-		mlog( MLOG_NORMAL,
-		      "unable to construct a file system handle for %s: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "unable to construct a file system handle for %s: %s\n"),
 		      mntpnt,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1579,13 +1579,13 @@ baseuuidbypass:
 			filesz
 			+
 			datasz;
-	mlog( MLOG_VERBOSE,
-	      "estimated dump size: %llu bytes\n",
+	mlog( MLOG_VERBOSE, _(
+	      "estimated dump size: %llu bytes\n"),
 	      size_estimate );
 
 	if (drivecnt > 1) {
-	    mlog( MLOG_VERBOSE,
-		  "estimated dump size per stream: %llu bytes\n",
+	    mlog( MLOG_VERBOSE, _(
+		  "estimated dump size per stream: %llu bytes\n"),
 		    hdr_mfilesz + (filesz + datasz) / drivecnt); 
 	}
 	mlog( MLOG_DEBUG,
@@ -1694,16 +1694,16 @@ baseuuidbypass:
 			switch ( c ) {
 			case GETOPT_MEDIALABEL:
 				if ( cp >= ep ) {
-					mlog( MLOG_NORMAL,
+					mlog( MLOG_NORMAL, _(
 					      "more -%c arguments "
-					      "than number of drives\n",
+					      "than number of drives\n"),
 					      optopt );
 					usage( );
 					return BOOL_FALSE;
 				}
 				if ( ! optarg || optarg[ 0 ] == '-' ) {
-					mlog( MLOG_NORMAL,
-					      "-%c argument missing\n",
+					mlog( MLOG_NORMAL, _(
+					      "-%c argument missing\n"),
 					      optopt );
 					usage( );
 					return BOOL_FALSE;
@@ -1715,9 +1715,9 @@ baseuuidbypass:
 		}
 
 		if ( cp > sc_contextp && cp < ep ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "media labels given for only %d out of %d "
-			      "drives\n",
+			      "drives\n"),
 			      cp - sc_contextp,
 			      drivecnt );
 		}
@@ -2303,18 +2303,18 @@ content_stream_dump( ix_t strmix )
 			return mlog_exit(EXIT_INTERRUPT, rv);
 		}
 		if ( rv == RV_TIMEOUT ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change timeout will be treated as "
 			      "a request to stop using drive: "
-			      "can resume later\n" );
+			      "can resume later\n") );
 			mlog_exit_hint(RV_QUIT);
 			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_QUIT ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change decline will be treated as "
 			      "a request to stop using drive: "
-			      "can resume later\n" );
+			      "can resume later\n") );
 			mlog_exit_hint(RV_QUIT);
 			return mlog_exit(EXIT_NORMAL, rv);
 		}
@@ -2334,9 +2334,9 @@ content_stream_dump( ix_t strmix )
 
 		/* sync up here with other streams if reasonable
 		 */
-		mlog( MLOG_VERBOSE,
+		mlog( MLOG_VERBOSE, _(
 		      "creating dump session media file %u "
-		      "(media %u, file %u)\n",
+		      "(media %u, file %u)\n"),
 		      mwhdrp->mh_dumpfileix,
 		      mwhdrp->mh_mediaix,
 		      mwhdrp->mh_mediafileix );
@@ -2348,8 +2348,8 @@ content_stream_dump( ix_t strmix )
 
 		/* first dump the inomap
 		 */
-		mlog( MLOG_VERBOSE,
-		      "dumping ino map\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "dumping ino map\n") );
 		sc_stat_pds[ strmix ].pds_phase = PDS_INOMAP;
 		rv = inomap_dump( drivep );
 		if ( rv == RV_INTR ) {
@@ -2418,8 +2418,8 @@ content_stream_dump( ix_t strmix )
 		 * the starting point for the next media file will be advanced.
 		 */
 		if ( ! all_nondirs_committed ) {
-			mlog( MLOG_VERBOSE,
-			      "dumping non-directory files\n" );
+			mlog( MLOG_VERBOSE, _(
+			      "dumping non-directory files\n") );
 			sc_stat_pds[ strmix ].pds_phase = PDS_NONDIR;
 			rv = RV_OK;
 			rval = bigstat_iter( sc_fshandlep,
@@ -2535,8 +2535,8 @@ decision_more:
 		 * will invoke drive end_write, which will flush
 		 * all pending marks.
 		 */
-		mlog( MLOG_VERBOSE,
-		      "ending media file\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "ending media file\n") );
 		ncommitted = 0;
 		rv = Media_mfile_end( drivep,
 				      contextp,
@@ -2551,8 +2551,8 @@ decision_more:
 			free( ( void * )bstatbufp );
 			return mlog_exit(EXIT_FAULT, rv);
 		}
-		mlog( MLOG_VERBOSE,
-		      "media file size %lld bytes\n",
+		mlog( MLOG_VERBOSE, _(
+		      "media file size %lld bytes\n"),
 		      ncommitted );
 
 		/* if at least one mark committed, we know all of
@@ -2649,8 +2649,8 @@ decision_more:
 						! empty_mediafile,
 						BOOL_FALSE );
 			if ( ! ok ) {
-				mlog( MLOG_NORMAL,
-				      "inventory media file put failed\n" );
+				mlog( MLOG_NORMAL, _(
+				      "inventory media file put failed\n") );
 			}
 		}
 		if ( done ) {
@@ -2680,9 +2680,9 @@ decision_more:
 	if ( drivep->d_capabilities & DRIVE_CAP_FILES ) {
 		if ( ! miniroot ) {
 			if ( stream_cnt( ) > 1 ) {
-				mlog( MLOG_VERBOSE,
+				mlog( MLOG_VERBOSE, _(
 				      "waiting for synchronized "
-				      "session inventory dump\n" );
+				      "session inventory dump\n") );
 				sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
 			}
 
@@ -2712,8 +2712,8 @@ decision_more:
 
 	elapsed = time( 0 ) - sc_stat_starttime;
 
-	mlog( MLOG_TRACE,
-	      "ending stream: %ld seconds elapsed\n",
+	mlog( MLOG_TRACE, _(
+	      "ending stream: %ld seconds elapsed\n"),
 	      elapsed );
 
 	return mlog_exit(EXIT_NORMAL, rv);
@@ -2735,42 +2735,42 @@ content_complete( void )
 
 	elapsed = time( 0 ) - sc_stat_starttime;
 
-	mlog( MLOG_VERBOSE,
-	      "dump size (non-dir files) : %llu bytes\n",
+	mlog( MLOG_VERBOSE, _(
+	      "dump size (non-dir files) : %llu bytes\n"),
 	      sc_stat_datadone );
 
 	if ( completepr ) {
 		if( sc_savequotas ) {
 			for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
 				if( quotas[i].savequotas && unlink( quotas[i].quotapath ) < 0 ) {
-					mlog( MLOG_ERROR,
-					"unable to remove %s: %s\n",
+					mlog( MLOG_ERROR, _(
+					"unable to remove %s: %s\n"),
 					quotas[i].quotapath,
 					strerror ( errno ));
 				}
 			}
 		}
 
-		mlog( MLOG_VERBOSE,
+		mlog( MLOG_VERBOSE, _(
 		      "dump complete"
 		      ": %ld seconds elapsed"
-		      "\n",
+		      "\n"),
 		      elapsed );
 	} else {
 		if ( sc_inv_updatepr ) {
-			mlog( MLOG_VERBOSE | MLOG_NOTE,
+			mlog( MLOG_VERBOSE | MLOG_NOTE, _(
 			      "dump interrupted"
 			      ": %ld seconds elapsed"
 			      ": may resume later using -%c option"
-			      "\n",
+			      "\n"),
 			      elapsed,
 			      GETOPT_RESUME );
 			mlog_exit_hint(RV_INTR);
 		} else {
-			mlog( MLOG_VERBOSE | MLOG_NOTE,
+			mlog( MLOG_VERBOSE | MLOG_NOTE, _(
 			      "dump interrupted"
 			      ": %ld seconds elapsed"
-			      "\n",
+			      "\n"),
 			      elapsed );
 			mlog_exit_hint(RV_INTR);
 		}
@@ -2885,7 +2885,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		if ( sc_thrdsdirdumpsynccnt > 1 && stream_cnt( ) > 1 ) {
 			rv_t rv;
 			mlog( bulkstatcallcnt == 0 ? MLOG_VERBOSE : MLOG_NITTY,
-			      "waiting for synchronized directory dump\n" );
+			      _("waiting for synchronized directory dump\n") );
 			sc_stat_pds[ strmix ].pds_phase = PDS_DIRRENDEZVOUS;
 			rv = dump_dirs_rendezvous( );
 			if ( rv == RV_INTR ) {
@@ -2896,8 +2896,8 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 #endif /* SYNCDIR */
 
 		if ( bulkstatcallcnt == 0 ) {
-			mlog( MLOG_VERBOSE,
-			      "dumping directories\n" );
+			mlog( MLOG_VERBOSE, _(
+			      "dumping directories\n") );
 		}
 		sc_stat_pds[ strmix ].pds_phase = PDS_DIRDUMP;
 
@@ -2922,9 +2922,9 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		rval = ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq);
 
 		if ( rval ) {
-			mlog( MLOG_NORMAL,
+			mlog( MLOG_NORMAL, _(
 			      "SGI_FS_BULKSTAT failed: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      strerror( errno ),
 			      errno );
 			return RV_ERROR;
@@ -2963,8 +2963,8 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
                                 sbulkreq.ubuffer = p;
                                 sbulkreq.ocount = NULL;
                                 if( ioctl( sc_fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
-					mlog( MLOG_WARNING, 
-					      "failed to get bulkstat information for inode %llu\n",
+					mlog( MLOG_WARNING,  _(
+					      "failed to get bulkstat information for inode %llu\n"),
 					      p->bs_ino );
 					continue;
                                 }
@@ -3110,8 +3110,8 @@ dump_dir( ix_t strmix,
          * warn and skip.
          */
 	if ( statp->bs_ino > ( xfs_ino_t )INOMAX ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-		      "unable to dump directory: ino %llu too large\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		      "unable to dump directory: ino %llu too large\n"),
 		      statp->bs_ino );
 		return RV_OK; /* continue anyway */
 	}
@@ -3124,8 +3124,8 @@ dump_dir( ix_t strmix,
 	 */
 	fd = jdm_open( fshandlep, statp, O_RDONLY );
 	if ( fd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-		      "unable to open directory: ino %llu: %s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		      "unable to open directory: ino %llu: %s\n"),
 		      statp->bs_ino, strerror( errno ) );
 		return RV_OK; /* continue anyway */
 	}
@@ -3152,9 +3152,9 @@ dump_dir( ix_t strmix,
 		 * try to gracefully end this dir.
 		 */
 		if ( nread < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "unable to read dirents (%d) for "
-			      "directory ino %llu: %s\n",
+			      "directory ino %llu: %s\n"),
 			      gdcnt,
 			      statp->bs_ino,
 			      strerror( errno ));
@@ -3215,9 +3215,9 @@ dump_dir( ix_t strmix,
 			ino = (xfs_ino_t)p->d_ino;
 
 			if ( ino == 0 ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "encountered 0 ino (%s) in "
-				      "directory ino %llu: NOT dumping\n",
+				      "directory ino %llu: NOT dumping\n"),
 				      p->d_name,
 				      statp->bs_ino );
 				continue;
@@ -3232,11 +3232,11 @@ dump_dir( ix_t strmix,
 						      p->d_ino,
 						      &statbuf );
 				if ( scrval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "could not stat "
 					      "dirent %s ino %llu: %s: "
 					      "using null generation count "
-					      "in directory entry\n",
+					      "in directory entry\n"),
 					      p->d_name,
 					      ( xfs_ino_t )p->d_ino,
 					      strerror( errno ));
@@ -3335,10 +3335,10 @@ dump_extattrs( drive_t *drivep,
 						     flag, &cursor );
 
 				if ( rval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "could not get list of %s "
 					      "attributes for "
-					      "%s ino %llu: %s (%d)\n",
+					      "%s ino %llu: %s (%d)\n"),
 					      ( flag & ATTR_ROOT )
 					      ? "root" : "non-root",
 					      (( statp->bs_mode & S_IFMT )
@@ -3351,12 +3351,12 @@ dump_extattrs( drive_t *drivep,
 					 * don't log any more errors
 					 */
 					if (rval == EINVAL) {
-						mlog( MLOG_NORMAL | MLOG_WARNING,
+						mlog( MLOG_NORMAL | MLOG_WARNING, _(
 						      "ioctl returned EINVAL: "
 						      "disabling extended "
 						      "attribute operations (only "
 						      "one warning will be "
-						      "printed)\n");
+						      "printed)\n") );
 						sc_brokenioctl = BOOL_TRUE;
 					}
 				}
@@ -3452,12 +3452,12 @@ dump_extattr_list( drive_t *drivep,
 				    contextp->cc_hsm_f_ctxtp, entp->a_name,
 				    entp->a_valuelen, (isrootpr ? 1 : 0),
 				    &skip_entry)) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		    "HSM could not filter %s "
-					    "attribute %s for %s ino %llu\n",
-			      		    isrootpr ? "root" : "non-root",
+					    "attribute %s for %s ino %llu\n"),
+			      		    isrootpr? _("root") : _("non-root"),
 					    entp->a_name,
-	      		(statp->bs_mode & S_IFMT) == S_IFDIR ? "dir" : "nondir",
+      		(statp->bs_mode & S_IFMT) == S_IFDIR ? _("dir") : _("nondir"),
 			      		    statp->bs_ino);
 					*abortprp = BOOL_TRUE;
 					return RV_OK;
@@ -3506,23 +3506,23 @@ dump_extattr_list( drive_t *drivep,
 						       0 );
 
 				if (rval) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "could not retrieve %s "
 					      "attributes for "
-					      "%s ino %llu: %s (%d)\n",
-					      isrootpr ? "root" : "non-root",
-					      ( statp->bs_mode & S_IFMT )
-					      == S_IFDIR ? "dir" : "nondir",
+					      "%s ino %llu: %s (%d)\n"),
+					isrootpr ? _("root") : _("non-root"),
+					( statp->bs_mode & S_IFMT ) == S_IFDIR?
+					      _("dir") : _("nondir"),
 					      statp->bs_ino,
 					      strerror( errno ),
 					      errno );
 
 					if (rval == EINVAL) {
-						mlog( MLOG_NORMAL | MLOG_WARNING,
+						mlog( MLOG_NORMAL | MLOG_WARNING, _(
 						      "ioctl returned EINVAL: "
 						      "disabling extended attribute "
 						      "operations (only one warning "
-						      "will be printed)\n");
+						      "will be printed)\n") );
 						sc_brokenioctl = BOOL_TRUE;
 					}
 				}
@@ -3538,10 +3538,10 @@ dump_extattr_list( drive_t *drivep,
 				attr_multiop_t *opp;
 				opp = &contextp->cc_extattrrtrvarrayp[ rtrvix ];
 				if ( opp->am_error ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					     "attr_multi indicates error while "
 					     "retrieving %s attribute [%s] for "
-					     "%s ino %llu: %s (%d)\n",
+					     "%s ino %llu: %s (%d)\n"),
 					     isrootpr ? "root" : "non-root",
 					     opp->am_attrname,
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
@@ -3611,12 +3611,13 @@ dump_extattr_list( drive_t *drivep,
 						&hsmnamep,
 						&hsmvaluep,
 						&hsmvaluesz)) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		"HSM could not add new %s attribute "
-					"#%d for %s ino %llu\n",
-			      		isrootpr ? "root" : "non-root",
+					"#%d for %s ino %llu\n"),
+			      		isrootpr ? _("root") : _("non-root"),
 					hsmcursor,
-	      		(statp->bs_mode & S_IFMT) == S_IFDIR ? "dir" : "nondir",
+			      		(statp->bs_mode & S_IFMT) == S_IFDIR ?
+						_("dir") : _("nondir"),
 			      		statp->bs_ino);
 				*abortprp = BOOL_TRUE;
 				return RV_OK;
@@ -3740,11 +3741,12 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 	}
 
 	if ( namelen > NAME_MAX ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute name for %s ino %llu too long: "
-		      "%u, max is %u: skipping\n",
-		      isrootpr ? "root" : "non-root",
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
+		      "%u, max is %u: skipping\n"),
+		      isrootpr ? _("root") : _("non-root"),
+		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
+			_("dir") : _("nondir"),
 		      statp->bs_ino,
 		      namelen,
 		      NAME_MAX );
@@ -3753,11 +3755,12 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 	}
 
 	if ( valuesz > ATTR_MAX_VALUELEN ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute value for %s ino %llu too long: "
-		      "%u, max is %u: skipping\n",
-		      isrootpr ? "root" : "non-root",
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
+		      "%u, max is %u: skipping\n"),
+		      isrootpr ? _("root") : _("non-root"),
+		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
+			_("dir") : _("nondir"),
 		      statp->bs_ino,
 		      valuesz,
 		      ATTR_MAX_VALUELEN );
@@ -3964,9 +3967,9 @@ dump_file( void *arg1,
 	/* note if map says a dir
 	 */
 	if ( state == MAP_DIR_CHANGE || state == MAP_DIR_SUPPRT ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "inomap inconsistency ino %llu: "
-		      "%s but is now non-dir: NOT dumping\n",
+		      "%s but is now non-dir: NOT dumping\n"),
 		      statp->bs_ino,
 		      state == MAP_DIR_CHANGE
 		      ?
@@ -3983,9 +3986,9 @@ dump_file( void *arg1,
 
 	if (hsm_fs_ctxtp) {
 		if (HsmInitFileContext(contextp->cc_hsm_f_ctxtp, statp)) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "inomap inconsistency ino %llu: "
-			      "hsm detected error: NOT dumping\n",
+			      "hsm detected error: NOT dumping\n"),
 			      statp->bs_ino);
 			if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 				contextp->cc_stat_lastino = statp->bs_ino;
@@ -4049,8 +4052,8 @@ dump_file( void *arg1,
 	default:
 		/* don't know how to dump these
 		 */
-		mlog( MLOG_VERBOSE,
-		      "don't know how to dump ino %llu: mode %08x\n",
+		mlog( MLOG_VERBOSE, _(
+		      "don't know how to dump ino %llu: mode %08x\n"),
 		      statp->bs_ino,
 		      statp->bs_mode );
 		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
@@ -4174,9 +4177,9 @@ dump_file_reg( drive_t *drivep,
 					statp,
 					&extent_group_context );
 	if ( rv != RV_OK ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not open regular file ino %llu mode 0x%08x: "
-		      "%s: not dumped\n",
+		      "%s: not dumped\n"),
 		      statp->bs_ino,
 		      statp->bs_mode,
 		      strerror( errno ));
@@ -4223,8 +4226,8 @@ dump_file_reg( drive_t *drivep,
 		/* check if the operator has requested to interrupt the dump.
 		 */
 		if ( cldmgr_stop_requested( )) {
-			mlog( MLOG_NORMAL,
-			      "dump interrupted prior to ino %llu offset %lld\n",
+			mlog( MLOG_NORMAL, _(
+			      "dump interrupted prior to ino %llu offset %lld\n"),
 			      statp->bs_ino,
 			      offset );
 			mlog_exit_hint(RV_INTR);
@@ -4458,8 +4461,8 @@ init_extent_group_context( jdm_fshandle_t *fshandlep,
 		fl.l_start = (off_t)0;
 		fl.l_len = 0;
 		if ((fcntl(gcp->eg_fd, F_GETLK, &fl)) < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "locking check failed ino %llu\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "locking check failed ino %llu\n"),
 			      statp->bs_ino );
 			close(gcp->eg_fd);
 			return RV_ERROR;
@@ -4507,8 +4510,8 @@ dump_extent_group( drive_t *drivep,
 	 */
 	if ( isrealtime ) {
 		if ( (ioctl(gcp->eg_fd, XFS_IOC_DIOINFO, &da) < 0) ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      "dioinfo failed ino %llu\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "dioinfo failed ino %llu\n"),
 			      statp->bs_ino );
 			da.d_miniosz = PGSZ;
 		}
@@ -4576,10 +4579,10 @@ dump_extent_group( drive_t *drivep,
 			gcp->eg_gbmcnt++;
 			entrycnt = gcp->eg_bmap[ 0 ].bmv_entries;
 			if ( entrycnt < 0 ) { /* workaround for getbmap bug */
-				mlog( MLOG_DEBUG | MLOG_WARNING,
+				mlog( MLOG_DEBUG | MLOG_WARNING, _(
 				      "getbmapx %d ino %lld mode 0x%08x "
 				      "offset %lld ix %d "
-				      "returns negative entry count\n",
+				      "returns negative entry count\n"),
 				      gcp->eg_gbmcnt,
 				      statp->bs_ino,
 				      statp->bs_mode,
@@ -4591,9 +4594,9 @@ dump_extent_group( drive_t *drivep,
 				return RV_OK;
 			}
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "getbmapx %d ino %lld mode 0x%08x "
-				      "offset %lld failed: %s\n",
+				      "offset %lld failed: %s\n"),
 				      gcp->eg_gbmcnt,
 				      statp->bs_ino,
 				      statp->bs_mode,
@@ -4614,9 +4617,9 @@ dump_extent_group( drive_t *drivep,
 			if (hsm_fs_ctxtp) {
 				if (!HsmModifyExtentMap(contextp->cc_hsm_f_ctxtp,
 					&gcp->eg_bmap[0])) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 						"hsm detected an extent map "
-						"error in ino %lld, skipping\n",
+						"error in ino %lld, skipping\n"),
 						statp->bs_ino);
 					*nextoffsetp = nextoffset;
 					*bytecntp = bytecnt;
@@ -4966,8 +4969,8 @@ dump_extent_group( drive_t *drivep,
 			ASSERT( actualsz <= reqsz );
 			new_off = lseek64( gcp->eg_fd, offset, SEEK_SET );
 			if ( new_off == ( off64_t )( -1 )) {
-				mlog( MLOG_NORMAL,
-				      "can't lseek ino %llu\n",
+				mlog( MLOG_NORMAL, _(
+				      "can't lseek ino %llu\n"),
 				      statp->bs_ino );
 				nread = 0;
 			} else {
@@ -4980,8 +4983,8 @@ dump_extent_group( drive_t *drivep,
  				/* Be quiet if this is a swap file - #510197 */
 				if ( (fstatvfs64(gcp->eg_fd, &s) < 0 ) ||
 				     ((s.f_flag & ST_LOCAL) != 0) )
-				   mlog( MLOG_NORMAL,
-		"can't read ino %llu at offset %d (act=%d req=%d) rt=%d\n",
+				   mlog( MLOG_NORMAL, _(
+		"can't read ino %llu at offset %d (act=%d req=%d) rt=%d\n"),
 		statp->bs_ino, new_off, actualsz , reqsz, isrealtime );
 #endif /* HIDDEN */
 
@@ -5288,10 +5291,10 @@ dump_dirent( drive_t *drivep,
 	     ~( DIRENTHDR_ALIGN - 1 );
 
 	if ( sz > direntbufsz ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "unable to dump "
 		      "directory %llu entry %s (%llu): "
-		      "name too long\n",
+		      "name too long\n"),
 		      statp->bs_ino,
 		      name,
 		      ino );
@@ -5368,8 +5371,8 @@ dump_session_inv( drive_t *drivep,
 		return BOOL_TRUE;
 	}
 
-	mlog( MLOG_VERBOSE,
-	      "dumping session inventory\n" );
+	mlog( MLOG_VERBOSE, _(
+	      "dumping session inventory\n") );
 
 	/* get a buffer from the inventory manager
 	 */
@@ -5377,8 +5380,8 @@ dump_session_inv( drive_t *drivep,
 	inv_sbufsz = 0;
 	ok = inv_get_sessioninfo( sc_inv_sestoken, ( void * )&inv_sbufp, &inv_sbufsz );
 	if ( ! ok ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-		      "unable to get session inventory to dump\n" );
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		      "unable to get session inventory to dump\n") );
 		return BOOL_TRUE;
 	}
 	ASSERT( inv_sbufp );
@@ -5399,8 +5402,8 @@ dump_session_inv( drive_t *drivep,
 		intgen_t rval;
 		rv_t rv;
 
-		mlog( MLOG_VERBOSE,
-		      "beginning inventory media file\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "beginning inventory media file\n") );
 
 		partial = BOOL_FALSE;
 		rv = Media_mfile_begin( drivep, contextp, BOOL_FALSE );
@@ -5408,15 +5411,15 @@ dump_session_inv( drive_t *drivep,
 		case RV_OK:
 			break;
 		case RV_TIMEOUT:
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change timeout: "
-			      "session inventory not dumped\n" );
+			      "session inventory not dumped\n") );
 			mlog_exit_hint(RV_INV);
 			return BOOL_FALSE;
 		case RV_QUIT:
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change declined: "
-			      "session inventory not dumped\n" );
+			      "session inventory not dumped\n") );
 			mlog_exit_hint(RV_INV);
 			return BOOL_FALSE;
 		case RV_DRIVE:
@@ -5426,8 +5429,8 @@ dump_session_inv( drive_t *drivep,
 			return BOOL_FALSE;
 		}
 
-		mlog( MLOG_VERBOSE,
-		      "media file %u (media %u, file %u)\n",
+		mlog( MLOG_VERBOSE, _(
+		      "media file %u (media %u, file %u)\n"),
 		      mwhdrp->mh_dumpfileix,
 		      mwhdrp->mh_mediaix,
 		      mwhdrp->mh_mediafileix );
@@ -5454,8 +5457,8 @@ dump_session_inv( drive_t *drivep,
 			return BOOL_FALSE;
 		}
 
-		mlog( MLOG_VERBOSE,
-		      "ending inventory media file\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "ending inventory media file\n") );
 		ncommitted = 0;
 		rv = Media_mfile_end( drivep,
 				      contextp,
@@ -5473,14 +5476,14 @@ dump_session_inv( drive_t *drivep,
 		}
 
 		if ( partial ) {
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "encountered EOM while writing "
-			      "inventory media file size %lld bytes\n",
+			      "inventory media file size %lld bytes\n"),
 			      ncommitted );
 			mlog_exit_hint(RV_INV);
 		} else {
-			mlog( MLOG_VERBOSE,
-			      "inventory media file size %lld bytes\n",
+			mlog( MLOG_VERBOSE, _(
+			      "inventory media file size %lld bytes\n"),
 			      ncommitted );
 		}
 		if ( sc_inv_stmtokenp ) {
@@ -5505,9 +5508,9 @@ dump_session_inv( drive_t *drivep,
 						! partial,
 						BOOL_TRUE );
 			if ( ! ok ) {
-				mlog( MLOG_NORMAL,
+				mlog( MLOG_NORMAL, _(
 				      "inventory session media file "
-				      "put failed\n" );
+				      "put failed\n") );
 				return BOOL_FALSE;
 			}
 		}
@@ -5530,8 +5533,8 @@ dump_terminator( drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp )
 		return;
 	}
 
-	mlog( MLOG_VERBOSE,
-	      "writing stream terminator\n" );
+	mlog( MLOG_VERBOSE, _(
+	      "writing stream terminator\n") );
 
 	/* modify the write header to indicate a terminator
 	 */
@@ -5545,8 +5548,8 @@ dump_terminator( drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp )
 		bool_t partial;
 		rv_t rv;
 
-		mlog( MLOG_VERBOSE,
-		      "beginning media stream terminator\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "beginning media stream terminator\n") );
 
 		partial = BOOL_FALSE;
 		rv = Media_mfile_begin( drivep, contextp, BOOL_FALSE );
@@ -5554,14 +5557,14 @@ dump_terminator( drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp )
 		case RV_OK:
 			break;
 		case RV_TIMEOUT:
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change timeout: "
-			      "media stream terminator not written\n" );
+			      "media stream terminator not written\n") );
 			return;
 		case RV_QUIT:
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 			      "media change declined: "
-			      "media stream terminator not written\n" );
+			      "media stream terminator not written\n") );
 			return;
 		case RV_DRIVE:
 		case RV_ERROR:
@@ -5570,14 +5573,14 @@ dump_terminator( drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp )
 			return;
 		}
 
-		mlog( MLOG_VERBOSE,
-		      "media file %u (media %u, file %u)\n",
+		mlog( MLOG_VERBOSE, _(
+		      "media file %u (media %u, file %u)\n"),
 		      mwhdrp->mh_dumpfileix,
 		      mwhdrp->mh_mediaix,
 		      mwhdrp->mh_mediafileix );
 
-		mlog( MLOG_VERBOSE,
-		      "ending media stream terminator\n" );
+		mlog( MLOG_VERBOSE, _(
+		      "ending media stream terminator\n") );
 		ncommitted = 0;
 		rv = Media_mfile_end( drivep,
 				      contextp,
@@ -5595,13 +5598,13 @@ dump_terminator( drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp )
 		}
 
 		if ( partial ) {
-			mlog( MLOG_VERBOSE,
+			mlog( MLOG_VERBOSE, _(
 			      "encountered EOM while writing "
-			      "media stream terminator size %lld bytes\n",
+			      "media stream terminator size %lld bytes\n"),
 			      ncommitted );
 		} else {
-			mlog( MLOG_VERBOSE,
-			      "media stream terminator size %lld bytes\n",
+			mlog( MLOG_VERBOSE, _(
+			      "media stream terminator size %lld bytes\n"),
 			      ncommitted );
 		}
 
@@ -5797,10 +5800,10 @@ position:
 		switch( rval ) {
 		case 0:
 			mlog_lock( );
-			mlog( MLOG_VERBOSE | MLOG_NOLOCK | MLOG_MEDIA,
+			mlog( MLOG_VERBOSE | MLOG_NOLOCK | MLOG_MEDIA, _(
 			      "positioned at media file %u: "
 			      "dump %u, "
-			      "stream %u\n",
+			      "stream %u\n"),
 			      mrhdrp->mh_mediafileix,
 			      mrhdrp->mh_dumpmediaix,
 			      drhdrp->dh_driveix );
@@ -5845,30 +5848,30 @@ position:
 			}
 
 			if ( ( int32_t )mwhdrp->mh_mediaix >= 0 ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "cannot interleave dump streams: "
-				      "must supply a blank media object\n" );
+				      "must supply a blank media object\n") );
 				goto changemedia;
 			}
 			if ( ! ( dcaps & DRIVE_CAP_APPEND )) {
-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA, _(
 				      "media contains valid xfsdump "
-				      "but does not support append\n" );
+				      "but does not support append\n") );
 				goto changemedia;
 			}
 			if ( MEDIA_TERMINATOR_CHK( mrhdrp )) {
 				intgen_t status;
-				mlog( MLOG_VERBOSE | MLOG_MEDIA,
-				      "stream terminator found\n" );
+				mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+				      "stream terminator found\n") );
 				ASSERT( contextp->cc_Media_useterminatorpr );
 				ASSERT( dcaps & DRIVE_CAP_BSF ); /* redundant */
 				status = 0;
 				rval = ( * dop->do_bsf )( drivep, 0, &status );
 				ASSERT( rval == 0 );
 				if ( status == DRIVE_ERROR_DEVICE ) {
-					mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA,
+					mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA, _(
 					      "encountered media error "
-					      "attempting BSF\n" ); 
+					      "attempting BSF\n") ); 
 					goto changemedia;
 				}
 				if ( mrhdrp->mh_mediafileix == 0 ) {
@@ -5880,10 +5883,10 @@ position:
 		case DRIVE_ERROR_FOREIGN:
 			prevmediapresentpr = mediapresentpr;
 			mediapresentpr = BOOL_TRUE;
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 			      "media contains non-xfsdump data "
 			      "or a corrupt xfsdump media file header "
-			      "at beginning of media\n" );
+			      "at beginning of media\n") );
 			mlog_exit_hint(RV_CORRUPT);
 
 			switch( Media_erasechk( drivep,
@@ -5910,13 +5913,13 @@ position:
 			}
 
 			if ( ! ( dcaps & DRIVE_CAP_OVERWRITE )) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
-				      "unable to overwrite\n" );
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
+				      "unable to overwrite\n") );
 				goto changemedia;
 			} else {
 				intgen_t status;
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
-				      "repositioning to overwrite\n" );
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
+				      "repositioning to overwrite\n") );
 				ASSERT( dcaps & DRIVE_CAP_BSF );
 				status = 0;
 				rval = ( * dop->do_bsf )( drivep, 0, &status );
@@ -5933,9 +5936,9 @@ position:
 		case DRIVE_ERROR_OVERWRITE:
 			prevmediapresentpr = mediapresentpr;
 			mediapresentpr = BOOL_TRUE;
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 				"media may contain data. "
-				"Overwrite option specified\n" );
+				"Overwrite option specified\n") );
 
 			if ( dlog_allowed( )) {
 				bool_t ok;
@@ -5961,8 +5964,8 @@ position:
 		case DRIVE_ERROR_DEVICE:
 			return RV_DRIVE;
 		case DRIVE_ERROR_EOD:
-			mlog( MLOG_VERBOSE | MLOG_MEDIA,
-			      "at end of data\n" );
+			mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
+			      "at end of data\n") );
 			prevmediapresentpr = mediapresentpr;
 			mediapresentpr = BOOL_TRUE;
 			virginmediapr = BOOL_FALSE;
@@ -5980,10 +5983,10 @@ position:
 			}
 
 			if ( contextp->cc_Media_useterminatorpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "encountered EOD but expecting a media "
 				      "stream terminator: "
-				      "assuming full media\n" );
+				      "assuming full media\n") );
 				goto changemedia;
 			} else {
 				goto write;
@@ -5992,8 +5995,8 @@ position:
 			prevmediapresentpr = mediapresentpr;
 			mediapresentpr = BOOL_TRUE;
 			virginmediapr = BOOL_FALSE;
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
-			      "encountered EOM: media is full\n" );
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
+			      "encountered EOM: media is full\n") );
 
 			switch( Media_erasechk( drivep,
 						dcaps,
@@ -6015,9 +6018,9 @@ position:
 			mediapresentpr = BOOL_TRUE;
 			virginmediapr = BOOL_FALSE;
 
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 			      "encountered corrupt or foreign data: "
-			      "assuming corrupted media\n" );
+			      "assuming corrupted media\n") );
 			mlog_exit_hint(RV_CORRUPT);
 
 			switch( Media_erasechk( drivep,
@@ -6033,25 +6036,25 @@ position:
 			}
 
 			if ( contextp->cc_Media_useterminatorpr ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "encountered corrupt or foreign data "
 				      "but expecting a media "
 				      "stream terminator: "
-				      "assuming corrupted media\n" );
+				      "assuming corrupted media\n") );
 				mlog_exit_hint(RV_CORRUPT);
 				goto changemedia;
 			} else if ( ! ( dcaps & DRIVE_CAP_OVERWRITE )) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "encountered corrupt or foreign data: "
 				      "unable to overwrite: "
-				      "assuming corrupted media\n" );
+				      "assuming corrupted media\n") );
 				mlog_exit_hint(RV_CORRUPT);
 				goto changemedia;
 			} else {
 				intgen_t status;
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "encountered corrupt or foreign data: "
-				      "repositioning to overwrite\n" );
+				      "repositioning to overwrite\n") );
 				mlog_exit_hint(RV_CORRUPT);
 				assert( dcaps & DRIVE_CAP_BSF );
 				status = 0;
@@ -6068,8 +6071,8 @@ position:
 			return RV_ERROR;
 		case DRIVE_ERROR_EOF:
 		default:
-			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA,
-			      "unexpected error from do_begin_read: %d\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_MEDIA, _(
+			      "unexpected error from do_begin_read: %d\n"),
 			      rval );
 			return RV_CORE;
 		}
@@ -6077,8 +6080,8 @@ position:
 	/* NOTREACHED */
 
 erasemedia:
-	mlog( MLOG_VERBOSE | MLOG_WARNING | MLOG_MEDIA,
-	      "erasing media\n" );
+	mlog( MLOG_VERBOSE | MLOG_WARNING | MLOG_MEDIA, _(
+	      "erasing media\n") );
 	rval = ( * dop->do_erase )( drivep );
 	if ( rval ) {
 		return RV_DRIVE;
@@ -6125,9 +6128,9 @@ changemedia:
 	if ( drivecnt > 1 && ! stdoutpiped ) {
 		ix_t thrdix = drivep->d_index;
 		ASSERT( sistr );
-		mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_MEDIA,
+		mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_MEDIA, _(
 		      "please change media: "
-		      "type %s to confirm media change\n",
+		      "type %s to confirm media change\n"),
 		      sistr );
 		set_mcflag( thrdix );
 		while ( sc_mcflag[ thrdix ] ) {
@@ -6209,9 +6212,9 @@ write:
 	     mwhdrp->mh_dumpmediafileix == 0
 	     &&
 	     ! virginmediapr ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 		      "cannot interleave dump streams: must supply a blank "
-		      "media object\n" );
+		      "media object\n") );
 		*gwhdrp = saved_gwhdr;
 		goto changemedia;
 	}
@@ -6260,8 +6263,8 @@ write:
 					      |
 					      MLOG_WARNING
 					      |
-					      MLOG_MEDIA,
-					      "no media label specified\n" );
+					      MLOG_MEDIA, _(
+					      "no media label specified\n") );
 				}
 			}
 		} else {
@@ -6285,9 +6288,9 @@ write:
 	case 0:
 		return RV_OK;
 	case DRIVE_ERROR_EOM:
-		mlog( MLOG_VERBOSE | MLOG_MEDIA,
+		mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 		      "encountered end of media "
-		      "while attempting to begin new media file\n" );
+		      "while attempting to begin new media file\n") );
 		*gwhdrp = saved_gwhdr;
 		goto changemedia;
 	case DRIVE_ERROR_MEDIA:
@@ -6331,9 +6334,9 @@ Media_mfile_end( drive_t *drivep,
 		return RV_OK;
 	case DRIVE_ERROR_MEDIA:
 	case DRIVE_ERROR_EOM:
-		mlog( MLOG_VERBOSE | MLOG_MEDIA,
+		mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 		      "encountered end of media "
-		      "while ending media file\n" );
+		      "while ending media file\n") );
 		mlog_exit_hint(RV_EOM);
 		contextp->cc_Media_begin_entrystate = BES_ENDEOM;
 		return RV_EOM;
@@ -6474,9 +6477,9 @@ Media_erasechk( drive_t *drivep,
 				return RV_OK;
 			}
 		} else {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 			      "drive does not support media erase: "
-			      "ignoring -%c option\n",
+			      "ignoring -%c option\n"),
 			      GETOPT_ERASE );
 			return RV_NOTOK;
 		}
@@ -6738,15 +6741,16 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
         int             fd;
         char            tmp;
 
-        mlog( MLOG_VERBOSE, "saving %s information for: %s\n", quotainfo->desc, mntpnt );
+        mlog( MLOG_VERBOSE, _(
+		"saving %s information for: %s\n"), quotainfo->desc, mntpnt );
 
         if( unlink( quotainfo->quotapath ) == 0 ) {
-            mlog( MLOG_WARNING, "overwriting: %s\n", quotainfo->quotapath);
+            mlog( MLOG_WARNING, _("overwriting: %s\n"), quotainfo->quotapath);
         }
         else {
             if( errno != ENOENT ) {
-                mlog( MLOG_ERROR,
-                      "unable to remove %s: %s\n",
+                mlog( MLOG_ERROR, _(
+                      "unable to remove %s: %s\n"),
                       quotainfo->quotapath,
                       strerror( errno ));
                 return BOOL_FALSE;
@@ -6764,13 +6768,13 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
 
         sts = system( buf );
         if( sts != 0 ) {
-            mlog( MLOG_ERROR,
-                  "%s failed with exit status: %d\n", REPQUOTA, sts);
+            mlog( MLOG_ERROR, _(
+                  "%s failed with exit status: %d\n"), REPQUOTA, sts);
             return BOOL_FALSE;
         }
         if((fd = open( quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
-            mlog( MLOG_ERROR,
-                  "open failed %s: %s\n",
+            mlog( MLOG_ERROR, _(
+                  "open failed %s: %s\n"),
                   quotainfo->quotapath,
                   strerror( errno ));
             return BOOL_FALSE;

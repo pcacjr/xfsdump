@@ -386,14 +386,14 @@ tree_init( char *hkdir,
 		rval = mkdir( tranp->t_orphdir, S_IRWXU );
 		if ( rval ) {
 			if ( errno == EEXIST ) {
-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
+				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
 				      "%s already exists: "
-				      "rm -rf prior to initating restore\n",
+				      "rm -rf prior to initating restore\n"),
 				      tranp->t_orphdir,
 				      strerror( errno ));
 			} else {
-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-				      "unable to create %s: %s\n",
+				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+				      "unable to create %s: %s\n"),
 				      tranp->t_orphdir,
 				      strerror( errno ));
 			}
@@ -412,8 +412,8 @@ tree_init( char *hkdir,
 				O_RDWR | O_CREAT,
 				S_IRUSR | S_IWUSR );
 	if ( tranp->t_persfd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "could not open %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "could not open %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -427,8 +427,8 @@ tree_init( char *hkdir,
 				     tranp->t_persfd,
 				     ( off64_t )0 );
 	if ( persp == ( treepers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "unable to map %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -551,8 +551,8 @@ tree_sync( char *hkdir, char *dstdir, bool_t toconlypr, bool_t fullpr )
 	 */
 	rval = mkdir( tranp->t_orphdir, S_IRWXU );
 	if ( rval && errno != EEXIST ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "unable to recreate %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "unable to recreate %s: %s\n"),
 		      tranp->t_orphdir,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -566,8 +566,8 @@ tree_sync( char *hkdir, char *dstdir, bool_t toconlypr, bool_t fullpr )
 	 */
 	tranp->t_persfd = open( perspath, O_RDWR );
 	if ( tranp->t_persfd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "could not open %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "could not open %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -581,8 +581,8 @@ tree_sync( char *hkdir, char *dstdir, bool_t toconlypr, bool_t fullpr )
 				     tranp->t_persfd,
 				     ( off64_t )0 );
 	if ( persp == ( treepers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "unable to map %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -1233,7 +1233,7 @@ noref_elim_recurse( nh_t parh,
 		nextcldh = cldp->n_sibh;
 
 #ifdef TREE_DEBUG
-		ok = Node2path( cldh, path1, "noref debug" );
+		ok = Node2path( cldh, path1, _("noref debug") );
 		mlog( MLOG_TRACE | MLOG_TREE,
 		      "noref: %s: isdir = %d, isreal = %d, isref = %d, "
 		      "isrenamedir = %d\n",
@@ -1265,7 +1265,7 @@ noref_elim_recurse( nh_t parh,
 
 				ASSERT( ! isrenamepr );
 				if ( isrealpr ) {
-					ok = Node2path( cldh, path1, "rmdir" );
+					ok = Node2path( cldh, path1, _("rmdir") );
 					if ( ! ok ) {
 						cldh = nextcldh;
 						continue;
@@ -1279,8 +1279,8 @@ noref_elim_recurse( nh_t parh,
 						      |
 						      MLOG_WARNING
 						      |
-						      MLOG_TREE,
-						     "unable to rmdir %s: %s\n",
+						      MLOG_TREE, _(
+						    "unable to rmdir %s: %s\n"),
 						     path1,
 						     strerror( errno ));
 						cldh = nextcldh;
@@ -1302,7 +1302,7 @@ noref_elim_recurse( nh_t parh,
 				ASSERT( isrealpr );
 				ok = Node2path( cldh,
 						path1,
-						"tmp dir rename src" );
+						_("tmp dir rename src") );
 				if ( ! ok ) {
 					cldh = nextcldh;
 					continue;
@@ -1312,7 +1312,7 @@ noref_elim_recurse( nh_t parh,
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				ok = Node2path( cldh,
 						path2,
-						"tmp dir rename dst" );
+						_("tmp dir rename dst") );
 				if ( ! ok ) {
 					/* REFERENCED */
 					nrh_t dummynrh;
@@ -1330,9 +1330,9 @@ noref_elim_recurse( nh_t parh,
 				if ( rval ) {
 					/* REFERENCED */
 					nrh_t dummynrh;
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "unable to rename dir %s "
-					      "to dir %s: %s\n",
+					      "to dir %s: %s\n"),
 					      path1,
 					      path2,
 					      strerror( errno ));
@@ -1420,7 +1420,7 @@ noref_elim_recurse( nh_t parh,
 				ASSERT( ! canunlinkpr );
 				ok = Node2path( cldh,
 						path1,
-						"tmp nondir rename src" );
+						_("tmp nondir rename src") );
 				if ( ! ok ) {
 					cldh = nextcldh;
 					continue;
@@ -1430,7 +1430,7 @@ noref_elim_recurse( nh_t parh,
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				ok = Node2path( cldh,
 						path2,
-						"tmp nondir rename dst" );
+						_("tmp nondir rename dst") );
 				if ( ! ok ) {
 					/* REFERENCED */
 					nrh_t dummynrh;
@@ -1448,9 +1448,9 @@ noref_elim_recurse( nh_t parh,
 				if ( rval ) {
 					/* REFERENCED */
 					nrh_t dummynrh;
-					mlog( MLOG_NORMAL | MLOG_WARNING,
+					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					      "unable to rename nondir %s "
-					      "to nondir %s: %s\n",
+					      "to nondir %s: %s\n"),
 					      path1,
 					      path2,
 					      strerror( errno ));
@@ -1471,7 +1471,7 @@ noref_elim_recurse( nh_t parh,
 
 				ASSERT( ! mustorphpr );
 				if ( isrealpr ) {
-					ok = Node2path( cldh, path1, "rmdir" );
+					ok = Node2path( cldh, path1, _("rmdir") );
 					if ( ! ok ) {
 						cldh = nextcldh;
 						continue;
@@ -1485,9 +1485,9 @@ noref_elim_recurse( nh_t parh,
 						      |
 						      MLOG_WARNING
 						      |
-						      MLOG_TREE,
+						      MLOG_TREE, _(
 						     "unable to unlink nondir "
-						     "%s: %s\n",
+						     "%s: %s\n"),
 						     path1,
 						     strerror( errno ));
 						cldh = nextcldh;
@@ -1536,7 +1536,7 @@ mkdirs_recurse( nh_t parh, nh_t cldh, char *path )
 		if ( isdirpr && ! isrealpr && isrefpr && isselpr ) {
 			intgen_t rval;
 
-			if ( ! Node2path( cldh, path, "makedir" )) {
+			if ( ! Node2path( cldh, path, _("makedir") )) {
 				cldh = nextcldh;
 				continue;
 			}
@@ -1549,8 +1549,8 @@ mkdirs_recurse( nh_t parh, nh_t cldh, char *path )
 				rval = mkdir( path, S_IRWXU );
 			}
 			if ( rval && errno != EEXIST ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-				      "mkdir %s failed: %s\n",
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
+				      "mkdir %s failed: %s\n"),
 				      path,
 				      strerror( errno ));
 				
@@ -1617,7 +1617,7 @@ rename_dirs( nh_t cldh,
 			newparh = renamep->n_parh;
 			newnrh = renamep->n_nrh;
 			Node_unmap( renameh, &renamep );
-			ok = Node2path( cldh, path1, "rename dir" );
+			ok = Node2path( cldh, path1, _("rename dir") );
 			if ( ! ok ) {
 				cldh = nextcldh;
 				continue;
@@ -1625,7 +1625,7 @@ rename_dirs( nh_t cldh,
 			dummynrh = disown( cldh );
 			ASSERT( dummynrh == NRH_NULL );
 			adopt( newparh, cldh, newnrh );
-			ok = Node2path( cldh, path2, "rename dir" );
+			ok = Node2path( cldh, path2, _("rename dir") );
 			if ( ! ok ) {
 				dummynrh = disown( cldh );
 				ASSERT( dummynrh == newnrh );
@@ -1642,9 +1642,9 @@ rename_dirs( nh_t cldh,
 			      path2 );
 			rval = rename( path1, path2 );
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				      "unable to rename dir %s "
-				      "to dir %s: %s\n",
+				      "to dir %s: %s\n"),
 				      path1,
 				      path2,
 				      strerror( errno ));
@@ -1712,7 +1712,7 @@ tree_cb_links( xfs_ino_t ino,
 
 		/* build a pathname
 		 */
-		ok = Node2path( nh, path, "restore" );
+		ok = Node2path( nh, path, _("restore") );
 		if ( ! ok ) {
 			continue;
 		}
@@ -1732,9 +1732,9 @@ tree_cb_links( xfs_ino_t ino,
 		/* don't restore into the housekeeping directory
 		 */
 		if ( path_beginswith( path, tranp->t_hkdir )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 			      "cannot restore %s (ino %llu gen %u): "
-			      "pathname contains %s\n",
+			      "pathname contains %s\n"),
 			      path,
 			      ino,
 			      gen,
@@ -1774,11 +1774,11 @@ tree_cb_links( xfs_ino_t ino,
 					rval = unlink( path );
 					if ( rval && errno != ENOENT ) {
 						mlog( MLOG_NORMAL | 
-						      MLOG_WARNING,
+						      MLOG_WARNING, _(
 						      "unable to unlink "
 						      "current file prior to "
 						      "restore: "
-						      "%s: %s: discarding\n",
+						      "%s: %s: discarding\n"),
 						      path,
 						      strerror( errno ));
 						continue;
@@ -1868,9 +1868,9 @@ tree_cb_links( xfs_ino_t ino,
 				strcpy(tmp, path);
 				dir = dirname(tmp);
 				mkdir_r(dir);
-				mlog (MLOG_VERBOSE | MLOG_NOTE | MLOG_TREE,
+				mlog (MLOG_VERBOSE | MLOG_NOTE | MLOG_TREE, _(
 				      "ino %llu salvaging file,"
-				      " placing in %s\n", ino, path1);
+				      " placing in %s\n"), ino, path1);
 				ok = ( * funcp )( contextp, path == path2, 
 					path1, path2 );
 				if ( ! ok ) {
@@ -1878,9 +1878,9 @@ tree_cb_links( xfs_ino_t ino,
 				}
 			} 
 		} else {
-			mlog( MLOG_VERBOSE | MLOG_NOTE | MLOG_TREE,
+			mlog( MLOG_VERBOSE | MLOG_NOTE | MLOG_TREE, _(
 			      "ino %llu gen %u not referenced: "
-			      "placing in orphanage\n",
+			      "placing in orphanage\n"),
 			      ino,
 			      biggen );
 			nh = Node_alloc( ino,
@@ -1889,14 +1889,14 @@ tree_cb_links( xfs_ino_t ino,
 					 DAH_NULL,
 					 NF_REAL | NF_NEWORPH );
 			if (nh == NH_NULL) {
-				mlog( MLOG_ERROR | MLOG_TREE,
+				mlog( MLOG_ERROR | MLOG_TREE, _(
 				"node allocation failed when placing ino %llu"
-				" in orphanage\n", ino); 
+				" in orphanage\n"), ino); 
 				return RV_ERROR; /* allocation failed */
 			}
 			link_in( nh );
 			adopt( persp->p_orphh, nh, NRH_NULL );
-			ok = Node2path( nh, path1, "orphan" );
+			ok = Node2path( nh, path1, _("orphan") );
 			ASSERT( ok );
 			( void )( * funcp )( contextp, BOOL_FALSE, path1,path2);
 		}
@@ -2031,10 +2031,10 @@ tree_extattr_recurse( nh_t parh,
 	parp = Node_map( parh );
 	dah = parp->n_dah;
 	Node_unmap( parh, &parp );
-	if ( ! Node2path( parh, path, "set dir extattr" )) {
-		mlog (MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, 
-		      "tree_extattr_recurse: Could not convert node to ",
-		      "path for %s\n", path);
+	if ( ! Node2path( parh, path, _("set dir extattr") )) {
+		mlog (MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,  _(
+		      "tree_extattr_recurse: Could not convert node to "
+		      "path for %s\n"), path);
 		return BOOL_TRUE;
 	}
 	if ( dah != DAH_NULL ) {
@@ -2232,7 +2232,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 
 		/* build pathname to dst
 		 */
-		ok = Node2path( dsth, phcbp->path2, "rename to" );
+		ok = Node2path( dsth, phcbp->path2, _("rename to") );
 		if ( ! ok ) {
 			link_in( dsth );
 			continue;
@@ -2252,7 +2252,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 
 			/* build a path to src
 			 */
-			ok = Node2path( srch, phcbp->path1, "rename from" );
+			ok = Node2path( srch, phcbp->path1, _("rename from") );
 			if ( ! ok ) {
 				link_in( srch );
 				continue;
@@ -2269,9 +2269,9 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 					       phcbp->path2 );
 			}
 			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 				      "unable to rename nondir "
-				      "%s to %s: %s\n",
+				      "%s to %s: %s\n"),
 				      phcbp->path1,
 				      phcbp->path2,
 				      strerror( errno ));
@@ -2291,12 +2291,12 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 		/* tes@sgi.com: note: loop of one iteration only 
 		 */
 		while ( ! successpr && lnsrch != NH_NULL ) {
-			ok = Node2path( lnsrch, phcbp->path1, "link" );
+			ok = Node2path( lnsrch, phcbp->path1, _("link") );
 
 			if ( ! ok ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 				      "unable to use %s "
-				      "as a hard link source\n",
+				      "as a hard link source\n"),
 				      phcbp->path1 );
 				lnsrch = NH_NULL;
 				continue;
@@ -2352,7 +2352,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 		srcp->n_lnkh = NH_NULL;
 		Node_unmap( srch, &srcp );
 
-		ok = Node2path( srch, phcbp->path1, "unlink" );
+		ok = Node2path( srch, phcbp->path1, _("unlink") );
 		if ( ! ok ) {
 			link_in( srch );
 			continue;
@@ -2367,8 +2367,8 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 			rval = unlink( phcbp->path1 );
 		}
 		if ( rval ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-			      "unable to unlink %s: %s\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
+			      "unable to unlink %s: %s\n"),
 			      phcbp->path1,
 			      strerror( errno ));
 			link_in( srch );
@@ -2439,7 +2439,7 @@ tree_setattr_recurse( nh_t parh, char *path )
 			}
 			if ( dah != DAH_NULL ) {
 				bool_t ok;
-				ok = Node2path( cldh, path, "set dirattr" );
+				ok = Node2path( cldh, path, _("set dirattr") );
 				if ( ok ) {
 					setdirattr( dah, path );
 				}
@@ -2481,16 +2481,16 @@ setdirattr( dah_t dah, char *path )
 		/* restore DMAPI event settings etc.
 		 */
 		if (path_to_handle(path, &hanp, &hlen)) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-				"path_to_handle of %s failed:%s\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				"path_to_handle of %s failed:%s\n"),
 				path, strerror( errno ));
 			return;
 		}
 		
 		fd = open_by_handle(hanp, hlen, O_RDONLY);
 		if (fd < 0) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-				"open_by_handle of %s failed:%s\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				"open_by_handle of %s failed:%s\n"),
 				path, strerror( errno ));
 			free_handle(hanp, hlen);
 			return;
@@ -2518,9 +2518,9 @@ setdirattr( dah_t dah, char *path )
 	utimbuf.modtime = dirattr_get_mtime( dah );
 	rval = utime( path, &utimbuf );
 	if ( rval ) {
-		mlog( MLOG_VERBOSE | MLOG_TREE,
+		mlog( MLOG_VERBOSE | MLOG_TREE, _(
 		      "could not set access and modification times"
-		      " of %s: %s\n",
+		      " of %s: %s\n"),
 		      path,
 		      strerror( errno ));
 	}
@@ -2530,8 +2530,8 @@ setdirattr( dah_t dah, char *path )
 			      dirattr_get_uid( dah ),
 			      dirattr_get_gid( dah ));
 		if ( rval ) {
-			mlog( MLOG_NORMAL | MLOG_TREE,
-			      "chown (uid=%d, gid=%d) %s failed: %s\n",
+			mlog( MLOG_NORMAL | MLOG_TREE, _(
+			      "chown (uid=%d, gid=%d) %s failed: %s\n"),
 			      dirattr_get_uid( dah ),
 			      dirattr_get_gid( dah ),
 			      path,
@@ -2540,8 +2540,8 @@ setdirattr( dah_t dah, char *path )
 	}
 	rval = chmod( path, mode );
 	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_TREE,
-		      "chmod %s failed: %s\n",
+		mlog( MLOG_NORMAL | MLOG_TREE, _(
+		      "chmod %s failed: %s\n"),
 		      path,
 		      strerror( errno ));
 	}
@@ -2557,12 +2557,12 @@ tree_delorph( void )
 	rval = rmdir( tranp->t_orphdir );
 	if ( rval ) {
 		if ( errno == EEXIST ) {
-			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-			     "unable to rmdir %s: not empty\n",
+			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
+			     "unable to rmdir %s: not empty\n"),
 			     tranp->t_orphdir );
 		} else {
-			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-			     "unable to rmdir %s: %s\n",
+			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
+			     "unable to rmdir %s: %s\n"),
 			     tranp->t_orphdir,
 			     strerror( errno ));
 		}
@@ -2614,7 +2614,7 @@ restart:
 	/* begin the dialog
 	 */
 	preamblecnt = 0;
-	fold_init( fold, "subtree selection dialog", '=' );
+	fold_init( fold, _("subtree selection dialog"), '=' );
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
@@ -2650,9 +2650,9 @@ restart:
 		 */
 		ackcnt = 0;
 		if ( responseix == sigintix ) {
-			ackstr[ ackcnt++ ] = "keyboard interrupt\n";
+			ackstr[ ackcnt++ ] = _("keyboard interrupt\n");
 		} else if ( responseix == abortix ) {
-			ackstr[ ackcnt++ ] = "abort\n";
+			ackstr[ ackcnt++ ] = _("abort\n");
 		} else {
 			ASSERT( responseix == okix );
 		}
@@ -2667,7 +2667,7 @@ restart:
 			 * if operator decidesd not to intr.
 			 */
 			postamblecnt = 0;
-			fold_init( fold, "end dialog", '-' );
+			fold_init( fold, _("end dialog"), '-' );
 			postamblestr[ postamblecnt++ ] = "\n";
 			postamblestr[ postamblecnt++ ] = fold;
 			postamblestr[ postamblecnt++ ] = "\n\n";
@@ -2708,7 +2708,7 @@ restart:
 	} while ( cmdp != tsi_cmd_quit && cmdp != tsi_cmd_extract );
 
 	postamblecnt = 0;
-	fold_init( fold, "end dialog", '-' );
+	fold_init( fold, _("end dialog"), '-' );
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
@@ -2719,8 +2719,8 @@ restart:
          * to be interrupted (we haven't started yet) so just unmark
          * any selected directories and return */
 	if ( cmdp == tsi_cmd_quit ) {
-	    mlog (MLOG_NORMAL, "Unmark and quit\n");
-	    selsubtree (persp->p_rooth , BOOL_FALSE );
+		mlog( MLOG_NORMAL, _("Unmark and quit\n") );
+		selsubtree( persp->p_rooth , BOOL_FALSE );
 	}
 	    
 	return BOOL_TRUE;
@@ -2903,7 +2903,7 @@ tsi_cmd_cd( void *ctxp,
 	if ( ! isdirpr ) {
 		ASSERT( arg );
 		( * pcb )( pctxp,
-			   "%s is not a directory\n",
+			   _("%s is not a directory\n"),
 			   arg );
 
 		return;
@@ -3122,7 +3122,7 @@ tsi_cmd_help( void *ctxp,
 				 /
 				 sizeof( tsi_cmd_tbl[ 0 ] );
 
-	( * pcb )( pctxp, "the following commands are available:\n" );
+	( * pcb )( pctxp, _("the following commands are available:\n") );
 	for ( ; tblp < tblendp ; tblp++ ) {
 		( * pcb )( pctxp,
 			   "\t%s %s\n",
@@ -3240,8 +3240,8 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 		 */
 		if ( ! isdirpr ) {
 			if ( pcb ) {
-				( * pcb )( pctxp,
-					   "parent of %s is not a directory\n",
+				( * pcb )( pctxp, _(
+					   "parent of %s is not a directory\n"),
 					   arg );
 			}
 			return BOOL_FALSE;
@@ -3261,8 +3261,8 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 		if ( ! strcmp( nbuf, ".." )) {
 			if ( parh == NH_NULL ) {
 				if ( pcb ) {
-					( * pcb )( pctxp,
-						   "%s above root\n",
+					( * pcb )( pctxp, _(
+						   "%s above root\n"),
 						   arg );
 				}
 				return BOOL_FALSE;
@@ -3315,8 +3315,8 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 		 */
 		if ( sibh == NH_NULL ) {
 			if ( pcb ) {
-				( * pcb )( pctxp,
-					   "%s not found\n",
+				( * pcb )( pctxp, _(
+					   "%s not found\n"),
 					   arg );
 			}
 			return BOOL_FALSE;
@@ -3401,8 +3401,8 @@ Node_map( nh_t nh )
 {
 	node_t *n = ( node_t * )node_map( nh );
 	if ( n == NULL ) {
-		mlog( MLOG_ERROR | MLOG_TREE,
-			"failed to map in node (node handle: %u)\n", nh);
+		mlog( MLOG_ERROR | MLOG_TREE, _(
+			"failed to map in node (node handle: %u)\n"), nh);
 		exit(EXIT_ERROR);
 	}
 	return n;
@@ -3428,9 +3428,9 @@ Node2path( nh_t nh, char *path, char *errmsg )
 		xfs_ino_t ino = np->n_ino;
 		gen_t gen = np->n_gen;
 		Node_unmap( nh, &np );
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 		      "unable %s ino %llu gen %u: "
-		      "relative pathname too long (partial %s)\n",
+		      "relative pathname too long (partial %s)\n"),
 		      errmsg,
 		      ino,
 		      gen,
@@ -3562,17 +3562,17 @@ disown( nh_t cldh )
 	parh = cldp->n_parh;
 	ASSERT( parh != NH_NULL );
 	if ( parh == NH_NULL ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 		      "attempt to disown child "
-		      "which has no parent!\n" );
+		      "which has no parent!\n") );
 		return nrh;
 	}
 	parp = Node_map( parh );
 	ASSERT( parp->n_cldh != NH_NULL );
 	if ( parp->n_cldh == NH_NULL ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 		      "attempt to disown child "
-		      "when parent has no children!\n" );
+		      "when parent has no children!\n") );
 		return nrh;
 	}
 	if ( parp->n_cldh == cldh ) {
@@ -4070,8 +4070,8 @@ hash_init( size64_t vmsz,
 					    tranp->t_persfd,
 					    ( off64_t )PERSSZ );
 	if ( tranp->t_hashp == ( nh_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_TREE,
-		      "unable to mmap hash array into %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_TREE, _(
+		      "unable to mmap hash array into %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -4116,8 +4116,8 @@ hash_sync( char *perspath )
 					    tranp->t_persfd,
 					    ( off64_t )PERSSZ );
 	if ( tranp->t_hashp == ( nh_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_TREE,
-		      "unable to mmap hash array into %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_TREE, _(
+		      "unable to mmap hash array into %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -4330,8 +4330,8 @@ Node_chk( nh_t nh, nh_t *nexthashhp, nh_t *nextlnkhp )
 	Node_unmap( nh, &np );
 
 	if ( ! nexthashhp && n.n_hashh != NH_NULL ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE,
-		      "nh 0x%x np 0x%x hash link not null\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "nh 0x%x np 0x%x hash link not null\n"),
 		      nh,
 		      np );
 		okaccum = BOOL_FALSE;
@@ -4482,17 +4482,17 @@ tree_chk2_recurse( nh_t cldh, nh_t parh )
 		}
 
 		if ( nodeparh == NH_NULL ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-			      "node %x %s %llu %u parent NULL\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
+			      "node %x %s %llu %u parent NULL\n"),
 			      cldh,
 			      tranp->t_namebuf,
 			      ino,
 			      gen );
 			return BOOL_FALSE;
 		} else if ( nodeparh != parh ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 			      "node %x %s %llu %u parent mismatch: "
-			      "nodepar %x par %x\n",
+			      "nodepar %x par %x\n"),
 			      cldh,
 			      tranp->t_namebuf,
 			      ino,
@@ -4842,19 +4842,20 @@ octal_to_size( char c )
 static int
 mkdir_r(char *path)
 {
-    struct stat sbuf;
+	struct stat sbuf;
 
-    if (stat(path, &sbuf) < 0) {
-	if (mkdir_r(dirname(strdup(path))) < 0)
-	    return -1;
-	return mkdir(path, 0755);
-    }
-    else if ((sbuf.st_mode & S_IFDIR) == 0) {
-	mlog( MLOG_TRACE | MLOG_ERROR | MLOG_TREE,
-	"%s is not a directory\n", path);
-	mlog_exit(EXIT_ERROR, RV_EXISTS);
-	exit(1);
-    }
-    return 0;
+	if (stat(path, &sbuf) < 0) {
+		if (mkdir_r(dirname(strdup(path))) < 0)
+			return -1;
+		return mkdir(path, 0755);
+	}
+	else if ((sbuf.st_mode & S_IFDIR) == 0) {
+		mlog( MLOG_TRACE | MLOG_ERROR | MLOG_TREE, _(
+			"%s is not a directory\n"),
+			path);
+		mlog_exit(EXIT_ERROR, RV_EXISTS);
+		exit(1);
+	}
+	return 0;
 }
 

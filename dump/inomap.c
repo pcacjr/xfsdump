@@ -234,9 +234,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	 * this will be used during the tree pruning phase.
 	 */
 	if ( subtreecnt ) {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 1: "
-		      "parsing subtree selections\n" );
+		      "parsing subtree selections\n") );
 		if ( ! subtreelist_parse( fshandlep,
 					  fsfd,
 					  rootstatp,
@@ -247,9 +247,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 			return BOOL_FALSE;
 		}
 	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 1: "
-		      "skipping (no subtrees specified)\n" );
+		      "skipping (no subtrees specified)\n") );
 	}
 	
 	if ( preemptchk( PREEMPT_FULL )) {
@@ -282,9 +282,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	 * callback. set a flag if any ino not put in a dump state. This will
 	 * be used to decide if any pruning can be done.
 	 */
-	mlog( MLOG_VERBOSE | MLOG_INOMAP,
+	mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 	      "ino map phase 2: "
-	      "constructing initial dump list\n" );
+	      "constructing initial dump list\n") );
 	*inomap_statdonep = 0;
 	*inomap_statphasep = 2;
 	pruneneeded = BOOL_FALSE;
@@ -314,13 +314,13 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	}
 
 	if ( inomap_exclude_filesize > 0 ) {
-		mlog( MLOG_NOTE | MLOG_VERBOSE,
-		      "pruned %llu files: maximum size exceeded\n",
+		mlog( MLOG_NOTE | MLOG_VERBOSE, _(
+		      "pruned %llu files: maximum size exceeded\n"),
 		      inomap_exclude_filesize );
 	}
 	if ( inomap_exclude_skipattr > 0 ) {
-		mlog( MLOG_NOTE | MLOG_VERBOSE,
-		      "pruned %llu files: skip attribute set\n",
+		mlog( MLOG_NOTE | MLOG_VERBOSE, _(
+		      "pruned %llu files: skip attribute set\n"),
 		      inomap_exclude_skipattr );
 	}
 
@@ -337,9 +337,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 		mln_init( );
 		gdrecursearray_init( );
 
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 3: "
-		      "pruning unneeded subtrees\n" );
+		      "pruning unneeded subtrees\n") );
 		*inomap_statdonep = 0;
 		*inomap_statpassp = 0;
 		*inomap_statphasep = 3;
@@ -390,9 +390,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 		cb_postmortem( );
 
 	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 3: "
-		      "skipping (no pruning necessary)\n" );
+		      "skipping (no pruning necessary)\n") );
 	}
 
 	/* free the subtree list memory
@@ -415,9 +415,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	if ( pruneneeded || subtreecnt > 0 ) {
 		cb_accuminit_sz( );
 
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 4: "
-		      "estimating dump size\n" );
+		      "estimating dump size\n") );
 		*inomap_statdonep = 0;
 		*inomap_statphasep = 4;
 		stat = 0;
@@ -448,9 +448,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 
 		inomap_state_postaccum( inomap_state_contextp );
 	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 4: "
-		      "skipping (size estimated in phase 2)\n" );
+		      "skipping (size estimated in phase 2)\n") );
 	}
 
 	/* initialize the callback context for startpoint calculation
@@ -460,13 +460,13 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	/* identify dump stream startpoints
 	 */
 	if ( startptcnt > 1 ) {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 5: "
-		      "identifying stream starting points\n" );
+		      "identifying stream starting points\n") );
 	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 		      "ino map phase 5: "
-		      "skipping (only one dump stream)\n" );
+		      "skipping (only one dump stream)\n") );
 	}
 	stat = 0;
 	*inomap_statdonep = 0;
@@ -506,17 +506,19 @@ inomap_build( jdm_fshandle_t *fshandlep,
 				ep = &startptp[ startptix + 1 ];
 			}
 			ASSERT( ! p->sp_flags );
-			mlog( MLOG_VERBOSE | MLOG_INOMAP,
-			      "stream %u: ino %llu offset %lld to ",
-			      startptix,
-			      p->sp_ino,
-			      p->sp_offset );
 			if ( ! ep ) {
-				mlog( MLOG_VERBOSE | MLOG_BARE | MLOG_INOMAP,
-				      "end\n" );
+				mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
+				   "stream %u: ino %llu offset %lld to end\n"),
+				      startptix,
+				      p->sp_ino,
+				      p->sp_offset );
 			} else {
-				mlog( MLOG_VERBOSE |  MLOG_BARE | MLOG_INOMAP,
-				      "ino %llu offset %lld\n",
+				mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
+				    "stream %u: ino %llu offset %lld to "
+				    "ino %llu offset %lld\n"),
+				      startptix,
+				      p->sp_ino,
+				      p->sp_offset,
 				      ep->sp_ino,
 				      ep->sp_offset );
 			}
@@ -525,8 +527,8 @@ inomap_build( jdm_fshandle_t *fshandlep,
 
 	free( ( void * )bstatbufp );
 	free( ( void * )getdentbufp );
-	mlog( MLOG_VERBOSE | MLOG_INOMAP,
-	      "ino map construction complete\n" );
+	mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
+	      "ino map construction complete\n") );
 	return BOOL_TRUE;
 }
 
@@ -612,8 +614,8 @@ cb_context( bool_t last,
 static void
 cb_postmortem( void )
 {
-	mlog( MLOG_DEBUG | MLOG_NOTE | MLOG_INOMAP,
-	      "maximum subtree pruning recursion depth: %u\n",
+	mlog( MLOG_DEBUG | MLOG_NOTE | MLOG_INOMAP, _(
+	      "maximum subtree pruning recursion depth: %u\n"),
 	      cb_maxrecursionlevel );
 }
 
@@ -1044,9 +1046,9 @@ cb_del( void *arg1,
 	register size_t recursion_level = ( size_t )arg1;
 
 	if ( recursion_level >= GDRECURSEDEPTHMAX ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
 		      "subtree pruning recursion depth exceeds max (%d): "
-		      "some unselected subtrees may be included in dump\n",
+		      "some unselected subtrees may be included in dump\n"),
 		      GDRECURSEDEPTHMAX );
 		return 0;
 	}
@@ -1494,8 +1496,8 @@ map_add( xfs_ino_t ino, intgen_t state )
 	}
 
 	if (ino <= last_ino_added) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP, 
-		  "map_add(%llu, %d): ino(%llu) <= last_ino(%llu)\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP, _(
+		  "map_add(%llu, %d): ino(%llu) <= last_ino(%llu)\n"),
 		  ino, state, ino, last_ino_added);
 		mlog_exit(EXIT_ERROR, RV_NONE);
 		exit(EXIT_ERROR);
@@ -1997,8 +1999,8 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 		if ( cbrval != 1 ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP,
 			      "%s: %s\n",
-			      cbrval == 0 ? "subtree not present"
-					  : "invalid subtree specified",
+			      cbrval == 0 ? _("subtree not present")
+					  : _("invalid subtree specified"),
 			      currentpath );
 			return BOOL_FALSE;
 		}
@@ -2177,8 +2179,8 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 	bmap[ 0 ].bmv_entries = -1;
 	fd = jdm_open( fshandlep, statp, O_RDONLY );
 	if ( fd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP,
-		      "could not open ino %llu to read extent map: %s\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
+		      "could not open ino %llu to read extent map: %s\n"),
 		      statp->bs_ino,
 		      strerror( errno ));
 		return 0;
@@ -2190,8 +2192,8 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 
 		rval = ioctl( fd, XFS_IOC_GETBMAPX, bmap );
 		if ( rval ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP,
-			      "could not read extent map for ino %llu: %s\n",
+			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
+			      "could not read extent map for ino %llu: %s\n"),
 			      statp->bs_ino,
 			      strerror( errno ));
 			( void )close( fd );
@@ -2255,8 +2257,8 @@ estimate_dump_space( xfs_bstat_t *statp )
 	*/
 		return 0;
 	default:
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP,
-		      "unknown inode type: ino=%llu, mode=0x%04x 0%06o\n",
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
+		      "unknown inode type: ino=%llu, mode=0x%04x 0%06o\n"),
 		      statp->bs_ino,
 		      statp->bs_mode,
 		      statp->bs_mode );

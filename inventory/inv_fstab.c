@@ -72,7 +72,8 @@ fstab_getall( invt_fstab_t **arr, invt_counter_t **cnt, int *numfs,
 						 sizeof( invt_fstab_t ), 
 						 sizeof( invt_counter_t ) )
 	     ) < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_INV, "INV: couldn't get fstab headers\n");
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+			"INV: couldn't get fstab headers\n") );
 	}
 #ifdef INVT_DEBUG	
 	mlog( MLOG_NITTY | MLOG_INV, "INV: number of filesystems in fstab %d\n", 
@@ -199,8 +200,9 @@ fstab_get_fname( void *pred,
 		if ( fd < 0 )
 			return -1;
 		if ( numfs <= 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV, "INV: No recorded filesystems in"
-			      " inventory's fstab.\n" );
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			      "INV: No recorded filesystems in"
+			      " inventory's fstab.\n") );
 			return -1;
 		}
 		INVLOCK( fd, LOCK_UN );
@@ -221,7 +223,7 @@ fstab_get_fname( void *pred,
 		}
 #ifdef INVT_DEBUG				
 		if (! uuidp )
-			mlog( MLOG_NORMAL | MLOG_INV,"INV: get_fname: unable to find %s"
+			mlog( MLOG_DEBUG | MLOG_INV,"INV: get_fname: unable to find %s"
 			      " in the inventory\n", (char *)pred);
 #endif
 		
@@ -252,12 +254,12 @@ fstab_DEBUG_print( invt_fstab_t *arr, int num )
 	int i;
 	char str[UUID_STR_LEN + 1];
 
-	mlog( MLOG_NORMAL | MLOG_INV, "\n\n--------- fstab ------------\n" );
+	mlog( MLOG_NORMAL | MLOG_INV, _("\n\n--------- fstab ------------\n") );
 	for ( i = 0; i < num; i++ ) {
-		printf( "Mount\t%s\n", arr[i].ft_mountpt );
-		printf( "Dev\t%s\n", arr[i].ft_devpath );
+		printf( _("Mount\t%s\n"), arr[i].ft_mountpt );
+		printf( _("Dev\t%s\n"), arr[i].ft_devpath );
 		uuid_unparse( arr[i].ft_uuid, str );
-		printf( "FSid\t%s\n\n", str );
+		printf( _("FSid\t%s\n\n"), str );
 	}
 	mlog( MLOG_NORMAL | MLOG_INV, "\n---------========------------\n" );
 }

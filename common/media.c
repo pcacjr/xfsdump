@@ -119,8 +119,8 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 		case GETOPT_MEDIALABEL:
 			if ( medialabel ) {
 				mlog( MLOG_NORMAL,
-				      "too many -%c arguments: "
-				      "\"-%c %s\" already given\n",
+				      _("too many -%c arguments: "
+				      "\"-%c %s\" already given\n"),
 				      optopt,
 				      optopt,
 				      medialabel );
@@ -129,7 +129,7 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return 0;
@@ -145,7 +145,7 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 	if ( ! medialabel ) {
 		/* not useful
 		mlog( MLOG_VERBOSE,
-		      "WARNING: no media label specified\n" );
+		      _("WARNING: no media label specified\n") );
 		*/
 		medialabel = "";
 	}
@@ -190,14 +190,15 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 	}
 	if ( ! chosen_sp ) {
 		mlog( MLOG_NORMAL,
-		      "no media strategy available for selected "
 #ifdef DUMP
-		      "dump destination"
+		      _("no media strategy available for selected "
+		      "dump destination(s)\n")
 #endif /* DUMP */
 #ifdef RESTORE
-		      "restore source"
+		      _("no media strategy available for selected "
+		      "restore source(s)\n")
 #endif /* RESTORE */
-		      "(s)\n" );
+			);
 		usage( );
 		return 0;
 	}

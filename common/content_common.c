@@ -76,7 +76,7 @@ Media_prompt_change( drive_t *drivep )
 
 retry:
 	preamblecnt = 0;
-	fold_init( fold, "change media dialog", '=' );
+	fold_init( fold, _("change media dialog"), '=' );
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
@@ -85,18 +85,18 @@ retry:
 
 	/* query: ask if media changed or declined
 	 */
-	sprintf( question,
+	sprintf( question, _(
 		 "please change media in "
-		 "drive %u\n",
+		 "drive %u\n"),
 		 (unsigned int)drivep->d_index );
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
 	ASSERT( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	dontix = choicecnt;
-	choicestr[ choicecnt++ ] = "media change declined";
+	choicestr[ choicecnt++ ] = _("media change declined");
 	doix = choicecnt;
-	choicestr[ choicecnt++ ] = "media changed";
+	choicestr[ choicecnt++ ] = _("media changed");
 	ASSERT( choicecnt <= CHOICEMAX );
 	sigintix = IXMAX - 1;
 
@@ -115,12 +115,12 @@ retry:
 				       dontix );	/* sigquit ix */
 	ackcnt = 0;
 	if ( responseix == doix ) {
-		ackstr[ ackcnt++ ] = "examining new media\n";
+		ackstr[ ackcnt++ ] = _("examining new media\n");
 	} else if ( responseix == dontix ) {
-		ackstr[ ackcnt++ ] = "media change aborted\n";
+		ackstr[ ackcnt++ ] = _("media change aborted\n");
 	} else {
 		ASSERT( responseix == sigintix );
-		ackstr[ ackcnt++ ] = "keyboard interrupt\n";
+		ackstr[ ackcnt++ ] = _("keyboard interrupt\n");
 	}
 
 	ASSERT( ackcnt <= ACKMAX );
@@ -128,7 +128,7 @@ retry:
 			ackcnt );
 
 	postamblecnt = 0;
-	fold_init( fold, "end dialog", '-' );
+	fold_init( fold, _("end dialog"), '-' );
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";

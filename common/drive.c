@@ -120,9 +120,9 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 	/* validate drive count
 	 */
 	if ( singlethreaded && drivecnt > 1 ) {
-		mlog( MLOG_NORMAL,
+		mlog( MLOG_NORMAL, _(
 		      "too many -%c arguments: "
-		      "maximum is %d when running in miniroot\n",
+		      "maximum is %d when running in miniroot\n"),
 		      optopt,
 		      1 );
 		usage( );
@@ -159,7 +159,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 		case GETOPT_DUMPDEST:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -193,14 +193,13 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 	if ( optind < argc && ! strcmp( argv[ optind ], "-" )) {
 		if ( driveix > 0 ) {
 			mlog( MLOG_NORMAL,
-			      "cannot specify source files and standard "
 #ifdef DUMP
-			      "out "
+			_("cannot specify source files and stdout together\n")
 #endif /* DUMP */
 #ifdef RESTORE
-			      "in "
+			_("cannot specify source files and stdin together\n")
 #endif /* RESTORE */
-			      "together\n" );
+			      );
 			usage( );
 			return BOOL_FALSE;
 		}
@@ -225,14 +224,13 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 	 */
 	if ( drivecnt == 0 ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "no "
 #ifdef DUMP
-		      "destination "
+			_("no destination file(s) specified\n")
 #endif /* DUMP */
 #ifdef RESTORE
-		      "source "
+			_("no source file(s) specified\n")
 #endif /* RESTORE */
-		      "file(s) specified\n" );
+			);
 		usage( );
 		return BOOL_FALSE;
 	}
@@ -265,7 +263,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 		drivep->d_recmarksep = bestsp->ds_recmarksep;
 		drivep->d_recmfilesz = bestsp->ds_recmfilesz;
 		mlog( MLOG_VERBOSE,
-		      "using %s strategy\n",
+		      _("using %s strategy\n"),
 		      bestsp->ds_description );
 		ok = ( * bestsp->ds_instantiate )( argc,
 						   argv,

@@ -191,7 +191,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 		case GETOPT_VERBOSITY:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				fprintf( stderr,
-					 "%s: -%c argument missing\n",
+					 _("%s: -%c argument missing\n"),
 					 progname,
 					 optopt );
 				usage( );
@@ -207,7 +207,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 						      &valstr );
 				if ( suboptix < 0 ) {
 					fprintf( stderr,
-						 "%s: -%c argument invalid\n",
+						 _("%s: -%c argument invalid\n"),
 						 progname,
 						 optopt );
 					usage( );
@@ -219,10 +219,10 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 				if ( suboptix < MLOG_SS_CNT ) {
 					if ( ! valstr ) {
 						fprintf( stderr,
-							 "%s: -%c subsystem "
+							 _("%s: -%c subsystem "
 							 "subargument "
 							 "%s requires a "
-							 "verbosity value\n",
+							 "verbosity value\n"),
 							 progname,
 							 optopt,
 						mlog_ss_names[ suboptix ] );
@@ -235,9 +235,9 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 				} else {
 					if ( valstr ) {
 						fprintf( stderr,
-							 "%s: -%c argument "
+							 _("%s: -%c argument "
 							 "does not require "
-							 "a value\n",
+							 "a value\n"),
 							 progname,
 							 optopt );
 						usage( );
@@ -249,8 +249,8 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 				}
 				if ( mlog_level_ss[ ssix ] < 0 ) {
 					fprintf( stderr,
-						 "%s: -%c argument "
-						 "invalid\n",
+						 _("%s: -%c argument "
+						 "invalid\n"),
 						 progname,
 						 optopt );
 					usage( );
@@ -425,7 +425,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 		}
 		if ( streamix != -1 && mlog_streamcnt > 1 ) {
 			fprintf( mlog_fp,
-				 "%s%s%s%s: drive %d: ",
+				 _("%s%s%s%s: drive %d: "),
 				 progname,
 				 mlog_tsstr,
 				 mlog_ssstr,
@@ -726,7 +726,7 @@ mlog_exit_flush(void)
 	if (npids > 0) {
 
 		/* print the state of all the streams */
-		fprintf(mlog_fp, "%s: " PROGSTR_CAPS " Summary:\n", progname);
+		fprintf(mlog_fp, _("%s: %s Summary:\n"), progname, PROGSTR_CAPS );
 
 		for (i = 0; i < npids; i++) {
 			stream_state_t state;
@@ -752,8 +752,8 @@ mlog_exit_flush(void)
 			/* print status of this stream */
 			rvp = rv_getdesc(rv);
 			fprintf(mlog_fp,
-				"%s:   stream %d (pid %d) %s "
-				"%s (%s)\n",
+				_("%s:   stream %d (pid %d) %s "
+				"%s (%s)\n"),
 				progname,
 				streamix,
 				pids[i],
@@ -792,7 +792,7 @@ mlog_exit_flush(void)
 	else status_str = exit_strings[mlog_main_exit_code];
 
 	/* now print the overall state of the dump/restore */
-	fprintf(mlog_fp, "%s: " PROGSTR_CAPS " Status: %s\n", progname, status_str);
+	fprintf(mlog_fp, "%s: %s Status: %s\n", progname, PROGSTR_CAPS, status_str);
 	fflush(mlog_fp);
 }
 

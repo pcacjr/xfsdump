@@ -193,7 +193,8 @@ inv_writesession_open(
 
 	if ( ! ( tok->d_update_flag & FSTAB_UPDATED ) ) {
 		if ( fstab_put_entry( fsid, mntpt, devpath, forwhat ) < 0 ) {
-		       mlog( MLOG_NORMAL | MLOG_INV, "INV: put_fstab_entry failed.\n");
+		       mlog( MLOG_NORMAL | MLOG_INV, _(
+				"INV: put_fstab_entry failed.\n") );
 		       return INV_TOKEN_NULL;
 		}
 		tok->d_update_flag |= FSTAB_UPDATED;
@@ -240,7 +241,8 @@ inv_writesession_open(
 
 	if ( tok->d_update_flag & NEW_INVINDEX ) {
 		if ( idx_put_sesstime( sestok, INVT_STARTTIME ) < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV, "INV: put_starttime failed.\n");
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+				"INV: put_starttime failed.\n") );
 			return INV_TOKEN_NULL;
 		}
 		tok->d_update_flag &= ~(NEW_INVINDEX);
@@ -339,8 +341,9 @@ inv_stream_open(
 				     tok->sd_session_off ) < 0 ) 
 			err = BOOL_TRUE;
 	} else if ( ! err ) {
-		mlog ( MLOG_NORMAL, "INV: cant create more than %d streams."
-		       " Max'd out..\n", ses.s_cur_nstreams );
+		mlog ( MLOG_NORMAL, _(
+		       "INV: cant create more than %d streams."
+		       " Max'd out..\n"), ses.s_cur_nstreams );
 		err = BOOL_TRUE;
 	}
 
@@ -385,8 +388,9 @@ inv_stream_close(
 	
 	rval = idx_put_sesstime( tok->md_sesstok, INVT_ENDTIME );
 	if (rval < 0)
-		mlog( MLOG_NORMAL | MLOG_INV, "INV: idx_put_sesstime failed in "
-		      "inv_stream_close() \n");
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+		      "INV: idx_put_sesstime failed in "
+		      "inv_stream_close() \n") );
 	INVLOCK( fd, LOCK_EX );
 	if ((rval = GET_REC_NOLOCK( fd, &strm, sizeof( invt_stream_t ), 
 			       tok->md_stream_off )) > 0 ) {
@@ -770,7 +774,7 @@ inv_delete_mediaobj( uuid_t *moid )
 
 	fd = fstab_getall( &arr, &cnt, &numfs, forwhat );
 	if ( fd < 0 || numfs <= 0 ) {
-		mlog( MLOG_NORMAL | MLOG_INV, "INV: Error in fstab\n" );
+		mlog( MLOG_NORMAL | MLOG_INV, _("INV: Error in fstab\n") );
 		return BOOL_FALSE;
 	}
 	
@@ -783,18 +787,16 @@ inv_delete_mediaobj( uuid_t *moid )
 				      forwhat
 				     )
 		     < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV,
-			     "INV: Cant get inv-name for uuid\n"
-			     );
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			      "INV: Cant get inv-name for uuid\n") );
 			return BOOL_FALSE;
 		}
 		strcat( fname, INV_INVINDEX_PREFIX );
 		invfd = open( fname, INV_OFLAG(forwhat));
 		if ( invfd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_INV,
-			     "INV: Open failed on %s\n", 
-			     fname
-			     );
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			     "INV: Open failed on %s\n"), 
+			     fname );
 			return BOOL_FALSE;
 		}
 
@@ -975,9 +977,9 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 					     atoi(value) < PR_MAXDEPTH )
 						prctx->depth = atoi(value);
 					else {
-						mlog( MLOG_NORMAL | MLOG_INV,
+						mlog( MLOG_NORMAL | MLOG_INV, _(
 					       "INV: invalid sub-option %s"
-					       " for -I option\n", value );
+					       " for -I option\n"), value );
 						rval |= I_IERR;
 					}
 					break;
@@ -989,14 +991,14 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 	}
 	
 	if (npreds > 1) {
-		mlog( MLOG_NORMAL | MLOG_INV,
-		     "INV: Only one of mnt=,dev= and fsid=value can be used.\n"
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+		     "INV: Only one of mnt=,dev= and fsid=value can be used.\n")
 		     );
 		rval |= I_IERR;
 	}
 	else if (npreds2 > 1) {
-		mlog( MLOG_NORMAL | MLOG_INV,
-		     "INV: Only one of mobjid= and mobjlabel= can be used.\n"
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+		     "INV: Only one of mobjid= and mobjlabel= can be used.\n")
 		     );
 		rval |= I_IERR;
 	}
@@ -1041,8 +1043,8 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 				rval |= I_IDONE;
 			}
 			if ( (rval&I_IERR) ) {
-				mlog( MLOG_NORMAL | MLOG_INV,
-				     "INV: open failed on mount point \"%s\"\n",
+				mlog( MLOG_NORMAL | MLOG_INV, _(
+				    "INV: open failed on mount point \"%s\"\n"),
 				     fs);
 			}
 			return rval;
@@ -1056,8 +1058,9 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 			inv_close( tok );
 			rval |= I_IDONE;
 		} else {
-			mlog( MLOG_NORMAL | MLOG_INV, 
-			     "INV: open failed on file system id \"%s\"\n", fs);
+			mlog( MLOG_NORMAL | MLOG_INV, _(
+			     "INV: open failed on file system id \"%s\"\n"),
+			     fs);
 			rval |= I_IERR;
 		}
 	}
@@ -1111,8 +1114,8 @@ inv_DEBUG_print( int argc, char **argv )
 			}
 
 			if (prctx.invcheck) {
-				mlog( MLOG_VERBOSE | MLOG_INV,
-				     "INV: checking fs \"%s\"\n",
+				mlog( MLOG_VERBOSE | MLOG_INV, _(
+				     "INV: checking fs \"%s\"\n"),
 				     &arr[i].ft_mountpt
 				     );
 				invmgr_inv_check(tok->d_invindex_fd);

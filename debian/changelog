@@ -1,4 +1,4 @@
-xfsdump (2.2.5-1) unstable; urgency=low
+xfsdump (2.2.6-1) unstable; urgency=low
 
   * New upstream release
   * Update build dependencies to require new XFS headers

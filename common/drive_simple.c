@@ -289,7 +289,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
 		if ( contextp->dc_fd < 0 ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-			      "unable to open %s: %s\n",
+			      _("unable to open %s: %s\n"),
 			      drivep->d_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -303,7 +303,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		if ( rval ) {
 			if ( errno != ENOENT ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "stat of %s failed: %s\n",
+				      _("stat of %s failed: %s\n"),
 				      drivep->d_pathname,
 				      strerror( errno ));
 				return BOOL_FALSE;
@@ -333,8 +333,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				break;
 			default:
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "cannot dump to %s "
-				      "file type %x\n",
+				      _("cannot dump to %s "
+				      "file type %x\n"),
 				      drivep->d_pathname,
 				      statbuf.st_mode & S_IFMT );
 				return BOOL_FALSE;
@@ -344,7 +344,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 #ifdef RESTORE
 		if ( rval ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-			      "stat of %s failed: %s\n",
+			      _("stat of %s failed: %s\n"),
 			      drivep->d_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -363,8 +363,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			break;
 		default:
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-			      "cannot restore from %s "
-			      "file type %x\n",
+			      _("cannot restore from %s file type %x\n"),
 			      drivep->d_pathname,
 			      statbuf.st_mode & S_IFMT );
 			return BOOL_FALSE;
@@ -375,7 +374,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
 		if ( contextp->dc_fd < 0 ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-			      "unable to open %s: %s\n",
+			      _("unable to open %s: %s\n"),
 			      drivep->d_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -523,7 +522,7 @@ do_begin_read( drive_t *drivep )
 	 */
 	if ( ! global_hdr_checksum_check( tmphdr )) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "media file header checksum error\n" );
+		      _("media file header checksum error\n") );
 		free(tmphdr);
 		return DRIVE_ERROR_CORRUPTION;
 	}
@@ -541,7 +540,7 @@ do_begin_read( drive_t *drivep )
 	 */
 	if ( strncmp( grhdrp->gh_magic, GLOBAL_HDR_MAGIC, GLOBAL_HDR_MAGIC_SZ)) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "media file header magic number mismatch: %s, %s\n",
+		      _("media file header magic number mismatch: %s, %s\n"),
 		      grhdrp->gh_magic,
 		      GLOBAL_HDR_MAGIC);
 		return DRIVE_ERROR_FORMAT;
@@ -551,7 +550,7 @@ do_begin_read( drive_t *drivep )
 	 */
 	if ( global_version_check( grhdrp->gh_version ) != BOOL_TRUE ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "unrecognized media file header version (%d)\n",
+		      _("unrecognized media file header version (%d)\n"),
 		      grhdrp->gh_version );
 		return DRIVE_ERROR_VERSION;
 	}
@@ -560,8 +559,8 @@ do_begin_read( drive_t *drivep )
 	 */
 	if ( drhdrp->dh_strategyid != drive_strategy_simple.ds_id ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "unrecognized drive strategy ID "
-		      "(media says %d, expected %d)\n",
+		      _("unrecognized drive strategy ID "
+		      "(media says %d, expected %d)\n"),
 		      drhdrp->dh_strategyid, drive_strategy_simple.ds_id );
 		return DRIVE_ERROR_FORMAT;
 	}
@@ -921,8 +920,7 @@ do_begin_write( drive_t *drivep )
 		rval = ftruncate( contextp->dc_fd, 0 );
 		if ( rval ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "attempt to truncate %s failed: "
-			      "%d (%s)\n",
+			      _("attempt to truncate %s failed: %d (%s)\n"),
 			      drivep->d_pathname,
 			      errno,
 			      strerror( errno ));
@@ -972,7 +970,7 @@ do_begin_write( drive_t *drivep )
 
 	if ( ! global_hdr_checksum_check( tmphdr )) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-		      "media file header checksum error\n" );
+		      _("media file header checksum error\n") );
 	}
 	else {
 		mlog( MLOG_NITTY, "media file header checksum OK!\n" );
@@ -1084,7 +1082,7 @@ do_set_mark( drive_t *drivep,
 			newoff = lseek64( contextp->dc_fd, ( off64_t )0, SEEK_SET );
 			if ( newoff < 0 ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      "could not save first mark: %d (%s)\n",
+				      _("could not save first mark: %d (%s)\n"),
 				      errno,
 				      strerror( errno ));
 			} else {
@@ -1288,7 +1286,7 @@ do_write( drive_t *drivep, char *bufp, size_t writesz )
 				  sizeof( contextp->dc_buf ));
 		if ( nwritten < 0 ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "write to %s failed: %d (%s)\n",
+			      _("write to %s failed: %d (%s)\n"),
 			      drivep->d_pathname,
 			      errno,
 			      strerror( errno ));
@@ -1382,7 +1380,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
 				  remaining_bufsz );
 		if ( nwritten < 0 ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-			      "write to %s failed: %d (%s)\n",
+			      _("write to %s failed: %d (%s)\n"),
 			      drivep->d_pathname,
 			      errno,
 			      strerror( errno ));
@@ -1436,7 +1434,7 @@ do_rewind( drive_t *drivep )
 	if ( newoff ) {
 		ASSERT( newoff < 0 );
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not rewind %s: %s\n",
+		      _("could not rewind %s: %s\n"),
 		      drivep->d_pathname,
 		      strerror( errno ));
 		return DRIVE_ERROR_DEVICE;
@@ -1472,7 +1470,7 @@ do_erase( drive_t *drivep )
 	if ( newoff ) {
 		ASSERT( newoff < 0 );
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not rewind %s in prep for erase: %s\n",
+		      _("could not rewind %s in prep for erase: %s\n"),
 		      drivep->d_pathname,
 		      strerror( errno ));
 		return DRIVE_ERROR_DEVICE;
@@ -1483,7 +1481,7 @@ do_erase( drive_t *drivep )
 	rval = ftruncate64( contextp->dc_fd, ( off64_t )0 );
 	if ( rval ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-		      "could not erase %s: %s (%d)\n",
+		      _("could not erase %s: %s (%d)\n"),
 		      drivep->d_pathname,
 		      strerror( errno ),
 		      errno );

@@ -72,8 +72,8 @@ get_counters( int fd, void **cntpp, size_t cntsz )
 	num = ((invt_counter_t *)(*cntpp))->ic_curnum;
 
 	if ( ( (invt_counter_t *)(*cntpp))->ic_vernum != INV_VERSION ) {
-		mlog( MLOG_NORMAL | MLOG_INV, 
-		      "INV : Unknown version %d - Expected version %d \n",
+		mlog( MLOG_NORMAL | MLOG_INV, _(
+		      "INV : Unknown version %d - Expected version %d\n"),
 		      (int) ( (invt_counter_t *)(*cntpp))->ic_vernum,
 		      (int) INV_VERSION );
 		ASSERT ( ((invt_counter_t *)(*cntpp))->ic_vernum ==
@@ -97,7 +97,7 @@ get_headers( int fd, void **hdrs, size_t bufsz, size_t off )
 
 	*hdrs = malloc( bufsz );
 	if ( *hdrs == NULL ) {
-		INV_PERROR( "get_headers() - malloc(seshdrs)\n" );
+		INV_PERROR( _("get_headers() - malloc(seshdrs)\n") );
 		return -1;
 	}
 	/* file must be locked at least SHARED by caller */
@@ -130,8 +130,8 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 		INVLOCK( fd, LOCK_SH );
 
 	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
-		INV_PERROR( "Error in reading inventory record "
-			    "(lseek failed): " );
+		INV_PERROR( _("Error in reading inventory record "
+			      "(lseek failed): ") );
 		if ( dolock ) 
 			INVLOCK( fd, LOCK_UN );
 		return -1;
@@ -140,7 +140,7 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 	nread = read( fd, buf, bufsz );
 
 	if (  nread != (int) bufsz ) {
-		INV_PERROR( "Error in reading inventory record :" );
+		INV_PERROR( _("Error in reading inventory record :") );
 		if ( dolock ) 
 			INVLOCK( fd, LOCK_UN );
 		return -1;
@@ -171,15 +171,15 @@ put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 		INVLOCK( fd, LOCK_EX );
 	
 	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
-		INV_PERROR( "Error in writing inventory record "
-			    "(lseek failed): " );
+		INV_PERROR( _("Error in writing inventory record "
+			      "(lseek failed): ") );
 		if ( dolock ) 
 			INVLOCK( fd, LOCK_UN );
 		return -1;
 	}
 	
 	if (( nwritten = write( fd, buf, bufsz ) ) != (int) bufsz ) {
-		INV_PERROR( "Error in writing inventory record :" );
+		INV_PERROR( _("Error in writing inventory record :") );
 		if ( dolock )
 			INVLOCK( fd, LOCK_UN );
 		return -1;
@@ -253,21 +253,5 @@ get_lastheader( int fd, void **ent, size_t hdrsz, size_t cntsz )
 
 	return nindices;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

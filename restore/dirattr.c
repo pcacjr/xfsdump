@@ -238,9 +238,9 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 		 */
 		dtp->dt_fd = open( dtp->dt_pathname, O_RDWR );
 		if ( dtp->dt_fd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not find directory attributes file %s: "
-			      "%s\n",
+			      "%s\n"),
 			      dtp->dt_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
@@ -254,16 +254,16 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 				   O_RDWR | O_CREAT | O_EXCL,
 				   S_IRUSR | S_IWUSR );
 		if ( dtp->dt_fd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not create directory attributes file %s: "
-			      "%s\n",
+			      "%s\n"),
 			      dtp->dt_pathname,
 			      strerror( errno ));
 			return BOOL_FALSE;
 		}
 
-		/* reserve space for the backing store. try to use F_RESVSP64.
-		 * if doesn't work, try F_RESVSP64. the former is faster, since
+		/* reserve space for the backing store. try to use RESVSP64.
+		 * if doesn't work, try ALLOCSP64. the former is faster, as
 		 * it does not zero the space.
 		 */
 		{
@@ -271,10 +271,6 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 		intgen_t ioctlcmd;
 		intgen_t loglevel;
 		size_t trycnt;
-
-#ifndef F_RESVSP64
-#define F_RESVSP64 0
-#endif /* F_RESVSP64 */
 
 		for ( trycnt = 0,
 		      successpr = BOOL_FALSE,
@@ -303,17 +299,17 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 			rval = ioctl( dtp->dt_fd, ioctlcmd, &flock64 );
 			if ( rval ) {
 				if ( errno != ENOTTY ) {
-					mlog( loglevel | MLOG_NOTE,
+					mlog( loglevel | MLOG_NOTE, _(
 					      "attempt to reserve %lld bytes for %s "
 					      "using %s "
-					      "failed: %s (%d)\n",
+					      "failed: %s (%d)\n"),
 					      initsz,
 					      dtp->dt_pathname,
-					      ioctlcmd == F_RESVSP64
+					      ioctlcmd == XFS_IOC_RESVSP64
 					      ?
-					      "F_RESVSP64"
+					      "XFS_IOC_RESVSP64"
 					      :
-					      "F_ALLOCSP64",
+					      "XFS_IOC_ALLOCSP64",
 					      strerror( errno ),
 					      errno );
 				}
@@ -332,8 +328,8 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 				        ( off_t )0 );
 	ASSERT( dpp );
 	if ( dpp == ( dirattr_pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map %s: %s\n"),
 		      dtp->dt_pathname,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -423,8 +419,8 @@ dirattr_add( filehdr_t *fhdrp )
 		off64_t newoff;
 		newoff = lseek64( dtp->dt_fd, dpp->dp_appendoff, SEEK_SET );
 		if ( newoff == ( off64_t )-1 ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "lseek of dirattr failed: %s\n",
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "lseek of dirattr failed: %s\n"),
 			      strerror( errno ));
 			return DAH_NULL;
 		}
@@ -463,8 +459,8 @@ dirattr_add( filehdr_t *fhdrp )
 	 */
 	nwritten = write( dtp->dt_fd, ( void * )&dirattr, sizeof( dirattr ));
 	if ( ( size_t )nwritten != sizeof( dirattr )) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "write of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "write of dirattr failed: %s\n"),
 		      strerror( errno ));
 		return DAH_NULL;
 	}
@@ -508,10 +504,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 					  O_RDWR | O_CREAT,
 					  S_IRUSR | S_IWUSR );
 		if ( dtp->dt_extattrfd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not open/create directory "
 			      "extended attributes file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -527,10 +523,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	while ( off != DIRATTR_EXTATTROFFNULL ) {
 		seekoff = lseek64( dtp->dt_extattrfd, off, SEEK_SET );
 		if ( seekoff < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not seek to into extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -545,10 +541,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 			      ( void * )&off,
 			      sizeof( off ));
 		if ( nread != ( intgen_t )sizeof( off )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -561,10 +557,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	 */
 	off = lseek64( dtp->dt_extattrfd, 0, SEEK_END );
 	if ( off < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not seek to end of extended attributes "
 		      "file %s: "
-		      "%s (%d)\n",
+		      "%s (%d)\n"),
 		      dtp->dt_extattrpathname,
 		      strerror( errno ),
 		      errno );
@@ -576,10 +572,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 			  ( void * )&nulloff,
 			  sizeof( nulloff ));
 	if ( nwritten != ( intgen_t )sizeof( nulloff )) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not write extended attributes "
 		      "file %s: "
-		      "%s (%d)\n",
+		      "%s (%d)\n"),
 		      dtp->dt_extattrpathname,
 		      strerror( errno ),
 		      errno );
@@ -588,10 +584,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	}
 	nwritten = write( dtp->dt_extattrfd, ( void * )ahdrp, ahdrp->ah_sz );
 	if ( nwritten != ( intgen_t )( ahdrp->ah_sz )) {
-		mlog( MLOG_NORMAL | MLOG_WARNING,
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not write at end of extended attributes "
 		      "file %s: "
-		      "%s (%d)\n",
+		      "%s (%d)\n"),
 		      dtp->dt_extattrpathname,
 		      strerror( errno ),
 		      errno );
@@ -608,10 +604,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	} else {
 		seekoff = lseek64( dtp->dt_extattrfd, oldoff, SEEK_SET );
 		if ( seekoff < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not seek to into extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -623,10 +619,10 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 				  ( void * )&off,
 				  sizeof( off ));
 		if ( nwritten != ( intgen_t )sizeof( off )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not write extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -659,10 +655,10 @@ dirattr_cb_extattr( dah_t dah,
 					  O_RDWR | O_CREAT,
 					  S_IRUSR | S_IWUSR );
 		if ( dtp->dt_extattrfd < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not open/create directory "
 			      "extended attributes file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -685,10 +681,10 @@ dirattr_cb_extattr( dah_t dah,
 		 */
 		seekoff = lseek64( dtp->dt_extattrfd, off, SEEK_SET );
 		if ( seekoff < 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not seek to into extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -703,10 +699,10 @@ dirattr_cb_extattr( dah_t dah,
 			      ( void * )&nextoff,
 			      sizeof( nextoff ));
 		if ( nread != ( intgen_t )sizeof( nextoff )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -720,10 +716,10 @@ dirattr_cb_extattr( dah_t dah,
 			      ( void * )ahdrp,
 			      EXTATTRHDR_SZ );
 		if ( nread != EXTATTRHDR_SZ ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -739,10 +735,10 @@ dirattr_cb_extattr( dah_t dah,
 			      ( void * )&ahdrp[ 1 ],
 			      recsz - EXTATTRHDR_SZ );
 		if ( nread != ( intgen_t )( recsz - EXTATTRHDR_SZ )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
-			      "%s (%d)\n",
+			      "%s (%d)\n"),
 			      dtp->dt_extattrpathname,
 			      strerror( errno ),
 			      errno );
@@ -810,8 +806,8 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	 */
 	newoff = lseek64( dtp->dt_fd, argoff, SEEK_SET );
 	if ( newoff == ( off64_t )-1 ) {
-		mlog( MLOG_NORMAL,
-		      "lseek of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "lseek of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}
@@ -837,8 +833,8 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	 */
 	nwritten = write( dtp->dt_fd, ( void * )&dirattr, sizeof( dirattr ));
 	if ( ( size_t )nwritten != sizeof( dirattr )) {
-		mlog( MLOG_NORMAL,
-		      "update of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "update of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}
@@ -969,8 +965,8 @@ dirattr_get( dah_t dah )
 	 */
 	newoff = lseek64( dtp->dt_fd, argoff, SEEK_SET );
 	if ( newoff == ( off64_t )-1 ) {
-		mlog( MLOG_NORMAL,
-		      "lseek of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "lseek of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}
@@ -982,8 +978,8 @@ dirattr_get( dah_t dah )
 		      ( void * )&dtp->dt_cached_dirattr,
 		      sizeof( dtp->dt_cached_dirattr ));
 	if ( ( size_t )nread != sizeof( dtp->dt_cached_dirattr )) {
-		mlog( MLOG_NORMAL,
-		      "read of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "read of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}
@@ -1047,8 +1043,8 @@ dirattr_flush( void )
 	 */
 	newoff = lseek64( dtp->dt_fd, argoff, SEEK_SET );
 	if ( newoff == ( off64_t )-1 ) {
-		mlog( MLOG_NORMAL,
-		      "lseek of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "lseek of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}
@@ -1060,8 +1056,8 @@ dirattr_flush( void )
 			  ( void * )&dtp->dt_cached_dirattr,
 			  sizeof( dtp->dt_cached_dirattr ));
 	if ( ( size_t )nwritten != sizeof( dtp->dt_cached_dirattr )) {
-		mlog( MLOG_NORMAL,
-		      "flush of dirattr failed: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "flush of dirattr failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 	}

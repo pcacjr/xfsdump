@@ -100,22 +100,22 @@ cldmgr_create( int ( * entry )( void *arg1 ),
 
 	cldp = cldmgr_getcld( );
 	if ( ! cldp ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC, _(
 		      "cannot create %s thread for stream %u: "
-		      "too many child threads (max allowed is %d)\n",
+		      "too many child threads (max allowed is %d)\n"),
 		      descstr,
 		      streamix,
 		      CLD_MAX );
 		return BOOL_FALSE;
 	}
-	
+
 	cldp->c_streamix = streamix;
 	cldp->c_entry = entry;
 	cldp->c_arg1 = arg1;
 	cldpid = ( pid_t )sproc( cldmgr_entry, inh, ( void * )cldp );
 	if ( cldpid < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC,
-		      "sproc failed creating %s thread for stream %u: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC, _(
+		      "sproc failed creating %s thread for stream %u: %s\n"),
 		      descstr,
 		      streamix,
 		      strerror( errno ));

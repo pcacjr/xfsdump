@@ -112,7 +112,7 @@ namreg_init( bool_t cumulative,
 		ncp->nc_fd = open_rwp( ncp->nc_pathname );
 		if ( ncp->nc_fd < 0 ) {
 			mlog( MLOG_NORMAL,
-			      "could not open %s: %s\n",
+			      _("could not open %s: %s\n"),
 			      ncp->nc_pathname,
 			      strerror( errno ));
 			return 0;
@@ -142,7 +142,7 @@ namreg_add( namreg_t *namregp, char *name, size_t namelen )
 		new_off = lseek64( ncp->nc_fd, ( off64_t )0, SEEK_END );
 		if ( new_off == ( off64_t )-1 ) {
 			mlog( MLOG_NORMAL,
-			      "lseek of namreg failed: %s\n",
+			      _("lseek of namreg failed: %s\n"),
 			      strerror( errno ));
 			ASSERT( 0 );
 			return NAMREG_IX_NULL;
@@ -162,7 +162,7 @@ namreg_add( namreg_t *namregp, char *name, size_t namelen )
 	nwritten = write( ncp->nc_fd, ( void * )&c, 1 );
 	if ( nwritten != 1 ) {
 		mlog( MLOG_NORMAL,
-		      "write of namreg failed: %s\n",
+		      _("write of namreg failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 		return NAMREG_IX_NULL;
@@ -173,7 +173,7 @@ namreg_add( namreg_t *namregp, char *name, size_t namelen )
 	nwritten = write( ncp->nc_fd, ( void * )name, namelen );
 	if ( ( size_t )nwritten != namelen ) {
 		mlog( MLOG_NORMAL,
-		      "write of namreg failed: %s\n",
+		      _("write of namreg failed: %s\n"),
 		      strerror( errno ));
 		ASSERT( 0 );
 		return NAMREG_IX_NULL;
@@ -213,7 +213,7 @@ namreg_get( namreg_t *namregp,
 	new_off = lseek64( ncp->nc_fd, new_off, SEEK_SET );
 	if ( new_off == ( off64_t )-1 ) {
 		mlog( MLOG_NORMAL,
-		      "lseek of namreg failed: %s\n",
+		      _("lseek of namreg failed: %s\n"),
 		      strerror( errno ));
 		return -3;
 	}
@@ -224,7 +224,7 @@ namreg_get( namreg_t *namregp,
 	nread = read( ncp->nc_fd, ( void * )&c, 1 );
 	if ( nread != 1 ) {
 		mlog( MLOG_NORMAL,
-		      "read of namreg failed: %s (nread = %d)\n",
+		      _("read of namreg failed: %s (nread = %d)\n"),
 		      strerror( errno ),
 		      nread );
 		return -3;
@@ -242,7 +242,7 @@ namreg_get( namreg_t *namregp,
 	nread = read( ncp->nc_fd, ( void * )bufp, len );
 	if ( ( size_t )nread != len ) {
 		mlog( MLOG_NORMAL,
-		      "read of namreg failed: %s\n",
+		      _("read of namreg failed: %s\n"),
 		      strerror( errno ));
 		return -3;
 	}

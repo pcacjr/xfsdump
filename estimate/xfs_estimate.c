@@ -36,6 +36,7 @@
 #include <libxfs.h>
 #include <sys/stat.h>
 #include <ftw.h>
+#include "config.h"
 
 unsigned long long
 cvtnum(char *s)
@@ -86,14 +87,15 @@ int elog = 0;
 void
 usage(char *progname)
 {
-	fprintf(stderr, "Usage: %s [opts] directory [directory ...]\n\
-\t-b blocksize (fundamental filesystem blocksize)\n\
-\t-i logsize (internal log size)\n\
-\t-e logsize (external log size)\n\
-\t-v prints more verbose messages\n\
-\t-h prints this usage message\n\n\
-Note:\tblocksize may have 'k' appended to indicate x1024\n\
-\tlogsize may also have 'm' appended to indicate (1024 x 1024)\n",
+	fprintf(stderr,
+		_("Usage: %s [opts] directory [directory ...]\n"
+		"\t-b blocksize (fundamental filesystem blocksize)\n"
+		"\t-i logsize (internal log size)\n"
+		"\t-e logsize (external log size)\n"
+		"\t-v prints more verbose messages\n"
+		"\t-h prints this usage message\n\n"
+	"Note:\tblocksize may have 'k' appended to indicate x1024\n"
+	"\tlogsize may also have 'm' appended to indicate (1024 x 1024)\n"),
 		basename(progname));
 	exit(1);
 }
@@ -107,25 +109,29 @@ main(int argc, char **argv)
 	char dname[40];
 	int c;
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	while ((c = getopt (argc, argv, "b:hdve:i:V")) != EOF) {
 		switch (c) {
 		case 'b':
 			blocksize=cvtnum(optarg);
 			if (blocksize <= 0LL) {
-				fprintf(stderr, "blocksize %llu too small\n",
+				fprintf(stderr, _("blocksize %llu too small\n"),
 					blocksize);
 				usage(argv[0]);
 			}
 			else if (blocksize > 64LL * 1024LL) {
-				fprintf(stderr, "blocksize %llu too large\n",
+				fprintf(stderr, _("blocksize %llu too large\n"),
 					blocksize);
 				usage(argv[0]);
 			}
 			break;
 		case 'i':
 			if (elog) {
-				fprintf(stderr, "already have external log "
-					"noted, can't have both\n");
+				fprintf(stderr, _("already have external log "
+					"noted, can't have both\n"));
 				usage(argv[0]);
 			}
 			logsize=cvtnum(optarg);
@@ -133,8 +139,8 @@ main(int argc, char **argv)
 			break;
 		case 'e':
 			if (ilog) {
-				fprintf(stderr, "already have internal log "
-					"noted, can't have both\n");
+				fprintf(stderr, _("already have internal log "
+					"noted, can't have both\n"));
 				usage(argv[0]);
 			}
 			logsize=cvtnum(optarg);
@@ -147,7 +153,7 @@ main(int argc, char **argv)
 			__debug++;
 			break;
 		case 'V':
-			printf("%s version %s\n", basename(argv[0]), VERSION);
+			printf(_("%s version %s\n"), basename(argv[0]), VERSION);
 			exit(0);
 		default:
 		case 'h':
@@ -163,8 +169,7 @@ main(int argc, char **argv)
 		logsize=LOGSIZE * blocksize;
 	}
 	if (verbose)
-		printf(
-"directory                               bsize   blocks    megabytes    logsize\n");
+		printf(_("directory                               bsize   blocks    megabytes    logsize\n"));
 
 	for ( ; optind < argc; optind++) {
 		dirsize=0LL;		/* bytes */
@@ -178,14 +183,14 @@ main(int argc, char **argv)
 		nftw64(argv[optind], ffn, 40, FTW_PHYS | FTW_MOUNT);
 
 		if (__debug) {
-			printf("dirsize=%llu\n", dirsize);
-			printf("fullblocks=%llu\n", fullblocks);
-			printf("isize=%llu\n", isize);
+			printf(_("dirsize=%llu\n"), dirsize);
+			printf(_("fullblocks=%llu\n"), fullblocks);
+			printf(_("isize=%llu\n"), isize);
 
-			printf("%llu regular files\n", nfiles);
-			printf("%llu symbolic links\n", nslinks);
-			printf("%llu directories\n", ndirs);
-			printf("%llu special files\n", nspecial);
+			printf(_("%llu regular files\n"), nfiles);
+			printf(_("%llu symbolic links\n"), nslinks);
+			printf(_("%llu directories\n"), ndirs);
+			printf(_("%llu special files\n"), nspecial);
 		}
 
 		est = FBLOCKS(isize) + 8	/* blocks for inodes */
@@ -198,22 +203,22 @@ main(int argc, char **argv)
 			est += (logsize / blocksize);
 
 		if (!verbose) {
-			printf("%s will take about %.1f megabytes\n",
+			printf(_("%s will take about %.1f megabytes\n"),
 				argv[optind],
 				(double)est*(double)blocksize/(1024.0*1024.0));
 		} else {
 			/* avoid running over 39 characters in field */
 			strncpy(dname, argv[optind], 40);
 			dname[39] = '\0';
-			printf("%-39s %5llu %8llu %10.1fMB %10llu\n",
+			printf(_("%-39s %5llu %8llu %10.1fMB %10llu\n"),
 			dname, blocksize, est,
 			(double)est*(double)blocksize/(1024.0*1024.0), logsize);
 		}
 
 		if (!verbose && elog) {
-			printf("\twith the external log using %llu blocks ",
+			printf(_("\twith the external log using %llu blocks "),
 			logsize/blocksize);
-			printf("or about %.1f megabytes\n",
+			printf(_("or about %.1f megabytes\n"),
 			(double)logsize/(1024.0*1024.0));
 		}
 	}

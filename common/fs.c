@@ -181,8 +181,8 @@ fs_info( char *typb,		/* out */
 		intgen_t rval = fs_getid( mntb, idb );
 		if ( rval ) {
 			mlog( MLOG_NORMAL,
-			      "unable to determine uuid of fs mounted at %s: "
-			      "%s\n",
+			      _("unable to determine uuid of fs mounted at %s: "
+			      "%s\n"),
 			      mntb,
 			      strerror( errno ));
 		}
@@ -261,7 +261,7 @@ fs_tab_build( void )
 	fp = setmntent( MOUNTED, "r" );
         if ( fp == NULL ) {
 		mlog( MLOG_NORMAL,
-		      "Can't open %s for mount information\n",
+		      _("Can't open %s for mount information\n"),
 		      MOUNTED );
 		return;
 	}

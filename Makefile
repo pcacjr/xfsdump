@@ -45,7 +45,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 
 SUBDIRS = include librmt \
 	common copy estimate fsr inventory invutil quota dump restore \
-	man doc debian build
+	man doc po debian build
 
 default: $(CONFIGURE)
 ifeq ($(HAVE_BUILDDEFS), no)

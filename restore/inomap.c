@@ -153,8 +153,8 @@ inomap_restore_pers( drive_t *drivep,
 		   O_RDWR | O_CREAT,
 		   S_IRUSR | S_IWUSR );
 	if ( fd < 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "could not open %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "could not open %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return RV_ERROR;
@@ -171,8 +171,8 @@ inomap_restore_pers( drive_t *drivep,
 				     fd,
 				     ( off64_t )0 );
 	if ( persp == ( pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return RV_ERROR;
@@ -317,8 +317,8 @@ inomap_sync_pers( char *hkdir )
 				     pers_fd,
 				     ( off64_t )0 );
 	if ( persp == ( pers_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map %s hdr: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map %s hdr: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -338,8 +338,8 @@ inomap_sync_pers( char *hkdir )
 				       pers_fd,
 				       ( off64_t )PERSSZ );
 	if ( roothnkp == ( hnk_t * )-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to map %s: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "unable to map %s: %s\n"),
 		      perspath,
 		      strerror( errno ));
 		return BOOL_FALSE;

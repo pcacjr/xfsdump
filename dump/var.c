@@ -75,14 +75,14 @@ var_create_component( char *path )
 	int rval = mkdir( path, 0755 );
 
 	if ( rval && errno != EEXIST ) {
-		mlog( MLOG_NORMAL, "unable to create %s: %s\n",
+		mlog( MLOG_NORMAL, _("unable to create %s: %s\n"),
 		      path, strerror( errno ));
 		return 0;
 	}
 	if ( rval == 0 ) {
 		rval = chown( path, 0, 0 );
 		if ( rval ) {
-			mlog( MLOG_NORMAL, "unable to chown %s: %s\n",
+			mlog( MLOG_NORMAL, _("unable to chown %s: %s\n"),
 			      path, strerror( errno ));
 		}
 	}
@@ -102,9 +102,9 @@ var_skip( uuid_t *dumped_fsidp, void ( *cb )( xfs_ino_t ino ))
 #ifdef HIDDEN
                 /* NOTE: this will happen for non-XFS file systems */
                 /*       and is expected, so no msg */
-		mlog( MLOG_NORMAL,
+		mlog( MLOG_NORMAL, _(
 		      "unable to determine uuid of fs containing %s: "
-		      "%s\n",
+		      "%s\n"),
 		      XFSDUMP_DIRPATH,
 		      strerror( errno ));
 #endif
@@ -131,8 +131,8 @@ var_skip_recurse( char *base, void ( *cb )( xfs_ino_t ino ))
 
 	rval = lstat64( base, &statbuf );
 	if ( rval ) {
-		mlog( MLOG_NORMAL,
-		      "unable to get status of %s: %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "unable to get status of %s: %s\n"),
 		      base,
 		      strerror( errno ));
 		return;
@@ -150,8 +150,8 @@ var_skip_recurse( char *base, void ( *cb )( xfs_ino_t ino ))
 
 	dirp = opendir( base );
 	if ( ! dirp ) {
-		mlog( MLOG_NORMAL,
-		      "unable to open directory %s\n",
+		mlog( MLOG_NORMAL, _(
+		      "unable to open directory %s\n"),
 		      base );
 		return;
 	}

@@ -280,8 +280,8 @@ win_map( off64_t off, void **pp )
 		ASSERT( tranp->t_wincnt == tranp->t_winmax );
 		*pp = NULL;
 		critical_end( );
-		mlog( MLOG_NORMAL | MLOG_WARNING,
-		      "all map windows in use. Check virtual memory limits\n" );
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		      "all map windows in use. Check virtual memory limits\n"));
 		return;
 	}
 
@@ -304,8 +304,8 @@ win_map( off64_t off, void **pp )
 			    tranp->t_fd,
 			    ( off64_t )( tranp->t_firstoff + segoff ));
 	if ( winp->w_p == (void *)-1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "win_map(): unable to map a node segment of size %d at %d: %s\n",
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		      "win_map(): unable to map a node segment of size %d at %d: %s\n"),
 		      tranp->t_segsz, tranp->t_firstoff + segoff,
 		      strerror( errno ));
 		*pp = NULL;

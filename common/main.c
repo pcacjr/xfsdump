@@ -201,6 +201,11 @@ main( int argc, char *argv[] )
 	 */
 	progname = argv[ 0 ];
 
+	/* setup I18N support */
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	/* Get the parent's pid. will be used in signal handling
 	 * to differentiate parent from children.
 	 */
@@ -241,7 +246,7 @@ main( int argc, char *argv[] )
                 case GETOPT_MINSTACKSZ:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
@@ -252,7 +257,7 @@ main( int argc, char *argv[] )
 			     ||
 			     errno == ERANGE ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument (%s) invalid\n",
+				      _("-%c argument (%s) invalid\n"),
 				      optopt,
 				      optarg );
 				usage( );
@@ -263,7 +268,7 @@ main( int argc, char *argv[] )
                 case GETOPT_MAXSTACKSZ:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
@@ -274,7 +279,7 @@ main( int argc, char *argv[] )
 			     ||
 			     errno == ERANGE ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument (%s) invalid\n",
+				      _("-%c argument (%s) invalid\n"),
 				      optopt,
 				      optarg );
 				usage( );
@@ -292,7 +297,7 @@ main( int argc, char *argv[] )
 		case GETOPT_PROGRESS:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
@@ -317,8 +322,8 @@ main( int argc, char *argv[] )
 		      MLOG_NOLOCK
 		      |
 		      MLOG_PROC,
-		      "specified minimum stack size is larger than maximum: "
-		      "min is 0x%llx,  max is 0x%llx\n",
+		      _("specified minimum stack size is larger than maximum: "
+		      "min is 0x%llx,  max is 0x%llx\n"),
 		      minstacksz,
 		      maxstacksz );
 		return mlog_exit(EXIT_ERROR, RV_INIT);
@@ -420,7 +425,7 @@ main( int argc, char *argv[] )
 	homedir = getcwd( 0, MAXPATHLEN );
 	if ( ! homedir ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR,
-		      "unable to determine current directory: %s\n",
+		      _("unable to determine current directory: %s\n"),
 		      strerror( errno ));
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
@@ -430,7 +435,7 @@ main( int argc, char *argv[] )
 	ok = inv_setup_base( );
 	if ( ! ok ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-		      "both /var/lib/xfsdump and /var/xfsdump exist - fatal\n");
+		      _("both /var/lib/xfsdump and /var/xfsdump exist - fatal\n"));
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
@@ -438,7 +443,7 @@ main( int argc, char *argv[] )
 	 */
 	if ( infoonly ) {
 		mlog( MLOG_NORMAL,
-		      "version %s (dump format %d.%d)\n",
+		      _("version %s (dump format %d.%d)\n"),
 		      VERSION,
 		      version,
 		      subversion );
@@ -463,7 +468,7 @@ main( int argc, char *argv[] )
 	      euid );
 	if ( euid != 0 ) {
 		mlog( MLOG_NORMAL,
-		      "effective user ID must be root\n" );
+		      _("effective user ID must be root\n") );
 		return mlog_exit(EXIT_ERROR, RV_PERM);
 	}
 #endif /* DUMP */
@@ -514,18 +519,18 @@ main( int argc, char *argv[] )
 	 */
 	sistr = sigintstr( );
 	mlog( MLOG_VERBOSE,
-	      "version %s (dump format %d.%d)",
+	      _("version %s (dump format %d.%d)"),
 	      VERSION,
 	      version,
 	      subversion );
 	if ( miniroot ) {
-		mlog( MLOG_VERBOSE | MLOG_BARE,
+		mlog( MLOG_VERBOSE | MLOG_BARE, _(
 		      " - "
-		      "Running single-threaded\n" );
+		      "Running single-threaded\n") );
 	} else if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
-		mlog( MLOG_VERBOSE | MLOG_BARE,
+		mlog( MLOG_VERBOSE | MLOG_BARE, _(
 		      " - "
-		      "type %s for status and control\n",
+		      "type %s for status and control\n"),
 		      sistr );
 	} else {
 		mlog( MLOG_VERBOSE | MLOG_BARE,
@@ -724,8 +729,8 @@ main( int argc, char *argv[] )
 			} else if ( prbcld_signo ) {
 				ASSERT( prbcld_signo );
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC,
-				      "child (pid %d) faulted: "
-				      "signal number %d (%s)\n",
+				      _("child (pid %d) faulted: "
+				      "signal number %d (%s)\n"),
 				      prbcld_pid,
 				      prbcld_signo,
 				      sig_numstring( prbcld_signo ));
@@ -749,7 +754,7 @@ main( int argc, char *argv[] )
 		 */
 		if ( stop_in_progress && now >= stop_deadline ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR,
-			      "session interrupt timeout\n" );
+			      _("session interrupt timeout\n") );
 			coredump_requested = BOOL_TRUE;
 			break;
 		}
@@ -766,8 +771,8 @@ main( int argc, char *argv[] )
 				}
 				/*
 				mlog( MLOG_NORMAL,
-				      "session interrupt in progress: "
-				      "please wait\n" );
+				      _("session interrupt in progress: "
+				      "please wait\n") );
 				 */
 			} else {
 				if ( dlog_allowed( )) {
@@ -827,8 +832,8 @@ main( int argc, char *argv[] )
 			      "SIGQUIT received\n" );
 			if ( stop_in_progress ) {
 				mlog( MLOG_NORMAL,
-				      "session interrupt in progress: "
-				      "please wait\n" );
+				      _("session interrupt in progress: "
+				      "please wait\n") );
 				stop_deadline = now;
 			} else {
 				stop_requested = BOOL_TRUE;
@@ -842,9 +847,8 @@ main( int argc, char *argv[] )
 		 */
 		if ( stop_requested && ! stop_in_progress ) {
 			mlog( MLOG_NORMAL,
-			      "initiating session interrupt (timeout in %d second%s)\n",
-			      stop_timeout,
-			      stop_timeout == 1 ? "" : "s" );
+			      _("initiating session interrupt (timeout in %d sec)\n"),
+			      stop_timeout);
 			mlog_exit_hint(RV_INTR);
 			stop_in_progress = BOOL_TRUE;
 			cldmgr_stop( );
@@ -949,16 +953,18 @@ main( int argc, char *argv[] )
 }
 
 #define ULO( f, o )	fprintf( stderr,		\
-				 "%*s[ -%c " f " ]\n",	\
+				 "%*s[ -%c %s ]\n",	\
 				 ps,			\
 				 ns,			\
-				 o ),			\
+				 o,			\
+				 f ),			\
 			ps = pfxsz
 
 #define ULN( f )	fprintf( stderr,		\
-				 "%*s[ " f " ]\n",	\
+				 "%*s[ %s ]\n",		\
 				 ps,			\
-				 ns ),			\
+				 ns,			\
+				 f ),			\
 			ps = pfxsz
 
 void
@@ -970,7 +976,7 @@ usage( void )
 	char *ns = "";
 
 	sprintf( linebuf,
-		 "%s: usage: %s ",
+		 _("%s: usage: %s "),
 		 progname,
 		 basename( progname ));
 	pfxsz = strlen( linebuf );
@@ -981,123 +987,123 @@ usage( void )
 
 #ifdef DUMP
 #ifdef DMEXTATTR
-	ULO( "(dump DMF dualstate files as offline)",   GETOPT_DUMPASOFFLINE );
+	ULO(_("(dump DMF dualstate files as offline)"),	GETOPT_DUMPASOFFLINE );
 #endif /* DMEXTATTR */
-	ULO( "<blocksize>",                             GETOPT_BLOCKSIZE );
-	ULO( "<media change alert program> ",		GETOPT_ALERTPROG );
-	ULO( "<dump media file size> ",			GETOPT_FILESZ );
-	ULO( "(allow files to be excluded)",		GETOPT_EXCLUDEFILES );
-	ULO( "<destination> ...",			GETOPT_DUMPDEST );
-	ULO( "(help)",					GETOPT_HELP );
-	ULO( "<level>",					GETOPT_LEVEL );
-	ULO( "(force usage of minimal rmt)",		GETOPT_MINRMT );
-	ULO( "(overwrite tape)",			GETOPT_OVERWRITE );
-	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
-	ULO( "<use QIC tape settings>",			GETOPT_QIC );
-	ULO( "<subtree> ...",				GETOPT_SUBTREE );
-	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
-	ULO( "<maximum file size>",			GETOPT_MAXDUMPFILESIZE );
+	ULO(_("<blocksize>"),				GETOPT_BLOCKSIZE );
+	ULO(_("<media change alert program> "),		GETOPT_ALERTPROG );
+	ULO(_("<dump media file size> "),		GETOPT_FILESZ );
+	ULO(_("(allow files to be excluded)"),		GETOPT_EXCLUDEFILES );
+	ULO(_("<destination> ..."),			GETOPT_DUMPDEST );
+	ULO(_("(help)"),				GETOPT_HELP );
+	ULO(_("<level>"),				GETOPT_LEVEL );
+	ULO(_("(force usage of minimal rmt)"),		GETOPT_MINRMT );
+	ULO(_("(overwrite tape)"),			GETOPT_OVERWRITE );
+	ULO(_("<seconds between progress reports>"),	GETOPT_PROGRESS );
+	ULO(_("<use QIC tape settings>"),		GETOPT_QIC );
+	ULO(_("<subtree> ..."),				GETOPT_SUBTREE );
+	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
+	ULO(_("<maximum file size>"),			GETOPT_MAXDUMPFILESIZE );
 #ifdef EXTATTR
-	ULO( "(don't dump extended file attributes)",	GETOPT_NOEXTATTR );
+	ULO(_("(don't dump extended file attributes)"),	GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
 #ifdef BASED
-	ULO( "<base dump session id>",			GETOPT_BASED );
+	ULO(_("<base dump session id>"),		GETOPT_BASED );
 #endif /* BASED */
 #ifdef REVEAL
-	ULO( "(generate tape record checksums)",	GETOPT_RECCHKSUM );
+	ULO(_("(generate tape record checksums)"),	GETOPT_RECCHKSUM );
 #endif /* REVEAL */
-	ULO( "(pre-erase media)",			GETOPT_ERASE );
-	ULO( "(don't prompt)",				GETOPT_FORCE );
+	ULO(_("(pre-erase media)"),			GETOPT_ERASE );
+	ULO(_("(don't prompt)"),			GETOPT_FORCE );
 #ifdef REVEAL
-	ULO( "<minimum thread stack size>",		GETOPT_MINSTACKSZ );
-	ULO( "<maximum thread stack size>",		GETOPT_MAXSTACKSZ );
+	ULO(_("<minimum thread stack size>"),		GETOPT_MINSTACKSZ );
+	ULO(_("<maximum thread stack size>"),		GETOPT_MAXSTACKSZ );
 #endif /* REVEAL */
-	ULO( "(display dump inventory)",		GETOPT_INVPRINT );
-	ULO( "(inhibit inventory update)",		GETOPT_NOINVUPDATE );
-	ULO( "<session label>",				GETOPT_DUMPLABEL );
-	ULO( "<media label> ...",			GETOPT_MEDIALABEL );
+	ULO(_("(display dump inventory)"),		GETOPT_INVPRINT );
+	ULO(_("(inhibit inventory update)"),		GETOPT_NOINVUPDATE );
+	ULO(_("<session label>"),			GETOPT_DUMPLABEL );
+	ULO(_("<media label> ..."),			GETOPT_MEDIALABEL );
 #ifdef REVEAL
-	ULO( "(timestamp messages)",			GETOPT_TIMESTAMP );
+	ULO(_("(timestamp messages)"),			GETOPT_TIMESTAMP );
 #endif /* REVEAL */
-	ULO( "<options file>",				GETOPT_OPTFILE );
+	ULO(_("<options file>"),			GETOPT_OPTFILE );
 #ifdef REVEAL
-	ULO( "(pin down I/O buffers)",			GETOPT_RINGPIN );
+	ULO(_("(pin down I/O buffers)"),		GETOPT_RINGPIN );
 #endif /* REVEAL */
-	ULO( "(resume)",				GETOPT_RESUME );
+	ULO(_("(resume)"),				GETOPT_RESUME );
 #ifdef REVEAL
-	ULO( "(generate single media file)",		GETOPT_SINGLEMFILE );
+	ULO(_("(generate single media file)"),		GETOPT_SINGLEMFILE );
 #endif /* REVEAL */
-	ULO( "(don't timeout dialogs)",			GETOPT_NOTIMEOUTS );
+	ULO(_("(don't timeout dialogs)"),		GETOPT_NOTIMEOUTS );
 #ifdef REVEAL
-	ULO( "(unload media when change needed)",	GETOPT_UNLOAD );
-	ULO( "(show subsystem in messages)",		GETOPT_SHOWLOGSS );
-	ULO( "(show verbosity in messages)",		GETOPT_SHOWLOGLEVEL );
+	ULO(_("(unload media when change needed)"),	GETOPT_UNLOAD );
+	ULO(_("(show subsystem in messages)"),		GETOPT_SHOWLOGSS );
+	ULO(_("(show verbosity in messages)"),		GETOPT_SHOWLOGLEVEL );
 #endif /* REVEAL */
-	ULO( "<I/O buffer ring length>",		GETOPT_RINGLEN );
+	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
 #ifdef REVEAL
-	ULO( "(miniroot restrictions)",			GETOPT_MINIROOT );
+	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
 #endif /* REVEAL */
-	ULN( "- (stdout)" );
-	ULN( "<source (mntpnt|device)>" );
+	ULN(_("- (stdout)") );
+	ULN(_("<source (mntpnt|device)>") );
 #endif /* DUMP */
 #ifdef RESTORE
-	ULO( "<alt. workspace dir> ...",		GETOPT_WORKSPACE );
-	ULO( "<blocksize>",                             GETOPT_BLOCKSIZE );
-	ULO( "<media change alert program> ",		GETOPT_ALERTPROG );
-	ULO( "(don't overwrite existing files)",	GETOPT_EXISTING );
-	ULO( "<source> ...",				GETOPT_DUMPDEST );
-	ULO( "(help)",					GETOPT_HELP );
-	ULO( "(interactive)",				GETOPT_INTERACTIVE );
-	ULO( "(force usage of minimal rmt)",		GETOPT_MINRMT );
-	ULO( "<file> (restore only if newer than)",	GETOPT_NEWER );
-	ULO( "(restore owner/group even if not root)",	GETOPT_OWNER );
-	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
-	ULO( "<use QIC tape settings>",			GETOPT_QIC );
-	ULO( "(cumulative restore)",			GETOPT_CUMULATIVE );
-	ULO( "<subtree> ...",				GETOPT_SUBTREE );
-	ULO( "(contents only)",				GETOPT_TOC );
-	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
-	ULO( "(use small tree window)",			GETOPT_SMALLWINDOW );
+	ULO(_("<alt. workspace dir> ..."),		GETOPT_WORKSPACE );
+	ULO(_("<blocksize>"),				GETOPT_BLOCKSIZE );
+	ULO(_("<media change alert program> "),		GETOPT_ALERTPROG );
+	ULO(_("(don't overwrite existing files)"),	GETOPT_EXISTING );
+	ULO(_("<source> ..."),				GETOPT_DUMPDEST );
+	ULO(_("(help)"),				GETOPT_HELP );
+	ULO(_("(interactive)"),				GETOPT_INTERACTIVE );
+	ULO(_("(force usage of minimal rmt)"),		GETOPT_MINRMT );
+	ULO(_("<file> (restore only if newer than)"),	GETOPT_NEWER );
+	ULO(_("(restore owner/group even if not root)"),GETOPT_OWNER );
+	ULO(_("<seconds between progress reports>"),	GETOPT_PROGRESS );
+	ULO(_("<use QIC tape settings>"),		GETOPT_QIC );
+	ULO(_("(cumulative restore)"),			GETOPT_CUMULATIVE );
+	ULO(_("<subtree> ..."),				GETOPT_SUBTREE );
+	ULO(_("(contents only)"),			GETOPT_TOC );
+	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
+	ULO(_("(use small tree window)"),		GETOPT_SMALLWINDOW );
 #ifdef EXTATTR
-	ULO( "(don't restore extended file attributes)",GETOPT_NOEXTATTR );
+	ULO(_("(don't restore extended file attributes)"),GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
-	ULO( "(restore root dir owner/permissions)",	GETOPT_ROOTPERM );
+	ULO(_("(restore root dir owner/permissions)"),	GETOPT_ROOTPERM );
 #ifdef DMEXTATTR
-	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
+	ULO(_("(restore DMAPI event settings)"),	GETOPT_SETDM );
 #endif /* DMEXTATTR */
 #ifdef REVEAL
-	ULO( "(check tape record checksums)",		GETOPT_RECCHKSUM );
+	ULO(_("(check tape record checksums)"),		GETOPT_RECCHKSUM );
 #endif /* REVEAL */
-	ULO( "(don't overwrite if changed)",		GETOPT_CHANGED );
-	ULO( "(don't prompt)",				GETOPT_FORCE );
-	ULO( "(display dump inventory)",		GETOPT_INVPRINT );
-	ULO( "(inhibit inventory update)",		GETOPT_NOINVUPDATE );
-	ULO( "<session label>",				GETOPT_DUMPLABEL );
+	ULO(_("(don't overwrite if changed)"),		GETOPT_CHANGED );
+	ULO(_("(don't prompt)"),			GETOPT_FORCE );
+	ULO(_("(display dump inventory)"),		GETOPT_INVPRINT );
+	ULO(_("(inhibit inventory update)"),		GETOPT_NOINVUPDATE );
+	ULO(_("<session label>"),			GETOPT_DUMPLABEL );
 #ifdef REVEAL
-	ULO( "(timestamp messages)",			GETOPT_TIMESTAMP );
+	ULO(_("(timestamp messages)"),			GETOPT_TIMESTAMP );
 #endif /* REVEAL */
-	ULO( "<options file>",				GETOPT_OPTFILE );
+	ULO(_("<options file>"),			GETOPT_OPTFILE );
 #ifdef REVEAL
-	ULO( "(pin down I/O buffers)",			GETOPT_RINGPIN );
+	ULO(_("(pin down I/O buffers)"),		GETOPT_RINGPIN );
 #endif /* REVEAL */
 #ifdef SESSCPLT
-	ULO( "(force interrupted session completion)",	GETOPT_SESSCPLT );
+	ULO(_("(force interrupted session completion)"),GETOPT_SESSCPLT );
 #endif /* SESSCPLT */
-	ULO( "(resume)",				GETOPT_RESUME );
-	ULO( "<session id>",				GETOPT_SESSIONID );
-	ULO( "(don't timeout dialogs)",			GETOPT_NOTIMEOUTS );
+	ULO(_("(resume)"),				GETOPT_RESUME );
+	ULO(_("<session id>"),				GETOPT_SESSIONID );
+	ULO(_("(don't timeout dialogs)"),		GETOPT_NOTIMEOUTS );
 #ifdef REVEAL
-	ULO( "(unload media when change needed)",	GETOPT_UNLOAD );
-	ULO( "(show subsystem in messages)",		GETOPT_SHOWLOGSS );
-	ULO( "(show verbosity in messages)",		GETOPT_SHOWLOGLEVEL );
+	ULO(_("(unload media when change needed)"),	GETOPT_UNLOAD );
+	ULO(_("(show subsystem in messages)"),		GETOPT_SHOWLOGSS );
+	ULO(_("(show verbosity in messages)"),		GETOPT_SHOWLOGLEVEL );
 #endif /* REVEAL */
-	ULO( "<excluded subtree> ...",			GETOPT_NOSUBTREE );
-	ULO( "<I/O buffer ring length>",		GETOPT_RINGLEN );
+	ULO(_("<excluded subtree> ..."),		GETOPT_NOSUBTREE );
+	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
 #ifdef REVEAL
-	ULO( "(miniroot restrictions)",			GETOPT_MINIROOT );
+	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
 #endif /* REVEAL */
-	ULN( "- (stdin)" );
-	ULN( "<destination>" );
+	ULN(_("- (stdin)") );
+	ULN(_("<destination>") );
 #endif /* RESTORE */
 
 	/* anywhere usage is called we will exit shortly after...
@@ -1200,7 +1206,7 @@ preemptchk( int flg )
 	}
 	
 	if ( sigquit_received ) {
-		mlog( MLOG_NORMAL | MLOG_PROC,
+		mlog( MLOG_DEBUG | MLOG_PROC,
 		      "SIGQUIT received (preempt)\n" );
 		preempt_requested = BOOL_TRUE;
 		sigquit_received = BOOL_FALSE;
@@ -1239,14 +1245,14 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 		case GETOPT_OPTFILE:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c argument missing\n",
+				      _("-%c argument missing\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( optfilename ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
-				      "-%c allowed only once\n",
+				      _("-%c allowed only once\n"),
 				      optopt );
 				usage( );
 				return BOOL_FALSE;
@@ -1267,7 +1273,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	fd = open( optfilename, O_RDONLY );
 	if ( fd  < 0 ) {
 		mlog( MLOG_ERROR | MLOG_NOLOCK,
-		      "cannot open option file %s: %s (%d)\n",
+		      _("cannot open option file %s: %s (%d)\n"),
 		      optfilename,
 		      strerror( errno ),
 		      errno );
@@ -1279,7 +1285,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	rval = fstat64( fd, &stat );
 	if ( rval ) {
 		mlog( MLOG_ERROR | MLOG_NOLOCK,
-		      "cannot stat option file %s: %s (%d)\n",
+		      _("cannot stat option file %s: %s (%d)\n"),
 		      optfilename,
 		      strerror( errno ),
 		      errno );
@@ -1291,7 +1297,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	 */
 	if ( ( stat.st_mode & S_IFMT ) != S_IFREG ) {
 		mlog( MLOG_ERROR | MLOG_NOLOCK,
-		      "given option file %s is not ordinary file\n",
+		      _("given option file %s is not ordinary file\n"),
 		      optfilename );
 		close( fd );
 		return BOOL_FALSE;
@@ -1332,7 +1338,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	nread = read( fd, ( void * )p, ( size_t )stat.st_size );
 	if ( nread < 0 ) {
 		mlog( MLOG_ERROR | MLOG_NOLOCK,
-		      "read of option file %s failed: %s (%d)\n",
+		      _("read of option file %s failed: %s (%d)\n"),
 		      optfilename,
 		      strerror( errno ),
 		      errno );
@@ -1545,7 +1551,7 @@ sighandler( int signo )
 		intgen_t rval;
 
 		mlog( MLOG_TRACE | MLOG_NOTE | MLOG_NOLOCK | MLOG_PROC,
-		      "received signal %d (%s): cleanup and exit\n",
+		      _("received signal %d (%s): cleanup and exit\n"),
 		      signo,
 		      sig_numstring( signo ));
 
@@ -1735,10 +1741,10 @@ prompt_prog_cb( void *uctxp, dlog_pcbp_t pcb, void *pctxp )
 	( * pcb )( pctxp,
 		   progrpt_enabledpr
 		   ?
-		   "please enter seconds between progress reports, "
-		   "or 0 to disable"
+		   _("please enter seconds between progress reports, "
+		   "or 0 to disable")
 		   :
-		   "please enter seconds between progress reports" );
+		   _("please enter seconds between progress reports") );
 }
 
 /* SIGINTR dialog
@@ -1792,7 +1798,7 @@ sigint_dialog( void )
 
 	/* preamble: the content status line, indicate if interrupt happening
 	 */
-	fold_init( fold, "status and control dialog", '=' );
+	fold_init( fold, _("status and control dialog"), '=' );
 	statlinecnt = content_statline( &statline );
 	preamblecnt = 0;
 	preamblestr[ preamblecnt++ ] = "\n";
@@ -1804,7 +1810,7 @@ sigint_dialog( void )
 	}
 	if ( stop_in_progress ) {
 		preamblestr[ preamblecnt++ ] =
-			"\nsession interrupt in progress\n";
+			_("\nsession interrupt in progress\n");
 	}
 	preamblestr[ preamblecnt++ ] = "\n";
 	ASSERT( preamblecnt <= PREAMBLEMAX );
@@ -1813,31 +1819,31 @@ sigint_dialog( void )
 	/* top-level query: a function of session interrupt status
 	 */
 	querycnt = 0;
-	querystr[ querycnt++ ] = "please select one of "
-				 "the following operations\n";
+	querystr[ querycnt++ ] = _("please select one of "
+				 "the following operations\n");
 	ASSERT( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	if ( ! stop_in_progress ) {
 		interruptix = choicecnt;
-		choicestr[ choicecnt++ ] = "interrupt this session";
+		choicestr[ choicecnt++ ] = _("interrupt this session");
 	} else {
 		interruptix = SIZEMAX; /* never happen */
 	}
 
 	verbosityix = choicecnt;
-	choicestr[ choicecnt++ ] = "change verbosity";
+	choicestr[ choicecnt++ ] = _("change verbosity");
 	metricsix = choicecnt;
-	choicestr[ choicecnt++ ] = "display metrics";
+	choicestr[ choicecnt++ ] = _("display metrics");
 	if ( content_media_change_needed ) {
 		mediachangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "confirm media change";
+		choicestr[ choicecnt++ ] = _("confirm media change");
 	} else {
 		mediachangeix = SIZEMAX; /* never happen */
 	}
 	controlix = choicecnt;
-	choicestr[ choicecnt++ ] = "other controls";
+	choicestr[ choicecnt++ ] = _("other controls");
 	continueix = choicecnt;
-	choicestr[ choicecnt++ ] = "continue";
+	choicestr[ choicecnt++ ] = _("continue");
 	ASSERT( choicecnt <= CHOICEMAX );
 
 	responseix = dlog_multi_query( querystr,
@@ -1859,13 +1865,13 @@ sigint_dialog( void )
 		dlog_multi_ack( ackstr,
 				ackcnt );
 		querycnt = 0;
-		querystr[ querycnt++ ] = "please confirm\n";
+		querystr[ querycnt++ ] = _("please confirm\n");
 		ASSERT( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		interruptix = choicecnt;
-		choicestr[ choicecnt++ ] = "interrupt this session";
+		choicestr[ choicecnt++ ] = _("interrupt this session");
 		nochangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "continue";
+		choicestr[ choicecnt++ ] = _("continue");
 		ASSERT( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
@@ -1882,9 +1888,9 @@ sigint_dialog( void )
 					       nochangeix);/* sigquit ix */
 		ackcnt = 0;
 		if ( responseix == nochangeix ) {
-			ackstr[ ackcnt++ ] = "continuing\n";
+			ackstr[ ackcnt++ ] = _("continuing\n");
 		} else {
-			ackstr[ ackcnt++ ] = "interrupt request accepted\n";
+			ackstr[ ackcnt++ ] = _("interrupt request accepted\n");
 			stop_requested = BOOL_TRUE;
 		}
 		dlog_multi_ack( ackstr,
@@ -1895,8 +1901,8 @@ sigint_dialog( void )
 		dlog_multi_ack( ackstr,
 				ackcnt );
 		querycnt = 0;
-		querystr[ querycnt++ ] = "please select one of "
-					 "the following subsystems\n";
+		querystr[ querycnt++ ] = _("please select one of "
+					 "the following subsystems\n");
 		ASSERT( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		/* number of lines must match number of subsystems
@@ -1905,9 +1911,9 @@ sigint_dialog( void )
 			choicestr[ choicecnt ] = mlog_ss_names[ choicecnt ];
 		}
 		allix = choicecnt;
-		choicestr[ choicecnt++ ] = "all of the above";
+		choicestr[ choicecnt++ ] = _("all of the above");
 		nochangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "no change";
+		choicestr[ choicecnt++ ] = _("no change");
 		ASSERT( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
@@ -1924,10 +1930,10 @@ sigint_dialog( void )
 					       nochangeix);/* sigquit ix */
 		ackcnt = 0;
 		if ( responseix == nochangeix ) {
-			ackstr[ ackcnt++ ] = "no change\n";
+			ackstr[ ackcnt++ ] = _("no change\n");
 		} else if ( responseix == allix ) {
 			ssselected = -1;
-			ackstr[ ackcnt++ ] = "all subsystems selected\n\n";
+			ackstr[ ackcnt++ ] = _("all subsystems selected\n\n");
 		} else {
 			ssselected = ( intgen_t )responseix;
 			ackstr[ ackcnt++ ] = "\n";
@@ -1936,18 +1942,18 @@ sigint_dialog( void )
 				ackcnt );
 		if ( responseix != nochangeix ) {
 			querycnt = 0;
-			querystr[ querycnt++ ] = "please select one of the "
-						 "following verbosity levels\n";
+			querystr[ querycnt++ ] = ("please select one of the "
+						  "following verbosity levels\n");
 			ASSERT( querycnt <= QUERYMAX );
 			choicecnt = 0;
-			choicestr[ choicecnt++ ] = "silent";
-			choicestr[ choicecnt++ ] = "verbose";
-			choicestr[ choicecnt++ ] = "trace";
-			choicestr[ choicecnt++ ] = "debug";
-			choicestr[ choicecnt++ ] = "nitty";
-			choicestr[ choicecnt++ ] = "nitty + 1";
+			choicestr[ choicecnt++ ] = _("silent");
+			choicestr[ choicecnt++ ] = _("verbose");
+			choicestr[ choicecnt++ ] = _("trace");
+			choicestr[ choicecnt++ ] = _("debug");
+			choicestr[ choicecnt++ ] = _("nitty");
+			choicestr[ choicecnt++ ] = _("nitty + 1");
 			nochangeix = choicecnt;
-			choicestr[ choicecnt++ ] = "no change";
+			choicestr[ choicecnt++ ] = _("no change");
 			ASSERT( choicecnt <= CHOICEMAX );
 			responseix = dlog_multi_query( querystr,
 						       querycnt,
@@ -1957,7 +1963,7 @@ sigint_dialog( void )
 						       ?
 						       0
 						       :
-						    " (current)",/* hilitestr */
+						    _(" (current)"),/* hilitestr */
 						       ssselected == -1
 						       ?
 						       IXMAX
@@ -1978,7 +1984,7 @@ sigint_dialog( void )
 			       responseix
 			       ==
 			       ( ix_t )mlog_level_ss[ ssselected ] )) {
-				ackstr[ ackcnt++ ] = "no change\n";
+				ackstr[ ackcnt++ ] = _("no change\n");
 			} else {
 				if ( ssselected < 0 ) {
 					ix_t ssix;
@@ -1995,7 +2001,7 @@ sigint_dialog( void )
 					mlog_level_ss[ ssselected ] =
 							( intgen_t )responseix;
 				}
-				ackstr[ ackcnt++ ] = "level changed\n";
+				ackstr[ ackcnt++ ] = _("level changed\n");
 			}
 			dlog_multi_ack( ackstr,
 					ackcnt );
@@ -2006,20 +2012,20 @@ sigint_dialog( void )
 		dlog_multi_ack( ackstr,
 				ackcnt );
 		querycnt = 0;
-		querystr[ querycnt++ ] = "please select one of "
-					 "the following metrics\n";
+		querystr[ querycnt++ ] = _("please select one of "
+					  "the following metrics\n");
 		ASSERT( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		ioix = choicecnt;
-		choicestr[ choicecnt++ ] = "I/O";
+		choicestr[ choicecnt++ ] = _("I/O");
 #ifdef RESTORE
 		piix = choicecnt;
-		choicestr[ choicecnt++ ] = "media inventory status";
+		choicestr[ choicecnt++ ] = _("media inventory status");
 		roix = choicecnt;
-		choicestr[ choicecnt++ ] = "needed media objects";
+		choicestr[ choicecnt++ ] = _("needed media objects");
 #endif /* RESTORE */
 		nochangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "continue";
+		choicestr[ choicecnt++ ] = _("continue");
 		ASSERT( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
@@ -2056,7 +2062,7 @@ sigint_dialog( void )
 			ASSERT( querycnt <= QUERYMAX );
 			choicecnt = 0;
 			nochangeix = choicecnt;
-			choicestr[ choicecnt++ ] = "continue";
+			choicestr[ choicecnt++ ] = _("continue");
 			ASSERT( choicecnt <= CHOICEMAX );
 			responseix = dlog_multi_query( querystr,
 						       querycnt,
@@ -2073,7 +2079,7 @@ sigint_dialog( void )
 						       nochangeix);/*sigquitix*/
 		}
 		ackcnt = 0;
-		ackstr[ ackcnt++ ] = "continuing\n";
+		ackstr[ ackcnt++ ] = _("continuing\n");
 		dlog_multi_ack( ackstr,
 				ackcnt );
 	} else if ( responseix == mediachangeix ) {
@@ -2090,37 +2096,37 @@ sigint_dialog( void )
 		dlog_multi_ack( ackstr,
 				ackcnt );
 		querycnt = 0;
-		querystr[ querycnt++ ] = "please select one of "
-					 "the following controls\n";
+		querystr[ querycnt++ ] = _("please select one of "
+					   "the following controls\n");
 		ASSERT( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		progix = choicecnt;
 		if ( progrpt_enabledpr ) {
-		    choicestr[ choicecnt++ ] = "change interval of "
-					       "or disable progress reports";
+		    choicestr[ choicecnt++ ] = _("change interval of "
+					         "or disable progress reports");
 		} else {
-		    choicestr[ choicecnt++ ] = "enable progress reports";
+		    choicestr[ choicecnt++ ] = _("enable progress reports");
 		}
 		mllevix = choicecnt;
 		if ( mlog_showlevel ) {
-			choicestr[ choicecnt++ ] = "hide log message levels";
+			choicestr[ choicecnt++ ] = _("hide log message levels");
 		} else {
-			choicestr[ choicecnt++ ] = "show log message levels";
+			choicestr[ choicecnt++ ] = _("show log message levels");
 		}
 		mlssix = choicecnt;
 		if ( mlog_showss ) {
-			choicestr[ choicecnt++ ] ="hide log message subsystems";
+			choicestr[ choicecnt++ ] = _("hide log message subsystems");
 		} else {
-			choicestr[ choicecnt++ ] ="show log message subsystems";
+			choicestr[ choicecnt++ ] = _("show log message subsystems");
 		}
 		mltsix = choicecnt;
 		if ( mlog_timestamp ) {
-			choicestr[ choicecnt++ ] ="hide log message timestamps";
+			choicestr[ choicecnt++ ] = _("hide log message timestamps");
 		} else {
-			choicestr[ choicecnt++ ] ="show log message timestamps";
+			choicestr[ choicecnt++ ] = _("show log message timestamps");
 		}
 		nochangeix = choicecnt;
-		choicestr[ choicecnt++ ] = "continue";
+		choicestr[ choicecnt++ ] = _("continue");
 		ASSERT( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
@@ -2159,18 +2165,18 @@ sigint_dialog( void )
 				intgen_t newinterval;
 				newinterval = atoi( buf );
 				if ( ! strlen( buf )) {
-					ackstr[ ackcnt++ ] = "no change\n";
+					ackstr[ ackcnt++ ] = _("no change\n");
 				} else if ( newinterval > 0 ) {
 					time32_t newdeadline;
 					char intervalbuf[ 64 ];
 					newdeadline = time( 0 ) + ( time32_t )newinterval;
 					if ( progrpt_enabledpr ) {
 						if ( ( time32_t )newinterval == progrpt_interval ) {
-							ackstr[ ackcnt++ ] = "no change\n";
+							ackstr[ ackcnt++ ] = _("no change\n");
 						} else {
-							ackstr[ ackcnt++ ] = "changing progress report interval to ";
+							ackstr[ ackcnt++ ] = _("changing progress report interval to ");
 							sprintf( intervalbuf,
-								 "%d seconds\n",
+								 _("%d seconds\n"),
 								 newinterval );
 							ASSERT( strlen( intervalbuf )
 								<
@@ -2181,9 +2187,9 @@ sigint_dialog( void )
 							}
 						}
 					} else {
-						ackstr[ ackcnt++ ] = "enabling progress reports at ";
+						ackstr[ ackcnt++ ] = _("enabling progress reports at ");
 						sprintf( intervalbuf,
-							 "%d second intervals\n",
+							 _("%d second intervals\n"),
 							 newinterval );
 						ASSERT( strlen( intervalbuf )
 							<
@@ -2195,47 +2201,47 @@ sigint_dialog( void )
 					progrpt_interval = ( time32_t )newinterval;
 				} else {
 					if ( progrpt_enabledpr ) {
-						ackstr[ ackcnt++ ] = "disabling progress reports\n";
+						ackstr[ ackcnt++ ] = _("disabling progress reports\n");
 					} else {
-						ackstr[ ackcnt++ ] = "no change\n";
+						ackstr[ ackcnt++ ] = _("no change\n");
 					}
 					progrpt_enabledpr = BOOL_FALSE;
 				}
 			} else {
-				ackstr[ ackcnt++ ] = "no change\n";
+				ackstr[ ackcnt++ ] = _("no change\n");
 			}
 		} else if ( responseix == mllevix ) {
 			mlog_showlevel = ! mlog_showlevel;
 			if ( mlog_showlevel ) {
-				ackstr[ ackcnt++ ] = "showing log message levels\n";
+				ackstr[ ackcnt++ ] = _("showing log message levels\n");
 			} else {
-				ackstr[ ackcnt++ ] = "hiding log message levels\n";
+				ackstr[ ackcnt++ ] = _("hiding log message levels\n");
 			}
 		} else if ( responseix == mlssix ) {
 			mlog_showss = ! mlog_showss;
 			if ( mlog_showss ) {
-				ackstr[ ackcnt++ ] = "showing log message subsystems\n";
+				ackstr[ ackcnt++ ] = _("showing log message subsystems\n");
 			} else {
-				ackstr[ ackcnt++ ] = "hiding log message subsystems\n";
+				ackstr[ ackcnt++ ] = _("hiding log message subsystems\n");
 			}
 		} else if ( responseix == mltsix ) {
 			mlog_timestamp = ! mlog_timestamp;
 			if ( mlog_timestamp ) {
-				ackstr[ ackcnt++ ] = "showing log message timestamps\n";
+				ackstr[ ackcnt++ ] = _("showing log message timestamps\n");
 			} else {
-				ackstr[ ackcnt++ ] = "hiding log message timestamps\n";
+				ackstr[ ackcnt++ ] = _("hiding log message timestamps\n");
 			}
 		}
 		dlog_multi_ack( ackstr,
 				ackcnt );
 	} else {
 		ackcnt = 0;
-		ackstr[ ackcnt++ ] = "continuing\n";
+		ackstr[ ackcnt++ ] = _("continuing\n");
 		dlog_multi_ack( ackstr,
 				ackcnt );
 	}
 
-	fold_init( fold, "end dialog", '-' );
+	fold_init( fold, _("end dialog"), '-' );
 	postamblecnt = 0;
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
@@ -2348,8 +2354,8 @@ set_rlimits( size64_t *vmszp )
 				      MLOG_NOLOCK
 				      |
 				      MLOG_PROC,
-				      "unable to raise stack size hard limit "
-				      "from 0x%llx to 0x%llx\n",
+				      _("unable to raise stack size hard limit "
+				      "from 0x%llx to 0x%llx\n"),
 				      rlimit64.rlim_max,
 				      minstacksz );
 			}
@@ -2375,8 +2381,8 @@ set_rlimits( size64_t *vmszp )
 				      MLOG_NOLOCK
 				      |
 				      MLOG_PROC,
-				      "unable to raise stack size soft limit "
-				      "from 0x%llx to 0x%llx\n",
+				      _("unable to raise stack size soft limit "
+				      "from 0x%llx to 0x%llx\n"),
 				      rlimit64.rlim_cur,
 				      minstacksz );
 			}
@@ -2403,8 +2409,8 @@ set_rlimits( size64_t *vmszp )
 			      MLOG_NOLOCK
 			      |
 			      MLOG_PROC,
-			      "unable to lower stack size soft limit "
-			      "from 0x%llx to 0x%llx\n",
+			      _("unable to lower stack size soft limit "
+			      "from 0x%llx to 0x%llx\n"),
 			      rlimit64.rlim_cur,
 			      maxstacksz );
 		}
@@ -2469,7 +2475,7 @@ typedef struct exit_printmap exit_printmap_t;
 static exit_printmap_t exit_printmap[ ] = {
 	{EXIT_NORMAL,	"EXIT_NORMAL"},
 	{EXIT_ERROR,	"EXIT_ERROR"},
-	{EXIT_INTERRUPT,	"EXIT_INTERRUPT"},
+	{EXIT_INTERRUPT,"EXIT_INTERRUPT"},
 	{EXIT_FAULT,	"EXIT_FAULT"}
 };
 
@@ -2525,7 +2531,7 @@ static sig_printmap_t sig_printmap[ ] = {
 	{SIGRTMIN,	"SIGRTMIN"},
 	{SIGRTMAX,	"SIGRTMAX"},
 #endif
-	{0,		"no signal"}
+	{0,		"???"}
 };
 
 static char *
