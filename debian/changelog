@@ -1,3 +1,10 @@
+xfsdump (2.2.8-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated policy version to which this package conforms
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 27 Mar 2003 10:30:18 +1100
+
 xfsdump (2.2.6-1) unstable; urgency=low
 
   * New upstream release

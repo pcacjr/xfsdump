@@ -1,3 +1,8 @@
+xfsdump-2.2.8 (27 March 2003)
+	- Cleanups to the build process, in particular the automatic
+	  rpm package generation Makefile and spec file template.
+	- Makepkgs script can now propagate failures back from make.
+
 xfsdump-2.2.7 (13 March 2003)
 	- add initial support for TS tape driver.
 	  (19 February 2003)
