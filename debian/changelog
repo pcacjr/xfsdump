@@ -1,3 +1,10 @@
+xfsdump (1.1.12-1) unstable; urgency=low
+
+  * New upstream bug-fix release
+  * Several xfsrestore performance improvements
+
+ -- Nathan Scott <nathans@debian.org>  Wed,  9 Jan 2002 14:21:56 +1100
+
 xfsdump (1.1.10-1) unstable; urgency=low
 
   * New upstream bug-fix release
