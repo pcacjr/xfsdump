@@ -140,24 +140,28 @@ AC_CHECK_HEADER(xfs/libxfs.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS library header.'
 	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_LIB(xfs, libxfs_init,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS base library.'
 	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_HEADER(xfs/handle.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS handle header.'
 	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_LIB(handle, path_to_handle,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS handle library.'
 	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 libxfs="-lxfs"
@@ -173,6 +177,7 @@ AC_TRY_LINK([#include <libxfs.h>], [int x = IRIX_MKDEV(0,0)], [echo ok], [
 	echo
 	echo 'FATAL ERROR: could not find IRIX_MKDEV macro in the XFS headers.'
 	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 
@@ -181,12 +186,14 @@ AC_CHECK_HEADER(xfs/dmapi.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid DMAPI library header.'
 	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the dmapi source.'
 	exit 1
 ])
 AC_CHECK_LIB(dm, dm_make_handle,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid DMAPI base library.'
 	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the dmapi source.'
 	exit 1
 ])
 libdm="-ldm"
@@ -198,12 +205,14 @@ AC_CHECK_HEADER(attr/attributes.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid Extended Attributes header.'
 	echo 'Install either the attr-devel (rpm) or the attr-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1
 ])
 AC_CHECK_LIB(attr, attr_get,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
 	echo 'Install either the attr-devel (rpm) or the attr-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1
 ])
 libattr="-lattr"
