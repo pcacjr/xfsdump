@@ -2967,7 +2967,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 					continue;
                                 }
 				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
-					mlog( MLOG_WARNING, 
+					mlog( MLOG_TRACE, 
 					      "failed to get valid bulkstat information for inode %llu\n",
 					      p->bs_ino );
 					continue;

@@ -2461,6 +2461,9 @@ setdirattr( dah_t dah, char *path )
 	struct fsxattr fsxattr;		/* can we get rid of this? */
 	intgen_t rval;
 
+	if ( dah == DAH_NULL )
+		return;
+
 	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
 	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
 
