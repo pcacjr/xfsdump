@@ -2648,7 +2648,7 @@ content_statline( char **linespp[ ] )
 			 (unsigned long long)tranp->t_dirdonecnt,
 			 (unsigned long long)tranp->t_dircnt,
 			 percent,
-			 tranp->t_direntcnt,
+			 (unsigned long long)tranp->t_direntcnt,
 			 elapsed );
 		ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
 		

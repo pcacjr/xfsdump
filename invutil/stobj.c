@@ -204,14 +204,14 @@ stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list)
 	    stobjstrm->st_cmdarg);
     put_info_line(1, txt);
 
-    sprintf(txt, "start ino: %lld, offset %lld",
-	    stobjstrm->st_startino.ino,
-	    stobjstrm->st_startino.offset);
+    sprintf(txt, "start ino: %llu, offset %lld",
+	    (unsigned long long) stobjstrm->st_startino.ino,
+	    (long long) stobjstrm->st_startino.offset);
     put_info_line(2, txt);
 
-    sprintf(txt, "  end ino: %lld, offset %lld",
-	    stobjstrm->st_endino.ino,
-	    stobjstrm->st_endino.offset);
+    sprintf(txt, "  end ino: %llu, offset %lld",
+	    (unsigned long long) stobjstrm->st_endino.ino,
+	    (long long) stobjstrm->st_endino.offset);
     put_info_line(3, txt);
 
     return FALSE;
@@ -240,14 +240,14 @@ stobjmed_highlight(WINDOW *win, node_t *current, node_t *list)
     sprintf(txt, "flags: %#x, id: %s", stobjmed->mf_flag, uuidstr);
     put_info_line(1, txt);
 
-    sprintf(txt, "start ino: %lld, offset %lld",
-	    stobjmed->mf_startino.ino,
-	    stobjmed->mf_startino.offset);
+    sprintf(txt, "start ino: %llu, offset %lld",
+	    (unsigned long long) stobjmed->mf_startino.ino,
+	    (long long) stobjmed->mf_startino.offset);
     put_info_line(2, txt);
 
-    sprintf(txt, "  end ino: %lld, offset %lld",
-	    stobjmed->mf_endino.ino,
-	    stobjmed->mf_endino.offset);
+    sprintf(txt, "  end ino: %llu, offset %lld",
+	    (unsigned long long) stobjmed->mf_endino.ino,
+	    (long long) stobjmed->mf_endino.offset);
     put_info_line(3, txt);
 
     return FALSE;
