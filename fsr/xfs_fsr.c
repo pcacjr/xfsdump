@@ -464,7 +464,7 @@ fsrallfs(int howlong, char *leftofffile)
 	xfs_ino_t startino = 0;
 	fsdesc_t *fsp;
 	
-	fsrprintf("fsr_xfs -m %s -t %d -f %s ...\n", mtab, howlong, leftofffile);
+	fsrprintf("xfs_fsr -m %s -t %d -f %s ...\n", mtab, howlong, leftofffile);
 
 	endtime = starttime + howlong;
 	fs = fsbase;
@@ -600,7 +600,7 @@ fsrall_cleanup(int timeout)
 	}
 
 	if (timeout)
-		fsrprintf("fsr_xfs startpass %d, endpass %d, time %d seconds\n",
+		fsrprintf("xfs_fsr startpass %d, endpass %d, time %d seconds\n",
 			startpass, fs->npass, time(0) - endtime + howlong);
 }
 

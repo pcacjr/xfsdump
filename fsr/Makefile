@@ -33,11 +33,10 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = fsr.xfs 
+CMDTARGET = xfs_fsr
 CMDDEPS = $(LIBHANDLE) $(LIBATTR)
 
-CFILES = fsr_xfs.c
-HFILES =
+CFILES = xfs_fsr.c
 LLDLIBS = $(LIBHANDLE) $(LIBATTR)
 
 default: $(CMDTARGET)
@@ -45,5 +44,6 @@ default: $(CMDTARGET)
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+install-dev:
