@@ -1,3 +1,7 @@
+xfsdump-2.1.0 (14 Jun 2002)
+	- new fsinfo system call used, mostly changing version to
+	  differentiate this.
+
 xfsdump-2.0.4 (14 June 2002)
 	- fix xfsrestore/xfsdump version output to report both 
 	  their version and the respective dump format version. They
