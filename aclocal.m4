@@ -76,59 +76,69 @@ AC_DEFUN([AC_PACKAGE_NEED_UTILITY],
 #  MSGFMT MSGMERGE RPM
 #
 AC_DEFUN([AC_PACKAGE_UTILITIES],
-  [ if test -z "$CC"; then
-        AC_PROG_CC
-    fi
+  [ AC_PROG_CC
     cc="$CC"
     AC_SUBST(cc)
     AC_PACKAGE_NEED_UTILITY($1, "$cc", cc, [C compiler])
 
     if test -z "$MAKE"; then
-        AC_PATH_PROG(MAKE, make, /usr/bin/make)
+        AC_PATH_PROG(MAKE, gmake,, /usr/bin:/usr/freeware/bin)
+    fi
+    if test -z "$MAKE"; then
+        AC_PATH_PROG(MAKE, make,, /usr/bin)
     fi
     make=$MAKE
     AC_SUBST(make)
     AC_PACKAGE_NEED_UTILITY($1, "$make", make, [GNU make])
 
     if test -z "$LIBTOOL"; then
-	AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin:/usr/local/bin)
+	AC_PATH_PROG(LIBTOOL, glibtool,, /usr/bin)
+    fi
+    if test -z "$LIBTOOL"; then
+	AC_PATH_PROG(LIBTOOL, libtool,, /usr/bin:/usr/local/bin:/usr/freeware/bin)
     fi
     libtool=$LIBTOOL
     AC_SUBST(libtool)
     AC_PACKAGE_NEED_UTILITY($1, "$libtool", libtool, [GNU libtool])
 
     if test -z "$TAR"; then
-        AC_PATH_PROG(TAR, tar)
+        AC_PATH_PROG(TAR, tar,, /usr/freeware/bin:/bin:/usr/local/bin:/usr/bin)
     fi
     tar=$TAR
     AC_SUBST(tar)
     if test -z "$ZIP"; then
-        AC_PATH_PROG(ZIP, gzip, /bin/gzip)
+        AC_PATH_PROG(ZIP, gzip,, /bin:/usr/local/bin:/usr/freeware/bin)
     fi
+
     zip=$ZIP
     AC_SUBST(zip)
+
     if test -z "$MAKEDEPEND"; then
         AC_PATH_PROG(MAKEDEPEND, makedepend, /bin/true)
     fi
     makedepend=$MAKEDEPEND
     AC_SUBST(makedepend)
+
     if test -z "$AWK"; then
-        AC_PATH_PROG(AWK, awk, /bin/awk)
+        AC_PATH_PROG(AWK, awk,, /bin:/usr/bin)
     fi
     awk=$AWK
     AC_SUBST(awk)
+
     if test -z "$SED"; then
-        AC_PATH_PROG(SED, sed, /bin/sed)
+        AC_PATH_PROG(SED, sed,, /bin:/usr/bin)
     fi
     sed=$SED
     AC_SUBST(sed)
+
     if test -z "$ECHO"; then
-        AC_PATH_PROG(ECHO, echo, /bin/echo)
+        AC_PATH_PROG(ECHO, echo,, /bin:/usr/bin)
     fi
     echo=$ECHO
     AC_SUBST(echo)
+
     if test -z "$SORT"; then
-        AC_PATH_PROG(SORT, sort, /bin/sort)
+        AC_PATH_PROG(SORT, sort,, /bin:/usr/bin)
     fi
     sort=$SORT
     AC_SUBST(sort)
@@ -138,13 +148,14 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
 
     if test "$enable_gettext" = yes; then
         if test -z "$MSGFMT"; then
-                AC_CHECK_PROG(MSGFMT, msgfmt, /usr/bin/msgfmt)
+                AC_PATH_PROG(MSGFMT, msgfmt,, /usr/bin:/usr/freeware/bin)
         fi
         msgfmt=$MSGFMT
         AC_SUBST(msgfmt)
         AC_PACKAGE_NEED_UTILITY($1, "$msgfmt", msgfmt, gettext)
+
         if test -z "$MSGMERGE"; then
-                AC_CHECK_PROG(MSGMERGE, msgmerge, /usr/bin/msgmerge)
+                AC_PATH_PROG(MSGMERGE, msgmerge,, /usr/bin:/usr/freeware/bin)
         fi
         msgmerge=$MSGMERGE
         AC_SUBST(msgmerge)
@@ -152,13 +163,14 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     fi
 
     if test -z "$RPM"; then
-        AC_PATH_PROG(RPM, rpm, /bin/rpm)
+        AC_PATH_PROG(RPM, rpm,, /bin:/usr/bin:/usr/freeware/bin)
     fi
     rpm=$RPM
     AC_SUBST(rpm)
+
     dnl .. and what version is rpm
     rpm_version=0
-    test -x $RPM && rpm_version=`$RPM --version \
+    test -x "$RPM" && rpm_version=`$RPM --version \
                         | awk '{print $NF}' | awk -F. '{V=1; print $V}'`
     AC_SUBST(rpm_version)
     dnl At some point in rpm 4.0, rpm can no longer build rpms, and
@@ -174,13 +186,14 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
   ])
 
 AC_DEFUN([AC_PACKAGE_NEED_UUID_H],
-  [ AC_CHECK_HEADERS(uuid.h)
-    if test $ac_cv_header_uuid_h = no; then
-	AC_CHECK_HEADERS(uuid/uuid.h,, [
+  [ AC_CHECK_HEADERS([uuid.h sys/uuid.h uuid/uuid.h])
+    if test $ac_cv_header_uuid_h = no -a \
+	    $ac_cv_header_sys_uuid_h = no -a \
+	    $ac_cv_header_uuid_uuid_h = no; then
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID header.'
 	echo 'Install the Universally Unique Identifiers development package.'
-	exit 1])
+	exit 1
     fi
   ])
 
@@ -241,6 +254,17 @@ AC_DEFUN([AC_PACKAGE_NEED_XFS_LIBXFS_H],
     fi
   ])
 
+AC_DEFUN([AC_PACKAGE_NEED_XFS_XQM_H],
+  [ AC_CHECK_HEADERS([xfs/xqm.h])
+    if test "$ac_cv_header_xfs_xqm_h" != "yes"; then
+        echo
+        echo 'FATAL ERROR: cannot find a valid <xfs/xqm.h> header file.'
+        echo 'Install or upgrade the XFS development package.'
+        echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
+        exit 1
+    fi
+  ])
+
 AC_DEFUN([AC_PACKAGE_NEED_XFS_HANDLE_H],
   [ AC_CHECK_HEADERS([xfs/handle.h])
     if test "$ac_cv_header_xfs_handle_h" != "yes"; then
@@ -273,6 +297,21 @@ AC_DEFUN([AC_PACKAGE_NEED_OPEN_BY_FSHANDLE],
         echo 'FATAL ERROR: could not find a current XFS handle library.'
         echo 'Install or upgrade the XFS library package.'
         echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
+        exit 1
+    ])
+    libhdl="-lhandle"
+    test -f `pwd`/../xfsprogs/libhandle/libhandle.la && \
+        libhdl="`pwd`/../xfsprogs/libhandle/libhandle.la"
+    test -f /usr/lib/libhandle.la && libhdl="/usr/lib/libhandle.la"
+    AC_SUBST(libhdl)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTRLIST_LIBHANDLE],
+  [ AC_CHECK_LIB(handle, attr_list_by_handle,, [
+        echo
+        echo 'FATAL ERROR: could not find a current XFS handle library.'
+        echo 'Install or upgrade the XFS library package.'
+        echo 'Alternatively, run "make install-lib" from the xfsprogs source.'
         exit 1
     ])
     libhdl="-lhandle"
@@ -342,11 +381,12 @@ AC_DEFUN([AC_PACKAGE_NEED_ATTR_ERROR_H],
     fi
   ])
 
-AC_DEFUN([AC_PACKAGE_NEED_ATTR_ATTRIBUTES_H],
-  [ AC_CHECK_HEADERS([attr/attributes.h])
-    if test "$ac_cv_header_attr_attributes_h" != "yes"; then
+AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_H],
+  [ have_attributes_h=false
+    AC_CHECK_HEADERS([attr/attributes.h sys/attributes.h], [have_attributes_h=true], )
+    if test "$have_attributes_h" = "false"; then
         echo
-        echo 'FATAL ERROR: attr/attributes.h does not exist.'
+        echo 'FATAL ERROR: attributes.h does not exist.'
         echo 'Install the extended attributes (attr) development package.'
         echo 'Alternatively, run "make install-lib" from the attr source.'
         exit 1
