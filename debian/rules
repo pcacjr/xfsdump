@@ -5,7 +5,7 @@ package=xfsdump
 dirtmp = debian/tmp
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 stdenv = GZIP=-q; export GZIP;
-options = DEBUG="-DNDEBUG"; OPTIMIZER="-O2 -g"; export DEBUG OPTIMIZER;
+options = DEBUG="-DNDEBUG"; OPTIMIZER="-O1 -g"; export DEBUG OPTIMIZER;
 checkdir = test -f debian/rules
 
 build: built
