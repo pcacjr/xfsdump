@@ -1,6 +1,6 @@
 /**************************************************************************
  *                                                                        *
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -256,7 +256,7 @@ HsmFilterExistingAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 const	char		*namep,		/* name of attribute to filter */
 	u_int32_t	valuesz,	/* attribute's current value size */
-	int		isroot,		/* != 0, an ATTR_ROOT attribute */
+	int		flag,		/* ext attr flags */
 	int		*skip_entry);
 
 
@@ -290,7 +290,7 @@ extern int
 HsmAddNewAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 	int		cursor,
-	int		isroot,		/* != 0, wants ATTR_ROOT attributes */
+	int		flag,		/* ext attr flags */
 	char		**namepp,	/* pointer to new attribute name */
 	char		**valuepp,	/* pointer to its value */
 	u_int32_t	*valueszp);	/* pointer to the value size */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -236,6 +236,12 @@ typedef struct extent_group_context extent_group_context_t;
 #define EXTATTR_LISTBUF_SZ	( 4 * pgsz )
 #define EXTATTR_RTRVARRAY_LEN	( 1 * pgsz )
 #define EXTATTR_DUMPBUF_SZ	( 4 * pgsz )
+
+/* for printing ext attr namespace
+ */
+#define EXTATTR_NAMESPACE(flag)	( ((flag) & ATTR_ROOT) ? _("root") : \
+				( ((flag) & ATTR_SECURE) ? _("secure") : \
+				  _("non-root") ) )
 #endif /* EXTATTR */
 
 /* per-drive status descriptor
@@ -3321,8 +3327,7 @@ dump_extattrs( drive_t *drivep,
 
 		mlog( MLOG_NITTY,
 		      "dumping %s extended attributes for %s ino %llu\n",
-		      ( flag & ATTR_ROOT ) ? _("root") : (( flag & ATTR_SECURE ) ?
-		      _("secure") : _("non-root")),
+		      EXTATTR_NAMESPACE(flag),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
 		      statp->bs_ino );
 
@@ -3347,9 +3352,7 @@ dump_extattrs( drive_t *drivep,
 					      "could not get list of %s "
 					      "attributes for "
 					      "%s ino %llu: %s (%d)\n"),
-					      ( flag & ATTR_ROOT )
-					      ? _("root") : (( flag & ATTR_SECURE )
-					      ? _("secure") : _("non-root")),
+					      EXTATTR_NAMESPACE(flag),
 					      (( statp->bs_mode & S_IFMT )
 					       == S_IFDIR) ? "dir" : "nondir",
 					      statp->bs_ino,
@@ -3464,9 +3467,8 @@ dump_extattr_list( drive_t *drivep,
 					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		    "HSM could not filter %s "
 					    "attribute %s for %s ino %llu\n"),
-			      		    (flag & ATTR_ROOT) ? _("root") :
-					    ((flag & ATTR_SECURE) ? _("secure") :
-					     _("non-root")), entp->a_name,
+					    EXTATTR_NAMESPACE(flag),
+					    entp->a_name,
       		(statp->bs_mode & S_IFMT) == S_IFDIR ? _("dir") : _("nondir"),
 			      		    statp->bs_ino);
 					*abortprp = BOOL_TRUE;
@@ -3520,9 +3522,7 @@ dump_extattr_list( drive_t *drivep,
 					      "could not retrieve %s "
 					      "attributes for "
 					      "%s ino %llu: %s (%d)\n"),
-					(flag & ATTR_ROOT) ? _("root") :
-				        ((flag & ATTR_SECURE) ? _("secure") :
-					 _("non-root")),
+					      EXTATTR_NAMESPACE(flag),
 					( statp->bs_mode & S_IFMT ) == S_IFDIR?
 					      _("dir") : _("nondir"),
 					      statp->bs_ino,
@@ -3567,9 +3567,7 @@ dump_extattr_list( drive_t *drivep,
 					     "attr_multi indicates error while "
 					     "retrieving %s attribute [%s] for "
 					     "%s ino %llu: %s (%d)\n"),
-					     (flag & ATTR_ROOT) ? _("root") :
-					     ((flag & ATTR_SECURE) ? _("secure") :
-					      _("non-root")),
+					     EXTATTR_NAMESPACE(flag),
 					     opp->am_attrname,
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
 					     statp->bs_ino,
@@ -3641,9 +3639,7 @@ dump_extattr_list( drive_t *drivep,
 				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		"HSM could not add new %s attribute "
 					"#%d for %s ino %llu\n"),
-			      		(flag & ATTR_ROOT) ? _("root") :
-					((flag & ATTR_SECURE) ? _("secure") :
-					 _("non-root")),
+					EXTATTR_NAMESPACE(flag),
 					hsmcursor,
 			      		(statp->bs_mode & S_IFMT) == S_IFDIR ?
 						_("dir") : _("nondir"),
@@ -3773,8 +3769,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute name for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
-		      (flag & ATTR_ROOT) ? _("root") :
-		      ((flag & ATTR_SECURE) ? _("secure") :_("non-root")),
+		      EXTATTR_NAMESPACE(flag),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
 			_("dir") : _("nondir"),
 		      statp->bs_ino,
@@ -3788,8 +3783,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute value for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
-		      (flag & ATTR_ROOT) ? _("root") :
-		      ((flag & ATTR_SECURE) ? _("secure") :_("non-root")),
+		      EXTATTR_NAMESPACE(flag),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
 			_("dir") : _("nondir"),
 		      statp->bs_ino,

@@ -1,6 +1,6 @@
 /**************************************************************************
  *                                                                        *
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -39,37 +39,77 @@
 
 #include "hsmapi.h"
 
-/* This version of the HSM API currently only supports the DMF attribute
-   format used in the initial release.
+/* This version of the HSM API supports the DMF attribute used in the initial
+ * DMF release, as well as the attribute used in the pseudo multiple managed
+ * region DMF release.
 */
 
 /* DMF attribute name, size, and format as stored within XFS. (Stolen directly
-   from "dmfsapi/dmf_dmapi.h".
+   from "dmfsapi/dmf_dmattr.H".
 */
 
-#define	DMF_ATTR_NAME	"SGI_DMI_DMFATTR"	/* attribute used by DMF */
-#define	DMF_ATTR_LEN	22			/* length of the attribute */
+#define	DMF_ATTR_NAME	"SGI_DMI_DMFATTR"	/* name of DMF's attr */
 
 typedef	struct {
+	u_char	fsys;		/* filesystem type */
 	u_char	version;	/* attribute format version */
-	u_char	pad;
 	u_char	state[2];	/* dm_state in MSB form */
 	u_char	flags[2];	/* dm_flags in MSB form */
 	u_char	bfid[16];	/* Bitfile ID in MSB form */
+} XFSattrvalue0_t;
+
+typedef	struct {
+	u_char	rg_offset[8];	/* region offset in MSB form */
+	u_char	rg_size[8];	/* region length in MSB form */
+	u_char	rg_state[2];	/* region dm_state in MSB form */
+	u_char	rg_flags;	/* managed region event bits */
+	u_char	rg_fbits;	/* region flag bits */
+} XFSattrregion_t;
+
+typedef	struct {
+	u_char	fsys;		/* filesystem type */
+	u_char	version;	/* attribute format version */
+	u_char	state[2];	/* global dm_state in MSB form */
+	u_char	flags[2];	/* global dm_flags in MSB form */
+	u_char	bfid[16];	/* Bitfile ID in MSB form. */
+	u_char	sitetag[4];	/* site tag */
+	u_char	regcnt[2];	/* number of regions in MSB form */
 } XFSattrvalue1_t;
 
-#define	XFS_ATTR_VERSION_1	1	/* only supported version field value */
+#define	MIN_FORMAT1_ATTR_LEN	( sizeof(XFSattrvalue1_t) + \
+				  sizeof(XFSattrregion_t) )
 
-/* Interesting state field values (bottom byte). */
+/* supported fsys values */
+
+/* XFS DMAPI (w/o MMR ) */
+#define	FSYS_TYPE_XFS		1
+
+/* supported version values */
+
+/* original DMF attr format */
+#define	DMF_ATTR_FORMAT_0	0
+/* DMF attr with multiple regions (real or pseudo) or with a non-zero
+ * site tag. attrs of this format consist of a XFSattrvalue1_t struct
+ * followed by 1 or more XFSattrregion_t structs */
+#define	DMF_ATTR_FORMAT_1	1
+
+/* Interesting state field values */
 
 #define	DMF_ST_DUALSTATE	2	/* file has backups plus online data */
 #define	DMF_ST_OFFLINE		3	/* file has backups, no online data */
 #define	DMF_ST_UNMIGRATING	4	/* file data is being staged in */
+#define	DMF_ST_PARTIAL		6	/* file has backups plus parts online */
 
-/* Interesting bit combinations within the bs_dmevmask field of xfs_bstat_t. */
+/* Interesting bit combinations within the bs_dmevmask field of xfs_bstat_t:
+ * OFL, UNM, and PAR files have exactly these bits set.
+ * DUL and MIG files have all but the DM_EVENT_READ bit set */
+#define DMF_EV_BITS	( (1<<DM_EVENT_DESTROY) | \
+			  (1<<DM_EVENT_READ)    | \
+			  (1<<DM_EVENT_WRITE)   | \
+			  (1<<DM_EVENT_TRUNCATE) )
 
-#define	DUALSTATE_BITS	( (1<<DM_EVENT_WRITE) | (1<<DM_EVENT_TRUNCATE) )
-
+/* OFL file's managed region event flags */
+#define DMF_MR_FLAGS	( 0x1 | 0x2 | 0x4 )
 
 /* The following definitions provide the internal format of the hsm_fs_ctxt_t
    and hsm_f_ctxt_t structures, respectively.
@@ -82,12 +122,53 @@ typedef	struct	{
 
 typedef	struct	{
 	dmf_fs_ctxt_t	fsys;
-	__int64_t	filesize;	/* in 512-byte units */
+	off64_t		filesize;
 	int		candidate;
+	int		attrlen;
 	char		attrval[5000];	/* sized bigger than any poss. value */
 } dmf_f_ctxt_t;
 
+/******************************************************************************
+* Name
+*       msb_store - store a variable to u_char array in MSB format
+*
+* Returns
+*	void
+******************************************************************************/
+static inline void
+msb_store(
+	u_char		*dest,
+	u_int64_t	src,
+	int		length)
+{
+        int             i;
 
+        for (i = length - 1; i >= 0; i--) {
+                dest[i] = (u_char)(src & 0xff);
+                src >>= 8;
+        }
+}
+
+/******************************************************************************
+* Name
+*       msb_load - load a variable from a u_char array in MSB format
+*
+* Returns
+*	value
+******************************************************************************/
+static inline u_int64_t
+msb_load(
+	u_char		*src,
+	int		length)
+{
+        u_int64_t        tmp = 0;
+        int             i;
+
+        for (i = 0; i < length; i++) {
+                tmp = (tmp << 8) | src[i];
+        }
+        return tmp;
+}
 
 /******************************************************************************
 * Name
@@ -342,12 +423,12 @@ HsmInitFileContext(
 const	xfs_bstat_t	*statp)
 {
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
-	XFSattrvalue1_t	*dmfattrp;
-	int		attrlen;
+	XFSattrvalue0_t	*dmfattrp;
 	void		*hanp;
 	size_t		hlen=0;
 	dm_ino_t	ino;
 	dm_igen_t	igen;
+	int		state;
 	int		fd;
 	int		error;
 
@@ -361,8 +442,8 @@ const	xfs_bstat_t	*statp)
 	if ((statp->bs_xflags & XFS_XFLAG_HASATTR) == 0) {
 		return 0;	/* no DMF attribute exists */
 	}
-	if ((statp->bs_dmevmask & DUALSTATE_BITS) != DUALSTATE_BITS) {
-		return 0;	/* non-dualstate managed region bits */
+	if ((statp->bs_dmevmask & DMF_EV_BITS) == 0 ) {
+		return 0;	/* no interesting DMAPI bits set */
 	}
 
 	/* We have a likely candidate, so we have to pay the price and look
@@ -380,39 +461,50 @@ const	xfs_bstat_t	*statp)
 	   attr_multif-by-handle call when it is available.
 	*/
 
-	fd = open_by_fshandle(hanp, hlen, O_RDONLY);
+	fd = open_by_handle(hanp, hlen, O_RDONLY);
 	dm_handle_free(hanp, hlen);
 	if (fd < 0) {
                 return 0;
 	}
-	attrlen = sizeof(dmf_f_ctxtp->attrval);
+	dmf_f_ctxtp->attrlen = sizeof(dmf_f_ctxtp->attrval);
 	error = attr_getf(fd, DMF_ATTR_NAME, dmf_f_ctxtp->attrval,
-		&attrlen, ATTR_ROOT);
+		&dmf_f_ctxtp->attrlen, ATTR_ROOT);
 	(void)close(fd);
 	if (error) {
 		return 0;
  	}
 
-	if (attrlen != DMF_ATTR_LEN) {
-                return 0;	/* not the right length to be the attribute */
+	dmfattrp = (XFSattrvalue0_t *)dmf_f_ctxtp->attrval;
+
+	if (dmfattrp->fsys != FSYS_TYPE_XFS)
+		return 0; /* unsupported filesystem version */
+
+	switch(dmfattrp->version) {
+	case DMF_ATTR_FORMAT_0:
+		if (dmf_f_ctxtp->attrlen != sizeof(XFSattrvalue0_t))
+			return 0; /* wrong size */
+		break;
+	case DMF_ATTR_FORMAT_1:
+		if (dmf_f_ctxtp->attrlen < MIN_FORMAT1_ATTR_LEN)
+			return 0; /* wrong size */
+		break;
+	default:
+		return 0; /* unsupported attr version */
 	}
 
-	dmfattrp = (XFSattrvalue1_t *)dmf_f_ctxtp->attrval;
-	if (dmfattrp->version != XFS_ATTR_VERSION_1) {
-		return 0;	/* we don't support this version */
+	state = (int)msb_load(dmfattrp->state, sizeof(dmfattrp->state));
+	switch (state) {
+	case DMF_ST_DUALSTATE:
+	case DMF_ST_UNMIGRATING:
+	case DMF_ST_PARTIAL:
+		/* We have a DMF file that can be treated as offline */
+		dmf_f_ctxtp->candidate = 1;
+		dmf_f_ctxtp->filesize = statp->bs_size;
+		break;
+	
+	default:
+		break;
 	}
-	if (dmfattrp->state[0] != '\0') {
-		return 0;	/* should be zero */
-	}
-	if (dmfattrp->state[1] != DMF_ST_DUALSTATE &&
-	    dmfattrp->state[1] != DMF_ST_UNMIGRATING) {
-		return 0;
-	}
-
-	/* We have a DMF dual state file. */
-
-	dmf_f_ctxtp->candidate = 1;
-	dmf_f_ctxtp->filesize = BTOBB(statp->bs_size);
 	return 0;
 }
 
@@ -439,7 +531,7 @@ HsmModifyInode(
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
 
 	if (dmf_f_ctxtp->candidate) {
-		statp->bs_dmevmask |= (1<<DM_EVENT_READ);
+		statp->bs_dmevmask = DMF_EV_BITS;
 	}
 	return 1;
 }
@@ -482,7 +574,7 @@ HsmModifyExtentMap(
 	   should already be correct.
 	*/
 
-	length = dmf_f_ctxtp->filesize - bmap[1].bmv_offset;
+	length = BTOBB(dmf_f_ctxtp->filesize) - bmap[1].bmv_offset;
 
 	if (length > 0) {
 		bmap[0].bmv_entries = 1;	/* rest of file is one extent */
@@ -525,7 +617,7 @@ HsmFilterExistingAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 const	char		*namep,		/* attribute name */
 	u_int32_t	valuesz,	/* value size */
-	int		isroot,
+	int		flag,
 	int		*skip_entry)
 {
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)hsm_f_ctxtp;
@@ -535,14 +627,14 @@ const	char		*namep,		/* attribute name */
 	if (!dmf_f_ctxtp->candidate) {
 		return 1;	/* not a dualstate file */
 	}
-	if (!isroot) {
+	if (flag != ATTR_ROOT) {
 		return 1;	/* not a root attribute */
 	}
 	if (strcmp(namep, DMF_ATTR_NAME)) {
 		return 1;	/* not the right attribute */
 	}
 
-	if (valuesz != DMF_ATTR_LEN) {
+	if (valuesz < sizeof(XFSattrvalue0_t)) {
 		return 0;	/* attribute is corrupt */
 	}
 
@@ -585,20 +677,20 @@ extern int
 HsmAddNewAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 	int		cursor,
-	int		isroot,
+	int		flag,
 	char		**namepp,	/* pointer to new attribute name */
 	char		**valuepp,	/* pointer to its value */
 	u_int32_t	*valueszp)	/* pointer to the value size */
 {
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)hsm_f_ctxtp;
-	XFSattrvalue1_t	*dmfattrp = (XFSattrvalue1_t *)dmf_f_ctxtp->attrval;
+	XFSattrvalue1_t	*dmfattr1p = (XFSattrvalue1_t *)dmf_f_ctxtp->attrval;
 
 	*namepp = NULL;		/* assume we won't add an attribute */
 
 	if (!dmf_f_ctxtp->candidate) {
 		return 1;	/* not a dualstate file */
 	}
-	if (!isroot) {
+	if (flag != ATTR_ROOT) {
 		return 1;	/* not in the root attribute section */
 	}
 
@@ -606,10 +698,38 @@ HsmAddNewAttribute(
 		return 1;	/* there is only one attribute to add */
 	}
 
-	dmfattrp->state[1] = DMF_ST_OFFLINE;
-	*valuepp = (char *)dmfattrp;
-	*namepp = DMF_ATTR_NAME;
-	*valueszp = DMF_ATTR_LEN;
+	/* DMF writes format0 (XFSattrvalue0_t) attributes unless:
+	 *    - the file has multiple regions
+	 *    - the file has a non-zero site tag
+	 *
+	 * Here we are writing a single region (OFL), so we only dump a
+	 * format1 attribute if the file has a non-zero site tag.
+	 */
+	if (dmfattr1p->version == DMF_ATTR_FORMAT_1 &&
+	    msb_load(dmfattr1p->sitetag, sizeof(dmfattr1p->sitetag)) != 0) {
+		XFSattrregion_t *reg;
+		reg = (XFSattrregion_t *)( dmf_f_ctxtp->attrval +
+				           sizeof(XFSattrvalue1_t) );
+		dmf_f_ctxtp->attrlen = MIN_FORMAT1_ATTR_LEN;
 
+		/* make one offline region the size of the whole file */
+		msb_store(dmfattr1p->regcnt, 1, sizeof(dmfattr1p->regcnt));
+		msb_store(reg->rg_offset, 0, sizeof(reg->rg_offset));
+		msb_store(reg->rg_size, dmf_f_ctxtp->filesize, sizeof(reg->rg_size));
+		msb_store(reg->rg_state, DMF_ST_OFFLINE, sizeof(reg->rg_state));
+		reg->rg_flags = DMF_MR_FLAGS;
+		reg->rg_fbits = 0;
+	} else {
+		/* writing a format0 attr. ensure correct length and version */
+		dmfattr1p->version = DMF_ATTR_FORMAT_0;
+		dmf_f_ctxtp->attrlen = sizeof(XFSattrvalue0_t);
+	}
+
+	/* set the global state to offline */
+	msb_store(dmfattr1p->state, DMF_ST_OFFLINE, sizeof(dmfattr1p->state));
+
+	*valuepp = (char *)dmfattr1p;
+	*namepp = DMF_ATTR_NAME;
+	*valueszp = dmf_f_ctxtp->attrlen;
 	return 1;
 }
