@@ -30,7 +30,7 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 COMMINCL = \
@@ -66,8 +66,9 @@ default: $(LINKS) $(CMDTARGET)
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+install-dev:
 
 $(COMMINCL) $(COMMON):
 	@$(RM) $@; $(LN_S) ../common/$@ $@

@@ -36,7 +36,7 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 STATICLIBTARGET = librmt.a
@@ -50,4 +50,4 @@ default: $(STATICLIBTARGET)
 
 include $(BUILDRULES)
 
-install: default
+install install-dev: default

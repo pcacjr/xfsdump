@@ -30,8 +30,10 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
+
+LIBRMT = $(TOPDIR)/librmt/librmt.a
 
 COMMINCL = \
 	arch_xlate.h \
@@ -110,8 +112,6 @@ LOCALINCL = \
 	inomap.h \
 	var.h
 
-LIBRMT = ../librmt/librmt.a
-
 CMDTARGET = xfsdump
 CMDDEPS = $(LIBHANDLE)
 
@@ -121,16 +121,17 @@ LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
 LLDLIBS = $(LIBHANDLE) $(LIBUUID) $(LIBRMT)
 
-#LCFLAGS = -DDUMP -DRMT -DEXTATTR -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
 LCFLAGS = -DDUMP -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
+#LCFLAGS += -DEXTATTR
 
 default: $(LINKS) $(CMDTARGET)
 
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+install-dev:
 
 $(COMMINCL) $(COMMON):
 	@$(RM) $@; $(LN_S) ../common/$@ $@

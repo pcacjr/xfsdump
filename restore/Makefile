@@ -30,9 +30,10 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
+LIBRMT = $(TOPDIR)/librmt/librmt.a
 
 COMMINCL = \
 	arch_xlate.h \
@@ -118,8 +119,6 @@ LOCALINCL = \
 	tree.h \
 	win.h
 
-LIBRMT = ../librmt/librmt.a
-
 CMDTARGET = xfsrestore
 CMDDEPS = $(LIBHANDLE)
 
@@ -129,16 +128,17 @@ LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
 LLDLIBS = $(LIBHANDLE) $(LIBUUID) $(LIBRMT)
 
-#LCFLAGS = -DRESTORE -DRMT -DEXTATTR -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX -DEOMFIX -DSESSCPLT -DWHITEPARSE
 LCFLAGS = -DRESTORE -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX -DEOMFIX -DSESSCPLT -DWHITEPARSE -DNODECHK -DDIRENTHDR_CHECKSUM
+#LCFLAGS += -DEXTATTR
 
 default: $(LINKS) $(CMDTARGET)
 
 include $(BUILDRULES)
 
 install: default
-	$(INSTALL) -m 755 -d $(XFS_CMDS_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(XFS_CMDS_BIN_DIR)
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+install-dev:
 
 $(COMMINCL) $(COMMON):
 	@$(RM) $@; $(LN_S) ../common/$@ $@

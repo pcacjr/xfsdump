@@ -35,9 +35,9 @@
 
 #include <libxfs.h>
 #include <string.h>
+#include <jdm.h>
 
 #include "types.h"
-#include "jdm.h"
 #include "global.h"
 #include "content.h"
 #include "content_inode.h"

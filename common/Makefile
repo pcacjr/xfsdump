@@ -30,7 +30,7 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = ../..
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LSRCFILES = arch_xlate.c arch_xlate.h archdep.c archdep.h attr.c attr.h \
@@ -44,8 +44,6 @@ LSRCFILES = arch_xlate.c arch_xlate.h archdep.c archdep.h attr.c attr.h \
 	rec_hdr.h ring.c ring.h sproc.c sproc.h stkchk.c stkchk.h stream.c \
 	stream.h types.h util.c util.h
 
-default:
+default install install-dev :
 
 include $(BUILDRULES)
-
-install: 

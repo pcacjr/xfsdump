@@ -45,10 +45,10 @@
 #endif /* __linux__ */
 
 #include <libxfs.h>
+#include <jdm.h>
 
 #include "arch_xlate.h"
 #include "types.h"
-#include "jdm.h"
 #include "global.h"
 #include "content.h"
 #include "content_inode.h"
