@@ -468,7 +468,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 	    printf("ftruncate fstab from %d to %d (%ld bytes)\n",
 		   nEntries,
 		   fstabEntries,
-		   sizeof(invt_counter_t) + (sizeof(invt_fstab_t) * fstabEntries));
+		   (long) sizeof(invt_counter_t) + (sizeof(invt_fstab_t) * fstabEntries));
 	    printf("ftruncate %s\n", fstabname);
 	}
 	ftruncate(fd,
@@ -578,7 +578,7 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 	    printf("ftruncate idx from %d to %d (%ld bytes)\n",
 		   nEntries,
 		   validEntries,
-		   sizeof(invt_counter_t) + (validEntries * sizeof(invt_entry_t)) );
+		   (long) sizeof(invt_counter_t) + (validEntries * sizeof(invt_entry_t)) );
             printf("- truncate %s\n", idxFileName);
 	}
     	ftruncate( fd,
@@ -956,14 +956,14 @@ read_n_bytes(int fd, void * buf, size_t count, char *path)
     rc = read(fd, buf, count);
     if (rc < 0) {
 	fprintf(stderr, "%s: read of %ld bytes on %s failed.\n",
-		g_programName, count, path);
+		g_programName, (long) count, path);
 	perror(path);
 	exit (2);
     } else  if (rc != count) {
 	fprintf(stderr, "%s: read of %ld bytes on %s failed.\n",
-		g_programName, count, path);
+		g_programName, (long) count, path);
 	fprintf(stderr, "Tried to read %ld bytes, got %d.\n",
-		count, rc);
+		(long) count, rc);
 	exit (2);
     }
 }
@@ -976,14 +976,14 @@ write_n_bytes(int fd, void * buf, size_t count, char *path)
     rc = write(fd, buf, count);
     if (rc < 0) {
 	fprintf(stderr, "%s: write of %ld bytes on %s failed.\n",
-		g_programName, count, path);
+		g_programName, (long) count, path);
 	perror(path);
 	exit (2);
-    } else  if (rc != count) {
+    } else if (rc != count) {
 	fprintf(stderr, "%s: write of %ld bytes on %s failed.\n",
-		g_programName, count, path);
+		g_programName, (long) count, path);
 	fprintf(stderr, "Tried to write %ld bytes, wrote %d.\n",
-		count, rc);
+		(long) count, rc);
 	exit (2);
     }
 }
@@ -1000,7 +1000,7 @@ mmap_n_bytes(int fd, size_t count, bool_t checkonly, char *path)
 	
     if (temp == (void *)-1) {
 	fprintf( stderr, "%s: error in mmap of %ld bytes for file %s\n",
-		 g_programName, count, path);
+		 g_programName, (long) count, path);
 	perror("mmap");
 	fprintf( stderr, "%s: abnormal termination\n", g_programName );
 	exit(1);
