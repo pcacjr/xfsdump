@@ -74,7 +74,7 @@ rmt_turnonmsgs(int code)
 int
 _rmt_msgson(void)
 {
-    return (rmt_debug_code != 0);
+    return rmt_debug_code;
 }
 
 #define RMT_MAX_MSG_STR 256

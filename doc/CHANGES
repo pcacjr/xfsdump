@@ -1,3 +1,14 @@
+xfsdump-1.0.12 (13 July 2001)
+	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore 
+          to remote tape drives will cause rmt debug messages to be
+          written to the remote machine in:
+	      /server.XXX (where XXX = pid). 
+	  These files will no longer be created via xfsdump/xfsrestore.
+          The fix is in librmt - it should have only written out 
+          warning messages and not debug messages.
+          If the debug environment variable is turned on for librmt then
+          the debug file will go to /tmp/librmt_debug.XXX.
+
 xfsdump-1.0.11 (12 July 2001)
 	- correctly restore block and character device major numbers
 

@@ -49,6 +49,8 @@
 
 #include "rmtlib.h"
 
+#define RMT_DEBUG_FILE "/tmp/librmt_debug" /* file for debug output on server */
+
 static int _rmt_open(char *, int, int);
 
 int _rmt_Ctp[MAXUNIT][2] = { {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1} };
@@ -241,9 +243,9 @@ again:
 		close(_rmt_Ctp[i][0]); close(_rmt_Ctp[i][1]);
 		(void) setuid (getuid ());
 		(void) setgid (getgid ());
-		if (_rmt_msgson()) {
-		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s server.%d", 
-				rmt_path, getpid());
+		if (_rmt_msgson() == RMTDBG) {
+		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s %s.%d", 
+				rmt_path, RMT_DEBUG_FILE, getpid());
 		} 
 		else {
 		    strncpy(rmt_cmd, rmt_path, sizeof(rmt_cmd)); 	
