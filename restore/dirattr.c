@@ -302,19 +302,21 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 			flock64.l_len = initsz;
 			rval = ioctl( dtp->dt_fd, ioctlcmd, &flock64 );
 			if ( rval ) {
-				mlog( loglevel | MLOG_NOTE,
-				      "attempt to reserve %lld bytes for %s "
-				      "using %s "
-				      "failed: %s (%d)\n",
-				      initsz,
-				      dtp->dt_pathname,
-				      ioctlcmd == F_RESVSP64
-				      ?
-				      "F_RESVSP64"
-				      :
-				      "F_ALLOCSP64",
-				      strerror( errno ),
-				      errno );
+				if ( errno != ENOTTY ) {
+					mlog( loglevel | MLOG_NOTE,
+					      "attempt to reserve %lld bytes for %s "
+					      "using %s "
+					      "failed: %s (%d)\n",
+					      initsz,
+					      dtp->dt_pathname,
+					      ioctlcmd == F_RESVSP64
+					      ?
+					      "F_RESVSP64"
+					      :
+					      "F_ALLOCSP64",
+					      strerror( errno ),
+					      errno );
+				}
 			} else {
 				successpr = BOOL_TRUE;
 			}

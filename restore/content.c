@@ -1260,11 +1260,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	 */
 	if ( ! tranp->t_hkdir ) {
 		if ( tranp->t_toconlypr ) {
-			if (isinxfs(homedir) == BOOL_FALSE) {
-			    mlog( MLOG_NORMAL | MLOG_ERROR,
-				  "Current directory not XFS: %s\n", homedir);
-			    return BOOL_FALSE;
-			}
 			tranp->t_hkdir = homedir;
 		} else {
 			if ( ! dstdir ) {
