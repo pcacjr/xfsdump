@@ -1,7 +1,7 @@
-#ifndef __SYS_MTIO_H__
-#define __SYS_MTIO_H__
+#ifndef __TS_MTIO_H__
+#define __TS_MTIO_H__
 
-#include <linux/mtio.h>
+#include <sys/mtio.h>
 
 #ifndef __KERNEL__
 #include <stdint.h>
@@ -22,8 +22,8 @@ typedef unsigned int    minor_t;
 
 /*
  * TS supports the following MTIOCTOP subcodes. These subcode
- * have been defined in linux/mtio.h and are supported in ST as well.
- * See linux/mtio.h for details.
+ * have been defined in sys/mtio.h and are supported in ST as well.
+ * See sys/mtio.h for details.
  *
  *  operations (mt_op values for MTIOCTOP) 
  *
@@ -434,9 +434,9 @@ struct mt_capablity  {
 #define MTPDTRACE	6000			/* From pd_ioctl.h */
 #define MTIOCODE(x)	('t'<<8|(x))
 
-#ifndef	_LINUX_MTIO_H
+#ifndef	_SYS_MTIO_H
 #define MTIOCTOP	MTIOCODE('a')		/* perform tape op */
-#endif	/* _LINUX_MTIO_H */
+#endif	/* _SYS_MTIO_H */
 #define MTIOCGET_SGI	MTIOCODE('b')		/* get tape status */
 #define MTIOCGETBLKSIZE	MTIOCODE('c')		/* get tape block size
 						 * in multiples of 512 bytes */
@@ -758,4 +758,4 @@ struct	vendor_specific_pos
 #define	MTR_SFBM	31		/* Skip filemarks backward, position at FM */
 #define	MTR_SFFM	32		/* Skip filemarks forward, position at FM */
 
-#endif /* __SYS_MTIO_H__ */
+#endif /* __TS_MTIO_H__ */
