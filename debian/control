@@ -6,7 +6,7 @@ Build-Depends: uuid-dev, xfslibs-dev, attr-dev, autoconf, debmake
 Standards-Version: 3.1.1
 
 Package: xfsdump
-Depends: ${shlibs:Depends}, xfsprogs
+Depends: ${shlibs:Depends}
 Suggests: xfsprogs, attr
 Architecture: any
 Description: Administrative utilities for the XFS filesystem
