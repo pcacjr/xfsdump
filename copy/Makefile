@@ -33,7 +33,8 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LTCOMMAND = xfs_copy
+#LTCOMMAND = xfs_copy	# NEEDS FURTHER PORTING WORK
+LTCOMMAND = 		# <-- don't build, but put source in tarball.
 
 CFILES = xfs_copy.c locks.c
 HFILES = locks.h

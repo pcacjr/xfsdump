@@ -44,7 +44,7 @@ LDIRT = config.log config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include librmt \
-	common estimate fsr inventory invutil quota dump restore \
+	common copy estimate fsr inventory invutil quota dump restore \
 	man doc debian build
 
 default: $(CONFIGURE)

@@ -40,9 +40,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LTLIBRARY = librmt.la
-LT_CURRENT = 0
-LT_REVISION = 0
-LT_AGE = 0
+LTLDFLAGS =	# empty, forces a static-only library build
 
 HFILES = rmtlib.h
 CFILES = \

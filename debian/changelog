@@ -4,6 +4,7 @@ xfsdump (1.1.0-0) unstable; urgency=low
   * Debian-specific changes now documented in changelog.Debian.gz
   * New upstream release (see /usr/share/doc/xfsdump/changelog.gz)
   * Checked standards compliance - update standards version to 3.5.5
+  * Introduce a shlibs.local file to track package inter-dependencies
 
  -- Nathan Scott <nathans@debian.org>  Wed, 18 Jul 2001 15:57:04 +1000
 

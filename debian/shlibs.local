@@ -1,0 +1,3 @@
+libdm		0	dmapi (>= 0.2.0)
+libattr		0	attr (>= 1.1.0)
+libhandle	0	xfsprogs (>= 1.3.1)

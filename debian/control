@@ -6,7 +6,7 @@ Build-Depends: xfslibs-dev (>= 1.3.1), attr-dev (>= 1.1.0), dmapi-dev, uuid-dev,
 Standards-Version: 3.5.5
 
 Package: xfsdump
-Depends: ${shlibs:Depends}, xfsprogs (>= 1.3.1), attr (>= 1.1.0), dmapi
+Depends: ${shlibs:Depends}
 Architecture: any
 Description: Administrative utilities for the XFS filesystem
  The xfsdump package contains xfsdump, xfsrestore and a number of
