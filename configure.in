@@ -157,10 +157,10 @@ AC_CHECK_HEADER(xfs/handle.h,, [
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
-AC_CHECK_LIB(handle, path_to_handle,, [
+AC_CHECK_LIB(handle, fssetdm_by_handle,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS handle library.'
-	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
