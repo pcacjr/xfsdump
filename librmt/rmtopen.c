@@ -77,7 +77,7 @@ char *path;
 int oflag;
 int mode;
 {
-	if (_rmt_dev (path))
+	if (strchr (path, ':') != NULL)
 	{
 		return (_rmt_open (path, oflag, mode) | REM_BIAS);
 	}
@@ -88,9 +88,10 @@ int mode;
 }
 
 /*
- *	_rmt_open --- open a magtape device on system specified, as given user
+ *	_rmt_open --- open a magtape device (or file) on system specified, 
+ *                    as given user
  *
- *	file name has the form system[.user]:/dev/????
+ *	file name has the form system[.user]:????
  */
 
 #define MAXHOSTLEN	257
