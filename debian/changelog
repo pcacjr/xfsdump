@@ -1,3 +1,10 @@
+xfsdump (2.1.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Uses updated XFS geometry ioctl (version change differentiates this).
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 20 Jun 2002 14:43:07 +1000
+
 xfsdump (2.0.4-1) unstable; urgency=low
 
   * New upstream release
