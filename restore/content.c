@@ -809,6 +809,7 @@ static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
 static int reopen_invis(char * path, int oflags);
 static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
 #endif
+static int quotafilecheck(char *type, char *dstdir, char *quotafile);
 
 /* definition of locally defined global variables ****************************/
 
@@ -2490,19 +2491,7 @@ content_complete( void )
 			      "\n",
 			      elapsed );
 		} else {
-			struct stat64 s;
-			char buf[MAXPATHLEN];
-
-			sprintf( buf,
-				 "%s/%s",
-				 persp->a.dstdir,
-				 CONTENT_QUOTAFILE );
-			if( stat64( buf, &s ) >= 0 && S_ISREG( s.st_mode )) {
-				mlog( MLOG_NORMAL,
-				      "quotas written to \'%s\', "
-				      "use \'edquota\' to restore\n",
-				      buf );
-			}
+			quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE);
 
 			mlog( MLOG_VERBOSE,
 			      "restore complete"
@@ -9369,3 +9358,25 @@ do_fssetdm_by_handle(
 	return rc;
 }
 #endif /*F_FSSETDM*/
+
+static int
+quotafilecheck(char *type, char *dstdir, char *quotafile)
+{
+	struct stat s;
+	char buf[MAXPATHLEN];
+
+	sprintf( buf,
+		 "%s/%s",
+		 dstdir,
+		 quotafile );
+
+	if ( stat (buf, &s ) >= 0 && S_ISREG(s.st_mode)) {
+		mlog(MLOG_NORMAL,
+		     "%s quota information written to \'%s\'\n",
+		     type,
+		     buf );
+		return 1;
+	}
+
+	return 0;
+}

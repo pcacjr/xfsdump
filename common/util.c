@@ -166,7 +166,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	intgen_t saved_errno;
         
         xfs_fsop_bulkreq_t bulkreq;
-#ifdef SGI_FS_BULKSTAT_SINGLE
+#ifdef XFS_IOC_FSBULKSTAT_SINGLE
         xfs_fsop_bulkreq_t sbulkreq;
 #endif
 
@@ -213,7 +213,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 		for ( p = buf, endp = buf + buflenout ; p < endp ; p++ ) {
 			intgen_t rval;
 
-#ifdef SGI_FS_BULKSTAT_SINGLE
+#ifdef XFS_IOC_FSBULKSTAT_SINGLE
 			if ( (!p->bs_nlink || !p->bs_mode) && p->bs_ino != 0 ) {
 				/* inode being modified, get synced data */
 				mlog( MLOG_NITTY + 1,
@@ -223,7 +223,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
                                 sbulkreq.icount = 1;
                                 sbulkreq.ubuffer = p;
                                 sbulkreq.ocount = NULL;
-                                ioctl(fsfd, XFS_IOC_FSBULKSTAT, &sbulkreq);
+                                ioctl(fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq);
 			}
 #endif
 

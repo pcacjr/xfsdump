@@ -42,6 +42,8 @@
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
+#include <linux/quota.h>
+#include <xqm.h>
 #include <malloc.h>
 
 #ifdef EXTATTR
@@ -379,6 +381,10 @@ static rv_t dump_extattrhdr( drive_t *drivep,
 			     ix_t flags,
 			     u_int32_t valsz );
 #endif /* EXTATTR */
+static bool_t save_quotas( char *mntpnt,
+			   quota_info_t *quotainfo );
+static int getxfsqstat( char *fsname );
+
 
 
 /* definition of locally defined global variables ****************************/
@@ -498,6 +504,13 @@ static size_t sc_thrdswaitingdirdumpsync2 = 0;
 static qbarrierh_t sc_barrierh;
 #endif /* SYNCDIR */
 
+static bool_t sc_savequotas = BOOL_TRUE;
+        /* save quota information in dump
+         */
+static quota_info_t quotas[] = {
+	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-u", XFS_QUOTA_UDQ_ACCT },
+	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-g", XFS_QUOTA_GDQ_ACCT }
+};
 
 /* definition of locally defined global functions ****************************/
 
@@ -539,6 +552,8 @@ content_init( intgen_t argc,
 	bool_t sameinterruptedpr = BOOL_FALSE;
 	size_t strmix;
 	intgen_t c;
+	intgen_t i;
+	intgen_t qstat;
 	intgen_t rval;
 	bool_t ok;
 	extern char *optarg;
@@ -787,6 +802,7 @@ content_init( intgen_t argc,
 
 
 #ifndef PIPEINVFIX
+
 	/* use of any pipes precludes inventory update
 	 */
 	for ( strmix = 0 ; strmix < drivecnt ; strmix++ ) {
@@ -797,6 +813,34 @@ content_init( intgen_t argc,
 		}
 	}
 #endif /* ! PIPEINVFIX */
+
+        /* write quota information */
+        if( sc_savequotas ) {
+		sc_savequotas = BOOL_FALSE;
+		for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
+			quotas[i].savequotas = BOOL_FALSE;
+			qstat = getxfsqstat( fsdevice );
+			if (qstat > 0 && (qstat & quotas[i].statflag) ) {
+				sprintf( quotas[i].quotapath, "%s/%s", mntpnt, quotas[i].quotafile );
+				if( save_quotas( mntpnt, &quotas[i] )) {
+					if( subtreecnt ) {
+						subtreecnt++;
+						subtreep = (char **) realloc( subtreep,
+						subtreecnt * sizeof(char *));
+						assert( subtreep );
+						subtreep[ subtreecnt - 1 ] = quotas[i].quotafile;
+					}
+					sc_savequotas = BOOL_TRUE;
+					quotas[i].savequotas = BOOL_TRUE;
+				} else {
+					mlog( MLOG_NORMAL | MLOG_ERROR,
+					      "failed to save %s information, continuing\n",
+					      quotas[i].desc );
+				}
+			}
+		}
+        }
+
 
 	/* create my /var directory if it doesn't already exist.
 	 */
@@ -2624,6 +2668,7 @@ content_complete( void )
 {
 	time_t elapsed;
 	bool_t completepr;
+	intgen_t i;
 
 	completepr = check_complete_flags( );
 
@@ -2634,6 +2679,17 @@ content_complete( void )
 	      sc_stat_datadone );
 
 	if ( completepr ) {
+		if( sc_savequotas ) {
+			for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
+				if( quotas[i].savequotas && unlink( quotas[i].quotapath ) < 0 ) {
+					mlog( MLOG_ERROR,
+					"unable to remove %s: %s\n",
+					quotas[i].quotapath,
+					strerror ( errno ));
+				}
+			}
+		}
+
 		mlog( MLOG_VERBOSE,
 		      "dump complete"
 		      ": %u seconds elapsed"
@@ -2832,14 +2888,14 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 			if ( (!p->bs_nlink || !p->bs_mode) && p->bs_ino != 0 ) {
 				/* inode being modified, get synced data */
 				mlog( MLOG_NITTY,
-				      "ino %llu needed second bulkstat\n",
+				      "ino %llu needs second bulkstat\n",
 				      p->bs_ino );
 
                                 sbulkreq.lastip = &p->bs_ino;
                                 sbulkreq.icount = 1;
                                 sbulkreq.ubuffer = p;
                                 sbulkreq.ocount = NULL;
-                                ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &sbulkreq);
+                                ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq);
 			}
 			if ( ( p->bs_mode & S_IFMT ) != S_IFDIR ) {
 				continue;
@@ -6561,3 +6617,72 @@ check_complete_flags( void )
 	return completepr;
 }
 
+/* on linux we use xfsdq instead of repquota */
+#define REPQUOTA "xfsdq"
+
+static bool_t
+save_quotas( char *mntpnt, quota_info_t *quotainfo )
+{
+        int             sts = 0;
+        char            buf[1024] = "";
+        int             fd;
+        char            tmp;
+
+        mlog( MLOG_VERBOSE, "saving %s information for: %s\n", quotainfo->desc, mntpnt );
+
+        if( unlink( quotainfo->quotapath ) == 0 ) {
+            mlog( MLOG_WARNING, "overwriting: %s\n", quotainfo->quotapath);
+        }
+        else {
+            if( errno != ENOENT ) {
+                mlog( MLOG_ERROR,
+                      "unable to remove %s: %s\n",
+                      quotainfo->quotapath,
+                      strerror( errno ));
+                return BOOL_FALSE;
+            }
+        }
+ 
+        sprintf( buf,
+                 "%s %s %s > %s",
+                 REPQUOTA,
+                 quotainfo->repquotaargs,
+                 mntpnt,
+                 quotainfo->quotapath );
+
+        mlog( MLOG_NITTY, "saving quotas: %s\n", buf );
+
+        sts = system( buf );
+        if( sts != 0 ) {
+            mlog( MLOG_ERROR,
+                  "%s failed with exit status: %d\n", REPQUOTA, sts);
+            return BOOL_FALSE;
+        }
+        if((fd = open( quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
+            mlog( MLOG_ERROR,
+                  "open failed %s: %s\n",
+                  quotainfo->quotapath,
+                  strerror( errno ));
+            return BOOL_FALSE;
+        }
+        /* open and read dump file to ensure it is in the dump */
+        read(fd, &tmp, 1);
+        close(fd);
+        return BOOL_TRUE;
+}
+
+static int
+getxfsqstat(char *fsname)
+{
+	fs_quota_stat_t qstat;
+
+	/*
+	 * See if quotas is on. If not, nada.
+	 */
+	memset(&qstat, 0, sizeof(fs_quota_stat_t));
+	if (quotactl(QCMD(Q_XGETQSTAT, 0), fsname, 0,
+		     (caddr_t)&qstat) < 0) {
+		return (-1);
+	}
+	return ((int)qstat.qs_flags);
+}

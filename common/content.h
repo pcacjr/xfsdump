@@ -50,6 +50,7 @@
 #define CONTENT_HDR_FSTYPE_SZ	16
 #define CONTENT_STATSZ		160 /* must match dlog.h DLOG_MULTI_STATSZ */
 #define CONTENT_QUOTAFILE	"xfsdump_quotas"
+#define CONTENT_GQUOTAFILE	"xfsdump_quotas_group"
 
 struct content_hdr {
 	char ch_mntpnt[ GLOBAL_HDR_STRING_SZ ];		/* 100  100 */
@@ -75,6 +76,17 @@ struct content_hdr {
 };
 
 typedef struct content_hdr content_hdr_t;	
+
+struct quota_info {
+	char *  desc;		/* Quotas type (user, group, etc) */
+	bool_t  savequotas;	/* Quotas saved OK */
+	char *  quotafile;	/* Filename quota info is stored in */
+	char    quotapath[MAXPATHLEN]; /* Full path to quotafile */
+	char *  repquotaargs;	/* Args to repquota to create this quotafile */
+	int     statflag;	/* quota stats flag for this type */
+};
+
+typedef struct quota_info quota_info_t;
 
 
 #ifdef DUMP
