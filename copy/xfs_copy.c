@@ -1301,7 +1301,7 @@ main(int argc, char **argv)
 		btree_levels = INT_GET(ag_hdr.xfs_agf->agf_levels[XFS_BTNUM_BNOi],ARCH_CONVERT);
 
 		ag_end = XFS_AGB_TO_DADDR(mp, agno,
-				ag_hdr.xfs_agf->agf_length - 1)
+				INT_GET(ag_hdr.xfs_agf->agf_length,ARCH_CONVERT) - 1)
 				+ source_blocksize/BBSIZE;
 
 		for (;;) {
