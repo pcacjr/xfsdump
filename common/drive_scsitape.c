@@ -2602,17 +2602,17 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 		return 0;
 	}
 
-#ifdef HAVE_2WAYFMK
-	/* should be to the left of a file mark. drive status indicates
-	 * file mark whether to left or right.
-	 * THIS IS TRUE IN IRIX, BUT NOT IN LINUX !
-	 * IN LINUX, GMT_EOF only happens to the right of the filemark. 
+	/* should be to the left of a file mark. drive status
+	 * indicates file mark whether to left or right - for
+	 * TS devices !!!  LINUX ST tape driver only reports
+	 * GMT_EOF to the right of the filemark !!
 	 */
-	if ( ! IS_FMK( mtstat )) {
-		*statp = DRIVE_ERROR_DEVICE;
-		return 0;
+	if ( TS_ISDRIVER ) {
+		if ( ! IS_FMK( mtstat )) {
+			*statp = DRIVE_ERROR_DEVICE;
+			return 0;
+		}
 	}
-#endif
 
 	/* now loop, skipping media files
 	 */
@@ -2626,12 +2626,12 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 			*statp = DRIVE_ERROR_BOM;
 			return skipped + 1;
 		}
-#ifdef HAVE_2WAYFMK
-		if ( ! IS_FMK( mtstat )) {
-			*statp = DRIVE_ERROR_DEVICE;
-			return 0;
+		if ( TS_ISDRIVER ) {
+			if ( ! IS_FMK( mtstat )) {
+				*statp = DRIVE_ERROR_DEVICE;
+				return 0;
+			}
 		}
-#endif
 	}
 
 	/* finally, move to the right side of the file mark
@@ -4837,14 +4837,14 @@ quick_backup( drive_t *drivep, drive_context_t *contextp, ix_t skipcnt )
 			if ( IS_BOT( mtstat )) {
 				return 0;
 			}
-#ifdef HAVE_2WAYFMK
-			if ( ! IS_FMK( mtstat )) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      _("unable to backspace tape: "
-				      "assuming media error\n") );
-				return DRIVE_ERROR_MEDIA;
+			if ( TS_ISDRIVER ) {
+				if ( ! IS_FMK( mtstat )) {
+					mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+					      _("unable to backspace tape: "
+					      "assuming media error\n") );
+					return DRIVE_ERROR_MEDIA;
+				}
 			}
-#endif
 		} while ( skipcnt-- );
 		( void )fsf_and_verify( drivep );
 	} else {
@@ -5305,55 +5305,57 @@ bsf_and_verify( drive_t *drivep )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	ix_t try;
-        long fileno;
 	bool_t ok;
 
-	/* 
-         * Workaround for linux st driver bug.
-         * Don't do a bsf if still in the first file.
-         * Do a rewind instead because the status won't be
-         * set correctly otherwise. [TS:Oct/2000]
-         */
-	ok = mt_get_fileno( drivep, &fileno );
-	if ( ! ok ) {
-		status_failed_message( drivep );
-		return 0;
-	}
-        if (fileno == 0) { 
-		mlog( MLOG_DEBUG | MLOG_DRIVE,
-		    "In first file, do a rewind to achieve bsf\n");
- 		return rewind_and_verify( drivep );
-        }
-
-	( void )mt_op( contextp->dc_fd, MTBSF, 1 );
-#ifdef HAVE_2WAYFMK /* Can't do in LINUX as GMT_EOF never set for left of fmk */
-	for ( try = 1 ; ; try++ ) {
-		mtstat_t mtstat;
+	/* Can't do with LINUX ST driver, as GMT_EOF never set for left of fmk */
+	if ( TS_ISDRIVER ) {
+		( void )mt_op( contextp->dc_fd, MTBSFM, 1 );
+		for ( try = 1 ; ; try++ ) {
+			mtstat_t mtstat;
 		
-		ok = mt_get_status( drivep, &mtstat );
-		if ( ! ok ) {
-			mtstat = 0;
-			status_failed_message( drivep );
-			if ( try > 1 ) {
-				return 0;
+			ok = mt_get_status( drivep, &mtstat );
+			if ( ! ok ) {
+				mtstat = 0;
+				status_failed_message( drivep );
+				if ( try > 1 ) {
+					return 0;
+				}
 			}
+			if ( IS_FMK( mtstat )) {
+				return mtstat;
+			}
+			if ( IS_BOT( mtstat )) {
+				return mtstat;
+			}
+			if ( try >= MTOP_TRIES_MAX ) {
+				return mtstat;
+			}
+			sleep( 1 );
 		}
-		if ( IS_FMK( mtstat )) {
-			return mtstat;
-		}
-		if ( IS_BOT( mtstat )) {
-			return mtstat;
-		}
-		if ( try >= MTOP_TRIES_MAX ) {
-			return mtstat;
-		}
-		sleep( 1 );
-	}
-#else
-	{	
+	} else {
+		long fileno;
 		mtstat_t mtstat;
 		bool_t ok;
-		
+
+		/*
+		 * Workaround for linux st driver bug.
+		 * Don't do a bsf if still in the first file.
+		 * Do a rewind instead because the status won't be
+		 * set correctly otherwise. [TS:Oct/2000]
+		 */
+		ok = mt_get_fileno( drivep, &fileno );
+		if ( ! ok ) {
+			status_failed_message( drivep );
+			return 0;
+		}
+		if (fileno == 0) {
+			mlog( MLOG_DEBUG | MLOG_DRIVE,
+			      "In first file, do a rewind to achieve bsf\n");
+			return rewind_and_verify( drivep );
+		}
+
+		( void )mt_op( contextp->dc_fd, MTBSFM, 1 );
+
 		try = 1;
 status:		ok = mt_get_status( drivep, &mtstat );
 		if ( ! ok ) {
@@ -5368,7 +5370,6 @@ status:		ok = mt_get_status( drivep, &mtstat );
 		}
 		return mtstat;
 	}
-#endif
 	/* NOTREACHED */
 }
 

@@ -1,3 +1,7 @@
+xfsdump-2.2.13 (21 Jul 2003)
+	- fix ST/TS tape driver compatibility issues in drive_scsitape.
+	- fix multiple backups to a single tape (TS AND ST).
+
 xfsdump-2.2.12 (29 May 2003)
 	- fix up an invutil Makefile botch which was effectively
 	  disabling the optional ncurses support (interactive mode).
