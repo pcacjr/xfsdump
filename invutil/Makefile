@@ -43,7 +43,8 @@ INVINCL = \
 	inventory.h \
 	inv_priv.h
 
-INVCOMMON = 
+INVCOMMON = \
+	inv_files.c
 
 COMMON = 
 

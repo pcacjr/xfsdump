@@ -41,19 +41,20 @@
 #include "fs.h"
 #include "openutil.h"
 #include "mlog.h"
+#include "global.h"
+#include "inventory.h"
 
 #define VAR_PATH	"/var"
+#define VARLIB_PATH	VAR_PATH"/lib"
+#define XFSDUMP_PATH	VARLIB_PATH"/xfsdump"
 #define VAR_MODE	0755
 #define VAR_OWNER	0
 #define VAR_GROUP	0
 
-#define XFSDUMP_PATH	"/var/xfsdump"
-#define XFSDUMP_MODE	0755
-#define XFSDUMP_OWNER	0
-#define XFSDUMP_GROUP	0
-
-static char *var_path = VAR_PATH;
-static char *xfsdump_path = XFSDUMP_PATH;
+static char *paths[] = { VAR_PATH, VARLIB_PATH, XFSDUMP_PATH };
+#define var_path	paths[0]
+#define varlib_path	paths[1]
+#define xfsdump_path	paths[2]
 
 static void var_skip_recurse( char *, void ( * )( xfs_ino_t ));
 
@@ -61,48 +62,29 @@ void
 var_create( void )
 {
 	intgen_t rval;
+	intgen_t i;
 
 	mlog( MLOG_DEBUG,
-	      "creating directory %s\n",
-	      XFSDUMP_PATH );
+		"creating directory %s\n",
+		xfsdump_path );
 
-	/* first make /var
-	 */
-	rval = mkdir( var_path, VAR_MODE );
-	if ( rval && errno != EEXIST ) {
-		mlog( MLOG_NORMAL,
-		      "unable to create %s: %s\n",
-		      var_path,
-		      strerror( errno ));
-		return;
-	}
-	if ( rval == 0 ) {
-		rval = chown( var_path, VAR_OWNER, VAR_GROUP );
-		if ( rval ) {
+	for (i = 0 ; i < sizeof(paths)/sizeof(char *); i++) {
+		rval = mkdir( paths[i], VAR_MODE );
+		if ( rval && errno != EEXIST ) {
 			mlog( MLOG_NORMAL,
-			      "unable to chmown %s: %s\n",
-			      var_path,
+			      "unable to create %s: %s\n",
+			      paths[i],
 			      strerror( errno ));
+			return;
 		}
-	}
-
-	/* next make /var/xfsdump
-	 */
-	rval = mkdir( xfsdump_path, XFSDUMP_MODE );
-	if ( rval && errno != EEXIST ) {
-		mlog( MLOG_NORMAL,
-		      "unable to create %s: %s\n",
-		      xfsdump_path,
-		      strerror( errno ));
-		return;
-	}
-	if ( rval == 0 ) {
-		rval = chown( xfsdump_path, XFSDUMP_OWNER, XFSDUMP_GROUP );
-		if ( rval ) {
-			mlog( MLOG_NORMAL,
-			      "unable to chmown %s: %s\n",
-			      xfsdump_path,
-			      strerror( errno ));
+		if ( rval == 0 ) {
+			rval = chown( paths[i], VAR_OWNER, VAR_GROUP );
+			if ( rval ) {
+				mlog( MLOG_NORMAL,
+				      "unable to chown %s: %s\n",
+				      paths[i],
+				      strerror( errno ));
+			}
 		}
 	}
 }
@@ -116,7 +98,7 @@ var_skip( uuid_t *dumped_fsidp, void ( *cb )( xfs_ino_t ino ))
 
 	/* see if the fs uuid's match
 	 */
-	rval = fs_getid( var_path, &fsid );
+	rval = fs_getid( XFSDUMP_DIRPATH, &fsid );
 	if ( rval ) {
 #ifdef HIDDEN
                 /* NOTE: this will happen for non-XFS file systems */
@@ -124,7 +106,7 @@ var_skip( uuid_t *dumped_fsidp, void ( *cb )( xfs_ino_t ino ))
 		mlog( MLOG_NORMAL,
 		      "unable to determine uuid of fs containing %s: "
 		      "%s\n",
-		      var_path,
+		      XFSDUMP_DIRPATH,
 		      strerror( errno ));
 #endif
 		return;
@@ -137,7 +119,7 @@ var_skip( uuid_t *dumped_fsidp, void ( *cb )( xfs_ino_t ino ))
 	/* traverse the xfsdump directory, getting inode numbers of it
 	 * and all of its children, and reporting those to the callback.
 	 */
-	var_skip_recurse( xfsdump_path, cb );
+	var_skip_recurse( XFSDUMP_DIRPATH, cb );
 }
 
 static void

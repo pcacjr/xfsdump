@@ -425,6 +425,15 @@ main( int argc, char *argv[] )
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
+	/* sanity check the inventory database directory, setup global paths
+	 */
+	ok = inv_setup_base( );
+	if ( ! ok ) {
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
+		      "both /var/lib/xfsdump and /var/xfsdump exist - fatal\n");
+		return mlog_exit(EXIT_ERROR, RV_INIT);
+	}
+
 	/* if just looking for info, oblige
 	 */
 	if ( infoonly ) {

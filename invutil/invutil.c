@@ -94,6 +94,13 @@ main (int argc, char *argv[])
 	    g_programName );
 	usage();
     }
+
+    if (! inv_setup_base()) {
+	fprintf( stderr, "%s: both /var/lib/xfsdump and /var/xfsdump exist - "
+			 "this is fatal\n", g_programName );
+	exit(1);
+    }
+
     if (c_option) {
 	char *tempstr = "test";
 	time32_t temptime = 0;

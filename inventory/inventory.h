@@ -48,10 +48,9 @@
  * 
  */
 
-#define INV_DIRPATH		XFSDUMP_DIRPATH"/inventory" 
-
+#define INV_DIRPATH		inv_dirpath()
 #define INV_TOKEN_NULL 		NULL
-#define INV_FSTAB		INV_DIRPATH"/fstab"
+#define INV_FSTAB		inv_fstab()
 #define INV_INVINDEX_PREFIX     ".InvIndex"
 #define INV_STOBJ_PREFIX        ".StObj"
 
@@ -309,6 +308,21 @@ inv_delete_mediaobj( uuid_t *moid );
 
 extern bool_t
 inv_DEBUG_print( int argc, char **argv );
+
+extern intgen_t
+inv_setup_base( void );
+
+extern char *
+inv_dirpath( void );
+
+extern char *
+inv_fstab( void );
+
+extern char *
+inv_lockfile( void );
+
+extern char *
+inv_basepath( void );
 
 
 #endif /* INVENTORY_H */

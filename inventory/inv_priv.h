@@ -54,7 +54,7 @@
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-#define INV_LOCKFILE		INV_DIRPATH"/invlock"
+#define INV_LOCKFILE		inv_lockfile()
 #define INVTSESS_COOKIE		"idbsess0"
 #define INVT_STOBJ_MAXSESSIONS	5
 #define INVT_MAX_INVINDICES	-1	/* unlimited */

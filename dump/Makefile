@@ -66,6 +66,7 @@ INVINCL = \
 INVCOMMON = \
 	inv_api.c \
 	inv_core.c \
+	inv_files.c \
 	inv_fstab.c \
 	inv_idx.c \
 	inv_mgr.c \

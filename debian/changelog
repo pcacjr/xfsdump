@@ -1,3 +1,11 @@
+xfsdump (1.1.6-0) unstable; urgency=low
+
+  * New upstream release
+  * Several fixes for IA64 and 64-bit Linux platforms in general
+  * FHS compliance for xfsdump inventory directory (closes: #112566)
+
+ -- Nathan Scott <nathans@debian.org>  Wed,  3 Oct 2001 15:09:51 +1000
+
 xfsdump (1.1.3-0) unstable; urgency=low
 
   * More changes to libtool build procedure (closes: #106702)

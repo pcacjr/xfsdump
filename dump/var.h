@@ -32,7 +32,7 @@
 #ifndef VAR_H
 #define VAR_H
 
-/* var.[ch] - abstraction dealing with /var/xfsdump/
+/* var.[ch] - abstraction dealing with /var/[lib/]xfsdump/
  */
 
 extern void var_create( void );

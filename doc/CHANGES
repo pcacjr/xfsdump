@@ -1,6 +1,12 @@
-xfsdump-1.1.6 (1 October 2001)
+xfsdump-1.1.6 (03 October 2001)
 	- get rid of useless stkchk abstraction
 	  (will no longer get stack info messages with -v proc=debug)
+	- FHS compliance for inventory directory (/var/lib/xfsdump),
+	  and existing installations will continue to work as is.
+	- A future xfsdump release will have an updated xfsinvutil to
+	  allow the old directory to be migrated to the new manually,
+	  without corrupting the inventory (its one or the other only
+	  though, not both, and this is enforced by the tools)
 
 xfsdump-1.1.5 (28 September 2001)
 	- changes for ia64 (e.g. time32_t, getdents, librmt mtget changes)
@@ -50,7 +56,7 @@ xfsdump-1.0.12 (13 July 2001)
 xfsdump-1.0.11 (12 July 2001)
 	- correctly restore block and character device major numbers
 
-xfsdump-1.0.10 (5 July 2001)
+xfsdump-1.0.10 (05 July 2001)
 	- produce librmt warning messages from xfsdump/xfsrestore
           without needing to set an environment variable 
 

@@ -300,7 +300,7 @@ as the restore target and from prompting for any media change.
 Causes the \f2xfsdump\f1 inventory to be displayed
 (no restore is performed).
 Each time \f2xfsdump\f1 is used, an online inventory
-in \f2/var/xfsdump/inventory\f1 is updated.
+in \f2/var/lib/xfsdump/inventory\f1 is updated.
 This is used to determine the base for incremental dumps.
 It is also useful for manually identifying a dump session to be restored
 (see the
@@ -529,7 +529,7 @@ Dumps placed in regular files or the standard output
 do not span multiple media objects,
 nor do they contain multiple dumps.
 .SS Inventory
-Each dump session updates an inventory database in \f2/var/xfsdump/inventory\f1.
+Each dump session updates an inventory database in \f2/var/lib/xfsdump/inventory\f1.
 This database can be displayed by invoking
 .I xfsrestore
 with the
@@ -688,7 +688,7 @@ To copy the contents of a filesystem to another directory (see \f2xfsdump\f1(8))
 .EE
 .SH FILES
 .TP 25
-/var/xfsdump/inventory
+/var/lib/xfsdump/inventory
 dump inventory database
 .SH SEE ALSO
 rmt(8),

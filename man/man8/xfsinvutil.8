@@ -12,7 +12,7 @@ inconsistencies)]
 .fi
 .SH DESCRIPTION
 .I xfsdump 
-maintains an online dump inventory in \f2/var/xfsdump/inventory\f1.
+maintains an online dump inventory in \f2/var/lib/xfsdump/inventory\f1.
 The
 .B \-I
 option of xfsdump displays the inventory contents hierarchically.
@@ -70,7 +70,7 @@ will not ask any confirmation questions regarding sessions to prune.
 (It is the "Nike" option).
 .SH NOTES
 .SS Inventory
-Each dump session updates an inventory database in \f2/var/xfsdump/inventory\f1.
+Each dump session updates an inventory database in \f2/var/lib/xfsdump/inventory\f1.
 .I xfsdump
 uses the inventory to determine the base of incremental
 and resumed dumps.
@@ -88,7 +88,7 @@ The third level is media stream (currently only one stream is supported).
 The fourth level lists the media files sequentially composing the stream.
 .SH FILES
 .TP 25
-/var/xfsdump/inventory
+/var/lib/xfsdump/inventory
 dump inventory database
 .SH SEE ALSO
 xfsdump(8),

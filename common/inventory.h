@@ -46,10 +46,9 @@
  * 
  */
 
-
-#define INV_DIRPATH		"/var/xfsdump/inventory" /*"./test/invt" /*  */
+#define INV_DIRPATH		inv_dirpath()
 #define INV_TOKEN_NULL 		NULL
-#define INV_FSTAB		INV_DIRPATH"/fstab"
+#define INV_FSTAB		inv_fstab()
 #define INV_INVINDEX_PREFIX     ".InvIndex"
 #define INV_STOBJ_PREFIX        ".StObj"
 #define INV_STRLEN              128      /* length of labels, mntpts, etc */
@@ -251,5 +250,18 @@ inv_DEBUG_printallsessions(
 	inv_session_t	**ses );
 
 #endif /* ifdef DEBUG */
+
+extern intgen_t
+inv_setup_base( void );
+
+extern char *
+inv_dirpath( void );
+
+extern char *
+inv_fstab( void );
+
+extern char *
+inv_lockfile( void );
+
 
 #endif /* INVENTORY_H */

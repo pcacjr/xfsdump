@@ -664,32 +664,40 @@ intgen_t
 make_invdirectory( inv_oflag_t forwhat )
 {
 	struct stat64 st;
+	char path[PATH_MAX];
+	char *p;
 
-	if ( stat64( INV_DIRPATH, &st ) < 0 ) {
-		
-	        if ( forwhat == INV_SEARCH_ONLY || errno != ENOENT ) {
-			return -1;
-		}
+	p = strcpy( path, INV_DIRPATH );
 
-		if ( mkdir( XFSDUMP_DIRPATH, (mode_t)0755 ) < 0 ) {
-			if ( errno != EEXIST ) {
-				INV_PERROR( XFSDUMP_DIRPATH );
-				return -1;
-			}
-		}
-
-		if ( mkdir( INV_DIRPATH, (mode_t)0755 ) < 0 ) {
-			INV_PERROR( INV_DIRPATH );
-			return -1;
-		}
-
-		mlog( MLOG_VERBOSE | MLOG_INV, "%s created\n", INV_DIRPATH);
+	if ( stat64( path, &st ) == 0 )
 		return 1;
+
+	if ( forwhat == INV_SEARCH_ONLY || errno != ENOENT )
+		return -1;
+
+	do {
+		p++;
+		if ( *p == '/' ) {
+			*p = '\0';
+			if ( mkdir( path, (mode_t)0755 ) < 0 ) {
+				if ( errno != EEXIST ) {
+					INV_PERROR( path );
+					return -1;
+				}
+			}
+			*p = '/';
+		}
+	} while ( *p );
+
+	if ( mkdir( path, (mode_t)0755 ) < 0 ) {
+		if ( errno != EEXIST ) {
+			INV_PERROR( path );
+			return -1;
+		}
 	}
 
+	mlog( MLOG_VERBOSE | MLOG_INV, "%s created\n", path );
 	return 1;
-	
-
 }
 
 #ifdef NOTDEF

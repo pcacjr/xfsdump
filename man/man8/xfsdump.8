@@ -68,7 +68,7 @@ and running single threaded. Therefore, the above comments
 regarding multiple streams describe the possible future capabilities.
 .P
 .I xfsdump
-maintains an online dump inventory in \f2/var/xfsdump/inventory\f1.
+maintains an online dump inventory in \f2/var/lib/xfsdump/inventory\f1.
 The
 .B \-I
 option displays the inventory contents hierarchically.
@@ -281,7 +281,7 @@ Displays the \f2xfsdump\f1 inventory
 (no dump is performed).
 .I xfsdump
 records each dump session in an online inventory
-in \f2/var/xfsdump/inventory\f1.
+in \f2/var/lib/xfsdump/inventory\f1.
 .I xfsdump
 uses this inventory to determine the base for incremental dumps.
 It is also useful for manually identifying a dump session to be restored.
@@ -396,7 +396,7 @@ into the drive.
 The dump stream continuation is appended after the last media file
 on the new media object.
 .SS Inventory
-Each dump session updates an inventory database in \f2/var/xfsdump/inventory\f1.
+Each dump session updates an inventory database in \f2/var/lib/xfsdump/inventory\f1.
 .I xfsdump
 uses the inventory to determine the base of incremental
 and resumed dumps.
@@ -587,7 +587,7 @@ To copy the contents of a filesystem to another directory (see \f2xfsrestore\f1(
 .EE
 .SH FILES
 .TP 25
-/var/xfsdump/inventory
+/var/lib/xfsdump/inventory
 dump inventory database
 .SH SEE ALSO
 rmt(8),

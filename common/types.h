@@ -32,7 +32,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define XFSDUMP_DIRPATH "/var/xfsdump"
+#define XFSDUMP_DIRPATH	inv_basepath()
 
 /*
  * Should be, but isn't, defined in uuid/uuid.h
