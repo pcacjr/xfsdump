@@ -41,6 +41,7 @@
 #include <time.h>
 #include <handle.h>
 #include <dirent.h>
+#include <sys/ioctl.h>
 
 #include "types.h"
 #include "util.h"
@@ -2387,7 +2388,7 @@ setdirattr( dah_t dah, char *path )
 	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
 	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
 
-#ifdef F_FSSETDM
+#ifdef DMEXTATTR
 	if ( persp->p_restoredmpr ) {
 		size_t	hlen;
 		void	*hanp;
@@ -2432,7 +2433,7 @@ setdirattr( dah_t dah, char *path )
 		}
 		( void )close( fd );
 	}
-#endif /* F_FSSETDM */
+#endif /* DMEXTATTR */
 
 	utimbuf.actime = dirattr_get_atime( dah );
 	utimbuf.modtime = dirattr_get_mtime( dah );

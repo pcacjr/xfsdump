@@ -977,7 +977,9 @@ usage( void )
 	fprintf( stderr, linebuf );
 
 #ifdef DUMP
+#ifdef DMEXTATTR
 	ULO( "(dump DMF dualstate files as offline)",   GETOPT_DUMPASOFFLINE );
+#endif /* DMEXTATTR */
 	ULO( "<blocksize>",                             GETOPT_BLOCKSIZE );
 	ULO( "<media change alert program> ",		GETOPT_ALERTPROG );
 	ULO( "<destination> ...",			GETOPT_DUMPDEST );
@@ -991,9 +993,6 @@ usage( void )
 #ifdef EXTATTR
 	ULO( "(don't dump extended file attributes)",	GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
-#ifdef DMEXTATTR
-	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
-#endif /* DMEXTATTR */
 #ifdef BASED
 	ULO( "<base dump session id>",			GETOPT_BASED );
 #endif /* BASED */
@@ -1053,6 +1052,9 @@ usage( void )
 #ifdef EXTATTR
 	ULO( "(don't restore extended file attributes)",GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
+#ifdef DMEXTATTR
+	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
+#endif /* DMEXTATTR */
 #ifdef REVEAL
 	ULO( "(check tape record checksums)",		GETOPT_RECCHKSUM );
 #endif /* REVEAL */

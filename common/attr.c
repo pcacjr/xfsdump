@@ -34,6 +34,7 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 
+#include <xfs_fs.h>
 #include <handle.h>
 #include <libxfs.h>
 #include <attributes.h>
