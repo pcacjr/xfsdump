@@ -554,7 +554,7 @@ The third level is media stream (currently only one stream is supported).
 The fourth level lists the media files sequentially composing the stream.
 .P
 The following suboptions are available to filter the display.
-.TP5
+.TP 5
 \f3\-I depth=\f1\f2n\f1
 (where
 .I n
@@ -565,7 +565,7 @@ is 1, only the filesystem information from the inventory is displayed. When
 is 2, only filesystem and session information are displayed. When
 .I n
 is 3, only filesystem, session and stream information are displayed.
-.TP5
+.TP 5
 \f3\-I level=\f1\f2n\f1
 (where
 .I n
@@ -573,28 +573,28 @@ is the dump level) limits the display to dumps of that particular dump level.
 .P
 The display may be restricted to media files contained in a specific
 media object.
-.TP5
+.TP 5
 \f3\-I mobjid=\f1\f2value\f1
 (where
 .I value
 is a media ID) specifies the media object by its media ID.
-.TP5
+.TP 5
 \f3\-I mobjlabel=\f1\f2value\f1
 (where
 .I value
 is a media label) specifies the media object by its media label.
 .P
 Similarly, the display can be restricted to a specific filesystem.
-.TP5
+.TP 5
 \f3\-I mnt=\f1\f2mount_point\f1
 (that is, [hostname:]pathname), identifies the filesystem by
 mountpoint.  Specifying the hostname is optional, but may be useful
 in a clustered environment where more than one host can be responsible
 for dumping a filesystem.
-.TP5
+.TP 5
 \f3\-I fsid=\f1\f2filesystem_id\f1
 identifies the filesystem by filesystem ID.
-.TP5
+.TP 5
 \f3\-I dev=\f1\f2device_pathname\f1
 (that is, [hostname:]device_pathname) identifies the filesystem by
 device.  As with the

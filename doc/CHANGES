@@ -1,3 +1,6 @@
+xfsdump-2.2.1 (24 September 2002)
+	- minor troff-version-specific fixups for xfsrestore(8).
+
 xfsdump-2.2.0 (03 September 2002)
 	- force use of version 1 XFS geometry ioctl everywhere in xfsdump
 	  package, so that these tools can still work on older kernels
