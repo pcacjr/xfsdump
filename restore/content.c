@@ -2838,7 +2838,7 @@ applydirdump( drive_t *drivep,
 
 		char _direntbuf[ sizeof( direnthdr_t )
 				+
-				NAME_MAX
+				NAME_MAX + 1
 				+
 				DIRENTHDR_ALIGN ];
 		char *direntbuf = ALIGN_PTR(_direntbuf, DIRENTHDR_ALIGN);
@@ -2952,7 +2952,7 @@ applydirdump( drive_t *drivep,
 					break;
 				}
 				namelen = strlen( dhdrp->dh_name );
-				ASSERT( namelen < NAME_MAX );
+				ASSERT( namelen <= NAME_MAX );
 
 				/* add this dirent to the tree.
 				 */
@@ -2988,7 +2988,7 @@ eatdirdump( drive_t *drivep,
 	bool_t dhcs;
 	char _direntbuf[ sizeof( direnthdr_t )
 			+
-			NAME_MAX
+			NAME_MAX + 1
 			+
 			DIRENTHDR_ALIGN ];
 	char *direntbuf = ALIGN_PTR(_direntbuf, DIRENTHDR_ALIGN);
@@ -3070,7 +3070,7 @@ eatdirdump( drive_t *drivep,
 				break;
 			}
 			namelen = strlen( dhdrp->dh_name );
-			ASSERT( namelen < NAME_MAX );
+			ASSERT( namelen <= NAME_MAX );
 		}
 	}
 

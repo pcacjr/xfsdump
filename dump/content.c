@@ -1596,7 +1596,7 @@ baseuuidbypass:
 
 		contextp->cc_getdentsbufsz = sizeof( struct dirent )
 					       +
-					       NAME_MAX;
+					       NAME_MAX + 1;
 		if ( contextp->cc_getdentsbufsz < GETDENTSBUF_SZ_MIN ) {
 			contextp->cc_getdentsbufsz = GETDENTSBUF_SZ_MIN;
 		}
@@ -1606,7 +1606,7 @@ baseuuidbypass:
 
 		contextp->cc_mdirentbufsz = sizeof( direnthdr_t  )
 					    +
-					    NAME_MAX
+					    NAME_MAX + 1
 					    +
 					    DIRENTHDR_ALIGN;
 		contextp->cc_mdirentbufp =

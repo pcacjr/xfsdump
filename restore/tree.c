@@ -131,7 +131,7 @@ struct inter {
 	size_t i_argc;
 	char *i_argv[ INTER_ARGMAX ];
 	nh_t i_cwdh;
-	char i_name[ NAME_MAX ];
+	char i_name[ NAME_MAX + 1 ];
 };
 
 typedef struct inter inter_t;
@@ -161,7 +161,7 @@ struct tran {
 	nh_t *t_hashp;
 		/* pointer to mapped hash array (private to hash abstraction)
 		 */
-	char t_namebuf[ NAME_MAX ];
+	char t_namebuf[ NAME_MAX + 1 ];
 		/* to hold names temporarily retrieved from name registry
 		 */
 	inter_t t_inter;
@@ -3071,7 +3071,7 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 	nh_t cldh;
 	node_t *namedp;
 	char *path;
-	char nbuf[ NAME_MAX ];
+	char nbuf[ NAME_MAX + 1 ];
 	xfs_ino_t ino;
 	bool_t isdirpr;
 	bool_t isselpr;
