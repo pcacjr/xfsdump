@@ -30,47 +30,19 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = .
-HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
-
-ifeq ($(HAVE_BUILDDEFS), yes)
+TOPDIR = ..
 include $(TOPDIR)/include/builddefs
-endif
 
-CONFIGURE = configure include/builddefs
-LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
-LDIRT = config.* conftest* Logs/* built install.* install-dev.* *.gz
+CMDTARGET = xfsdq
+CFILES = xfsdq.c
+LSRCFILES = xfsrq.sh
 
-SUBDIRS = include librmt \
-	common estimate fsr inventory invutil quota dump restore \
-	man doc debian build
+default: $(CMDTARGET)
 
-default: $(CONFIGURE)
-ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
-else
-	$(SUBDIRS_MAKERULE)
-endif
-
-ifeq ($(HAVE_BUILDDEFS), yes)
 include $(BUILDRULES)
-else
-clean:	# if configure hasn't run, nothing to clean
-endif
-
-$(CONFIGURE): configure.in include/builddefs.in VERSION
-	rm -f config.cache
-	autoconf
-	./configure
 
 install: default
-	$(SUBDIRS_MAKERULE)
-	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
-
-install-dev: default
-	$(SUBDIRS_MAKERULE)
-
-realclean distclean: clean
-	rm -f $(LDIRT) $(CONFIGURE)
-	[ ! -d Logs ] || rmdir Logs
+	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(INSTALL) -m 755 xfsrq.sh $(PKG_BIN_DIR)/xfsrq
+install-dev:

@@ -1,3 +1,4 @@
+#!/bin/sh -f
 #
 # Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
 # 
@@ -30,47 +31,41 @@
 # http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
 #
 
-TOPDIR = .
-HAVE_BUILDDEFS = $(shell test -f $(TOPDIR)/include/builddefs && echo yes || echo no)
+OPTS=" -u"
+VERBOSE=false
+PATH="/bin:/usr/bin:/usr/sbin"
+USAGE="Usage: xfsrq [-guv] dumpfile"
 
-ifeq ($(HAVE_BUILDDEFS), yes)
-include $(TOPDIR)/include/builddefs
-endif
+while getopts "guv" c
+do
+	case $c in
+	g)	OPTS=" -g";;
+	u)	OPTS=" -u";;
+	v)	VERBOSE=true;;
+	\?)	echo $USAGE 1>&2
+		exit 2
+		;;
+	esac
+done
 
-CONFIGURE = configure include/builddefs
-LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
-LDIRT = config.* conftest* Logs/* built install.* install-dev.* *.gz
+[ -x /usr/bin/perl ] || "Error: cannot find /usr/bin/perl"
+[ -x /usr/bin/expr ] || "Error: cannot find /usr/bin/expr"
+[ -x /usr/sbin/setquota ] || "Error: cannot find /usr/sbin/setquota"
 
-SUBDIRS = include librmt \
-	common estimate fsr inventory invutil quota dump restore \
-	man doc debian build
-
-default: $(CONFIGURE)
-ifeq ($(HAVE_BUILDDEFS), no)
-	$(MAKE) -C . $@
-else
-	$(SUBDIRS_MAKERULE)
-endif
-
-ifeq ($(HAVE_BUILDDEFS), yes)
-include $(BUILDRULES)
-else
-clean:	# if configure hasn't run, nothing to clean
-endif
-
-$(CONFIGURE): configure.in include/builddefs.in VERSION
-	rm -f config.cache
-	autoconf
-	./configure
-
-install: default
-	$(SUBDIRS_MAKERULE)
-	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
-
-install-dev: default
-	$(SUBDIRS_MAKERULE)
-
-realclean distclean: clean
-	rm -f $(LDIRT) $(CONFIGURE)
-	[ ! -d Logs ] || rmdir Logs
+set -- extra $@
+shift $OPTIND
+case $# in
+	1)	perl -pe 's/^fs = (.*)/\1 / && chomp' < $1 | \
+		while read fs id bsoft bhard isoft ihard; do
+			[ $VERBOSE ] && echo setting quota for id=$id dev=$fs
+			# blk conversion (512 -> 1024)
+			bsoft=`expr $bsoft / 2`
+			bhard=`expr $bhard / 2`
+			setquota $OPTS -n $id $fs $bsoft $bhard $isoft $ihard
+		done
+		;;
+	*)	echo $USAGE 1>&2
+		exit 2
+		;;
+esac
+exit 0
