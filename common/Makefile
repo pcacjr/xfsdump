@@ -41,7 +41,7 @@ LSRCFILES = arch_xlate.c arch_xlate.h attr.c attr.h \
 	inventory.c inventory.h inventory_priv.c inventory_priv.h \
 	lock.c lock.h main.c media.c media.h media_rmvtape.h mlog.c mlog.h \
 	namreg.c namreg.h openutil.c openutil.h path.c path.h qlock.c qlock.h \
-	rec_hdr.h ring.c ring.h sproc.c sproc.h stkchk.c stkchk.h stream.c \
+	rec_hdr.h ring.c ring.h sproc.c sproc.h stream.c \
 	stream.h types.h util.c util.h
 
 default install install-dev :

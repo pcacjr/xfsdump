@@ -40,7 +40,6 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "stkchk.h"
 #include "types.h"
 #include "lock.h"
 #include "qlock.h"
@@ -274,6 +273,5 @@ cldmgr_entry( void *arg1 )
 	      "child %d created for stream %d\n",
 	      pid,
 	      cldp->c_streamix );
-	stkchk_register( );
 	return ( * cldp->c_entry )( cldp->c_arg1 );
 }

@@ -52,7 +52,6 @@ COMMINCL = \
 	path.h \
 	qlock.h \
 	ring.h \
-	stkchk.h \
 	stream.h \
 	types.h \
 	util.h \
@@ -91,7 +90,6 @@ COMMON = \
 	qlock.c \
 	path.c \
 	ring.c \
-	stkchk.c \
 	stream.c \
 	util.c \
 	sproc.c \

@@ -47,7 +47,6 @@
 #include <stdint.h>
 #include <sched.h>
 
-#include "stkchk.h"
 #include "exit.h"
 #include "types.h"
 #include "stream.h"
@@ -166,23 +165,6 @@ static time32_t progrpt_deadline;
 
 /* definition of locally defined global functions ****************************/
 
-#ifdef NEVER
-void
-stkplay( int level )
-{
-	intgen_t rval;
-
-	char dummy[ 4096 ];
-	mlog( MLOG_DEBUG | MLOG_PROC,
-	      "stkplay( %d )\n",
-	      level );
-	rval = stkchk( );
-	if ( rval > 1 ) {
-		return;
-	}
-	stkplay( level + 1 );
-}
-#endif /* NEVER */
 
 int
 main( int argc, char *argv[] )
@@ -483,11 +465,6 @@ main( int argc, char *argv[] )
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
-	/* initialize the stack checking abstraction
-	 */
-	stkchk_init( STREAM_SIMMAX * 2 + 1 );
-	stkchk_register( );
-
 	/* initialize the child process manager
 	 */
 	ok = cldmgr_init( );
@@ -522,10 +499,6 @@ main( int argc, char *argv[] )
 			stdoutpiped = BOOL_TRUE;
 		}
 	}
-
-#ifdef NEVER
-	stkplay( 0 );
-#endif /* NEVER */
 
 	/* announce version and instructions
 	 */

@@ -54,7 +54,6 @@ COMMINCL = \
 	rec_hdr.h \
 	ring.h \
 	sproc.h \
-	stkchk.h \
 	stream.h \
 	types.h \
 	util.h
@@ -91,7 +90,6 @@ COMMON = \
 	qlock.c \
 	ring.c \
 	sproc.c \
-	stkchk.c \
 	stream.c \
 	util.c
 

@@ -1,3 +1,7 @@
+xfsdump-1.1.6 (1 October 2001)
+	- get rid of useless stkchk abstraction
+	  (will no longer get stack info messages with -v proc=debug)
+
 xfsdump-1.1.5 (28 September 2001)
 	- changes for ia64 (e.g. time32_t, getdents, librmt mtget changes)
 	- fix dump/restore to be able to use drive_scsitape with devfs
