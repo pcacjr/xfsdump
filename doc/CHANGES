@@ -1,3 +1,11 @@
+xfsdump-1.1.0 (18 July 2001)
+	- rework package to use libtool
+	- merge fsr bug fixes from IRIX
+	- merge xfsdump phase 3 performance fixup from IRIX
+	- enable use of (shared) libhandle.so and libattr.so
+	- re-enable use of libdm.so for DMAPI support
+	- remove some more unused "common" files
+
 xfsdump-1.0.12 (13 July 2001)
 	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore 
           to remote tape drives will cause rmt debug messages to be

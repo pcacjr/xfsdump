@@ -33,17 +33,11 @@
  **************************************************************************/
 
 #include <libxfs.h>
-
-#include <sys/types.h>
-
-#include <fcntl.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <attributes.h>
+#include <handle.h>
+#include <dmapi.h>
 
 #include "hsmapi.h"
-
-/* XXX PORT */
-#ifdef HIDDEN
 
 /* This version of the HSM API currently only supports the DMF attribute
    format used in the initial release.
@@ -619,4 +613,3 @@ HsmAddNewAttribute(
 
 	return 1;
 }
-#endif

@@ -146,5 +146,5 @@ by the scsi tape driver (max_sg_segs) as mentioned above.
 TODO List
 ---------
 
-* turn on dmapi handling when dmapi supported
-* fix up running multi-threaded
+* fix up running multi-threaded (needs locking code)
+* complete the port of xfs_copy (needs locking code)

@@ -35,12 +35,11 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <utime.h>
 #include <limits.h>
 #include <time.h>
 #include <handle.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <dirent.h>
 
 #include "types.h"
@@ -2417,8 +2416,8 @@ setdirattr( dah_t dah, char *path )
 			return;
 		}
 		free_handle(hanp, hlen);
-		rval = fcntl( fd,
-			      F_FSSETDM,
+		rval = ioctl( fd,
+			      XFS_IOC_FSSETDM,
 			      ( void * )&fssetdm );
 		if ( rval ) {
 			mlog( errno == EINVAL

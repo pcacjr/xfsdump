@@ -31,6 +31,7 @@
  */
 
 #include <libxfs.h>
+#include <malloc.h>
 #include <jdm.h>
 
 #include <sys/stat.h>
@@ -100,11 +101,6 @@ static intgen_t cb_count_in_subtreelist( void *,
 					 intgen_t,
 					 xfs_bstat_t *,
 					 char * );
-static intgen_t cb_count_needed_children( void *,
-					  jdm_fshandle_t *,
-					  intgen_t,
-					  xfs_bstat_t *,
-					  char * );
 static void gdrecursearray_init( void );
 static void gdrecursearray_free( void );
 static intgen_t cb_cond_del( void *,
@@ -128,6 +124,11 @@ static intgen_t cb_startpt( void *,
 			    jdm_fshandle_t *,
 			    intgen_t,
 			    xfs_bstat_t * );
+static intgen_t supprt_prune( void *,
+			      jdm_fshandle_t *,
+			      intgen_t,
+			      xfs_bstat_t *,
+			      char * );
 static off64_t quantity2offset( jdm_fshandle_t *, xfs_bstat_t *, off64_t );
 static off64_t estimate_dump_space( xfs_bstat_t * );
 
@@ -170,6 +171,7 @@ static void mln_free( void );
 static ix_t *inomap_statphasep;
 static ix_t *inomap_statpassp;
 static size64_t *inomap_statdonep;
+static bool_t inomap_pruneneeded;
 
 /* definition of locally defined global functions ****************************/
 
@@ -201,8 +203,6 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	size_t bstatbuflen;
 	char *getdentbufp;
 	bool_t pruneneeded;
-	bool_t rescanneeded;
-	ix_t scancnt;
 	intgen_t stat;
 	void *inomap_state_contextp;
 	intgen_t rval;
@@ -216,12 +216,15 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	/* allocate a bulkstat buf
 	 */
 	bstatbuflen = BSTATBUFLEN;
-	bstatbufp = ( xfs_bstat_t * )malloc( bstatbuflen * sizeof( xfs_bstat_t ));
+	bstatbufp = ( xfs_bstat_t * )memalign( pgsz,
+					       bstatbuflen
+					       *
+					       sizeof( xfs_bstat_t ));
 	ASSERT( bstatbufp );
 
 	/* allocate a getdent buf
 	 */
-	getdentbufp = ( char * )malloc( GETDENTBUFSZ );
+	getdentbufp = ( char * )memalign( pgsz, GETDENTBUFSZ );
 	ASSERT( getdentbufp );
 
 	/* parse the subtree list, if any subtrees specified.
@@ -313,57 +316,62 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	 * occurs at least once, repeat.
 	 */
 	if ( pruneneeded || subtreecnt > 0 ) {
+		bool_t	rootdump = BOOL_FALSE;
+
 		/* setup the list of multiply-linked pruned nodes
 		 */
 		mln_init( );
 		gdrecursearray_init( );
 
-		scancnt = 0;
-		rescanneeded = BOOL_FALSE; /* not needed, keeps lint happy */
-		do {
-			scancnt++;
-			if ( scancnt <= 1 ) {
-				mlog( MLOG_VERBOSE | MLOG_INOMAP,
-				      "ino map phase 3: "
-				      "pruning unneeded subtrees\n" );
-			} else {
-				mlog( MLOG_VERBOSE | MLOG_INOMAP,
-				      "ino map phase 3: "
-				      "pass %d\n",
-				      scancnt );
-			}
-			*inomap_statdonep = 0;
-			*inomap_statpassp = scancnt;
-			*inomap_statphasep = 3;
-			rescanneeded = BOOL_FALSE;
-			stat = 0;
-			rval = bigstat_iter( fshandlep,
-					     fsfd,
-					     BIGSTAT_ITER_DIR,
-					     ( xfs_ino_t )0,
-					     cb_prune,
-					     ( void * )&rescanneeded,
-					     &stat,
-					     preemptchk,
-					     bstatbufp,
-					     bstatbuflen );
-			*inomap_statphasep = 0;
-			*inomap_statpassp = 0;
-			if ( rval ) {
-				gdrecursearray_free( );
-				free( ( void * )bstatbufp );
-				free( ( void * )getdentbufp );
-				return BOOL_FALSE;
-			}
+		mlog( MLOG_VERBOSE | MLOG_INOMAP,
+		      "ino map phase 3: "
+		      "pruning unneeded subtrees\n" );
+		*inomap_statdonep = 0;
+		*inomap_statpassp = 0;
+		*inomap_statphasep = 3;
+		stat = 0;
+		rval = bigstat_iter( fshandlep,
+				     fsfd,
+				     BIGSTAT_ITER_DIR,
+				     ( ino64_t )0,
+				     cb_prune,
+				     NULL,
+				     &stat,
+				     preemptchk,
+				     bstatbufp,
+				     bstatbuflen );
 
-			if ( preemptchk( PREEMPT_FULL )) {
-				gdrecursearray_free( );
-				free( ( void * )bstatbufp );
-				free( ( void * )getdentbufp );
-				return BOOL_FALSE;
-			}
+		if ( preemptchk( PREEMPT_FULL )) {
+			gdrecursearray_free( );
+			free( ( void * )bstatbufp );
+			free( ( void * )getdentbufp );
+			return BOOL_FALSE;
+		}
 
-		} while ( rescanneeded );
+		*inomap_statpassp = 1;
+		inomap_pruneneeded = BOOL_FALSE;
+		(void) supprt_prune( &rootdump,
+				     fshandlep,
+				     fsfd,
+				     rootstatp,
+				     NULL );
+		if (pruneneeded == BOOL_FALSE)
+			pruneneeded = inomap_pruneneeded;
+		*inomap_statphasep = 0;
+		*inomap_statpassp = 0;
+		if ( rval ) {
+			gdrecursearray_free( );
+			free( ( void * )bstatbufp );
+			free( ( void * )getdentbufp );
+			return BOOL_FALSE;
+		}
+
+		if ( preemptchk( PREEMPT_FULL )) {
+			gdrecursearray_free( );
+			free( ( void * )bstatbufp );
+			free( ( void * )getdentbufp );
+			return BOOL_FALSE;
+		}
 
 		gdrecursearray_free( );
 		mln_free( );
@@ -733,14 +741,14 @@ cb_inoresumed( xfs_ino_t ino )
 /* cb_prune -  does subtree and incremental pruning.
  * calls cb_cond_del() to do dirty work on subtrees.
  */
+/* ARGSUSED */
 static intgen_t
 cb_prune( void *arg1,
 	  jdm_fshandle_t *fshandlep,
 	  intgen_t fsfd,
 	  xfs_bstat_t *statp )
 {
-	register bool_t *rescanneededp = ( bool_t * )arg1;
-	xfs_ino_t ino = statp->bs_ino;
+	ino64_t ino = statp->bs_ino;
 
 	ASSERT( ( statp->bs_mode & S_IFMT ) == S_IFDIR );
 
@@ -768,27 +776,75 @@ cb_prune( void *arg1,
 			}
 		}
 	}
-	if ( map_get( ino ) == MAP_DIR_SUPPRT ) {
-		intgen_t n = 0;
-		intgen_t cbrval = 0;
-		( void )diriter( fshandlep,
-				 fsfd,
-				 statp,
-				 cb_count_needed_children,
-				 ( void * )&n,
-				 &cbrval,
-				 cb_getdentbufp,
-				 cb_getdentbufsz );
-		if ( n == 0 ) {
-			( void )map_set( ino, MAP_DIR_NOCHNG );
-			cb_dircnt--;
-			( *rescanneededp )++;
-		}
-	}
 
 	( *inomap_statdonep )++;
 
 	return 0;
+}
+
+
+/* supprt_prune -  does supprt directory entry pruning.
+ * recurses downward looking for modified inodes, & clears supprt
+ * (-> nochng) on the way back up after examining all descendents.
+ */
+/* ARGSUSED */
+static bool_t			/* has dump size been modified? */
+supprt_prune( void *arg1,	/* ancestors marked as changed? */
+	      jdm_fshandle_t *fshandlep,
+	      intgen_t fsfd,
+	      xfs_bstat_t *statp,
+	      char *name )
+{
+	static bool_t cbrval = BOOL_FALSE;
+	intgen_t state;
+
+	if ( ( statp->bs_mode & S_IFMT ) == S_IFDIR ) {
+		bool_t changed_below = BOOL_FALSE;
+
+		state = map_get( statp->bs_ino );
+		ASSERT( state != MAP_INO_UNUSED );
+		ASSERT( state != MAP_NDR_CHANGE );
+		ASSERT( state != MAP_NDR_NOCHNG );
+
+		( void )diriter( fshandlep,
+				 fsfd,
+				 statp,
+				 supprt_prune,
+				 (void *)&changed_below,
+				 &cbrval,
+				 NULL,
+				 0 );
+
+		if ( state == MAP_DIR_SUPPRT ) {
+			if ( changed_below == BOOL_FALSE ) {
+				map_set( statp->bs_ino, MAP_DIR_NOCHNG );
+				cb_dircnt--;	/* dump size change! */
+				inomap_pruneneeded = BOOL_TRUE;
+			}
+		}
+		else if ( state == MAP_DIR_CHANGE ) {
+			/* Directory entries back up the hierarchy must get */
+			/* dumped - as either MAP_DIR_SUPPRT/MAP_DIR_CHANGE */
+			*( bool_t * )arg1 = BOOL_TRUE;
+		}
+		return cbrval;
+	}
+
+	if ( *(bool_t *)arg1 == BOOL_TRUE ) {	/* changed, skip map_get */
+		return cbrval;
+	}
+
+	state = map_get( statp->bs_ino );
+	ASSERT( state != MAP_DIR_CHANGE );
+	ASSERT( state != MAP_DIR_NOCHNG );
+	ASSERT( state != MAP_DIR_SUPPRT );
+
+	if ( state == MAP_NDR_CHANGE ) {
+		/* Directory entries back up the hierarchy must get */
+		/* dumped - as either MAP_DIR_SUPPRT/MAP_DIR_CHANGE */
+		*( bool_t * )arg1 = BOOL_TRUE;
+	}
+	return cbrval;
 }
 
 /* cb_count_in_subtreelist - used by cb_prune() to look for possible
@@ -804,28 +860,6 @@ cb_count_in_subtreelist( void *arg1,
 {
 	if ( subtreelist_contains( statp->bs_ino )) {
 		intgen_t *np = ( intgen_t * )arg1;
-		( *np )++;
-	}
-
-	return 0;
-}
-
-/* ARGSUSED */
-static intgen_t
-cb_count_needed_children( void *arg1,
-			  jdm_fshandle_t *fshandlep,
-			  intgen_t fsfd,
-			  xfs_bstat_t *statp,
-			  char *namep )
-{
-	intgen_t state = map_get( statp->bs_ino );
-	
-	if ( state != MAP_INO_UNUSED
-	     &&
-	     state != MAP_DIR_NOCHNG
-	     &&
-	     state != MAP_NDR_NOCHNG ) {
-		register intgen_t *np = ( intgen_t * )arg1;
 		( *np )++;
 	}
 
@@ -912,7 +946,7 @@ cb_del( void *arg1,
 		oldstate = map_set( ino, MAP_DIR_NOCHNG );
 		if ( ! gdrecursearray[ recursion_level ] ) {
 			char *getdentbufp;
-			getdentbufp = ( char * )malloc( GETDENTBUFSZ );
+			getdentbufp = ( char * )memalign( pgsz, GETDENTBUFSZ );
 			ASSERT( getdentbufp );
 			gdrecursearray[ recursion_level ] = getdentbufp;
 		}
@@ -1369,6 +1403,66 @@ map_add( xfs_ino_t ino, intgen_t state )
 	tailhnkp->maxino = ino;
 	last_ino_added = ino;
 }
+
+/* for debugger work only
+void
+map_print( char *file )
+{
+	FILE  *fp;
+	hnk_t *hnkp;
+	seg_t *segp;
+	ino64_t ino;
+	intgen_t state, i, j;
+
+	fp = fopen(file, "w");
+	if (!fp)
+		abort();
+
+	for ( i = 0, hnkp = roothnkp ; hnkp != 0 ; hnkp = hnkp->nextp, i++ ) {
+		fprintf(fp, "INOMAP HUNK #%d\n", i);
+		for ( j = 0, segp = hnkp->seg;
+		      segp < hnkp->seg+SEGPERHNK ;
+		      segp++, j++ ) {
+			fprintf(fp, "SEGMENT #%d\n", j);
+			if ( hnkp == tailhnkp && segp > lastsegp )
+				break;
+			for ( ino = segp->base;
+			      ino < segp->base + INOPERSEG;
+			      ino++ ) {
+#ifdef MACROBITS
+				SEG_GET_BITS( segp, ino, state );
+#else
+				state = SEG_GET_BITS( segp, ino );
+#endif
+				fprintf(fp, "%llu", ino);
+				switch(state) {
+				case MAP_INO_UNUSED:
+					fprintf(fp, " unused");		break;
+				case MAP_DIR_NOCHNG:
+					fprintf(fp, " dir_nochng");	break;
+				case MAP_NDR_NOCHNG:
+					fprintf(fp, " ndir_nochng");	break;
+				case MAP_DIR_CHANGE:
+					fprintf(fp, " dir_change");	break;
+				case MAP_NDR_CHANGE:
+					fprintf(fp, " ndir_change");	break;
+				case MAP_DIR_SUPPRT:
+					fprintf(fp, " dir_support");	break;
+				default:
+					fprintf(fp, " UNKNOWN!(%d)", state);
+					break;
+				}
+				if (ino % 3 == 0)
+					fprintf(fp, "\n");
+				else
+					fprintf(fp, "  ");
+			}
+			fprintf(fp, "\n");
+		}
+	}
+	fclose(fp);
+}
+ */
 
 /* map_getset - locates and gets the state of the specified ino,
  * and optionally sets the state to a new value.

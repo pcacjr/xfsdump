@@ -92,6 +92,7 @@ static __int64_t	minimumfree = 2048;
 
 #define SMBUFSZ		1024
 #define ROOT		0
+#define NULLFD		-1
 #define GRABSZ		64
 #define TARGETRANGE	10
 #define	V_NONE		0
@@ -256,6 +257,13 @@ main(int argc, char **argv)
 			break;
 		case 'p':
 			npasses = atoi(optarg);
+			break;
+		case 'C':
+			/* Testing opt: coerses frag count in result */
+			if (getenv("FSRXFSTEST") != NULL) {
+				nfrags = atoi(optarg);
+				openopts |= O_SYNC;
+			}
 			break;
 		case 'V':
 			printf("%s version %s\n", progname, VERSION);
@@ -460,6 +468,7 @@ fsrallfs(int howlong, char *leftofffile)
 	char *ptr;
 	xfs_ino_t startino = 0;
 	fsdesc_t *fsp;
+	struct stat64 sb, sb2;
 	
 	fsrprintf("xfs_fsr -m %s -t %d -f %s ...\n", mtab, howlong, leftofffile);
 
@@ -467,13 +476,41 @@ fsrallfs(int howlong, char *leftofffile)
 	fs = fsbase;
 
 	/* where'd we leave off last time? */
-	fd = open(leftofffile, O_RDONLY);
-	if (fd == -1) {
-		if (errno != ENOENT)
-			fsrprintf(
-			    "open(%s, O_RDONLY) failed: %s, starting with %s\n",
-			    leftofffile, strerror(errno), *fs->dev);
-	} else {
+	if (lstat64(leftofffile, &sb) == 0) {
+		if ( (fd = open(leftofffile, O_RDONLY)) == -1 ) {
+			fsrprintf("%s: open failed\n", leftofffile);
+		}
+		else if ( fstat64(fd, &sb2) == 0) {
+			/*
+			 * Verify that lstat & fstat point to the
+			 * same regular file (no links/no quick spoofs)
+			 */
+			if ( (sb.st_dev  != sb2.st_dev) ||
+			     (sb.st_ino  != sb2.st_ino) ||
+			     ((sb.st_mode & S_IFMT) != S_IFREG) ||
+			     ((sb2.st_mode & S_IFMT) != S_IFREG) ||
+			     (sb2.st_uid  != ROOT) ||
+			     (sb2.st_nlink != 1)
+			   )
+			{
+				fsrprintf( "Can't use %s: mode=0%o own=%d"
+					" nlink=%d\n",
+					leftofffile, sb.st_mode, 
+					sb.st_uid, sb.st_nlink);
+				close(fd);
+				fd = NULLFD;
+			}
+		} 
+		else {
+			close(fd);
+			fd = NULLFD;
+		}
+	}
+	else {
+		fd = NULLFD;
+	}
+			
+	if (fd != NULLFD) {
 		if (read(fd, buf, SMBUFSZ) == -1) {
 			fs = fsbase;
 			fsrprintf("could not read %s, starting with %s\n",
@@ -496,11 +533,13 @@ fsrallfs(int howlong, char *leftofffile)
 				startpass = atoi(++ptr);
 				ptr = strchr(ptr, ' ');
 				if (ptr) {
-					startino = strtoll(++ptr, 
+					startino = strtoull(++ptr, 
 					                   (char **)NULL, 
 					                   10);
 				}
 			}
+			if (startpass < 0)
+				startpass = 0;
 
 			/* Init pass counts */
 			for (fsp = fsbase; fsp < fs; fsp++) {
@@ -548,13 +587,6 @@ fsrallfs(int howlong, char *leftofffile)
 			error = fsrfs(fs->mnt, startino, TARGETRANGE);
 			exit (error);
 			break;
-		case 'C':
-			/* Testing opt: coerses frag count in result */
-			if (getenv("FSRXFSTEST") != NULL) {
-				nfrags = atoi(optarg);
-				openopts |= O_SYNC;
-			}
-			break;
 		default:
 			wait(&error);
 			close(fd);
@@ -582,7 +614,8 @@ fsrall_cleanup(int timeout)
 	char buf[SMBUFSZ];
 
 	/* record where we left off */
-	fd = open(leftofffile, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+	unlink(leftofffile);
+	fd = open(leftofffile, O_WRONLY|O_CREAT|O_EXCL, 0644);
 	if (fd == -1)
 		fsrprintf("open(%s) failed: %s\n", 
 		          leftofffile, strerror(errno));
@@ -642,16 +675,12 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 
 	tmp_init(mntdir);
 
-	sync();
 	while (! xfs_bulkstat(fsfd, &lastino, GRABSZ, &buf[0], &buflenout)) {
 		xfs_bstat_t *p;
 		xfs_bstat_t *endp;
 
 		if (buflenout == 0 )
 			goto out0;
-                
-
-                    
 
 		/* Each loop through, defrag targetrange percent of the files */
 		count = (buflenout * targetrange) / 100;
@@ -976,7 +1005,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	int 		ct, wc, wc_b4;
 	struct fsxattr  tfsx;
 	char		ffname[SMBUFSZ];
-	int		ffd = 0;
+	int		ffd = -1;
 
 	/*
 	 * Work out the extent map - nextents will be set to the
@@ -1021,7 +1050,6 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		close(tfd);
 		return -1;
 	}
-
 	if (do_rt) {
 		int rt_textsize = fsgeom.rtextsize * fsgeom.blocksize;
 
@@ -1167,7 +1195,8 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			if (nfrags) {
 				/* Do a matching write to the tmp file */
 				wc = wc_b4;
-				if (((wc = write(ffd, fbuf, wc)) != wc_b4)) {						fsrprintf("bad write of %d bytes "
+				if (((wc = write(ffd, fbuf, wc)) != wc_b4)) {
+					fsrprintf("bad write of %d bytes "
 						  "to %s: %s\n",
 					   wc_b4, ffname, strerror(errno));
 				}
@@ -1175,7 +1204,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		}
 	}
 	ftruncate64(tfd, statp->bs_size);
-	if (ffd) close(ffd);
+	if (ffd > 0) close(ffd);
 	fsync(tfd);
 
 	free(fbuf);
@@ -1373,7 +1402,7 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 /*
  * Read the block map and return the number of extents.
  */
-static int 
+int 
 getnextents(int fd)
 {
 	int		nextents;
@@ -1395,6 +1424,7 @@ getnextents(int fd)
 
 		nextents += map[0].bmv_entries;
 	} while (map[0].bmv_entries == (MAPSIZE-1));
+
 	return(nextents);
 }
 

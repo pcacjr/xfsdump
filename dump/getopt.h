@@ -58,6 +58,7 @@
 #define	GETOPT_NOEXTATTR	'A'	/* do not dump ext. file attributes */
 #define	GETOPT_BASED		'B'	/* specify session to base increment */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */
+#define GETOPT_SETDM		'D'
 #define	GETOPT_ERASE		'E'	/* pre-erase media */
 #define GETOPT_FORCE		'F'	/* don't prompt (getopt.c) */
 #define GETOPT_MINSTACKSZ	'G'	/* minimum stack size (bytes) */

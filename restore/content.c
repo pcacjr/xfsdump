@@ -45,7 +45,8 @@
 #include <attributes.h>
 #endif /* EXTATTR */
 #ifdef DMEXTATTR /* also see F_FSSETDM */
-#include <xfs_dmapi.h>
+#include <dmapi.h>
+#define DMATTR_PREFIXSTRING "SGI_DMI_"
 #endif /* DMEXTATTR */
 #include <handle.h>
 #include <time.h>
@@ -7257,8 +7258,8 @@ restore_reg( drive_t *drivep,
 					fssetdm.fsd_padding = 0;
 					fssetdm.fsd_dmstate =
 						bstatp->bs_dmstate;
-					rval = fcntl( fd,
-						      F_FSSETDM,
+					rval = ioctl( fd,
+						      XFS_IOC_FSSETDM,
 						      ( void * )
 						      &fssetdm );
 					if ( rval ) {
@@ -9331,6 +9332,8 @@ do_fssetdm_by_handle(
 	void		*hanp;
 	size_t		hlen;
 	int		rc;
+	int		fsfd;
+	xfs_fsop_setdm_handlereq_t setdm_hreq;
 
 	if (path_to_handle(path, &hanp, &hlen)) {
 		mlog( MLOG_NORMAL | MLOG_WARNING,
@@ -9339,7 +9342,22 @@ do_fssetdm_by_handle(
 		return -1;
 	}
 
-	rc = fssetdm_by_handle(hanp, hlen, fdmp);
+	if ((fsfd = handle_to_fsfd(hanp)) < 0) {
+		free_handle(hanp, hlen);
+		errno = EBADF;
+		return -1;
+	}
+
+	setdm_hreq.hreq.fd       = 0;
+	setdm_hreq.hreq.path     = NULL;
+	setdm_hreq.hreq.oflags   = 0;
+	setdm_hreq.hreq.ihandle  = hanp;
+	setdm_hreq.hreq.ihandlen = hlen;
+	setdm_hreq.hreq.ohandle  = NULL;
+	setdm_hreq.hreq.ohandlen = NULL;
+	setdm_hreq.data          = *fdmp;
+
+	rc = ioctl(fsfd, XFS_IOC_FSSETDM_BY_HANDLE, &setdm_hreq);
 	free_handle(hanp, hlen);
 	if (rc) {
 		mlog( MLOG_NORMAL | MLOG_WARNING,

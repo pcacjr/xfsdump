@@ -33,8 +33,6 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LIBRMT = $(TOPDIR)/librmt/librmt.a
-
 COMMINCL = \
 	arch_xlate.h \
 	cldmgr.h \
@@ -101,36 +99,36 @@ COMMON = \
 
 LOCALS = \
 	content.c \
+	hsmapi.c \
 	inomap.c \
 	var.c
 
-#LOCALS += hsmapi.c
-#LOCALINCL += hsmapi.h
-
 LOCALINCL = \
 	getopt.h \
+	hsmapi.h \
 	inomap.h \
 	var.h
 
-CMDTARGET = xfsdump
-CMDDEPS = $(LIBHANDLE) $(LIBATTR)
+LTCOMMAND = xfsdump
 
 CFILES = $(COMMON) $(INVCOMMON) $(LOCALS)
 HFILES = $(LOCALINCL)
 LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
-LLDLIBS = $(LIBHANDLE) $(LIBUUID) $(LIBRMT) $(LIBATTR)
+LLDLIBS = $(LIBUUID) $(LIBRMT) $(LIBHANDLE) $(LIBATTR) $(LIBDM)
+LTDEPENDENCIES = $(LIBRMT)
+LLDFLAGS = -static
 
-LCFLAGS = -DDUMP -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX -DEXTATTR
-#LCFLAGS += -DDMEXTATTR
+LCFLAGS = -DDUMP -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST \
+	-DPIPEINVFIX -DEXTATTR -DDMEXTATTR
 
-default: $(LINKS) $(CMDTARGET)
+default: $(LINKS) $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 install-dev:
 
 $(COMMINCL) $(COMMON):

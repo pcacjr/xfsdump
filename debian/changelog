@@ -1,3 +1,11 @@
+xfsdump (1.1.0-0) unstable; urgency=low
+
+  * Reworked package slightly so that its not Debian native
+  * Debian-specific changes now documented in changelog.Debian.gz
+  * New upstream release (see /usr/share/doc/xfsdump/changelog.gz)
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 18 Jul 2001 15:57:04 +1000
+
 xfsdump (1.0.9) unstable; urgency=low
 
   * Correctly [xfs]restore the suid and guid mode bits

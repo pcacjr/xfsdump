@@ -32,12 +32,11 @@
 
 #define ustat __kernel_ustat
 #include <libxfs.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
 #undef ustat
 #include <sys/ustat.h>
+#include <sys/ioctl.h>
 
 #include "locks.h"
 
@@ -780,8 +779,8 @@ main(int argc, char **argv)
 
 		/* set direct i/o parameters */
 
-		if (fcntl(source_fd, F_DIOINFO, &d_info) < 0)  {
-			fprintf(logerr, "%s: fcntl on file \"%s\" failed.\n",
+		if (ioctl(source_fd, XFS_IOC_DIOINFO, &d_info) < 0)  {
+			fprintf(logerr, "%s: ioctl on file \"%s\" failed.\n",
 				progname, source_name);
 			do_error("Aborting XFS copy - reason");
 			exit(1);
@@ -1100,9 +1099,9 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		}
 
 		if (write_last_block)  {
-			if (fcntl(target_fds[0], F_DIOINFO, &d_info) < 0)  {
+			if (ioctl(target_fds[0], XFS_IOC_DIOINFO, &d_info) < 0)  {
 				fprintf(logerr,
-				"%s:  fcntl on file \"%s\" failed.\n",
+				"%s:  ioctl on file \"%s\" failed.\n",
 					progname, target_names[0]);
 				do_error("Aborting XFS copy - reason");
 				exit(1);

@@ -33,16 +33,16 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = xfsdq
+LTCOMMAND = xfsdq
 CFILES = xfsdq.c
 LSRCFILES = xfsrq.sh
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
 	$(INSTALL) -m 755 xfsrq.sh $(PKG_BIN_DIR)/xfsrq
 install-dev:

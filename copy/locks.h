@@ -36,17 +36,18 @@
 #define US_SHAREDONLY	0	/* TODO - port to pthreads */
 #define CONF_INITUSERS	0	/* TODO - port to pthreads */
 #define PR_SALL		0	/* TODO - port to pthreads */
-#define F_DIOINFO	0	/* TODO - port to Linux */
 
 /* TODO - port to pthreads... */
-static inline usptr_t *usinit (const char *f)	{ ASSERT(0); }
-static inline int uspsema (usema_t *sema)	{ ASSERT(0); }
-static inline int usvsema (usema_t *sema)	{ ASSERT(0); }
-static inline pid_t wait (int *statptr)		{ ASSERT(0); }
-static inline int usconfig (int cmd, ...)	{ ASSERT(0); }
-static inline usema_t *usnewsema (usptr_t *handle, int val)	{ ASSERT(0); }
+static inline usptr_t *usinit (const char *f)	{ ASSERT(0); return NULL; }
+static inline int uspsema (usema_t *sema)	{ ASSERT(0); return 0; }
+static inline int usvsema (usema_t *sema)	{ ASSERT(0); return 0; }
+static inline pid_t wait (int *statptr)		{ ASSERT(0); return 0; }
+static inline int usconfig (int cmd, ...)	{ ASSERT(0); return 0; }
+static inline usema_t *usnewsema (usptr_t *handle, int val)	\
+						{ ASSERT(0); return NULL; }
 static inline pid_t sprocsp (void (*entry) (void *, size_t),
-	uint inh, void *arg, char *sp, size_t len)		{ ASSERT(0); }
+	uint inh, void *arg, char *sp, size_t len)		\
+						{ ASSERT(0); return 0; }
 
 
 #define ACTIVE		1

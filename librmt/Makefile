@@ -39,7 +39,11 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-STATICLIBTARGET = librmt.a
+LTLIBRARY = librmt.la
+LT_CURRENT = 0
+LT_REVISION = 0
+LT_AGE = 0
+
 HFILES = rmtlib.h
 CFILES = \
     isrmt.c      rmtclose.c    rmtdev.c    rmtisatty.c  rmtread.c   \
@@ -47,7 +51,7 @@ CFILES = \
     rmtaccess.c  rmtcreat.c    rmtioctl.c  rmtopen.c    rmtwrite.c \
     rmtmsg.c
 
-default: $(STATICLIBTARGET)
+default: $(LTLIBRARY)
 
 include $(BUILDRULES)
 

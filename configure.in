@@ -35,7 +35,7 @@ pkg_release=$PKG_BUILD
 AC_SUBST(pkg_version)
 AC_SUBST(pkg_release)
 
-pkg_distribution="SGI ProPack"
+pkg_distribution="SGI XFS"
 test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
 AC_SUBST(pkg_distribution)
 
@@ -98,6 +98,24 @@ test -z "$ECHO" && AC_PATH_PROG(ECHO, echo, /bin/echo)
 echo=$ECHO
 AC_SUBST(echo)
 
+dnl ensure libtool is installed
+AC_PATH_PROG(LIBTOOL, libtool,,/usr/bin)
+if test "$LIBTOOL" = ""; then
+	echo
+	echo 'FATAL ERROR: libtool does not seem to be installed.'
+	echo $pkg_name cannot be built without a working libtool installation.
+	exit 1
+fi
+libtool=$LIBTOOL
+AC_SUBST(libtool)
+
+dnl libtool to build libraries static only?
+AC_ARG_ENABLE(enable_shared,
+	[ --enable-shared=[yes/no]	Enable use of shared libraries [default=yes].],
+	,
+	enable_shared=yes)
+AC_SUBST(enable_shared)
+
 CPPFLAGS="-I/usr/include/xfs"
 AC_SUBST(CPPFLAGS)
 
@@ -156,6 +174,22 @@ AC_TRY_LINK([#include <libxfs.h>], [int x = IRIX_MKDEV(0,0)], [echo ok], [
 	exit 1
 ])
 
+dnl Checks for the DMAPI library
+AC_CHECK_HEADER(xfs/dmapi.h,, [
+	echo
+	echo 'FATAL ERROR: could not find a valid DMAPI library header.'
+	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
+	exit 1
+])
+AC_CHECK_LIB(dm, dm_make_handle,, [
+	echo
+	echo 'FATAL ERROR: could not find a valid DMAPI base library.'
+	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
+	exit 1
+])
+libdm="-ldm"
+AC_SUBST(libdm)
+
 dnl Checks for Extended Attributes header and library.
 AC_CHECK_HEADER(attr/attributes.h,, [
 	echo
@@ -169,7 +203,7 @@ AC_CHECK_LIB(attr, attr_get,, [
 	echo 'Install either the attr-devel (rpm) or the attr-dev (deb) package.'
 	exit 1
 ])
-libattr="/usr/lib/libattr.a"
+libattr="-lattr"
 AC_SUBST(libattr)
 
 

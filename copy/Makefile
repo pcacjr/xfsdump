@@ -33,17 +33,22 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-CMDTARGET = xfs_copy
+LTCOMMAND = xfs_copy
 
 CFILES = xfs_copy.c locks.c
 HFILES = locks.h
 LLDLIBS = $(LIBXFS) $(LIBUUID)
+LTDEPENDENCIES = $(LIBXFS)
 
-default: $(CMDTARGET)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
+#install: default
+# Locking code needs to be ported!  (it compiles but doesn't work)
+# Once that's done, uncomment these two lines:
+#	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
+#	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+
 install: default
-	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(INSTALL) -m 755 $(CMDTARGET) $(PKG_BIN_DIR)
-install-dev:
+install-dev: default

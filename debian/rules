@@ -5,22 +5,28 @@ package=xfsdump
 dirtmp = debian/tmp
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 stdenv = GZIP=-q; export GZIP;
+
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
 checkdir = test -f debian/rules
 
 build: built
-built:
+built: config
 	@echo "== dpkg-buildpackage: build" 1>&2
+	$(MAKE) default
+	touch built
+
+config: .census
+.census:
+	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
 	autoconf
 	$(options) ./configure
-	$(MAKE) default
-	touch built
+	touch .census
 
 clean:
 	@echo "== dpkg-buildpackage: clean" 1>&2
 	$(checkdir)
-	-rm -f built
+	-rm -f built .census
 	$(MAKE) distclean
 	-rm -rf $(dirtmp) debian/*substvars debian/files*
 
@@ -29,15 +35,15 @@ binary-indep:
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
-	-rm -rf $(dirtmp) $(dirdev)
+	-rm -rf $(dirtmp)
 	$(pkgtmp) $(MAKE) -C . install
 	$(pkgtmp) $(MAKE) -C build src-manifest
 	@echo "== dpkg-buildpackage: debstd" 1>&2
 	$(stdenv) debstd -m
-	dpkg-gencontrol -isp -p$(package)
+	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
 	chown -R root.root $(dirtmp)
 	chmod -R go=rX $(dirtmp)
-	dpkg --build $(dirtmp) ..
+	dpkg --build $(dirtmp) .. 
 
 binary: binary-indep binary-arch
 
