@@ -59,13 +59,7 @@ unsigned int	source_sectorsize;	/* source disk sectorsize */
 xfs_agblock_t	first_agbno;
 
 unsigned int	num_targets;
-char		**target_names;
-int		*target_fds;
-xfs_off_t	*target_positions;
-pthread_t	*target_pids;
-int		*target_states;
-int		*target_errors;
-int		*target_err_types;
+target_control	*target;
 
 wbuf		w_buf;
 wbuf		btree_buf;
@@ -148,18 +142,18 @@ check_errors(void)
 	/* now check for errors */
 
 	for (i = 0; i < num_targets; i++)  {
-		if (target_states[i] == INACTIVE)  {
+		if (target[i].state == INACTIVE)  {
 			if (first_error == 0)  {
 				first_error++;
 				do_log(
 				_("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
 			}
-			do_log("    %s -- ", target_names[i]);
-			if (target_err_types[i] == 0)
+			do_log("    %s -- ", target[i].name);
+			if (target[i].err_type == 0)
 				do_log(_("write error"));
 			else
 				do_log(_("lseek64 error"));
-			do_log(_(" at offset %lld\n"), target_positions[i]);
+			do_log(_(" at offset %lld\n"), target[i].position);
 		}
 	}
 	if (first_error == 0)  {
@@ -187,18 +181,18 @@ begin_reader(void *arg)
 		pthread_mutex_lock(&args->wait);
 
 		/* write */
-		if (target_positions[args->id] != w_buf.position)  {
+		if (target[args->id].position != w_buf.position)  {
 			if (lseek64(args->fd, w_buf.position, SEEK_SET) < 0)  {
 				error = 1;
-				target_err_types[args->id] = 1;
+				target[args->id].err_type = 1;
 			} else  {
-				target_positions[args->id] = w_buf.position;
+				target[args->id].position = w_buf.position;
 			}
 		}
 
-		if ((res = write(target_fds[args->id], w_buf.data,
+		if ((res = write(target[args->id].fd, w_buf.data,
 				w_buf.length)) == w_buf.length)  {
-			target_positions[args->id] += res;
+			target[args->id].position += res;
 		} else  {
 			error = 2;
 		}
@@ -217,11 +211,11 @@ begin_reader(void *arg)
 handle_error:
 	/* error will be logged by primary thread */
 
-	target_errors[args->id] = errno;
-	target_positions[args->id] = w_buf.position;
+	target[args->id].error = errno;
+	target[args->id].position = w_buf.position;
 
 	pthread_mutex_lock(&glob_masks.mutex);
-	target_states[args->id] = INACTIVE;
+	target[args->id].state = INACTIVE;
 	if (--glob_masks.num_working == 0)
 		pthread_mutex_unlock(&mainwait);
 	pthread_mutex_unlock(&glob_masks.mutex);
@@ -239,9 +233,9 @@ killall(void)
 		return;
 
 	for (i = 0; i < num_targets; i++)  {
-		if (target_states[i] == ACTIVE)  {
+		if (target[i].state == ACTIVE)  {
 			/* kill up target threads */
-			pthread_kill(target_pids[i], SIGKILL);
+			pthread_kill(target[i].pid, SIGKILL);
 			pthread_mutex_unlock(&targ[i].wait);
 		}
 	}
@@ -258,23 +252,23 @@ handler()
 	kids--;
 
 	for (i = 0; i < num_targets; i++)  {
-		if (target_pids[i] == pid)  {
-			if (target_states[i] == INACTIVE)  {
+		if (target[i].pid == pid)  {
+			if (target[i].state == INACTIVE)  {
 				/* thread got an I/O error */
 
-				if (target_err_types[i] == 0)  {
+				if (target[i].err_type == 0)  {
 					do_warn(
 		_("%s:  write error on target %d \"%s\" at offset %lld\n"),
-						progname, i, target_names[i],
-						target_positions[i]);
+						progname, i, target[i].name,
+						target[i].position);
 				} else  {
 					do_warn(
 		_("%s:  lseek64 error on target %d \"%s\" at offset %lld\n"),
-						progname, i, target_names[i],
-						target_positions[i]);
+						progname, i, target[i].name,
+						target[i].position);
 				}
 
-				do_vfatal(target_errors[i],
+				do_vfatal(target[i].error,
 					_("Aborting target %d - reason"), i);
 
 				if (kids == 0)  {
@@ -291,12 +285,12 @@ handler()
 
 				do_warn(
 	_("%s:  thread %d died unexpectedly, target \"%s\" incomplete\n"),
-					progname, i, target_names[i]);
+					progname, i, target[i].name);
 
 				do_warn(
 					_("%s:  offset was probably %lld\n"),
-					progname, target_positions[i]);
-				do_fatal(target_errors[i],
+					progname, target[i].position);
+				do_fatal(target[i].error,
 					_("Aborting XFS copy - reason"));
 				pthread_exit(NULL);
 			}
@@ -460,24 +454,17 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 void
 write_wbuf(void)
 {
-	int i;
+	int		i;
 
 	/* verify target threads */
-
-	for (i = 0; i < num_targets; i++)  {
-		if (target_states[i] != INACTIVE)  {
+	for (i = 0; i < num_targets; i++)
+		if (target[i].state != INACTIVE)
 			glob_masks.num_working++;
-		}
-	}
 
 	/* release target threads */
-
-	for (i = 0; i < num_targets; i++)  {
-		if (target_states[i] != INACTIVE)  {
-			/* wake up target threads */
-			pthread_mutex_unlock(&targ[i].wait);
-		}
-	}
+	for (i = 0; i < num_targets; i++)
+		if (target[i].state != INACTIVE)
+			pthread_mutex_unlock(&targ[i].wait);	/* wake up */
 
 	sigrelse(SIGCLD);
 	pthread_mutex_lock(&mainwait);
@@ -552,11 +539,9 @@ main(int argc, char **argv)
 	if (argc - optind < 2)
 		usage();
 
-	/* open up log file */
-
-	if (logfile_name)
+	if (logfile_name)  {
 		logfd = open(logfile_name, O_CREAT|O_WRONLY|O_EXCL, 0600);
-	else  {
+	} else  {
 		logfile_name = LOGFILE_NAME;
 		logfd = mkstemp(logfile_name);
 	}
@@ -579,55 +564,18 @@ main(int argc, char **argv)
 	source_fd = -1;
 	optind++;
 
-	/* set up fd and name array */
-
 	num_targets = argc - optind;
-
-	if ((target_names = malloc(sizeof(char *)*num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target name array\n"));
+	if ((target = malloc(sizeof(target_control) * num_targets)) == NULL)  {
+		do_log(_("Couldn't allocate target array\n"));
 		die_perror();
 	}
-
-	if ((target_positions = malloc(sizeof(xfs_off_t)*num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target position array\n"));
-		die_perror();
-	}
-
-	if ((target_pids = malloc(sizeof(pthread_t) * num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target pid array\n"));
-		die_perror();
-	}
-
-	if ((target_states = malloc(sizeof(int) * num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target state array\n"));
-		die_perror();
-	}
-
-	if ((target_errors = malloc(sizeof(int) * num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target errno array\n"));
-		die_perror();
-	}
-
-	if ((target_err_types = malloc(sizeof(int) * num_targets)) == NULL)  {
-		do_log(_("Couldn't allocate target error type array\n"));
-		die_perror();
-	}
-
-	for (i = 0; i < num_targets; i++)  {
-		target_positions[i] = -1;
-		target_states[i] = INACTIVE;
-		target_errors[i] = 0;
-		target_err_types[i] = 0;
-	}
-
-	if ((target_fds = malloc(sizeof(int)*num_targets)) == NULL)  {
-		do_log(_("%s: couldn't malloc target fd array\n"), progname);
-		die_perror();
-	}
-
 	for (i = 0; optind < argc; i++, optind++)  {
-		target_names[i] = argv[optind];
-		target_fds[i] = -1;
+		target[i].name = argv[optind];
+		target[i].fd = -1;
+		target[i].position = -1;
+		target[i].state = INACTIVE;
+		target[i].error = 0;
+		target[i].err_type = 0;
 	}
 
 	parent_pid = getpid();
@@ -672,7 +620,7 @@ main(int argc, char **argv)
 		wbuf_size = d.d_maxiosz;
 		wbuf_miniosize = d.d_miniosz;
 	} else  {
-		/* set arbitrary i/o params, miniosize at least 1 disk block */
+		/* set arbitrary I/O params, miniosize at least 1 disk block */
 
 		wbuf_align = 4096*4;
 		wbuf_size = 1024 * 4000;
@@ -781,10 +729,10 @@ main(int argc, char **argv)
 	for (i = 0; i < num_targets; i++)  {
 		int	write_last_block = 0;
 
-		if (stat64(target_names[i], &statbuf) < 0)  {
+		if (stat64(target[i].name, &statbuf) < 0)  {
 			/* ok, assume it's a file and create it */
 
-			do_out(_("Creating file %s\n"), target_names[i]);
+			do_out(_("Creating file %s\n"), target[i].name);
 
 			open_flags |= O_CREAT;
 			if (!buffered_output)
@@ -805,31 +753,31 @@ main(int argc, char **argv)
 					"on target device \"%s\".\n"
 					"%s cannot copy to mounted filesystems."
 					"  Aborting\n"),
-					progname, target_names[i], progname);
+					progname, target[i].name, progname);
 				exit(1);
 			}
 		}
 
-		target_fds[i] = open(target_names[i], open_flags, 0644);
-		if (target_fds[i] < 0)  {
+		target[i].fd = open(target[i].name, open_flags, 0644);
+		if (target[i].fd < 0)  {
 			do_log(_("%s:  couldn't open target \"%s\"\n"),
-				progname, target_names[i]);
+				progname, target[i].name);
 			die_perror();
 		}
 
 		if (write_last_block)  {
 			/* ensure regular files are correctly sized */
 
-			if (ftruncate64(target_fds[i], mp->m_sb.sb_dblocks *
+			if (ftruncate64(target[i].fd, mp->m_sb.sb_dblocks *
 						source_blocksize))  {
 				do_log(_("%s:  cannot grow data section.\n"),
 					progname);
 				die_perror();
 			}
-			if (xfsctl(target_names[i], target_fds[i],
+			if (xfsctl(target[i].name, target[i].fd,
 						XFS_IOC_DIOINFO, &d) < 0)  {
 				do_log(_("%s:  xfsctl on \"%s\" failed.\n"),
-					progname, target_names[i]);
+					progname, target[i].name);
 				die_perror();
 			}
 		} else  {
@@ -837,13 +785,13 @@ main(int argc, char **argv)
 
 			/* ensure device files are sufficiently large */
 
-			if (pwrite64(target_fds[i], buf, sizeof(buf),
+			if (pwrite64(target[i].fd, buf, sizeof(buf),
 				     (mp->m_sb.sb_dblocks * source_blocksize)
 					- sizeof(buf)))  {
 				do_log(_("%s:  failed to write last block\n"),
 					progname);
 				do_log(_("\tIs target \"%s\" too small?\n"),
-					target_names[i]);
+					target[i].name);
 				die_perror();
 			}
 		}
@@ -909,12 +857,12 @@ main(int argc, char **argv)
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
 		tcarg->id = i;
-		tcarg->fd = target_fds[i];
+		tcarg->fd = target[i].fd;
 
-		target_states[i] = ACTIVE;
+		target[i].state = ACTIVE;
 		num_threads++;
 
-		if (pthread_create(&target_pids[i], NULL,
+		if (pthread_create(&target[i].pid, NULL,
 					begin_reader, (void *)tcarg))  {
 			do_log(_("Error creating thread for target %d\n"), i);
 			die_perror();
@@ -1183,7 +1131,7 @@ main(int argc, char **argv)
 
 		snprintf(command, sizeof(command),
 			"%s -x -c 'uuid rewrite' %s >/dev/null 2>&1\n",
-			"/usr/sbin/xfs_db", target_names[i]);
+			"/usr/sbin/xfs_db", target[i].name);
 		system(command);
 	}
 

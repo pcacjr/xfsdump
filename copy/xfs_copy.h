@@ -88,3 +88,13 @@ typedef int thread_id;
 typedef int tm_index;			/* index into thread mask array */
 typedef __uint32_t thread_mask;		/* a thread mask */
 
+typedef struct {
+	char		*name;
+	int		fd;
+	xfs_off_t	position;
+	pthread_t	pid;
+	int		state;
+	int		error;
+	int		err_type;
+} target_control;
+
