@@ -144,6 +144,5 @@ by the scsi tape driver (max_sg_segs) as mentioned above.
 TODO List
 ---------
 
-* turn on attribute handling when attributes supported
 * turn on dmapi handling when dmapi supported
 * fix up running multi-threaded
