@@ -3552,14 +3552,15 @@ dump_extattr_list( drive_t *drivep,
 				if ( opp->am_error ) {
 					if ( opp->am_error == ENOATTR &&
 					     flag & ATTR_SECURE ) {
-						/* Security attributes are supported by
-						 * the kernel but jdm_attr_multi() returns
-						 * ENOATTR for every 'user' space attribute
-						 * during the 'security' pass of the extended
-						 * attribute loop (pass==3).  Suppress the
-						 * following error message with a no-op. The
-						 * jdm_attr_multi() problem is fixed in mod
-						 * xfs-linux:xfs-kern:167038a (PV 907903).
+				/* Security attributes are supported by
+				 * the kernel but jdm_attr_multi() returns
+				 * ENOATTR for every 'user' space attribute
+				 * during the 'security' pass of the extended
+				 * attribute loop (pass==3).  Suppress the
+				 * following error message with a no-op. The
+				 * jdm_attr_multi() problem is fixed in mod
+				 * xfs-linux:xfs-kern:167038a (PV 907903).
+				 */
 						continue;
 					}
 					mlog( MLOG_NORMAL | MLOG_WARNING, _(
