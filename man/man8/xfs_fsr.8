@@ -153,3 +153,20 @@ See the
 .IR fstab (5)
 reference page for
 more details.
+.PP
+In general we do not foresee the need to run
+.I xfs_fsr
+on system partitions such as
+.IR / ,
+.I /boot
+and
+.I /usr
+as in general these will not suffer from fragmentation.
+There are also issues with defragmenting files
+.IR lilo (8)
+uses to boot your system.
+Should these files be moved by
+.I xfs_fsr
+then you must rerun
+.I lilo
+before you reboot or you may have an unbootable system.
