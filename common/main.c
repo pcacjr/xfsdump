@@ -934,9 +934,12 @@ main( int argc, char *argv[] )
 		( void )content_complete( );
 		exitcode = EXIT_ERROR;
 	} else {
-		if ( content_complete( ) )
-			exitcode = EXIT_NORMAL;
-		else {
+		if ( content_complete( ) ) {
+			if (prbcld_xc != EXIT_NORMAL)
+				exitcode = EXIT_ERROR;
+			else
+				exitcode = EXIT_NORMAL;
+		} else {
 			exitcode = EXIT_INTERRUPT;
 			if ( mlog_get_hint() == RV_NONE )
 				mlog_exit_hint(RV_INCOMPLETE);
