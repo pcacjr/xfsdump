@@ -255,7 +255,7 @@ typedef struct link_iter_context link_iter_context_t;
 extern void usage( void );
 extern size_t pgsz;
 extern size_t pgmask;
-
+extern bool_t restore_rootdir_permissions;
 
 /* forward declarations of locally defined static functions ******************/
 
@@ -2353,7 +2353,17 @@ bool_t
 tree_setattr( char *path )
 {
 	bool_t ok;
+	node_t *rootp;
+
 	ok = tree_setattr_recurse( persp->p_rooth, path );
+
+	if ( restore_rootdir_permissions && ok ) {
+		rootp = Node_map( persp->p_rooth );
+		/* "." is cwd which is the destination dir */
+		setdirattr( rootp->n_dah, "." );
+		Node_unmap( persp->p_rooth, &rootp );
+	}
+
 	return ok;
 }
 

@@ -1054,6 +1054,7 @@ usage( void )
 #ifdef EXTATTR
 	ULO( "(don't restore extended file attributes)",GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
+	ULO( "(restore root dir owner/permissions)",	GETOPT_ROOTPERM );
 #ifdef DMEXTATTR
 	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
 #endif /* DMEXTATTR */

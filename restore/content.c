@@ -818,6 +818,7 @@ static int quotafilecheck(char *type, char *dstdir, char *quotafile);
 /* definition of locally defined global variables ****************************/
 
 bool_t content_media_change_needed;
+bool_t restore_rootdir_permissions;
 char *media_change_alert_program = NULL;
 size_t perssz;
 
@@ -931,6 +932,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	firststsensepr = firststsenseprvalpr = BOOL_FALSE;
 	stsz = 0;
 	interpr = BOOL_FALSE;
+	restore_rootdir_permissions = BOOL_FALSE;
 	optind = 1;
 	opterr = 0;
 	while ( ( c = getopt( argc, argv, GETOPT_CMDSTRING )) != EOF ) {
@@ -1153,6 +1155,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 #endif /* SESSCPLT */
 		case GETOPT_SMALLWINDOW:
 			tranp->t_largewindowpr = BOOL_FALSE;
+			break;
+		case GETOPT_ROOTPERM:
+			restore_rootdir_permissions = BOOL_TRUE;
 			break;
 		}
 	}

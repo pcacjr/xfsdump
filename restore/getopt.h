@@ -40,7 +40,7 @@
  * purpose is to contain that command string.
  */
 
-#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wACDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
+#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
 
 #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
 #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
@@ -48,8 +48,12 @@
 #define GETOPT_PV766024		'd'	/* DRIVE_ERROR_MEDIA for pv#766024 */
 #define	GETOPT_EXISTING		'e'	/* don't overwrite existing files */
 #define	GETOPT_DUMPDEST		'f'	/* dump src. file (drive.c) */
+/*				'g' */
 #define	GETOPT_HELP		'h'	/* display version and usage */
 #define	GETOPT_INTERACTIVE	'i'	/* interactive subtree selection */
+/*				'j' */
+/*				'k' */
+/*				'l' */
 #define GETOPT_MINRMT		'm'	/* use minimal rmt protocol */
 #define	GETOPT_NEWER		'n'	/* only restore files newer than arg */
 #define	GETOPT_OWNER		'o'	/* restore owner/grp even if not root */
@@ -58,9 +62,14 @@
 #define	GETOPT_CUMULATIVE	'r'	/* accumulating restore (content.c) */
 #define	GETOPT_SUBTREE		's'	/* subtree restore (content.c) */
 #define	GETOPT_TOC		't'	/* display contents only (content.c) */
+/*				'u' */
 #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4 ) */
 #define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
+/*				'x' */
+/*				'y' */
+/*				'z' */
 #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
+#define GETOPT_ROOTPERM		'B'	/* restore ownership and permissions for root directory */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */
 #define GETOPT_SETDM		'D'	/* set DMAPI event mask and state */
 #define	GETOPT_CHANGED		'E'	/* overwrite if missing or old */
@@ -69,6 +78,7 @@
 #define GETOPT_MAXSTACKSZ	'H'	/* maximum stack size (bytes) */
 #define GETOPT_INVPRINT         'I'     /* just display the inventory */
 #define	GETOPT_NOINVUPDATE	'J'	/* do not update the dump inventory */
+/*				'K' */
 #define	GETOPT_DUMPLABEL	'L'	/* dump session label (global.c) */
 #define	GETOPT_MEDIALABEL	'M'	/* media object label (media.c) */
 #define	GETOPT_TIMESTAMP	'N'	/* show timestamps in log msgs */
