@@ -47,12 +47,9 @@ fi
 %install
 DIST_ROOT="$RPM_BUILD_ROOT"
 DIST_INSTALL=`pwd`/install.manifest
-DIST_INSTALL_DEV=`pwd`/install-dev.manifest
-export DIST_ROOT DIST_INSTALL DIST_INSTALL_DEV
+export DIST_ROOT DIST_INSTALL
 @make@ install DIST_MANIFEST="$DIST_INSTALL"
 @make@ -C build/rpm rpmfiles DIST_MANIFEST="$DIST_INSTALL"
-@make@ install-dev DIST_MANIFEST="$DIST_INSTALL_DEV"
-@make@ -C build/rpm rpmfiles-dev DIST_MANIFEST="$DIST_INSTALL_DEV"
 
 %clean
 rm -rf $RPM_BUILD_ROOT

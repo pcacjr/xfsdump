@@ -1,4 +1,12 @@
-xfsdump (2.2.10-1) unstable; urgency=high
+xfsdump (2.2.11-1) unstable; urgency=low
+
+  * New upstream release
+  * Fine-tuned shared library dependencies slightly, so we depend
+    on libattr itself (rather than attr which depends on libattr).
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 26 Apr 2003 06:30:30 +1000
+
+xfsdump (2.2.10-1) unstable; urgency=low
 
   * New upstream release
 

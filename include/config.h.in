@@ -34,18 +34,6 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-/*
- * If we don't have the v1 geometry definition, we're using early
- * versions of the XFS headers, so we simply create the structure
- * and macro definition based on the original (v1) definition.
- */
-#undef HAVE_V1_GEOMETRY
-
-#if !defined(HAVE_V1_GEOMETRY)
-#define XFS_IOC_FSGEOMETRY_V1 XFS_IOC_FSGEOMETRY
-typedef struct xfs_fsop_geom xfs_fsop_geom_v1_t;
-#endif
-
 /* Define if you want gettext (I18N) support */
 #undef ENABLE_GETTEXT
 

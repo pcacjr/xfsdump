@@ -39,8 +39,6 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
-HAVE_CURSES = @have_curses@
-
 LIBRMT = $(TOPDIR)/librmt/librmt.la
 LIBDM = @libdm@
 LIBXFS = @libxfs@
@@ -69,30 +67,30 @@ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
 PKG_LOCALE_DIR	= @datadir@/locale
 
 CC		= @cc@
-LD		= @ld@
 AWK		= @awk@
 SED		= @sed@
 TAR		= @tar@
 ZIP		= @zip@
 MAKE		= @make@
 ECHO		= @echo@
+SORT		= @sort@
 LN_S		= @LN_S@
 LIBTOOL		= @LIBTOOL@
 MAKEDEPEND	= @makedepend@
 
 MSGFMT		= @msgfmt@
 MSGMERGE	= @msgmerge@
-XGETTEXT	= @xgettext@ --omit-header --language=C --keyword=_
 
 RPM		= @rpm@
 RPMBUILD	= @rpmbuild@
 RPM_VERSION	= @rpm_version@
 
+ENABLE_CURSES = @enable_curses@
 ENABLE_SHARED = @enable_shared@
 ENABLE_GETTEXT = @enable_gettext@
 HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 
-CPPFLAGS += -I$(TOPDIR)/include -I/usr/include/xfs -I/usr/include/attr
+LCFLAGS += -DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
 
 ifeq ($(PKG_PLATFORM),linux)
 PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
@@ -100,7 +98,7 @@ endif
 
 GCFLAGS = -O1 $(OPTIMIZER) $(DEBUG) -funsigned-char -Wall -I$(TOPDIR)/include \
 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-	  -DPACKAGE=\"$(PKG_NAME)\" -DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
+	  -DPACKAGE=\"$(PKG_NAME)\"
 
 # Global, Platform, Local CFLAGS
 CFLAGS += $(GCFLAGS) $(PCFLAGS) $(LCFLAGS) $(CPPFLAGS)

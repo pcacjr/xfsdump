@@ -1,3 +1,10 @@
+xfsdump-2.2.11 (26 April 2003)
+	- rework configure.in to make use of shared macros.
+	- fix up #include lines to allow compilation of sources
+	  with installed headers rather than local headers.
+	- update Debian packaging.
+	- fix up a botch in the RPM packaging from 2.2.8.
+
 xfsdump-2.2.10 (14 April 2003)
 	- fix configure tests that used AC_PATH_PROG incorrectly.
 	- switch from using mktemp to using mkstemp for xfs_copy log.
