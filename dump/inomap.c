@@ -54,6 +54,7 @@
 #define MACROBITS
 #include "inomap.h"
 #include "arch_xlate.h"
+#include "exit.h"
 
 /* structure definitions used locally ****************************************/
 
@@ -1342,7 +1343,12 @@ map_add( xfs_ino_t ino, intgen_t state )
 		return;
 	}
 
-	ASSERT( ino > last_ino_added );
+	if (ino <= last_ino_added) {
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP, 
+		  "map_add(%llu, %d): ino(%llu) <= last_ino(%llu)\n",
+		  ino, state, ino, last_ino_added);
+		exit(EXIT_ERROR);
+	}
 
 	if ( ino >= lastsegp->base + INOPERSEG ) {
 		lastsegp++;

@@ -44,7 +44,8 @@ HFILES = rmtlib.h
 CFILES = \
     isrmt.c      rmtclose.c    rmtdev.c    rmtisatty.c  rmtread.c   \
     rmtabort.c   rmtcommand.c  rmtfstat.c  rmtlseek.c   rmtstatus.c \
-    rmtaccess.c  rmtcreat.c    rmtioctl.c  rmtopen.c    rmtwrite.c
+    rmtaccess.c  rmtcreat.c    rmtioctl.c  rmtopen.c    rmtwrite.c \
+    rmtmsg.c
 
 default: $(STATICLIBTARGET)
 

@@ -75,11 +75,9 @@ extern int server_version;
  *	RMTHOST --- Return an id which says host type from uname    
  */
 
-extern int rmt_debug;
-#define RMTDEBUG(f)        if (rmt_debug) fprintf(stderr, f)
-#define RMTDEBUG1(f,a)     if (rmt_debug) fprintf(stderr, f, a)
-#define RMTDEBUG2(f,a1,a2) if (rmt_debug) fprintf(stderr, f, a1, a2)
-
+/* rmt msg types */
+#define RMTWARN 1
+#define RMTDBG 	2 /* includes warning */
 
 #define READ(fd)	(_rmt_Ctp[fd][0])
 #define WRITE(fd)	(_rmt_Ptc[fd][1])
@@ -105,3 +103,7 @@ void _rmt_abort(int);
 int _rmt_command(int, char *);
 int _rmt_dev (char *);
 int _rmt_status(int);
+int _rmt_msgson(void);
+void _rmt_msg(int level, const char *msg, ...);
+void _rmt_turnonmsgsbyenv(void);
+void rmt_turnonmsgs(int code);

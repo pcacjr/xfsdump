@@ -53,9 +53,11 @@ Stress/common.config needs to be updated for one's host with:
    TAPE_DEV         - tape device e.g. /dev/st0
    RMT_TAPE_DEV     - remote tape device
    RMT_IRIXTAPE_DEV - remote IRIX tape device
+   RMT_TAPE_USER    - remote user for tape device
 The first two above are absolutely necessary.
 The tape device variables are only needed if one wants
 to test out that particular functionality of xfsdump/xfsrestore.
+The RMT_* variables are needed for testing remote tape capability.
 
 With the common.config updated one should be able to run
 as root: 

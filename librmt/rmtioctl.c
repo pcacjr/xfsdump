@@ -168,14 +168,10 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 		int mt_op = ((struct mtop *) arg)->mt_op;
 		int mt_count = ((struct mtop *) arg)->mt_count;
 
-		/* ensure we know what host we reckon we have */
-		/* We must do a MTIOCGET for this */
 		if (RMTHOST(fildes) == UNAME_UNDEFINED) {
-			struct mtget mtget;
-			int sts;
-			
-			if ((sts = _rmt_ioctl(fildes, MTIOCGET, (char*)&mtget)) < 0) 
-				return sts;
+			_rmt_msg(RMTWARN, "rmtioctl: remote host type not supported for MTIOCTOP\n");
+			setoserror( EPROTONOSUPPORT );
+			return(-1);
 		}
 
 		/* map the linux op code to the irix op code */
@@ -227,30 +223,19 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 		 */ 
  		switch (RMTHOST(fildes)) {
 		    case UNAME_UNDEFINED:
-			RMTDEBUG("rmt: determining host from mtget size\n");
-			if (sizeof(struct mtget) == rc) {
-				RMTHOST(fildes) = UNAME_LINUX;
-			}
-			else if (sizeof(struct irix_mtget) == rc) {
-				RMTHOST(fildes) = UNAME_IRIX;
-			}
-			else {
-			    RMTDEBUG("rmt: no matching mtget structure\n");
-			    /* DUNNO */
-			    setoserror( EPROTONOSUPPORT );
-			    return(-1);
-			}
-			break;
+			_rmt_msg(RMTWARN, "rmtioctl: remote host type not supported for MTIOCGET\n");
+			setoserror( EPROTONOSUPPORT );
+			return(-1);
 		    case UNAME_IRIX:
 			if (sizeof(struct irix_mtget) != rc) {
-			    RMTDEBUG("rmt: IRIX mtget structure of wrong size\n");
+			    _rmt_msg(RMTWARN, "rmtioctl: IRIX mtget structure of wrong size\n");
 			    setoserror( EPROTONOSUPPORT );
 			    return(-1);
 			}
 			break;
 		    case UNAME_LINUX:
 			if (sizeof(struct mtget) != rc) {
-			    RMTDEBUG("rmt: Linux mtget structure of wrong size\n");
+			    _rmt_msg(RMTWARN, "rmtioctl: Linux mtget structure of wrong size\n");
 			    setoserror( EPROTONOSUPPORT );
 			    return(-1);
 			}

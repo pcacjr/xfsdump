@@ -1,3 +1,7 @@
+xfsdump-1.0.10 (5 July 2001)
+	- produce librmt warning messages from xfsdump/xfsrestore
+          without needing to set an environment variable 
+
 xfsdump-1.0.9 (15 May 2001)
 	- correctly [xfs]restore the suid and guid mode bits
  

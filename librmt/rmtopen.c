@@ -94,8 +94,6 @@ int mode;
 #define MAXHOSTLEN	257
 #define MAXDBGPATH	100
 
-int rmt_debug = 0;
-
 /* ARGSUSED */
 static int _rmt_open (char *path, int oflag, int mode)
 {
@@ -109,7 +107,6 @@ static int _rmt_open (char *path, int oflag, int mode)
         char *rsh_path;
         char *rmt_path;
 	char rmt_cmd[MAXDBGPATH];
-	char *rmt_debug_str;
 
 
 	sys = system;
@@ -170,7 +167,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 	}
 	*dev = '\0';
 
-	rmt_debug = ((rmt_debug_str = getenv("RMTDEBUG")) != NULL);
+	_rmt_turnonmsgsbyenv();
 
         /* try to find out the uname of the remote host */
 	{
@@ -190,19 +187,23 @@ static int _rmt_open (char *path, int oflag, int mode)
 
 	    rmt_f = popen(cmd, "r");
 	    if (rmt_f < 0) {
-		RMTDEBUG1("rmt: failed for %s\n", cmd);
+		_rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type using \"%s\"\n", cmd);
 		RMTHOST(i) = UNAME_UNDEFINED;
 		goto again;
 	    }
 	    else {
+		int len;
 		char *c  = fgets(uname, sizeof(uname), rmt_f);
 	        pclose(rmt_f);
 
 		if (c < 0) {
-		    RMTDEBUG1("rmt: failed to read for %s\n", cmd);
+		    _rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type reading \"%s\"\n", cmd);
 		    RMTHOST(i) = UNAME_UNDEFINED;
 		    goto again;
 		}
+		len = strlen(uname);
+		if (len > 0 && uname[len-1] == '\n')
+		    uname[len-1] = '\0'; /* chomp the '\n' */
 	    }
 
 	    for(p = &uname_table[0]; p->name != 0; p++) { 
@@ -211,11 +212,11 @@ static int _rmt_open (char *path, int oflag, int mode)
 	    }
 	    if (p->name == 0) {
 		RMTHOST(i) = UNAME_UNKNOWN;
-		RMTDEBUG1("rmt: RMTHOST(%d) = Unknown\n", i); 
+		_rmt_msg(RMTWARN, "rmtopen: remote host type, \"%s\", is unknown to librmt\n", uname); 
 	    }
 	    else {
 		RMTHOST(i) = p->id;
-		RMTDEBUG2("rmt: RMTHOST(%d) = %s\n", i, p->name); 
+		_rmt_msg(RMTDBG, "rmtopen: RMTHOST(%d) = %s\n", i, p->name); 
 	    }
 	}
 
@@ -240,9 +241,9 @@ again:
 		close(_rmt_Ctp[i][0]); close(_rmt_Ctp[i][1]);
 		(void) setuid (getuid ());
 		(void) setgid (getgid ());
-		if (rmt_debug) {
-		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s %s.server.%d", 
-				rmt_path, rmt_debug_str, getpid());
+		if (_rmt_msgson()) {
+		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s server.%d", 
+				rmt_path, getpid());
 		} 
 		else {
 		    strncpy(rmt_cmd, rmt_path, sizeof(rmt_cmd)); 	

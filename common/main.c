@@ -88,6 +88,7 @@
 
 /* declarations of externally defined global symbols *************************/
 
+extern void rmt_turnonmsgs(int);
 
 /* forward declarations of locally defined global functions ******************/
 
@@ -383,6 +384,8 @@ main( int argc, char *argv[] )
 	if ( ! ok ) {
 		return EXIT_ERROR;
 	}
+
+	rmt_turnonmsgs(1); /* turn on WARNING msgs for librmt */
 
 	mlog( MLOG_NITTY + 1, "INTGENMAX == %ld (0x%lx)\n", INTGENMAX, INTGENMAX );
 	mlog( MLOG_NITTY + 1, "UINTGENMAX == %lu (0x%lx)\n", UINTGENMAX, UINTGENMAX );
