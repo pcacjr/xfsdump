@@ -168,7 +168,6 @@ stream_find( pid_t pid, stream_state_t s[], int nstates )
 	int i;
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
-	static const char *state_strings[] = { "S_FREE", "S_RUNNING", "S_ZOMBIE" };
 
 	ASSERT(nstates > 0);
 
