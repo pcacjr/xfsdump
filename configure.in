@@ -161,9 +161,9 @@ AC_CHECK_LIB(handle, path_to_handle,, [
 	exit 1
 ])
 libxfs="-lxfs"
-test -f /lib/libxfs.la && libxfs="/lib/libxfs.la"
+test -f /usr/lib/libxfs.la && libxfs="/usr/lib/libxfs.la"
 libhdl="-lhandle"
-test -f /lib/libhandle.la && libhdl="/lib/libhandle.la"
+test -f /usr/lib/libhandle.la && libhdl="/usr/lib/libhandle.la"
 AC_SUBST(libxfs)
 AC_SUBST(libhdl)
 
@@ -190,7 +190,7 @@ AC_CHECK_LIB(dm, dm_make_handle,, [
 	exit 1
 ])
 libdm="-ldm"
-test -f /lib/libdm.la && libdm="/lib/libdm.la"
+test -f /usr/lib/libdm.la && libdm="/usr/lib/libdm.la"
 AC_SUBST(libdm)
 
 dnl Checks for Extended Attributes header and library.
@@ -207,7 +207,7 @@ AC_CHECK_LIB(attr, attr_get,, [
 	exit 1
 ])
 libattr="-lattr"
-test -f /lib/libattr.la && libattr="/lib/libattr.la"
+test -f /usr/lib/libattr.la && libattr="/usr/lib/libattr.la"
 AC_SUBST(libattr)
 
 

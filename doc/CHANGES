@@ -1,3 +1,6 @@
+xfsdump-1.1.1 (23 July 2001)
+	- look for libtool archives in /usr/lib, not /lib
+
 xfsdump-1.1.0 (18 July 2001)
 	- rework package to use libtool
 	- merge fsr bug fixes from IRIX
