@@ -1,3 +1,6 @@
+xfsdump-2.0.1 (13 April 2002)
+	- minor build system updates
+
 xfsdump-2.0.0 (07 February 2002)
 	- rework all code dealing with extended attributes to use
 	  the new system calls (requires attr-2.0.0 or greater)
