@@ -1489,7 +1489,7 @@ static int
 getmntany (FILE *filep, struct mntent *mp, struct mntent *mpref)
 {
         int match = 0;
-        struct mntent *t;
+        struct mntent *t = NULL;
 
         while (!match && (t = getmntent(filep)) != 0) {
                 if (mpref->mnt_fsname != NULL &&

@@ -3279,7 +3279,7 @@ dump_extattrs( drive_t *drivep,
 		do {
 			attrlist_t *listp;
 			bool_t abort;
-			int rval;
+			int rval = 0;
 
 			if (! sc_brokenioctl) {
 				rval = jdm_attr_list(fshandlep, statp,
@@ -3364,7 +3364,7 @@ dump_extattr_list( drive_t *drivep,
 	char *dumpbufp;
 	char *endp;
 	size_t bufsz;
-	intgen_t rval;
+	intgen_t rval = 0;
 	rv_t rv;
 	char *dumpbufendp = contextp->cc_extattrdumpbufp
 			    +

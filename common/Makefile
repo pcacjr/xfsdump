@@ -34,7 +34,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LSRCFILES = arch_xlate.c arch_xlate.h attr.c attr.h \
-	cldmgr.c cldmgr.h cleanup.c cleanup.h content.c content.h \
+	cldmgr.c cldmgr.h cleanup.c cleanup.h content.h \
 	content_common.c content_common.h content_inode.h dlog.c dlog.h \
 	drive.c drive.h drive_minrmt.c drive_scsitape.c drive_simple.c \
 	exit.h fs.c fs.h getdents.c getdents.h global.c global.h \

@@ -161,7 +161,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	      xfs_bstat_t *buf,
 	      size_t buflenin )
 {
-	size_t buflenout;
+	__s32 buflenout;
 	xfs_ino_t lastino;
 	intgen_t saved_errno;
         
@@ -192,11 +192,11 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	mlog( MLOG_NITTY + 1,
 	      "calling bulkstat\n" );
         
-        bulkreq.lastip = (__u64 *)&lastino; /* TODO XXX PORT */
-        bulkreq.icount = buflenin;
-        bulkreq.ubuffer = buf;
-        bulkreq.ocount = &buflenout;
-        while (!ioctl(fsfd, XFS_IOC_FSBULKSTAT, &bulkreq)) {
+	bulkreq.lastip = (__u64 *)&lastino;
+	bulkreq.icount = buflenin;
+	bulkreq.ubuffer = buf;
+	bulkreq.ocount = &buflenout;
+	while (!ioctl(fsfd, XFS_IOC_FSBULKSTAT, &bulkreq)) {
 		xfs_bstat_t *p;
 		xfs_bstat_t *endp;
 
