@@ -54,6 +54,8 @@ char *buf;
 	register int blen;
 	void (*pstat)();
 
+	_rmt_msg(RMTDBG, "rmtcommand: fd = %d, buf = %s\n", fildes, buf); 
+
 /*
  *	save current pipe status and try to make the request
  */

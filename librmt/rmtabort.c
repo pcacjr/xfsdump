@@ -50,4 +50,5 @@ void _rmt_abort(int fildes)
 	READ(fildes) = -1;
 	WRITE(fildes) = -1;
         RMTHOST(fildes) = -1;
+	_rmt_msg(RMTDBG, "rmtabort(%d)\n", fildes); 
 }

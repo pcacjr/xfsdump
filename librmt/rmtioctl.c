@@ -45,13 +45,15 @@
 #include <sys/mtio.h>
 #include <sys/param.h>
 
+/* 
+ * uses old_mtget IRIX structure since we don't bother
+ * sending the "V" version command.
+ */
 struct  irix_mtget   {
         short   mt_type;          /* type of magtape device */
-        unsigned short  mt_dposn; /* status of tape position */
         unsigned short  mt_dsreg; /* ``drive status'' register */
         short   mt_erreg;         /* ``error'' register */
         short   mt_resid;         /* residual count */
-	short   pad;
         int     mt_fileno;        /* file number of current position */
         int     mt_blkno;         /* block number of current position */
 };
@@ -259,7 +261,7 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			return(-1);
 		    case UNAME_IRIX:
 			if (sizeof(struct irix_mtget) != rc) {
-			    _rmt_msg(RMTWARN, "rmtioctl: IRIX mtget structure of wrong size\n");
+			    _rmt_msg(RMTWARN, "rmtioctl: IRIX mtget structure of wrong size - got %d, wanted %d\n", rc, sizeof(struct irix_mtget));
 			    setoserror( EPROTONOSUPPORT );
 			    return(-1);
 			}
@@ -272,7 +274,8 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			    islinux32 = 0;	
 			}
 			else {
-			    _rmt_msg(RMTWARN, "rmtioctl: Linux mtget structure of wrong size\n");
+			    _rmt_msg(RMTWARN, "rmtioctl: Linux mtget structure of wrong size - got %d, wanted %d or %d\n", rc, sizeof(struct linux32_mtget),
+sizeof(struct linux64_mtget));
 			    setoserror( EPROTONOSUPPORT );
 			    return(-1);
 			}
@@ -324,7 +327,6 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			    irixp->mt_resid  = INT_SWAP(irixp->mt_resid, irixp->mt_resid);
 			    irixp->mt_fileno = INT_SWAP(irixp->mt_fileno, irixp->mt_fileno);
 			    irixp->mt_blkno  = INT_SWAP(irixp->mt_blkno, irixp->mt_blkno);
-			    irixp->mt_dposn  = INT_SWAP(irixp->mt_dposn, irixp->mt_dposn);
 			}
 		}
 		else if (islinux32) {

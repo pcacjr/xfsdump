@@ -105,7 +105,6 @@ static int _rmt_open (char *path, int oflag, int mode)
 	char system[MAXHOSTLEN];
 	char device[BUFMAGIC];
 	char login[BUFMAGIC];
-	int  failed_once = 0;
 	char *sys, *dev, *user;
         char *rsh_path;
         char *rmt_path;
@@ -192,7 +191,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 	    if (rmt_f < 0) {
 		_rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type using \"%s\"\n", cmd);
 		RMTHOST(i) = UNAME_UNDEFINED;
-		goto again;
+		goto do_rmt;
 	    }
 	    else {
 		int len;
@@ -202,7 +201,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 		if (c < 0) {
 		    _rmt_msg(RMTWARN, "rmtopen: failed to detect remote host type reading \"%s\"\n", cmd);
 		    RMTHOST(i) = UNAME_UNDEFINED;
-		    goto again;
+		    goto do_rmt;
 		}
 		len = strlen(uname);
 		if (len > 0 && uname[len-1] == '\n')
@@ -227,7 +226,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 /*
  *	setup the pipes for the 'rsh' command and fork
  */
-again:
+do_rmt:
 	if (pipe(_rmt_Ptc[i]) == -1 || pipe(_rmt_Ctp[i]) == -1)
 		return(-1);
 
@@ -280,31 +279,6 @@ again:
 	sprintf(buffer, "O%s\n%d\n", device, oflag);
 	if (_rmt_command(i, buffer) == -1 || _rmt_status(i) == -1)
 		return(-1);
-
-	/*
-	 * old version of /etc/rmt does not understand 'V'
-	 */
-	if (failed_once == 0) {
-		int rv;
-
-		sprintf(buffer, "V%d\n", LIBRMT_VERSION);
-		if (_rmt_command(i, buffer) == -1 || (rv=_rmt_status(i)) == -1 )
-		{
-			failed_once++;
-			close(READ(i));
-			close(WRITE(i));
-			READ(i) = -1;
-			WRITE(i) = -1;
-			if (kill(rc, SIGKILL)) 
-				fprintf(stderr,"remote shell program that invoked /etc/rmt does not exist\n");
-			goto again;
-		}
-		if ( rv != LIBRMT_VERSION ) {
-			setoserror( EPROTONOSUPPORT );
-			fprintf (stderr, "Remote tape protocol version mismatch (/etc/rmt)\n");
-			exit(1);
-		}
-	}
 
 	return(i);
 }

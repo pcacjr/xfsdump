@@ -45,9 +45,6 @@
 
 #include <libxfs.h>
 
-#define	LIBRMT_VERSION	2
-extern int server_version;
-
 /*
  *	Note that local vs remote file descriptors are distinquished
  *	by adding a bias to the remote descriptors.  This is a quick
