@@ -354,7 +354,7 @@ typedef struct bytespan bytespan_t;
 struct partial_rest {
 	xfs_ino_t	is_ino;
 		/* inode number */
-	bytespan_t is_bs[STREAM_MAX];
+	bytespan_t is_bs[STREAM_SIMMAX];
 		/* each stream could conceivably be writing to a single
 		 * file simultaneously if one file spans all device streams.
 		 * Need a record for each possible place in the file.
@@ -440,7 +440,7 @@ struct pers {
 			 * up searches in parrest.
 			 */
 
-		partial_rest_t parrest[ STREAM_MAX * 2 - 2 ];
+		partial_rest_t parrest[ STREAM_SIMMAX * 2 - 2 ];
 			/* record of bytes restored to partially restored files.
 			 * Max possible is two per stream except the first 
 			 * drive will never finish another drives file and the
@@ -824,7 +824,7 @@ static pers_desc_t *descp = 0;	/* mapped on the fly; don't use! (see macros) */
 static char *hkdirname = "xfsrestorehousekeepingdir";
 static char *persname = "state";
 static char *perspath = 0;
-static bool_t mcflag[ STREAM_MAX ]; /* media change flag */
+static bool_t mcflag[ STREAM_SIMMAX ]; /* media change flag */
 
 
 
@@ -2700,7 +2700,7 @@ typedef struct { ix_t thrdix; char choicestr[ CHOICESTRSZ ]; } cttm_t;
 char *
 content_mediachange_query( void )
 {
-	cttm_t choicetothrdmap[ STREAM_MAX ];
+	cttm_t choicetothrdmap[ STREAM_SIMMAX ];
 	char *querystr[ QUERYMAX ];
 	size_t querycnt;
 	char *choicestr[ CHOICEMAX ];
@@ -2717,7 +2717,7 @@ content_mediachange_query( void )
 	querystr[ querycnt++ ] = "select a drive to acknowledge media change\n";
 	choicecnt = 0;
 	maxdrvchoiceix = 0;
-	for ( thrdix = 0 ; thrdix < STREAM_MAX ; thrdix++ ) {
+	for ( thrdix = 0 ; thrdix < STREAM_SIMMAX ; thrdix++ ) {
 		if ( mcflag[ thrdix ] ) {
 			choicetothrdmap[ choicecnt ].thrdix = thrdix;
 			sprintf( choicetothrdmap[ choicecnt ].choicestr,

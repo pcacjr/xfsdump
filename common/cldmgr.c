@@ -51,7 +51,7 @@
 
 extern size_t pgsz;
 
-#define CLD_MAX	( STREAM_MAX * 2 )
+#define CLD_MAX	( STREAM_SIMMAX * 2 )
 struct cld {
 	bool_t c_busy;
 	pid_t c_pid;

@@ -682,7 +682,7 @@ is_incomplete(rv_t rv)
 void
 mlog_exit_flush(void)
 {
-	pid_t pids[STREAM_MAX];
+	pid_t pids[STREAM_SIMMAX];
 	int i, npids;
 	const struct rv_map *rvp;
 	stream_state_t states[] = { S_RUNNING, S_ZOMBIE };
@@ -697,7 +697,7 @@ mlog_exit_flush(void)
 	if (mlog_main_exit_hint == RV_USAGE)
 		return;
 
-	npids = stream_find_all(states, N(states), pids, STREAM_MAX);
+	npids = stream_find_all(states, N(states), pids, STREAM_SIMMAX);
 	if (npids > 0) {
 
 		/* print the state of all the streams */
