@@ -72,14 +72,18 @@
 
 
 #ifdef __NR_getdents64
-#ifndef __ASSUME_GETDENTS64_SYSCALL
-#ifndef __GETDENTS
+# ifndef __ASSUME_GETDENTS64_SYSCALL
+#  ifndef __GETDENTS
 /* The variable is shared between all *getdents* calls.  */
 int __have_no_getdents64;
-#else
+#  else
 extern int __have_no_getdents64;
-#endif
-#endif
+#  endif
+# endif
+/* Earlier versions of glibc don't define SYS_getdents64 at all */
+# ifndef SYS_getdents64
+#  define SYS_getdents64 __NR_getdents64
+# endif
 #endif
 
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
