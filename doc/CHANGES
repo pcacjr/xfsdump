@@ -1,3 +1,10 @@
+xfsdump-2.0.4 (14 June 2002)
+	- fix xfsrestore/xfsdump version output to report both 
+	  their version and the respective dump format version. They
+	  will report their version from cmd/xfsdump/VERSION.  
+	- changed the messages printed out for the xfsrestore 
+	  interactive mode to emphasize the restore is interactive.
+	  
 xfsdump-2.0.3 (08 May 2002)
 	- fix xfsdump so that it does not cause segmentation fault
 	  when media specific object id (OPT_MOBJID) is specified 

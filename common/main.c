@@ -438,7 +438,8 @@ main( int argc, char *argv[] )
 	 */
 	if ( infoonly ) {
 		mlog( MLOG_NORMAL,
-		      "version %d.%d\n",
+		      "version %s (dump format %d.%d)\n",
+		      VERSION,
 		      version,
 		      subversion );
 		usage( );
@@ -513,7 +514,8 @@ main( int argc, char *argv[] )
 	 */
 	sistr = sigintstr( );
 	mlog( MLOG_VERBOSE,
-	      "version %d.%d",
+	      "version %s (dump format %d.%d)",
+	      VERSION,
 	      version,
 	      subversion );
 	if ( miniroot ) {

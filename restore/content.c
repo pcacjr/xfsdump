@@ -7004,14 +7004,16 @@ retry:
 	if ( tranp->t_toconlypr ) {
 		querystr[ querycnt++ ] = "\nexamine this dump?\n";
 	} else {
-		querystr[ querycnt++ ] = "\nrestore this dump?\n";
+		querystr[ querycnt++ ] = (persp->a.interpr) ? "\ninteractively restore from this dump?\n"
+                                          : "\nrestore this dump?\n";
 	}
 	ASSERT( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	dontix = choicecnt;
 	choicestr[ choicecnt++ ] = "skip";
 	doix = choicecnt;
-	choicestr[ choicecnt++ ] = "restore";
+	choicestr[ choicecnt++ ] = (persp->a.interpr) ? "interactively restore\n"
+				    : "restore\n";
 	ASSERT( choicecnt <= CHOICEMAX );
 	sigintix = IXMAX - 1;
 
@@ -7030,7 +7032,8 @@ retry:
 				       dontix );	/* sigquit ix */
 	ackcnt = 0;
 	if ( responseix == doix ) {
-		ackstr[ ackcnt++ ] = "this dump selected for restoral\n";
+		ackstr[ ackcnt++ ] = (persp->a.interpr) ? "this dump selected for interactive restoral\n"
+				      : "this dump selected for restoral\n";
 	} else if ( responseix == dontix ) {
 		ackstr[ ackcnt++ ] = "dump skipped\n";
 	} else {
