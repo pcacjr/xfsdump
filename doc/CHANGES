@@ -1,3 +1,9 @@
+xfsdump-2.2.20 (31 Mar 2004)
+	- fix up "xfs_invutil -i" which was getting segmentation faults on
+	  presumably long session labels.
+	  See http://oss.sgi.com/bugzilla/show_bug.cgi?id=320.
+	  Become paranoid and convert all sprintf's to snprintf's.
+
 xfsdump-2.2.19 (23 Mar 2004)
 	- rearrange fsr algorithm to not copy data unless extent
 	  count has been improved.  Suggested by Chris Wedgwood

@@ -67,7 +67,7 @@ put_line(WINDOW *win, int line, char *msg, int attr, alignment_t alignment)
 	break;
     }
 
-    sprintf(text, "%*s%.*s%*s", c, "", msglen, msg, cols - msglen - c, "");
+    snprintf(text, sizeof(text), "%*s%.*s%*s", c, "", msglen, msg, cols - msglen - c, "");
 
     wmove(win, line, 0);
     wattron(win, attr);

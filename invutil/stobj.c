@@ -195,7 +195,7 @@ stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
 
     put_info_header("session entry");
 
-    sprintf(txt, "pruned:  %s, flags: %#x, time: %s",
+    snprintf(txt, sizeof(txt), "pruned:  %s, flags: %#x, time: %s",
 	    (stobjhdr->sh_pruned == BOOL_TRUE) ? "yes" : "no",
 	    stobjhdr->sh_flag,
 	    ctime((time_t *)&(stobjhdr->sh_time)));
@@ -203,11 +203,11 @@ stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
     put_info_line(1, txt);
 
     uuid_unparse(stobjses->s_fsid, uuidstr);
-    sprintf(txt, "mountpt: %s, fsid: %s", stobjses->s_mountpt, uuidstr);
+    snprintf(txt, sizeof(txt), "mountpt: %s, fsid: %s", stobjses->s_mountpt, uuidstr);
     put_info_line(2, txt);
 
     uuid_unparse(stobjses->s_sesid, uuidstr);
-    sprintf(txt, "device:  %s, sesid: %s", stobjses->s_devpath, uuidstr);
+    snprintf(txt, sizeof(txt), "device:  %s, sesid: %s", stobjses->s_devpath, uuidstr);
     put_info_line(3, txt);
 
     return FALSE;
@@ -231,17 +231,17 @@ stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list)
 
     put_info_header("session stream");
 
-    sprintf(txt, "interrupted: %s, cmdarg: %s",
+    snprintf(txt, sizeof(txt), "interrupted: %s, cmdarg: %s",
 	    (stobjstrm->st_interrupted == BOOL_TRUE) ? "yes" : "no",
 	    stobjstrm->st_cmdarg);
     put_info_line(1, txt);
 
-    sprintf(txt, "start ino: %llu, offset %lld",
+    snprintf(txt, sizeof(txt), "start ino: %llu, offset %lld",
 	    (unsigned long long) stobjstrm->st_startino.ino,
 	    (long long) stobjstrm->st_startino.offset);
     put_info_line(2, txt);
 
-    sprintf(txt, "  end ino: %llu, offset %lld",
+    snprintf(txt, sizeof(txt), "  end ino: %llu, offset %lld",
 	    (unsigned long long) stobjstrm->st_endino.ino,
 	    (long long) stobjstrm->st_endino.offset);
     put_info_line(3, txt);
@@ -269,15 +269,15 @@ stobjmed_highlight(WINDOW *win, node_t *current, node_t *list)
     put_info_header("session media file");
 
     uuid_unparse(stobjmed->mf_moid, uuidstr);
-    sprintf(txt, "flags: %#x, id: %s", stobjmed->mf_flag, uuidstr);
+    snprintf(txt, sizeof(txt), "flags: %#x, id: %s", stobjmed->mf_flag, uuidstr);
     put_info_line(1, txt);
 
-    sprintf(txt, "start ino: %llu, offset %lld",
+    snprintf(txt, sizeof(txt), "start ino: %llu, offset %lld",
 	    (unsigned long long) stobjmed->mf_startino.ino,
 	    (long long) stobjmed->mf_startino.offset);
     put_info_line(2, txt);
 
-    sprintf(txt, "  end ino: %llu, offset %lld",
+    snprintf(txt, sizeof(txt), "  end ino: %llu, offset %lld",
 	    (unsigned long long) stobjmed->mf_endino.ino,
 	    (long long) stobjmed->mf_endino.offset);
     put_info_line(3, txt);
@@ -400,6 +400,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
     int		k;
     int		idx;
     int		data_idx;
+    int		len;
     char	*txt;
     node_t	*n;
     node_t	*parent_stream;
@@ -429,12 +430,13 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
 	session->header = StObjhdr;
 	session->session = StObjses;
 
-	txt = malloc(60);
+	len = 60+strlen(session->session->s_label);
+	txt = malloc(len);
 	if(txt == NULL) {
 	    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
 	    exit(1);
 	}
-	sprintf(txt, "        session level: %d label: %s",
+	snprintf(txt, len, "        session level: %d label: %s",
 		session->header->sh_level,
 		session->session->s_label);
 
@@ -463,12 +465,13 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
 					  StObjhdr->sh_streams_off +
 					  (j * sizeof(invt_stream_t)));
 
-	    txt = malloc(strlen(StObjstrm->st_cmdarg) + 33);
+	    len = strlen(StObjstrm->st_cmdarg) + 33;
+	    txt = malloc(len);
 	    if(txt == NULL) {
 		fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
 		exit(1);
 	    }
-	    sprintf(txt, "          stream: drive path: %s", StObjstrm->st_cmdarg);
+	    snprintf(txt, len, "          stream: drive path: %s", StObjstrm->st_cmdarg);
 
 	    n = list_add(n, node_create(BOOL_TRUE,	/* hidden */
 					BOOL_FALSE,	/* expanded */
@@ -495,12 +498,13 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
 						StObjstrm->st_firstmfile +
 						(k * sizeof(invt_mediafile_t)));
 		
-		txt = malloc(strlen(StObjmed->mf_label) + 26);
+		len = strlen(StObjmed->mf_label) + 26;
+		txt = malloc(len);
 		if(txt == NULL) {
 		    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
 		    exit(1);
 		}
-		sprintf(txt, "            media file: %s", StObjmed->mf_label);
+		snprintf(txt, len, "            media file: %s", StObjmed->mf_label);
 
 		n = list_add(n, node_create(BOOL_TRUE,	/* hidden */
 					    BOOL_FALSE,	/* expanded */

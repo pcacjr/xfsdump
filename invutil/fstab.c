@@ -174,11 +174,11 @@ fstab_highlight(WINDOW *win, node_t *current, node_t *list)
 
     put_info_header("fstab entry");
 
-    sprintf(txt, "device: %s", fstabentry->ft_devpath);
+    snprintf(txt, sizeof(txt), "device: %s", fstabentry->ft_devpath);
     put_info_line(1, txt);
 
     uuid_unparse(fstabentry->ft_uuid, uuidstr);
-    sprintf(txt, "uuid:   %s", uuidstr);
+    snprintf(txt, sizeof(txt), "uuid:   %s", uuidstr);
     put_info_line(2, txt);
 
     return FALSE;
@@ -241,6 +241,7 @@ generate_fstab_menu(char * inv_path, node_t *startnode, int level, char *fstabna
     char	*invname;
     char	*txt;
     int		idx;
+    int		len;
     node_t	*list = NULL;
     node_t	*n;
     invt_fstab_t *fstab_entry;
@@ -252,12 +253,13 @@ generate_fstab_menu(char * inv_path, node_t *startnode, int level, char *fstabna
 
     n = startnode;
     for(i=0; i < fstab_file[idx].counter->ic_curnum; i++) {
-	txt = malloc(strlen(fstab_entry[i].ft_mountpt) + strlen(fstab_entry[i].ft_devpath) + 40);
+	len = strlen(fstab_entry[i].ft_mountpt) + strlen(fstab_entry[i].ft_devpath) + 40;
+	txt = malloc(len);
 	if(txt == NULL) {
 	    fprintf(stderr, "%s: internal memory error: fstab_text\n", g_programName);
 	    exit(1);
 	}
-	sprintf(txt, "    fs: %s", fstab_entry[i].ft_mountpt);
+	snprintf(txt, len, "    fs: %s", fstab_entry[i].ft_mountpt);
 
 	n = list_add(n, node_create(BOOL_FALSE,	/* hidden */
 				    BOOL_FALSE,	/* expanded */

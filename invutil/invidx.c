@@ -53,6 +53,7 @@ int invidx_numfiles;
 extern stobj_fileinfo_t *stobj_file;
 extern int stobj_numfiles;
 
+static void stobj_makefname_len( char *fname, int fname_len );
 
 menu_ops_t invidx_ops = {
     NULL,
@@ -122,7 +123,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 	char *stobjfile;
 	char cmd[1024];
 
-	sprintf(dst_idxfile, "%s/%s", inventory_path, basename(invidx_file[fidx].name));
+	snprintf(dst_idxfile, sizeof(dst_idxfile), "%s/%s", inventory_path, basename(invidx_file[fidx].name));
 
 	/* append if we have the target open already, else write to a possibly new file */
 	if((dst_fileidx = find_matching_invidxfile(dst_idxfile)) >= 0) {
@@ -242,7 +243,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 		    return 0;
 		}
 
-		sprintf(dst_stobjfile, "%s/%s", inventory_path, basename(stobjfile));
+		snprintf(dst_stobjfile, sizeof(dst_stobjfile), "%s/%s", inventory_path, basename(stobjfile));
 
 		if(stat(dst_stobjfile, &s) < 0) {
 		    if(errno != ENOENT) {
@@ -255,7 +256,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 		    return 0;
 		}
 	    
-		sprintf(cmd, "cp %s %s", stobjfile, dst_stobjfile);
+		snprintf(cmd, sizeof(cmd), "cp %s %s", stobjfile, dst_stobjfile);
 		if(system(cmd) != 0) {
 		    put_error("Error: unable to copy stobj file: cp failed");
 		    return 0;
@@ -312,7 +313,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 		return 0;
 	    }
 
-	    sprintf(dst_stobjfile, "%s/%s", inventory_path, basename(stobjfile));
+	    snprintf(dst_stobjfile, sizeof(dst_stobjfile), "%s/%s", inventory_path, basename(stobjfile));
 
 	    if(stat(dst_stobjfile, &s) < 0) {
 		if(errno != ENOENT) {
@@ -325,7 +326,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 		return 0;
 	    }
 	    
-	    sprintf(cmd, "cp %s %s", stobjfile, dst_stobjfile);
+	    snprintf(cmd, sizeof(cmd), "cp %s %s", stobjfile, dst_stobjfile);
 	    if(system(cmd) != 0) {
 		put_error("Error: unable to copy stobj file: cp failed");
 		return 0;
@@ -340,12 +341,13 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 }
 
 int
-create_stobjfile(int invidx_fileidx, char *filename, invt_seshdr_t *hdr,
-	invt_session_t *ses, invt_stream_t *strms, invt_mediafile_t *mfiles)
+create_stobjfile(int invidx_fileidx, char *filename, int fname_len, 
+	invt_seshdr_t *hdr, invt_session_t *ses, invt_stream_t *strms,
+	invt_mediafile_t *mfiles)
 {
     int fd;
 
-    stobj_makefname(filename);
+    stobj_makefname_len(filename, fname_len);
     fd = stobj_create(filename);
 
     insert_stobj_into_stobjfile(invidx_fileidx, filename, fd, hdr, ses, strms, mfiles);
@@ -555,7 +557,7 @@ insert_stobj_into_stobjfile(int invidx_fileidx, char *filename, int fd,
 	invt_stream_t *s_strms;
 	invt_mediafile_t *s_mfiles;
 
-	new_fd = create_stobjfile(invidx_fileidx, new_filename, hdr, ses, strms, mfiles);
+	new_fd = create_stobjfile(invidx_fileidx, new_filename, sizeof(new_filename), hdr, ses, strms, mfiles);
 
 	for(i = pos; i < sescnt.ic_curnum; i++) {
 	    read_stobj_info(fd, i, &s_hdr, &s_ses, &s_strms, &s_mfiles);
@@ -608,8 +610,8 @@ insert_stobj_into_stobjfile(int invidx_fileidx, char *filename, int fd,
     return 0;
 }
 
-void
-stobj_makefname( char *fname )
+static void
+stobj_makefname_len( char *fname, int fname_len )
 {	
     /* come up with a new unique name */
     uuid_t	fn;
@@ -618,7 +620,7 @@ stobj_makefname( char *fname )
     uuid_generate( fn );
     uuid_unparse( fn, str );
 
-    sprintf(fname, "%s/%s.StObj", inventory_path, str);
+    snprintf(fname, fname_len, "%s/%s.StObj", inventory_path, str);
 }
 
 int
@@ -727,14 +729,14 @@ invidx_highlight(WINDOW *win, node_t *current, node_t *list)
 
     put_info_header("inventory index entry");
 
-    sprintf(txt, "path:  %s", invtentry->ie_filename);
+    snprintf(txt, sizeof(txt), "path:  %s", invtentry->ie_filename);
     put_info_line(1, txt);
 
-    sprintf(txt, "start: %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_start));
+    snprintf(txt, sizeof(txt), "start: %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_start));
     txt[strlen(txt) - 1] = '\0';
     put_info_line(2, txt);
 
-    sprintf(txt, "end:   %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_end));
+    snprintf(txt, sizeof(txt), "end:   %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_end));
     txt[strlen(txt) - 1] = '\0';
     put_info_line(3, txt);
 
@@ -931,6 +933,7 @@ generate_invidx_menu(char * inv_path, node_t *startnode, int level, char *idxFil
 {
     int			i;
     int			idx;
+    int			len;
     char		*txt;
     node_t		*n;
     invt_entry_t	*invidx_entry;
@@ -944,12 +947,13 @@ generate_invidx_menu(char * inv_path, node_t *startnode, int level, char *idxFil
 
     n = startnode;
     for (i=0; i < invidx_file[idx].counter->ic_curnum; i++) {
-	txt = malloc(strlen(invidx_entry[i].ie_filename) + 54);
+	len = strlen(invidx_entry[i].ie_filename) + 54;
+	txt = malloc(len);
 	if(txt == NULL) {
 	    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
 	    exit(1);
 	}
-	sprintf(txt, "      inv file: %s ", basename(invidx_entry[i].ie_filename));
+	snprintf(txt, len, "      inv file: %s ", basename(invidx_entry[i].ie_filename));
 
 	n = list_add(n, node_create(BOOL_TRUE,	/* hidden */
 				    BOOL_FALSE,	/* expanded */

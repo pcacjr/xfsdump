@@ -1096,7 +1096,7 @@ usage (void)
     char *ns = "";
 
     fprintf( stderr, "%s: %s\n", g_programName, g_programVersion );
-    sprintf( linebuf, "Usage: %s ", g_programName );
+    snprintf( linebuf, sizeof(linebuf), "Usage: %s ", g_programName );
     pfxsz = strlen( linebuf );
     assert( pfxsz < sizeof( linebuf ));
     ps = 0;

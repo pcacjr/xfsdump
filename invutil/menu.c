@@ -139,7 +139,7 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
 
 	if(redraw_screen == BOOL_TRUE) {
 	    wclear(win);
-	    sprintf(txt, "%s: %s", g_programName, g_programVersion);
+	    snprintf(txt, sizeof(txt), "%s: %s", g_programName, g_programVersion);
 	    put_header(txt, ALIGN_LEFT);
 	    if(d->hidden == BOOL_TRUE) {
 		current = list;
