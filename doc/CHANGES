@@ -1,4 +1,7 @@
 
+xfsdump-1.0.1 (30 January 2001)
+        - minor rpm and deb packaging work
+
 xfsdump-1.0.0 (15 January 2001)
 	- dump, restore, fsr and co. abstracted from xfs-cmds package
         - completed Debian packaging
