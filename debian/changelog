@@ -1,3 +1,10 @@
+xfsdump (2.2.17-1) unstable; urgency=low
+
+  * New upstream release
+  * Update xfsprogs and xfslibs-dev package dependency information.
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 17 Feb 2004 08:46:24 +1100
+
 xfsdump (2.2.16-1) unstable; urgency=low
 
   * New upstream release
