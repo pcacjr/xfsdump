@@ -1,3 +1,10 @@
+xfsdump-2.2.15 (18 Dec 2003)
+	- a mod was added in 2.2.13 to fix the way xfsdump handles
+	  multiple dump sessions to a single tape.  The mod fixed
+	  problems that the TS tape driver was hitting but actually
+	  broke multiple backup functionality using the ST tape
+	  driver.  Both problems (ST and TS) are fixed in 2.2.15.
+
 xfsdump-2.2.14 (18 October 2003)
 	- update Debian packaging to require latest dmapi packages.
 

@@ -415,6 +415,7 @@ static void calc_best_blk_and_rec_sz( drive_t *drivep );
 static bool_t set_best_blk_and_rec_sz( drive_t *drivep );
 static bool_t isefsdump( drive_t *drivep );
 static int get_driver_character_major( const char * );
+static void map_ts_status( struct mtget *, struct mtget_sgi );
 
 /* RMT trace stubs
  */
@@ -3592,14 +3593,34 @@ mt_get_status( drive_t *drivep, long *status)
 
 	ASSERT( contextp->dc_fd >= 0 );
 
-	if ( ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0 ) {
-		/* failure
+	if (TS_ISDRIVER) {
+		/*
+		 * Call the MTIOCGET_SGI ioctl for TS devices, then
+		 * map the results into ST format (mtget) using the
+		 * TS workaround routine called map_ts_status().
+		 * See comments in map_ts_status() for more detail.
 		 */
-		mlog(MLOG_DEBUG,
-			"tape command MTIOCGET failed : %d (%s)\n",
-	 		errno,
- 	 		strerror( errno ));
-		return BOOL_FALSE;
+		struct mtget_sgi mt_stat_sgi;
+                if ( ioctl(contextp->dc_fd, MTIOCGET_SGI, &mt_stat_sgi) < 0 ) {
+                        /* failure
+                         */
+                        mlog(MLOG_DEBUG,
+                                "tape command MTIOCGET_SGI failed : %d (%s)\n",
+                                errno,
+                                strerror( errno ));
+                        return BOOL_FALSE;
+                }
+		map_ts_status( &mt_stat, mt_stat_sgi );
+	} else {
+		if ( ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0 ) {
+			/* failure
+			 */
+			mlog(MLOG_DEBUG,
+				"tape command MTIOCGET failed : %d (%s)\n",
+	 			errno,
+ 	 			strerror( errno ));
+			return BOOL_FALSE;
+		}
 	}
 
 	/* success
@@ -5309,7 +5330,7 @@ bsf_and_verify( drive_t *drivep )
 
 	/* Can't do with LINUX ST driver, as GMT_EOF never set for left of fmk */
 	if ( TS_ISDRIVER ) {
-		( void )mt_op( contextp->dc_fd, MTBSFM, 1 );
+		( void )mt_op( contextp->dc_fd, MTBSF, 1 );
 		for ( try = 1 ; ; try++ ) {
 			mtstat_t mtstat;
 		
@@ -5354,7 +5375,7 @@ bsf_and_verify( drive_t *drivep )
 			return rewind_and_verify( drivep );
 		}
 
-		( void )mt_op( contextp->dc_fd, MTBSFM, 1 );
+		( void )mt_op( contextp->dc_fd, MTBSF, 1 );
 
 		try = 1;
 status:		ok = mt_get_status( drivep, &mtstat );
@@ -5542,5 +5563,47 @@ get_driver_character_major( const char *driver )
 found:
 	fclose(f);
 	return major;
+}
+
+static void
+map_ts_status( struct mtget *mtstat, struct mtget_sgi mtstat_sgi)
+{
+	/*
+	 * This routine has been added as a workaround for a TS/APD
+	 * bug which sets the BOT flag incorrectly when positioned
+	 * at a filemark.  The BOT bug has been fixed in APD 2.8,
+	 * however the fix won't be released until spring 2004 (well
+	 * after xfsdump 2.2.15).  This xfsdump workaround begins
+	 * in mt_get_status(), where we call the MTIOCGET_SGI ioctl
+	 * rather than the ST-emulated MTIOCGET ioctl for TS devices.
+	 * This routine is called following the MTIOCGET_SGI ioctl
+	 * to map the TS mtget_sgi.mt_dposn bits back to an ST value
+	 * for the mt_gstat status field.  NOTE that this routine does
+	 * NOT map the entire mtget struct, ONLY the mt_gstat field,
+	 * as required by mt_get_status()!!!  The ST mtget structure
+	 * is returned to mt_get_status() with ONLY the correct mt_gstat
+	 * flags set. This workaround can be removed once APD 2.8 has
+	 * been released for at least 6 months (Oct-Dec 2004).
+	 */
+	mtstat->mt_gstat = 0;
+	if (mtstat_sgi.mt_dposn & MT_BOT) {
+		mtstat->mt_gstat |= GMT_BOT(0xffffffff);
+	}
+	if (mtstat_sgi.mt_dposn & MT_EOT) {
+		mtstat->mt_gstat |= GMT_EOT(0xffffffff);
+	}
+	if (mtstat_sgi.mt_dposn & MT_WPROT) {
+		mtstat->mt_gstat |= GMT_WR_PROT(0xffffffff);
+	}
+	if (mtstat_sgi.mt_dposn & MT_ONL) {
+		mtstat->mt_gstat |= GMT_ONLINE(0xffffffff);
+	}
+	if (mtstat_sgi.mt_dposn & MT_EOD) {
+		mtstat->mt_gstat |= GMT_EOD(0xffffffff);
+	}
+	if (mtstat_sgi.mt_dposn & MT_FMK) {
+		mtstat->mt_gstat |= GMT_EOF(0xffffffff);
+	}
+	return;
 }
 
