@@ -44,51 +44,50 @@
 #include "global.h"
 #include "inventory.h"
 
-#define VAR_PATH	"/var"
-#define VARLIB_PATH	VAR_PATH"/lib"
-#define XFSDUMP_PATH	VARLIB_PATH"/xfsdump"
-#define VAR_MODE	0755
-#define VAR_OWNER	0
-#define VAR_GROUP	0
-
-static char *paths[] = { VAR_PATH, VARLIB_PATH, XFSDUMP_PATH };
-#define var_path	paths[0]
-#define varlib_path	paths[1]
-#define xfsdump_path	paths[2]
-
 static void var_skip_recurse( char *, void ( * )( xfs_ino_t ));
+static int  var_create_component( char * );
 
 void
 var_create( void )
 {
-	intgen_t rval;
-	intgen_t i;
+	char path[PATH_MAX];
+	char *p;
 
-	mlog( MLOG_DEBUG,
-		"creating directory %s\n",
-		xfsdump_path );
+	p = strcpy( path, XFSDUMP_DIRPATH );
+	mlog( MLOG_DEBUG, "creating directory %s\n", path );
 
-	for (i = 0 ; i < sizeof(paths)/sizeof(char *); i++) {
-		rval = mkdir( paths[i], VAR_MODE );
-		if ( rval && errno != EEXIST ) {
-			mlog( MLOG_NORMAL,
-			      "unable to create %s: %s\n",
-			      paths[i],
-			      strerror( errno ));
-			return;
+	do {
+		p++;
+		if ( *p == '/' ) {
+			*p = '\0';
+			if ( ! var_create_component( path ) )
+				return;
+			*p = '/';
 		}
-		if ( rval == 0 ) {
-			rval = chown( paths[i], VAR_OWNER, VAR_GROUP );
-			if ( rval ) {
-				mlog( MLOG_NORMAL,
-				      "unable to chown %s: %s\n",
-				      paths[i],
-				      strerror( errno ));
-			}
-		}
-	}
+	} while ( *p );
+
+	( void ) var_create_component( path );
 }
 
+static int
+var_create_component( char *path )
+{
+	int rval = mkdir( path, 0755 );
+
+	if ( rval && errno != EEXIST ) {
+		mlog( MLOG_NORMAL, "unable to create %s: %s\n",
+		      path, strerror( errno ));
+		return 0;
+	}
+	if ( rval == 0 ) {
+		rval = chown( path, 0, 0 );
+		if ( rval ) {
+			mlog( MLOG_NORMAL, "unable to chown %s: %s\n",
+			      path, strerror( errno ));
+		}
+	}
+	return 1;
+}
 
 void
 var_skip( uuid_t *dumped_fsidp, void ( *cb )( xfs_ino_t ino ))
