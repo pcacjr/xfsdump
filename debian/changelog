@@ -1,3 +1,9 @@
+xfsdump (1.0.6) unstable; urgency=low
+
+  * Remove spurious warnings when dumping quota information.
+
+ -- Nathan Scott <nathans@debian.org>  Tue,  1 May 2001 15:32:24 +1000
+
 xfsdump (1.0.5) unstable; urgency=low
 
   * Initial release (closes #83832).

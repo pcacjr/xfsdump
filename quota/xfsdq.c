@@ -54,8 +54,11 @@ void report(int id, int type, char *device)
 
 	memset(&d, 0, sizeof(struct fs_disk_quota));
 	if (quotactl(QCMD(Q_XGETQUOTA, type), device, id, (void *)&d) < 0) {
+		/*
+		 * debug only - uid's without quota expected to give errors *
 		fprintf(stderr, "%s: quotactl id=%d, device=", progname, id);
 		perror(device);
+		*/
 		return;
 	}
 	printf("fs = %s\n", device);
