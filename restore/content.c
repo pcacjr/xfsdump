@@ -3246,7 +3246,7 @@ applynondirdump( drive_t *drivep,
 		drive_ops_t *dop = drivep->d_opsp;
 		drive_mark_t drivemark;
 		bstat_t *bstatp = &fhdrp->fh_stat;
-		bool_t resyncpr;
+		bool_t resyncpr = BOOL_FALSE;
 		rv_t rv;
 		intgen_t rval;
 
@@ -7128,7 +7128,7 @@ restore_reg( drive_t *drivep,
 #ifdef EXTATTR
 	off64_t restoredsz = 0;
 #endif /* EXTATTR */
-	off64_t offset;
+	off64_t offset = 0;
 	rv_t rv;
 
 	if ( ! path ) {
@@ -8391,7 +8391,7 @@ restore_extattr( drive_t *drivep,
 	drive_ops_t *dop = drivep->d_opsp;
 	extattrhdr_t *ahdrp = ( extattrhdr_t * )extattrbufp;
 	bstat_t *bstatp = &fhdrp->fh_stat;
-	bool_t isfilerestored;
+	bool_t isfilerestored = BOOL_FALSE;
 
 	ASSERT( extattrbufp );
 
