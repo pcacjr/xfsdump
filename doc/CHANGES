@@ -1,3 +1,7 @@
+xfsdump-2.2.12 (29 May 2003)
+	- fix up an invutil Makefile botch which was effectively
+	  disabling the optional ncurses support (interactive mode).
+
 xfsdump-2.2.11 (26 April 2003)
 	- rework configure.in to make use of shared macros.
 	- fix up #include lines to allow compilation of sources
