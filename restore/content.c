@@ -1236,11 +1236,12 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				return BOOL_FALSE;
 			}
 
-#ifdef DMEXTATTR
-			/* alloc a file system handle, to be used with
-			 * open_by_handle().
+			/* effectively initialize libhandle on this filesystem by
+			 * allocating a file system handle. this needs to be done
+			 * before any open_by_handle() calls (and possibly other
+			 * libhandle calls).
 			 */
-			if (restoredmpr) {
+			{
 				void	*fshanp;
 				size_t	fshlen=0;
 
@@ -1255,7 +1256,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				/* libhandle has it cached, release this copy */
 				free_handle(fshanp, fshlen);
 			}
-#endif /* DMEXTATTR */
 		}
 	} else {
 		if ( optind < argc ) {

@@ -1,3 +1,14 @@
+xfsdump-2.2.21 (15 Apr 2004)
+	- Always allocate a filesystem handle on restore instead of
+	  doing so only when restoring DMAPI events, as the filesystem
+	  handle is also needed if restoring extended attrs.
+	- Remove path_to_fshandle calls in tree.c. These existed to
+	  ensure that we always had a fshandle before calling
+	  open_by_handle. These calls are extraneous since we now
+	  allocate a fshandle during context_init.
+	- Change open_by_fshandle calls to open_by_handle since
+	  we are passing a file handle, not a fshandle.
+
 xfsdump-2.2.20 (31 Mar 2004)
 	- fix up "xfs_invutil -i" which was getting segmentation faults on
 	  presumably long session labels.
