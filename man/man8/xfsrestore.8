@@ -200,6 +200,10 @@ Causes progress reports to be printed at intervals of
 The interval value is approximate, \f2xfsrestore\f1 will
 delay progress reports to avoid undue processing overhead.
 .TP 5
+\f3\-q\f1
+Source tape drive is a QIC tape.  QIC tapes only use a 512 byte
+blocksize, for which \f2xfsrestore\f1 must make special allowances.
+.TP 5
 \f3\-r\f1
 Selects the cumulative mode of operation.
 .TP 5

@@ -3,6 +3,8 @@
 	  XFS_IOC_FSGEOMETRY instead of XFS_IOC_GETFSUUID ioctl, so
 	  we can deprecate that "special" UUID ioctl at some point
 	  in the distant future.
+	- add -q description to xfsdump/xfsrestore man pages and
+	  usage text
 
 xfsdump-1.1.14 (16 January 2002)
 	- fix xfsrestore so that cumulative restores (with -r)

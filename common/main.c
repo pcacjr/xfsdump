@@ -988,6 +988,7 @@ usage( void )
 	ULO( "(force usage of minimal rmt)",		GETOPT_MINRMT );
 	ULO( "(overwrite tape)",			GETOPT_OVERWRITE );
 	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
+	ULO( "<use QIC tape settings>",			GETOPT_QIC );
 	ULO( "<subtree> ...",				GETOPT_SUBTREE );
 	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
 	ULO( "<maximum file size>",			GETOPT_MAXDUMPFILESIZE );
@@ -1046,6 +1047,7 @@ usage( void )
 	ULO( "<file> (restore only if newer than)",	GETOPT_NEWER );
 	ULO( "(restore owner/group even if not root)",	GETOPT_OWNER );
 	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
+	ULO( "<use QIC tape settings>",			GETOPT_QIC );
 	ULO( "(cumulative restore)",			GETOPT_CUMULATIVE );
 	ULO( "<subtree> ...",				GETOPT_SUBTREE );
 	ULO( "(contents only)",				GETOPT_TOC );

@@ -167,6 +167,10 @@ the percentage of data dumped,
 and
 the elapsed time.
 .TP 5
+\f3\-q\f1
+Destination tape drive is a QIC tape.  QIC tapes only use a 512 byte
+blocksize, for which \f2xfsdump\f1 must make special allowances.
+.TP 5
 \f3\-s\f1 \f2pathname\f1 [ \f3\-s\f1 \f2pathname\f1 ... ]
 Restricts the dump to files contained in the specified pathnames
 (subtrees).
