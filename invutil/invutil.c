@@ -465,7 +465,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 
     if ((fstabEntries != 0)  && (fstabEntries != nEntries)) {
 	if(debug) {
-	    printf("ftruncate fstab from %d to %d (%d bytes)\n",
+	    printf("ftruncate fstab from %d to %d (%ld bytes)\n",
 		   nEntries,
 		   fstabEntries,
 		   sizeof(invt_counter_t) + (sizeof(invt_fstab_t) * fstabEntries));
@@ -575,7 +575,7 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 
     if ((validEntries != 0)  && (validEntries != nEntries)) {
 	if(debug) {
-	    printf("ftruncate idx from %d to %d (%d bytes)\n",
+	    printf("ftruncate idx from %d to %d (%ld bytes)\n",
 		   nEntries,
 		   validEntries,
 		   sizeof(invt_counter_t) + (validEntries * sizeof(invt_entry_t)) );
@@ -694,10 +694,10 @@ CheckAndPruneStObjFile( bool_t checkonly,
 					      (i * sizeof(invt_stream_t)));
 		printf( "\t\t\tpathname:\t%s\n",
 			StObjstrm->st_cmdarg);
-		printf( "\t\t\tinode start:\t%lld\n",
-			StObjstrm->st_startino.ino);
-		printf( "\t\t\tinode   end:\t%lld\n",
-			StObjstrm->st_endino.ino);
+		printf( "\t\t\tinode start:\t%llu\n",
+			(unsigned long long) StObjstrm->st_startino.ino);
+		printf( "\t\t\tinode   end:\t%llu\n",
+			(unsigned long long) StObjstrm->st_endino.ino);
 		printf( "\t\t\tinterrupted:\t%s\n",
 			StObjstrm->st_interrupted ? "YES" : "NO" );
 		printf( "\t\t\tmedia files:\t%d\n",
@@ -708,11 +708,11 @@ CheckAndPruneStObjFile( bool_t checkonly,
 						    (j * sizeof(invt_mediafile_t)));
 		    printf( "\t\t\tmfile file %d:\n", j);
 		    printf( "\t\t\t\tmfile size:\t%lld\n",
-			    StObjmed->mf_size);
-		    printf( "\t\t\t\tmfile start:\t%lld\n",
-			    StObjmed->mf_startino.ino);
-		    printf( "\t\t\t\tmfile end:\t%lld\n",
-			    StObjmed->mf_endino.ino);
+			    (long long) StObjmed->mf_size);
+		    printf( "\t\t\t\tmfile start:\t%llu\n",
+			    (unsigned long long) StObjmed->mf_startino.ino);
+		    printf( "\t\t\t\tmfile end:\t%llu\n",
+			    (unsigned long long) StObjmed->mf_endino.ino);
 		    printf( "\t\t\t\tmedia label:\t\"%s\"\n",
 			    StObjmed->mf_label);
 		}
@@ -955,14 +955,14 @@ read_n_bytes(int fd, void * buf, size_t count, char *path)
 
     rc = read(fd, buf, count);
     if (rc < 0) {
-	fprintf(stderr, "%s: read of %d bytes on %s failed.\n",
+	fprintf(stderr, "%s: read of %ld bytes on %s failed.\n",
 		g_programName, count, path);
 	perror(path);
 	exit (2);
     } else  if (rc != count) {
-	fprintf(stderr, "%s: read of %d bytes on %s failed.\n",
+	fprintf(stderr, "%s: read of %ld bytes on %s failed.\n",
 		g_programName, count, path);
-	fprintf(stderr, "Tried to read %d bytes, got %d.\n",
+	fprintf(stderr, "Tried to read %ld bytes, got %d.\n",
 		count, rc);
 	exit (2);
     }
@@ -975,14 +975,14 @@ write_n_bytes(int fd, void * buf, size_t count, char *path)
 
     rc = write(fd, buf, count);
     if (rc < 0) {
-	fprintf(stderr, "%s: write of %d bytes on %s failed.\n",
+	fprintf(stderr, "%s: write of %ld bytes on %s failed.\n",
 		g_programName, count, path);
 	perror(path);
 	exit (2);
     } else  if (rc != count) {
-	fprintf(stderr, "%s: write of %d bytes on %s failed.\n",
+	fprintf(stderr, "%s: write of %ld bytes on %s failed.\n",
 		g_programName, count, path);
-	fprintf(stderr, "Tried to write %d bytes, wrote %d.\n",
+	fprintf(stderr, "Tried to write %ld bytes, wrote %d.\n",
 		count, rc);
 	exit (2);
     }
@@ -999,7 +999,7 @@ mmap_n_bytes(int fd, size_t count, bool_t checkonly, char *path)
 		 MAP_SHARED, fd, 0 );
 	
     if (temp == (void *)-1) {
-	fprintf( stderr, "%s: error in mmap of %d bytes for file %s\n",
+	fprintf( stderr, "%s: error in mmap of %ld bytes for file %s\n",
 		 g_programName, count, path);
 	perror("mmap");
 	fprintf( stderr, "%s: abnormal termination\n", g_programName );
@@ -1027,8 +1027,8 @@ void
 usage (void)
 {
     char linebuf[ 200 ];
-    size_t pfxsz;
-    size_t ps;
+    int pfxsz;
+    int ps;
     char *ns = "";
 
     fprintf( stderr, "%s: %s\n", g_programName, g_programVersion );
