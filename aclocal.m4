@@ -186,18 +186,17 @@ AC_DEFUN([AC_PACKAGE_NEED_UUID_H],
 
 AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE],
   [ AC_CHECK_FUNCS(uuid_compare)
-    if test $ac_cv_func_uuid_compare = no; then
-	AC_CHECK_LIB(uuid, uuid_compare, [libuuid=/usr/lib/libuuid.a], [
-	echo
-	echo 'FATAL ERROR: could not find a valid UUID library.'
-	echo 'Install the Universally Unique Identifiers library package.'
-	exit 1])
+    if test $ac_cv_func_uuid_compare = yes; then
+	libuuid=""
+    else
+	AC_CHECK_LIB(uuid, uuid_compare,, [
+	    echo
+	    echo 'FATAL ERROR: could not find a valid UUID library.'
+	    echo 'Install the Universally Unique Identifiers library package.'
+	    exit 1])
+	libuuid="-luuid"
     fi
     AC_SUBST(libuuid)
-  ])
-
-AC_DEFUN([AC_PACKAGE_CHECK_LIBUUID],
-  [ test $pkg_platform = freebsd && libuuid=""
   ])
 
 AC_DEFUN([AC_PACKAGE_NEED_NCURSES_H],
@@ -391,10 +390,10 @@ AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_MACROS],
 #include <attr/attributes.h>],
     [ int x = ATTR_SECURE; ], [ echo ok ], [
         echo
-        echo 'FATAL ERROR: incorrect macros exist in attributes.h header file.'
+	echo 'FATAL ERROR: could not find a current attributes header.'
         echo 'Upgrade the extended attributes (attr) development package.'
         echo 'Alternatively, run "make install-dev" from the attr source.'
-        exit 1 ])
+	exit 1 ])
   ])
 
 # 
