@@ -33,7 +33,7 @@
 /*
  * Estimate space of an XFS filesystem
  */
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include <sys/stat.h>
 #include <ftw.h>
 #include "config.h"

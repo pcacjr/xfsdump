@@ -33,9 +33,8 @@
 #ifndef ARCH_XLATE_H
 #define ARCH_XLATE_H
 
-#include <libxfs.h>
-#include <string.h>
-#include <jdm.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 
 #include "types.h"
 #include "global.h"

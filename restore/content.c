@@ -30,8 +30,8 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <jdm.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 
 #ifdef DOSOCKS
 #include <sys/socket.h>
@@ -42,9 +42,9 @@
 #include <sys/stat.h>
 #ifdef EXTATTR
 #include <sys/ioctl.h>
-#include <attributes.h>
+#include <attr/attributes.h>
 #endif /* EXTATTR */
-#include <handle.h>
+#include <xfs/handle.h>
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>

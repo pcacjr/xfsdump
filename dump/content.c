@@ -30,8 +30,8 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
-#include <jdm.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 
 #include <sys/stat.h>
 #include <sys/prctl.h>
@@ -50,7 +50,7 @@
 #endif
 
 #ifdef EXTATTR
-#include <attributes.h>
+#include <attr/attributes.h>
 #endif /* EXTATTR */
 
 #ifdef DMEXTATTR

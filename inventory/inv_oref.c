@@ -32,8 +32,8 @@
  *                                                                        *
  **************************************************************************/
 
-#include <libxfs.h>
-#include <jdm.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 
 #include "inv_priv.h"
 #include "inv_oref.h"

@@ -43,7 +43,7 @@
  */
 
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 
 /*
  *	Note that local vs remote file descriptors are distinquished

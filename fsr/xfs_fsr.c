@@ -55,8 +55,8 @@
  *	-p passes	Number of passes before terminating global re-org.
  */
 
-#include <libxfs.h>
-#include <jdm.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 #include "config.h"
 
 #include <fcntl.h>
@@ -69,8 +69,8 @@
 #include <sys/wait.h>
 #include <sys/vfs.h>
 #include <sys/statvfs.h>
-#include <attributes.h>
-#include <xfs_dfrag.h>
+#include <attr/attributes.h>
+#include <xfs/xfs_dfrag.h>
 
 int vflag;
 int gflag;

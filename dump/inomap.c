@@ -30,9 +30,9 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#include <libxfs.h>
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
 #include <malloc.h>
-#include <jdm.h>
 
 #include <sys/stat.h>
 #include <errno.h>
@@ -56,7 +56,7 @@
 #include "inomap.h"
 #include "arch_xlate.h"
 #include "exit.h"
-#include <attributes.h>
+#include <attr/attributes.h>
 
 /* structure definitions used locally ****************************************/
 

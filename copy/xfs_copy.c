@@ -31,7 +31,7 @@
  */
 
 #define ustat __kernel_ustat
-#include <libxfs.h>
+#include <xfs/libxfs.h>
 #include <signal.h>
 #include <pthread.h>
 #include <sys/stat.h>

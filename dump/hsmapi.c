@@ -32,10 +32,10 @@
  *                                                                        *
  **************************************************************************/
 
-#include <libxfs.h>
-#include <attributes.h>
-#include <handle.h>
-#include <dmapi.h>
+#include <xfs/libxfs.h>
+#include <attr/attributes.h>
+#include <xfs/handle.h>
+#include <xfs/dmapi.h>
 
 #include "hsmapi.h"
 
