@@ -707,7 +707,7 @@ msgid "could not remove tmpdir: %s: %s\n"
 msgstr ""
 
 #, c-format
-msgid "%s: [-ugV] <mntpnt>\n"
+msgid "%s: [-ugV] [-f path] <mntpnt>\n"
 msgstr ""
 
 #, c-format
