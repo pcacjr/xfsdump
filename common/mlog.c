@@ -657,6 +657,7 @@ rv_t
 mlog_get_hint( void )
 {
 	stream_state_t states[] = { S_RUNNING };
+	/* REFERENCED */
 	bool_t ok;
 	rv_t hint;
 	
@@ -708,6 +709,7 @@ mlog_exit_flush(void)
 			intgen_t streamix;
 			int exit_code;
 			rv_t exit_return, exit_hint;
+			/* REFERENCED */
 			bool_t ok;
 
 			ok = stream_get_exit_status(pids[i],

@@ -201,6 +201,7 @@ main( int argc, char *argv[] )
 	intgen_t exitcode;
 	rlim64_t tmpstacksz;
 	bool_t ok;
+	/* REFERENCED */
 	int rval;
 
 	/* sanity checks
