@@ -119,8 +119,10 @@ int main(int argc, char **argv)
 	}
 	endmntent(mtab);
 
-	if (!found)
+	if (!found) {
 		fprintf(stderr, "%s: mount point %s is not in " MOUNTED,
 			progname, argv[optind]);
-	exit(found == 1);
+		exit(1);
+	}
+	exit(0);
 }
