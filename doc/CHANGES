@@ -1,4 +1,8 @@
 
+xfsdump-1.0.3 (28 March 2001)
+	- minor rpm spec file changes
+	- added xfsdq and xfsrq for dumping quota information
+
 xfsdump-1.0.2 (10 January 2001)
         - support extended attributes in xfsdump and xfsrestore
 
