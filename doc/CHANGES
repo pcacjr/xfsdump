@@ -1,3 +1,6 @@
+xfsdump-2.2.26 (09 Feb 2005)
+	- Fix xfsrestore so that it can restore to non-XFS filesystems again.
+
 xfsdump-2.2.25 (13 Oct 2004)
 	- Bump the version to deal with the mixup in 2.2.23-lbs
 	  (that fix was missing from the 2.2.23/2.2.24 versions).

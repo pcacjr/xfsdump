@@ -149,6 +149,10 @@ struct tran {
 	char *t_dstdir;
 		/* full absolute pathname of destination directory
 		 */
+	bool_t t_dstdirisxfspr;
+		/* destination directory is an xfs filesystem; xfs-specific
+		 * calls can be made when needed.
+		 */
 	char *t_orphdir;
 		/* full absolute pathname of orphanage directory
 		 */
@@ -338,7 +342,8 @@ tree_init( char *hkdir,
 	   size64_t vmsz,
 	   bool_t fullpr,
 	   bool_t restoredmpr,
-	   bool_t largewindowpr )
+	   bool_t largewindowpr,
+	   bool_t dstdirisxfspr )
 {
 	off64_t nodeoff;
 	char *perspath;
@@ -361,6 +366,7 @@ tree_init( char *hkdir,
 	tranp->t_toconlypr = toconlypr;
 	tranp->t_hkdir = hkdir;
 	tranp->t_dstdir = dstdir;
+	tranp->t_dstdirisxfspr = dstdirisxfspr;
 
 	/* allocate a char string buffer to hold the abs. pathname
 	 * of the orphanage directory file. load it with the pathname.
@@ -500,7 +506,11 @@ tree_init( char *hkdir,
 }
 
 bool_t
-tree_sync( char *hkdir, char *dstdir, bool_t toconlypr, bool_t fullpr )
+tree_sync( char *hkdir,
+	   char *dstdir,
+	   bool_t toconlypr,
+	   bool_t fullpr,
+	   bool_t dstdirisxfspr )
 {
 	off64_t nodeoff;
 	char *perspath;
@@ -529,6 +539,7 @@ tree_sync( char *hkdir, char *dstdir, bool_t toconlypr, bool_t fullpr )
 	tranp->t_toconlypr = toconlypr;
 	tranp->t_hkdir = hkdir;
 	tranp->t_dstdir = dstdir;
+	tranp->t_dstdirisxfspr = dstdirisxfspr;
 
 	/* allocate a char string buffer to hold the abs. pathname
 	 * of the orphanage directory file. load it with the pathname.
@@ -2548,6 +2559,9 @@ setdirattr( dah_t dah, char *path )
 #ifdef EXTATTR
 	/* set the extended attributes
 	 */
+	if ( !tranp->t_dstdirisxfspr )
+		return;
+
 	if (path_to_handle(path, &hanp, &hlen)) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "path_to_handle of %s failed:%s\n"),

@@ -385,8 +385,11 @@ struct pers {
 			 * has been initialized and validated.
 			 */
 		char dstdir[ MAXPATHLEN ];
-		bool_t dstdirisxfspr;
 			/* absolute pathname of the destination directory
+			 */
+		bool_t dstdirisxfspr;
+			/* destination directory is an xfs filesystem; xfs-specific
+			 * calls can be made when needed.
 			 */
 		ix_t dumpcnt;
 			/* how many dumps have been applied completedly (A1)
@@ -1235,27 +1238,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				usage( );
 				return BOOL_FALSE;
 			}
-
-			/* effectively initialize libhandle on this filesystem by
-			 * allocating a file system handle. this needs to be done
-			 * before any open_by_handle() calls (and possibly other
-			 * libhandle calls).
-			 */
-			{
-				void	*fshanp;
-				size_t	fshlen=0;
-
-				if(path_to_fshandle(dstdir, &fshanp, &fshlen)) {
-					mlog( MLOG_NORMAL, _(
-					      "unable to construct a file "
-					      "system handle for %s: %s\n"),
-					      dstdir,
-					      strerror( errno ));
-					return BOOL_FALSE;
-				}
-				/* libhandle has it cached, release this copy */
-				free_handle(fshanp, fshlen);
-			}
 		}
 	} else {
 		if ( optind < argc ) {
@@ -1586,7 +1568,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		ok = tree_sync( tranp->t_hkdir,
 				persp->a.dstdir,
 				tranp->t_toconlypr,
-				fullpr );
+				fullpr,
+				persp->a.dstdirisxfspr );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
@@ -1659,7 +1642,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		stdesc_t *stdescp;
 
 		strcpy( persp->a.dstdir, dstdir );
-		persp->a.dstdirisxfspr = isinxfs( dstdir );
+		persp->a.dstdirisxfspr = platform_test_xfs_path( dstdir );
 		if ( cumpr ) {
 			persp->a.cumpr = cumpr;
 		}
@@ -1730,6 +1713,29 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		return BOOL_FALSE;
 	}
 #endif /* EXTATTR */
+
+#if defined(DMEXTATTR) || defined(EXTATTR)
+	/* effectively initialize libhandle on this filesystem by
+	 * allocating a file system handle. this needs to be done
+	 * before any open_by_handle() calls (and possibly other
+	 * libhandle calls).
+	 */
+	if ( persp->a.dstdirisxfspr ) {
+		void	*fshanp;
+		size_t	fshlen=0;
+
+		if(path_to_fshandle(persp->a.dstdir, &fshanp, &fshlen)) {
+			mlog( MLOG_NORMAL,
+				_("unable to construct a file "
+				  "system handle for %s: %s\n"),
+				persp->a.dstdir,
+				strerror( errno ));
+			return BOOL_FALSE;
+		}
+		/* libhandle has it cached, release this copy */
+		free_handle(fshanp, fshlen);
+	}
+#endif
 
 	/* map in pers. inv. descriptors, if any. NOTE: this ptr is to be
 	 * referenced ONLY via the macros provided; the descriptors will be
@@ -1815,7 +1821,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		ok = tree_sync( tranp->t_hkdir,
 				persp->a.dstdir,
 				tranp->t_toconlypr,
-				fullpr );
+				fullpr,
+				persp->a.dstdirisxfspr );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
@@ -2257,7 +2264,8 @@ content_stream_restore( ix_t thrdix )
 					tranp->t_vmsz,
 					fullpr,
 					persp->a.restoredmpr,
-					tranp->t_largewindowpr );
+					tranp->t_largewindowpr,
+					persp->a.dstdirisxfspr );
 			if ( ! ok ) {
 				Media_end( Mediap );
 				return EXIT_ERROR;

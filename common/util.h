@@ -89,10 +89,6 @@ extern intgen_t read_buf( char *bufp,
  */
 extern char *strncpyterm( char *s1, char *s2, size_t n );
 
-/* determines if the file specified is contained in an xfs file system
- */
-extern bool_t isinxfs( char *path );
-
 /* converts a struct stat64 into a xfs_bstat_t. does not fill in fields
  * where info cannot be extracted from struct stat64.
  */

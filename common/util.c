@@ -529,30 +529,6 @@ cvtnum( int blocksize, char *s )
 	return -1;
 }
 
-bool_t
-isinxfs( char *path )
-{
-	intgen_t fd;
-	xfs_fsop_geom_v1_t geo;
-	intgen_t rval;
-	
-	fd = open( path, O_RDONLY );
-	if ( fd < 0 ) {
-		mlog( MLOG_NORMAL,
-		      _("WARNING: could not open %s "
-		      "to determine fs type: assuming non-XFS\n"),
-		      path );
-		return BOOL_FALSE;
-	}
-        rval = ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geo);
-        
-	if ( rval < 0 ) {
-		return BOOL_FALSE;
-	} else {
-		return BOOL_TRUE;
-	}
-}
-
 void
 fold_init( fold_t fold, char *infostr, char c )
 {
