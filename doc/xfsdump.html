@@ -56,6 +56,17 @@
       </ul>
     </ul>
 
+  <li><a href="#drive_strategy">Drive Strategies</a>
+    <ul>
+    <li><a href="#drive_scsitape">Drive Scsitape</a>
+      <ul>
+      <li><a href="#reading">Reading</a>
+      </ul>
+    <li><a href="#librmt">Librmt</a>
+    <li><a href="#drive_minrmt">Drive Minrmt</a>
+    <li><a href="#drive_simple">Drive Simple</a>
+    </ul>
+
   <li><a href="#Q&A">Questions and Answers</a>
   <ul>
     <li><a href="#DMF">How is -a and -z handled by xfsdump ?</a>
@@ -1516,6 +1527,335 @@ should not happen now since it is done earlier.
 
 <p>
 <hr>
+<h3><a name="drive_strategy">Drive Strategies</a></h3>
+The I/O which happens when reading and writing the dump
+can be to a tape, file, stdout or 
+to a tape remotely via rsh(1) (or $RSH)  and rmt(1) (or $RMT).
+There are 3 pieces of code called strategies which
+handle the dump I/O:
+<ul>
+<li>drive_scsitape
+<li>drive_minrmt
+<li>drive_simple
+</ul>
+There is an associated data structure - below is one
+for drive_scsitape:
+<pre>
+    drive_strategy_t drive_strategy_scsitape = {
+	    DRIVE_STRATEGY_SCSITAPE,        /* ds_id */
+	    "scsi tape (drive_scsitape)",   /* ds_description */
+	    ds_match,                       /* ds_match */
+	    ds_instantiate,                 /* ds_instantiate */
+	    0x1000000ll,                    /* ds_recmarksep  16 MB */
+	    0x10000000ll,                   /* ds_recmfilesz 256 MB */
+    };
+</pre>
+The choice of the strategy to use is done by a
+scoring scheme which is probably not warranted IMHO.
+(A direct cmd option would be simpler and less confusing.)
+The scoring function is called ds_match.
+
+<table border>
+<tr>
+   <th>strategy</th><th>IRIX scoring</th><th>Linux scoring</th>
+</tr>
+<tr>
+   <td>drive_scsitape</td>
+   <td>
+   score badly with -10 if:
+       <ul>
+       <li>stdio pathname
+       <li>if colon (':') in pathname (assumes remote) and
+	    <ul>
+	    <li> open on pathname fails
+	    <li> MTIOCGET ioctl fails
+	    </ul>
+       <li>or not colon and drivername is not "tpsc" or "ts_"
+       </ul>
+   else if syscalls complete ok then we score 10.
+   </td>
+   <td>
+   score like IRIX but instead of checking drivername associated
+   with path (not available on Linux), score -10 if the following:
+	<ul>
+	<li>stat fails
+	<li>it is not a character device 
+	<li>its real path does not contain "/nst", "/st" nor "/mt". 
+	</ul>
+   </td>
+</tr>
+<tr>
+    <td>drive_minrmt</td>
+    <td>
+	<ul>
+	<li>score badly with -10 if stdio pathname
+	<li>score 10 if have all of the following:
+	    <ul>
+	    <li>colon is in the pathname (assumes remote from this)
+	    <li>blocksize set with -b option
+	    <li>minrmt chosen with -m option
+	    </ul>
+	<li>otherwise score badly with -10
+	</ul>
+    </td>
+    <td>score like IRIX but do not require a colon in the pathname;
+	i.e. one can use this strategy on Linux without requiring a
+	remote pathname
+    </td>
+</tr>
+<tr>
+    <td>drive_simple</td>
+    <td>
+	<ul>
+	<li>score badly with -1 if
+	    <ul>
+	    <li>stat fails on local pathname
+	    <li>pathname is a local directory
+	    </ul>
+	<li>otherwise score with 1
+	</ul>
+    </td>
+    <td>identical to IRIX</td>
+</tr>
+</table>
+
+<p>
+Each strategy is organised like a "class" with functions/methods
+in the data structure:
+<pre>
+        do_init,                
+        do_sync,                
+        do_begin_read,          
+        do_read,                
+        do_return_read_buf,     
+        do_get_mark,            
+        do_seek_mark,           
+        do_next_mark,           
+        do_end_read,            
+        do_begin_write,         
+        do_set_mark,            
+        do_get_write_buf,       
+        do_write,               
+        do_get_align_cnt,       
+        do_end_write,           
+        do_fsf,                 
+        do_bsf,                 
+        do_rewind,              
+        do_erase,               
+        do_eject_media,         
+        do_get_device_class,    
+        do_display_metrics,     
+        do_quit,                
+</pre>
+
+<h4><a name="drive_scsitape">Drive Scsitape</a></h4>
+This strategy is the main one used for dumps to tape and
+dumps to a remote tape. This strategy on IRIX can be used for remote
+dumps to another IRIX machine. On Linux, this strategy is
+used for remote dumps to Linux or IRIX machines. Remote dumping uses
+the librmt library, see below.
+<p>
+If xfsdump/xfsrestore is running single-threaded (-Z option)
+or is running on Linux (which is not multi-threaded) then
+records are read/written straight to the tape. If it is running
+multi-threaded then a circular buffer is used as an intermediary
+between the client and slave threads.  
+<p>
+Initially <i>drive_init1()</i> calls <i>ds_instantiate()</i> which 
+if dump/restore is running multi-threaded, 
+creates the ring buffer with <i>ring_create</i> which initialises
+the state to RING_STAT_INIT and sets up the slave thread with
+ring_slave_entry.
+<pre>
+ds_instantiate()
+  ring_create(...,ring_read, ring_write,...)
+    - allocate and init buffers
+    - set rm_stat = RING_STAT_INIT
+    start up slave thread with ring_slave_entry
+</pre>
+The slave spends its time in a loop getting items from the
+active queue, doing the read or write operation and placing the result
+back on the ready queue.
+<pre>
+slave
+======
+ring_slave_entry()
+  loop
+    ring_slave_get() - get from active queue
+    case rm_op
+      RING_OP_READ -> ringp->r_readfunc
+      RING_OP_WRITE -> ringp->r_writefunc
+      ..
+    endcase
+    ring_slave_put() - puts on ready queue
+  endloop
+</pre>
+
+
+<p>
+<h5><a name="reading">Reading</a></h5>
+
+Prior to reading, one needs to call <i>do_begin_read()</i>,
+which calls <i>prepare_drive()</i>. <i>prepare_drive()</i> opens
+the tape drive if necessary and gets its status.
+It then works out the tape record size to use
+(<i>set_best_blk_and_rec_sz</i>) using 
+current max blksize (mtinfo.maxblksz from ioctl(fd,MTIOCGETBLKINFO,minfo))
+on the scsi tape device in IRIX.
+
+<p>
+On IRIX (from <i>set_best_blk_and_rec_sz</i>):
+<ul>
+<li>
+local -> tape_recsz = min(STAPE_MAX_RECSZ = 2 Mb, mtinfo.maxblksz)<br>
+         which typically would mean 2 Mb.
+<li>
+remote -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
+</ul>
+<p>
+On Linux:
+<ul>
+<li>
+local -> 
+    <ul>
+    <li>
+    tape_recsz = STAPE_MAX_LINUX_RECSZ = 1 Mb<br>
+    <li> or if -b cmdlineblksize specified then<br>
+    tape_recsz = min(STAPE_MAX_RECSZ = 2 Mb, cmdlineblksize)<br>
+     which typically would mean cmdlineblksize.
+    </ul>
+<li>
+remote -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
+</ul>
+<p>
+If we have a fixed size device, then it tries to read
+initially at minimum(2Mb, current max blksize) 
+but if it reads in a smaller number of bytes than this,
+then it will try again for STAPE_MIN_MAX_BLKSZ = 240 Kb data.
+
+<p>
+<pre>
+prepare_drive()
+  open drive (repeat & timeout if EBUSY)
+  get tape status (repeat 'til timeout or online)
+  set up tape rec size to try
+  loop trying to read a record using straight Read()
+      if variable blksize then
+	 ok = nread>0 & !EOD & !EOT & !FileMark
+      else fixed blksize then
+	 ok = nread==tape_recsz & !EOD & !EOT & !FileMark
+      endif
+      if ok then 
+	validate_media_file_hdr()
+      else
+        could be an error or try again with newsize
+        (complicated logic in this code!)
+      endif
+  endloop
+</pre>
+
+<p>
+For each <i>do_read</i> call in the multi-threaded case,
+we have two sides to the story: the client which is coming
+from code in <i>content.c</i> and the slave which is a simple
+thread just satisfying I/O requests.
+From the point of view of the ring buffer, these are the steps
+which happen for reading:
+<ol>
+<li>client removes msg from ready queue
+<li>client wants to read, so sets op field to READ (RING_OP_READ)
+   and puts on active queue
+<li>slave removes msg from active queue,
+   invokes client read function,
+   sets status field: OK/ERROR,
+   puts msg on ready queue
+<li>client removes this msg from ready queue
+</ol>
+
+<p>
+
+The client read code looks like the following:
+<pre>
+client
+======
+do_read()
+  getrec()
+    singlethreaded -> read_record() -> Read()
+    else -> 
+      loop 'til contextp->dc_recp is set to a buffer
+	Ring_get() -> ring.c/ring_get()
+	  remove msg from ready queue
+	      block on ready queue - qsemP( ringp->r_ready_qsemh )
+	      msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
+	      cyclic_inc(ringp->r_ready_out_ix)
+        case rm_stat: 
+	  RING_STAT_INIT, RING_STAT_NOPACK, RING_STAT_IGNORE
+            put read msg on active queue
+		contextp->dc_msgp->rm_op = RING_OP_READ
+		Ring_put(contextp->dc_ringp,contextp->dc_msgp);
+          RING_STAT_OK
+            contextp->dc_recp = contextp->dc_msgp->rm_bufp
+          ...
+        endcase
+      endloop 
+</pre>
+
+<h4><a name="librmt">Librmt</a></h4>
+Librmt is a standard library on IRIX which provides a set of
+remote I/O functions:
+<ul>
+<li>rmtopen
+<li>rmtclose
+<li>rmtioctl
+<li>rmtread
+<li>rmtwrite
+</ul>
+On linux, a librmt library is provided as part of the
+xfsdump distribution.
+The remote functions are used to dump/restore to remote
+tape drives on remote machines. It does this by using
+rsh or ssh to run rmt(1) on the remote machine. 
+The main caveat, however, comes into play for the <i>rmtioctl</i>
+function.  Unfortunately, the values for mt operations and status
+codes are different on different machines. 
+For example, the offline command op
+on IRIX is 6 and on Linux it is 7. On Linux, 6 is rewind and
+on IRIX 7 is a no-op. 
+So for the Linux xfsdump, the <i>rmtiocl</i> function has been rewritten
+to check what the remote OS is (e.g. <i>rsh host uname</i>) 
+and do appropriate mappings of codes. 
+As well as the different mt op codes, the mtget structures
+differ for IRIX and Linux and for Linux 32 bit and Linux 64 bit.
+The size of the mtget structure is used to determine which 
+structure it is and the value of <i>mt_type</i> is used to
+determine if endian conversion needs to be done. 
+<p>
+
+<h4><a name="drive_minrmt">Drive Minrmt</a></h4>
+The minrmt strategy was written based (copied) on the scsitape
+strategy. It has been simplified so that the state of the
+tape driver is not needed (i.e. status of EOT, BOT, EOD, FMK,...
+are not used) and the current blk size of the tape driver
+is not used. Instead error handling is based on the return
+codes from reading and writing and the blksize must be give
+as a parameter. It was designed for talking
+to remote NON-IRIX hosts where the status codes can vary.
+However, as was mentioned in the discussion of librmt on Linux,
+the mt operations vary on foreign hosts as well as the status
+codes. So this is only a limited solution.  
+
+<h4><a name="drive_simple">Drive Simple</a></h4>
+The simple strategy was designed for dumping to files
+or stdout. It is simpler in that it does <b>NOT</b> have to worry
+about:
+<ul> 
+<li>the ring buffer
+<li>talking to the scsitape driver with various operations and status
+<li>multiple media files
+</ul>
+
+<p>
+<hr>
 <h3><a name="Q&A">Questions and Answers</a></h3>
 
 <dl>
@@ -1689,8 +2029,7 @@ nor the extent hdr terminator:
 It only adds this data size into the media file size.
  
 </dl>
-
-
+<p>
 <hr>
 <h3><a name="out_quest">Outstanding Questions</a></h3>
 <ul>
