@@ -209,6 +209,7 @@ inv_writesession_open(
 	strcpy( ses.s_devpath, devpath );	
 	ses.s_max_nstreams = nstreams;
 
+        hdr.sh_pruned = 0; /* session is not pruned by invutil */
 	hdr.sh_time = time;
 	hdr.sh_level = level;	
 	hdr.sh_flag = (ispartial) ? INVT_PARTIAL: 0;
