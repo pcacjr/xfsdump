@@ -33,7 +33,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = builddefs.in buildrules
+LSRCFILES = builddefs.in buildmacros buildrules
 
 default install install-dev :
 
