@@ -520,8 +520,8 @@ static bool_t sc_savequotas = BOOL_TRUE;
         /* save quota information in dump
          */
 static quota_info_t quotas[] = {
-	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-u", XFS_QUOTA_UDQ_ACCT },
-	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-g", XFS_QUOTA_GDQ_ACCT }
+	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
+	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT }
 };
 
 /* definition of locally defined global functions ****************************/
@@ -6758,11 +6758,11 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
         }
  
         sprintf( buf,
-                 "%s %s %s > %s",
+                 "%s %s %s %s",
                  REPQUOTA,
                  quotainfo->repquotaargs,
-                 mntpnt,
-                 quotainfo->quotapath );
+                 quotainfo->quotapath,
+                 mntpnt );
 
         mlog( MLOG_NITTY, "saving quotas: %s\n", buf );
 

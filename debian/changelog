@@ -1,3 +1,9 @@
+xfsdump (2.2.9-1) unstable; urgency=high
+
+  * New upstream release fixing xfsdump quota file security issues
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 27 Mar 2003 11:05:54 +1100
+
 xfsdump (2.2.8-1) unstable; urgency=low
 
   * New upstream release

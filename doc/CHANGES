@@ -1,3 +1,10 @@
+xfsdump-2.2.9 (27 March 2003)
+	- add -f option to xfsdq(8) to specify an output file instead
+	  of using the standard output stream.  This file is created
+	  by xfsdq and xfsdq will fail to run if it exists already.
+	  The file is also created with a more appropriate mode than
+	  whatever the umask happened to be when xfsdump(8) was run.
+
 xfsdump-2.2.8 (27 March 2003)
 	- Cleanups to the build process, in particular the automatic
 	  rpm package generation Makefile and spec file template.

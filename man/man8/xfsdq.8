@@ -3,7 +3,7 @@
 xfsdq, xfsrq \- XFS dump and restore quota
 .SH SYNOPSIS
 .nf
-\f3xfsdq\f1 [ \f3\-g\f1|\f3-u\f1 ] filesystem
+\f3xfsdq\f1 [ \f3\-g\f1|\f3-u\f1 ] [ \f3-f\f1 \f2path\f1 ] filesystem
 \f3xfsrq\f1 [ \f3\-g\f1|\f3-u\f1 ] xfsdump_quotas
 .fi
 .SH DESCRIPTION
@@ -29,8 +29,8 @@ order).
 .B xfsdump
 runs
 .B xfsdq
-on those filesystems with quota enabled, and redirects the
-output (from standard output stream) to a file which is
+on those filesystems with quota enabled, and sends the
+output to a file (standard output, by default) which is
 subsequently stored on the dump device.
 For user quota, this file is named
 .IR xfsdump_quotas ,
@@ -51,6 +51,14 @@ which automates the restoration of quota information
 using this
 .I xfsdump_quotas
 file.
+.PP
+The
+.B \-f
+option specifies the file to which
+.B xfsdq
+will write.
+This file must not already exist (it is created by
+.BR xfsdq ).
 .PP
 The
 .B \-u

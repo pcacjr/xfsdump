@@ -36,6 +36,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/quota.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
 #include "dqblk_xfs.h"
@@ -45,11 +47,11 @@ static char *progname;
 
 static void usage(void)
 {
-	fprintf(stderr, _("%s: [-ugV] <mntpnt>\n"), progname);
+	fprintf(stderr, _("%s: [-ugV] [-f path] <mntpnt>\n"), progname);
 	exit(2);
 }
 
-void report(int id, int type, char *device)
+void report(FILE *fp, int id, int type, char *device)
 {
 	struct fs_disk_quota d;
 
@@ -62,8 +64,8 @@ void report(int id, int type, char *device)
 		*/
 		return;
 	}
-	printf("fs = %s\n", device);
-	printf("%-10d %7llu %7llu %7llu %7llu\n", id,
+	fprintf(fp, "fs = %s\n", device);
+	fprintf(fp, "%-10d %7llu %7llu %7llu %7llu\n", id,
 		(unsigned long long)d.d_blk_softlimit,
 		(unsigned long long)d.d_blk_hardlimit,
 		(unsigned long long)d.d_ino_softlimit,
@@ -73,7 +75,8 @@ void report(int id, int type, char *device)
 int main(int argc, char **argv)
 {
 	struct mntent	*mntp;
-	FILE		*mtab;
+	FILE		*mtab, *fp;
+	char		*fname = NULL;
 	int		c;
 	int		found = 0;
 	int		type = USRQUOTA;
@@ -84,8 +87,11 @@ int main(int argc, char **argv)
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
-	while ((c = getopt(argc, argv, "ugV")) != EOF) {
+	while ((c = getopt(argc, argv, "f:ugV")) != EOF) {
 		switch(c) {
+		case 'f':
+			fname = optarg;
+			break;
 		case 'u':
 			type = USRQUOTA;
 			break;
@@ -103,6 +109,23 @@ int main(int argc, char **argv)
 	if (argc < optind + 1)
 		usage();
 
+	if (fname) {
+		int	fd;
+
+		if ((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL, 0600)) < 0) {
+			fprintf(stderr, _("%s: open on %s failed: %s\n"),
+				progname, fname, strerror(errno));
+			exit(1);
+		}
+		if ((fp = fdopen(fd, "w")) == NULL) {
+			fprintf(stderr, _("%s: fdopen on %s failed: %s\n"),
+				progname, fname, strerror(errno));
+			exit(1);
+		}
+	} else {
+		fp = stdout;
+	}
+
 	if ((mtab = setmntent(MOUNTED, "r")) == NULL) {
 		fprintf(stderr, _("%s: no %s file\n"), progname, MOUNTED);
 		exit(1);
@@ -115,14 +138,14 @@ int main(int argc, char **argv)
 			struct passwd *u;
 			setpwent();
 			while ((u = getpwent()) != NULL)
-				report(u->pw_uid, type, mntp->mnt_fsname);
+				report(fp, u->pw_uid, type, mntp->mnt_fsname);
 			endpwent();
 		}
 		else {
 			struct group *g;
 			setgrent();
 			while ((g = getgrent()) != NULL)
-				report(g->gr_gid, type, mntp->mnt_fsname);
+				report(fp, g->gr_gid, type, mntp->mnt_fsname);
 			endgrent();
 		}
 		break;
