@@ -3,30 +3,23 @@
 xfs_copy \- copy the contents of an XFS filesystem
 .SH SYNOPSIS
 .nf
-\f3xfs_copy\f1 [ \f3\-d\f1 ] device|file device1 [ device2 device3 ... ]
-\f3xfs_copy\f1 [ \f3\-d\f1 ] device|file file1
+\f3xfs_copy\f1 [ \f3\-bd\f1 ] [ \f3\-L\f1 log ] source target1 [ target2 target3 ... ]
 .fi
 .SH DESCRIPTION
 .I xfs_copy
 copies an XFS filesystem to one or more targets in parallel
 (see
-.IR xfs (8)).
+.IR xfs (5)).
 The
 first (source)
 argument must be the pathname of the device or file
 containing the XFS filesystem.
 The remaining arguments specify one or more target devices
-or a filename.
+or file names.
 If the pathnames specify devices, a copy of the source
 XFS filesystem is created on each device.
-If any of the source or target device names specify devices
-that are not raw devices,
-.I xfs_copy
-attempts to locate the raw device corresponding to the
-specified device and use the raw device instead.
-.PP
-If there is only one target, that target can be the name of a
-regular file in which case an image of the source XFS filesystem is
+The target can also be the name of a regular file,
+in which case an image of the source XFS filesystem is
 created in that file.
 If the file does not exist,
 .I xfs_copy
@@ -42,22 +35,10 @@ seeks over free blocks instead of copying them
 and the XFS filesystem supports sparse files efficiently.
 .PP
 .I xfs_copy
-can only be used to copy unmounted filesystems.
+should only be used to copy unmounted filesystems, read-only mounted
+filesystems, or frozen filesystems (see xfs_freeze(8)).
 Otherwise, the generated filesystem(s) would be inconsistent
-or corrupt.  Some versions of
-.I xfs_copy
-may print a message that they have detected a mounted filesystem,
-but are continuing the attempt to copy, and then issue a message
-that they are aborting.  This is misleading, but not incorrect.
-Unmount the filesystem and then issue the command.  This means
-that if you want to copy the root (/) filesystem, you must first
-load the miniroot, then unmount the root with the
-.I inst
-command
-.Ex
-admin umount /root
-.Ee
-and then do the copy.
+or corrupt.
 .PP
 .I xfs_copy
 does not alter the source filesystem in any way.
@@ -85,18 +66,20 @@ filesystem (such as in the case of disk replacement).
 .I xfs_copy
 uses synchronous writes to ensure that write errors are
 detected.
+.PP
+The
+.B \-b
+(buffered) option can be used to ensure direct IO is not attempted
+to any of the target files.
+This is useful when the filesystem holding the target file does not
+support direct IO.
 .I xfs_copy
 also uses
-\f2sproc\f1s (see \f2sproc\f1(2))
+\f2pthreads\f1s
 to perform simultaneous parallel writes.
-Therefore,
-.IR ps (1)
-reports multiple copies of
 .I xfs_copy
-while the copy is in progress.
-.I xfs_copy
-creates one additional \f2sproc\f1 for each target to be written.
-All \f2sproc\f1s die if
+creates one additional thread for each target to be written.
+All threads die if
 .I xfs_copy
 terminates or aborts.
 .PP
@@ -111,25 +94,20 @@ aborts with an error message.
 reports errors to both stderr and
 in more detailed form to a generated
 log file whose name is of the form
-.I /usr/tmp/xfs_copy.log.??????.
+.I /var/tmp/xfs_copy.log.XXXXXX
+or a log file specified by the
+.B \-L
+option.
 If
 .I xfs_copy
 detects a write error on a target,
 the copy of that one target is aborted and an error
-message is issued to both stderr and the logfile, but
+message is issued to both stderr and the log file, but
 the rest of the copies continue.
 When
 .I xfs_copy
 terminates, all aborted targets are reported to both stderr and
-the logfile.
-In some cases,
-.I xfs_copy
-may report the message
-.Ex
-xfs_copy:  couldn't initialize simulation library
-.Ee
-following another error message.  This message is sometimes of use when
-debugging problems, and should normally be ignored.
+the log file.
 .PP
 If all targets abort or if there is an error reading the source filesystem,
 .I xfs_copy
@@ -138,10 +116,10 @@ immediately aborts.
 .I xfs_copy
 returns an exit code of 0 if all targets are successfully
 copied and an exit code of 1 if any target fails.
-.SH BUGS
+.SH NOTES
 When moving filesystems from one disk to another,
-if the original filesystem is less than 4 Gbytes long
-and the new filesystem will larger, we
+if the original filesystem is significantly smaller
+than the new filesystem, and will be made larger, we
 recommend that
 .I
 mkfs
@@ -158,17 +136,15 @@ is almost always worse than the result of using
 but in the case of small filesystems, the
 differences can have a significant performance
 impact.
-.PP
+This is due to the way
+.I xfs_growfs
+works, and not due to any shortcoming in
 .I xfs_copy
-does not copy XFS filesystems with real-time partitions
-or external logs.
-.PP
-If the source filesystem is bigger than the target partition,
-the copy may succeed if the blocks at the end of the
-source filesystem are not in use but the generated copy will
-not be a valid filesystem.
+itself.
 .SH SEE ALSO
 mkfs.xfs(8),
 xfsdump(8),
 xfsrestore(8),
+xfs_freeze(8),
+xfs_growfs(8),
 xfs(5).
