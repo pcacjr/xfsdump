@@ -33,6 +33,7 @@
 #define ustat __kernel_ustat
 #include <libxfs.h>
 #include <signal.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #undef ustat
 #include <sys/ustat.h>
@@ -44,8 +45,8 @@
 
 /* private */
 
-#define ARENA_NAME	"/usr/tmp/xfs_copy.arenaXXXXXX"
-#define LOGFILE_NAME	"/usr/tmp/xfs_copy.log.XXXXXX"
+char LOGFILE_NAME[] = "/usr/tmp/xfs_copy.log.XXXXXX";
+
 #define MAX_TARGETS	100
 #define MAX_THREADS	(MAX_TARGETS + 2)
 #define T_STACKSIZE	(1024*16)
@@ -81,18 +82,17 @@ int	num_targets = 35;
 char	**target_names;
 int	*target_fds;
 xfs_off_t	*target_positions;
-pid_t	*target_pids;
+pthread_t *target_pids;
 int	*target_states;
 int	*target_errors;
 int	*target_err_types;
 
 typedef struct thread_args {
 	int		id;
-	usema_t		*wait;
+	pthread_mutex_t	wait;
 	int		fd;
 } t_args;
 
-usptr_t		*arena;
 #define	ANYCHILD	-1
 #define	NUM_BUFS	1
 
@@ -109,7 +109,7 @@ pid_t	source_pid;
 int	source_state;
 */
 
-usema_t	*mainwait;
+pthread_mutex_t mainwait;
 
 
 /*
@@ -243,7 +243,7 @@ broken:
 
 	fprintf(stderr, "Aborting XFS copy -- logfile error -- reason:  %s\n",
 		errstring2);
-	exit(1);
+	pthread_exit(NULL);
 }
 
 void
@@ -258,18 +258,17 @@ do_error(char *prefix)
  */
 
 /* ARGSUSED */
-void
-begin_reader(void *arg, size_t ignore)
-{
+void *
+begin_reader(void *arg) {
 	t_args	*args = arg;
 	int	res;
 	int	error = 0;
 
-	/*usadd(arena);*/
-	usinit(arena);
 
 	for (;;) {
-		uspsema(args->wait);
+		pthread_mutex_lock(&args->wait);
+	/* 	fprintf(stderr,"pid(%d)\awake tw_buf.position %Ld data 0x%p\n",
+ 			getpid(), w_buf.position,&w_buf.data); */
 
 		buf_read_start();
 
@@ -294,7 +293,7 @@ begin_reader(void *arg, size_t ignore)
 			goto handle_error;
 		}
 
-		buf_read_end(&glob_masks, mainwait);
+		buf_read_end(&glob_masks, &mainwait);
 	}
 	/* NOTREACHED */
 
@@ -304,8 +303,8 @@ handle_error:
 	target_errors[args->id] = errno;
 	target_positions[args->id] = w_buf.position;
 
-	buf_read_error(&glob_masks, mainwait, args->id);
-	exit(1);
+	buf_read_error(&glob_masks, &mainwait, args->id);
+	pthread_exit(NULL);
 }
 
 int kids;
@@ -323,8 +322,8 @@ killall(void)
 	for (i = 0; i < num_targets; i++)  {
 		if (target_states[i] == ACTIVE)  {
 			/* kill up target threads */
-			kill(target_pids[i], SIGKILL);
-			usvsema(targ[i].wait);
+			pthread_kill(target_pids[i], SIGKILL);
+			pthread_mutex_unlock(&targ[i].wait);
 		}
 	}
 }
@@ -364,7 +363,7 @@ handler()
 		fprintf(logerr, "Aborting XFS copy - no more targets.\n");
 		fprintf(stderr, "Aborting XFS copy - no more targets.\n");
 					check_errors();
-					exit(1);
+					pthread_exit(NULL);
 				}
 
 				sigset(SIGCLD, handler);
@@ -381,7 +380,7 @@ handler()
 					progname, target_positions[i]);
 				do_error2("Aborting XFS copy - reason",
 					target_errors[i], 1);
-				exit(1);
+				pthread_exit(NULL);
 			}
 		}
 	}
@@ -391,7 +390,7 @@ handler()
 	fprintf(logerr, "%s: UNKNOWN CHILD DIED - THIS SHOULD NEVER HAPPEN!\n",
 		progname);
 	do_error("Aborting XFS copy - reason");
-	exit(1);
+	pthread_exit(NULL);
 
 	sigset(SIGCLD, handler);
 }
@@ -446,7 +445,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 
 		buf->length += diff;
 	}
-
+/* 	fprintf(stderr,"read_wbuf %Ld data 0x%p\n", buf->position,&buf->data); */
 	if (source_position != buf->position)  {
 		lres = lseek64(fd, buf->position, SEEK_SET);
 		if (lres < 0LL)  {
@@ -530,15 +529,15 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
 
 	ag->xfs_sb = (xfs_sb_t *) (buf->data + diff);
 
-	ASSERT(ag->xfs_sb->sb_magicnum == XFS_SB_MAGIC);
+	ASSERT(INT_GET(ag->xfs_sb->sb_magicnum,ARCH_CONVERT) == XFS_SB_MAGIC);
 
 	ag->xfs_agf = (xfs_agf_t *) (buf->data + diff + sectorsize);
 
-	ASSERT(ag->xfs_agf->agf_magicnum == XFS_AGF_MAGIC);
+	ASSERT(INT_GET(ag->xfs_agf->agf_magicnum,ARCH_CONVERT) == XFS_AGF_MAGIC);
 
 	ag->xfs_agi = (xfs_agi_t *) (buf->data + diff + 2*sectorsize);
 
-	ASSERT(ag->xfs_agi->agi_magicnum == XFS_AGI_MAGIC);
+	ASSERT(INT_GET(ag->xfs_agi->agi_magicnum,ARCH_CONVERT) == XFS_AGI_MAGIC);
 
 	ag->xfs_agfl = (xfs_agfl_t *) (buf->data + diff + 3*sectorsize);
 
@@ -563,13 +562,12 @@ write_wbuf(void)
 	for (i = 0; i < num_targets; i++)  {
 		if (target_states[i] != INACTIVE)  {
 			/* wake up target threads */
-
-			usvsema(targ[i].wait);
+			pthread_mutex_unlock(&targ[i].wait);
 		}
 	}
 
 	sigrelse(SIGCLD);
-	uspsema(mainwait);
+	pthread_mutex_lock(&mainwait);
 	sighold(SIGCLD);
 }
 
@@ -609,6 +607,7 @@ main(int argc, char **argv)
 	libxfs_init_t	xargs;
 	t_args		*tcarg;
 	struct ustat	ustat_buf;
+	int		ret;
 
 	progname = basename(argv[0]);
 
@@ -687,7 +686,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if ((target_pids = malloc(sizeof(pid_t) * num_targets)) == NULL)  {
+	if ((target_pids = malloc(sizeof(pthread_t) * num_targets)) == NULL)  {
 		fprintf(logerr, "Couldn't allocate target pid array\n");
 		do_error("Aborting XFS copy - reason");
 		exit(1);
@@ -1116,7 +1115,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	direct_io = (source_is_file && write_last_block) ? 1 : 0;
 
 	/* initialize shared semaphore arena */
-
+#if 0 
 	if (usconfig(CONF_ARENATYPE, US_SHAREDONLY) < 0)  {
 		do_error("Error setting up semaphore area");
 		exit(1);
@@ -1144,7 +1143,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		do_error("Aborting XFS copy - reason");
 		exit(1);
 	}
-
+#endif
 	/* initialize locks and bufs */
 
 	if (thread_control_init(&glob_masks, num_targets+1) == NULL)  {
@@ -1169,13 +1168,15 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		do_error("Aborting XFS copy - reason");
 		exit(1);
 	}
-
-	if ((mainwait = usnewsema(arena, 0)) == NULL)  {
+	
+	if((ret = pthread_mutex_init(&mainwait,NULL) != 0)){
 		fprintf(logerr, "Error creating first semaphore.\n");
 		fprintf(logerr, "Something's really wrong.\n");
 		do_error("Aborting XFS copy - reason");
 		exit(1);
 	}
+	/* need to start out blocking */
+	pthread_mutex_lock(&mainwait); 
 
 	/* set up sigchild signal handler */
 
@@ -1191,13 +1192,15 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
-		if ((tcarg->wait = usnewsema(arena, 0)) == NULL)  {
+		if((ret = pthread_mutex_init(&tcarg->wait, NULL) != 0)){
 			fprintf(logerr,
 				"error creating sproc semaphore %d\n", i);
 			fprintf(logerr, "Try a smaller number of targets\n");
 			do_error("Aborting XFS copy - reason");
 			exit(1);
 		}
+		/* need to start out blocking */
+		pthread_mutex_lock(&tcarg->wait); 
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
@@ -1208,10 +1211,12 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 		num_threads++;
 
-		target_pids[i] = sprocsp(begin_reader, PR_SALL, tcarg,
-					NULL, T_STACKSIZE);
 
-		if ((target_pids[i]) < 0)  {
+		ret = pthread_create(&target_pids[i],NULL,
+					begin_reader, 
+					(void *)tcarg);
+
+		if (ret)  {
 			fprintf(logerr,
 				"error creating sproc for target %d\n", i);
 			do_error("Aborting XFS copy - reason");
@@ -1262,9 +1267,9 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 		/* traverse btree until we get to the leftmost leaf node */
 
-		bno = ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi];
+		bno =  INT_GET(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi],ARCH_CONVERT);
 		current_level = 0;
-		btree_levels = ag_hdr.xfs_agf->agf_levels[XFS_BTNUM_BNOi];
+		btree_levels = INT_GET(ag_hdr.xfs_agf->agf_levels[XFS_BTNUM_BNOi],ARCH_CONVERT);
 
 		ag_end = XFS_AGB_TO_DADDR(mp, agno,
 				ag_hdr.xfs_agf->agf_length - 1)
@@ -1285,9 +1290,9 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
 					+ pos - btree_buf.position);
 
-			ASSERT(block->bb_magic == XFS_ABTB_MAGIC);
+			ASSERT(INT_GET(block->bb_magic,ARCH_CONVERT) == XFS_ABTB_MAGIC);
 
-			if (block->bb_level == 0)
+			if (INT_GET(block->bb_level,ARCH_CONVERT) == 0)
 				break;;
 
 			ptr = XFS_BTREE_PTR_ADDR(sourceb_blocksize, xfs_alloc,
@@ -1336,7 +1341,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		/* handle the rest of the ag */
 
 		for (;;) {
-			if (block->bb_level != 0)  {
+			if (INT_GET(block->bb_level,ARCH_CONVERT) != 0)  {
 		fprintf(logerr, "WARNING:  source filesystem inconsistent.\n");
 		fprintf(stderr, "WARNING:  source filesystem inconsistent.\n");
 		fprintf(logerr,
@@ -1349,7 +1354,8 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			rec_ptr = XFS_BTREE_REC_ADDR(source_blocksize, xfs_alloc,
 					block, 1, mp->m_alloc_mxr[0]);
 
-			for (i = 0; i < block->bb_numrecs; i++, rec_ptr++)  {
+		/* 	fprintf(stderr,"block_bb_numrecs %d\n", INT_GET(block->bb_numrecs,ARCH_CONVERT)); */
+			for (i = 0; i < INT_GET(block->bb_numrecs,ARCH_CONVERT); i++, rec_ptr++)  {
 				/* calculate in daddr's */
 
 				begin = next_begin;
@@ -1369,7 +1375,8 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 				 */
 
 				sizeb = XFS_AGB_TO_DADDR(mp, agno,
-					rec_ptr->ar_startblock) - begin;
+					INT_GET(rec_ptr->ar_startblock,ARCH_CONVERT))
+					- begin;
 				size = roundup(sizeb << BBSHIFT, wbuf_miniosize);
 
 #if 0
@@ -1420,19 +1427,19 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 				/* round next starting point down */
 
 				new_begin = XFS_AGB_TO_DADDR(mp, agno,
-						rec_ptr->ar_startblock +
-						rec_ptr->ar_blockcount);
+					     INT_GET(rec_ptr->ar_startblock,ARCH_CONVERT) +
+					     INT_GET(rec_ptr->ar_blockcount,ARCH_CONVERT));
 				next_begin = rounddown(new_begin,
 						w_buf.min_io_size >> BBSHIFT);
 			}
 
-			if (block->bb_rightsib == NULLAGBLOCK)
+			if (INT_GET(block->bb_rightsib,ARCH_CONVERT) == NULLAGBLOCK)
 				break;
 
 			/* read in next btree record block */
 
 			btree_buf.position = pos = (xfs_off_t)XFS_AGB_TO_DADDR(mp,
-				agno, block->bb_rightsib) << BBSHIFT;
+				agno, INT_GET(block->bb_rightsib,ARCH_CONVERT)) << BBSHIFT;
 			btree_buf.length = source_blocksize;
 
 			/* let read_wbuf handle alignment */
@@ -1442,7 +1449,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 			block = (xfs_alloc_block_t *) ((char *) btree_buf.data
 					+ pos - btree_buf.position);
 
-			ASSERT(block->bb_magic == XFS_ABTB_MAGIC);
+			ASSERT(INT_GET(block->bb_magic,ARCH_CONVERT) == XFS_ABTB_MAGIC);
 		}
 
 		/*
@@ -1499,7 +1506,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		fprintf(logerr, "%s:  cannot grow data section.\n", progname);
 		fprintf(stderr, "%s:  cannot grow data section.\n", progname);
 				do_error("Aborting XFS copy - reason");
-				exit(1);
+				pthread_exit(NULL);
 			}
 			
 		/* reread and rewrite the first ag */
@@ -1518,6 +1525,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 
 	check_errors();
 	killall();
+	pthread_exit(NULL);		
 
 	return 0;
 }

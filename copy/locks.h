@@ -30,25 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#define usema_t		char	/* TODO - port to pthreads */
-#define usptr_t		char	/* TODO - port to pthreads */
-#define CONF_ARENATYPE	0	/* TODO - port to pthreads */
-#define US_SHAREDONLY	0	/* TODO - port to pthreads */
-#define CONF_INITUSERS	0	/* TODO - port to pthreads */
-#define PR_SALL		0	/* TODO - port to pthreads */
-
-/* TODO - port to pthreads... */
-static inline usptr_t *usinit (const char *f)	{ ASSERT(0); return NULL; }
-static inline int uspsema (usema_t *sema)	{ ASSERT(0); return 0; }
-static inline int usvsema (usema_t *sema)	{ ASSERT(0); return 0; }
-static inline pid_t wait (int *statptr)		{ ASSERT(0); return 0; }
-static inline int usconfig (int cmd, ...)	{ ASSERT(0); return 0; }
-static inline usema_t *usnewsema (usptr_t *handle, int val)	\
-						{ ASSERT(0); return NULL; }
-static inline pid_t sprocsp (void (*entry) (void *, size_t),
-	uint inh, void *arg, char *sp, size_t len)		\
-						{ ASSERT(0); return 0; }
-
 
 #define ACTIVE		1
 #define INACTIVE	2
@@ -78,7 +59,7 @@ typedef struct working_buffer  {
 } wbuf;
 
 typedef struct thread_state_control  {
-	usema_t		*mutex;
+	pthread_mutex_t mutex;
 /*	int		num_threads; */
 	int		num_working;
 	wbuf		*buffer;
@@ -100,14 +81,13 @@ void
 buf_read_start(void);
 
 void
-buf_read_end(thread_control *tmask, usema_t *mainwait);
+buf_read_end(thread_control *tmask, pthread_mutex_t *mainwait);
 
 void
-buf_read_error(thread_control *tmask, usema_t *wait, thread_id id);
+buf_read_error(thread_control *tmask, pthread_mutex_t *wait, thread_id id);
 
 void
 buf_write_start(void);
 
 void
-buf_write_end(thread_control *tmask, usema_t *mainwait);
-
+buf_write_end(thread_control *tmask, pthread_mutex_t *mainwait);

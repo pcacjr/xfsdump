@@ -32,14 +32,14 @@
 
 #include <libxfs.h>
 #include <malloc.h>
+#include <pthread.h>
 #include "locks.h"
 
-extern usptr_t	*arena;
 
 thread_control *
 thread_control_init(thread_control *mask, int num_threads)
 {
-	if ((mask->mutex = usnewsema(arena, 1)) == NULL)
+	if (pthread_mutex_init(&mask->mutex,NULL) != 0)
 		return(NULL);
 
 	mask->num_working = 0;
@@ -69,17 +69,17 @@ buf_read_start(void)
 }
 
 void
-buf_read_end(thread_control *tmask, usema_t *mainwait)
+buf_read_end(thread_control *tmask, pthread_mutex_t *mainwait)
 {
-	uspsema(tmask->mutex);
+	pthread_mutex_lock(&tmask->mutex);
 
 	tmask->num_working--;
 
 	if (tmask->num_working == 0)  {
-		usvsema(mainwait);
+		pthread_mutex_unlock(mainwait);
 	}
 
-	usvsema(tmask->mutex);
+	pthread_mutex_unlock(&tmask->mutex);
 }
 
 /*
@@ -88,18 +88,18 @@ buf_read_end(thread_control *tmask, usema_t *mainwait)
  */
 
 void
-buf_read_error(thread_control *tmask, usema_t *mainwait, thread_id id)
+buf_read_error(thread_control *tmask, pthread_mutex_t *mainwait, thread_id id)
 {
-	uspsema(tmask->mutex);
-
+	pthread_mutex_lock(&tmask->mutex);
+	
 	tmask->num_working--;
 	target_states[id] = INACTIVE;
 
 	if (tmask->num_working == 0)  {
-		usvsema(mainwait);
+		pthread_mutex_unlock(mainwait);
 	}
-
-	usvsema(tmask->mutex);
+	
+	pthread_mutex_unlock(&tmask->mutex);
 
 }
 
@@ -109,16 +109,16 @@ buf_write_start(void)
 }
 
 void
-buf_write_end(thread_control *tmask, usema_t *mainwait)
+buf_write_end(thread_control *tmask, pthread_mutex_t *mainwait)
 {
-	uspsema(tmask->mutex);
+	pthread_mutex_lock(&tmask->mutex);
 
 	tmask->num_working--;
 
 	if (tmask->num_working == 0)  {
-		usvsema(mainwait);
+		pthread_mutex_lock(mainwait);
 	}
 
-	usvsema(tmask->mutex);
+	pthread_mutex_unlock(&tmask->mutex);
 }
 

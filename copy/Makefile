@@ -33,17 +33,19 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-#LTCOMMAND = xfs_copy	# NEEDS FURTHER PORTING WORK
-LTCOMMAND = 		# <-- don't build, but put source in tarball.
+LTCOMMAND = xfs_copy	# NEEDS FURTHER PORTING WORK
+#LTCOMMAND = 		# <-- don't build, but put source in tarball.
 
 CFILES = xfs_copy.c locks.c
 HFILES = locks.h
-LLDLIBS = $(LIBXFS) $(LIBUUID)
+LLDLIBS = $(LIBXFS) $(LIBUUID) -lpthread
 LTDEPENDENCIES = $(LIBXFS)
 
 default: $(LTCOMMAND)
 
 include $(BUILDRULES)
+
+CFLAGS += -I../../xfsprogs/include
 
 #install: default
 # Locking code needs to be ported!  (it compiles but doesn't work)
