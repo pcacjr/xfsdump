@@ -111,7 +111,10 @@ onto a single tape.
 .TP 5
 \f3\-e\f1
 Allow files to be excluded from the dump.  This will cause xfsdump to 
-skip those files which are tagged with the "SGI_XFSDUMP_SKIP_FILE"
+skip those files which are tagged with the
+.hy 0
+"SGI_XFSDUMP_SKIP_FILE"
+.hy
 attribute.  Without this flag, xfsdump will ignore the attribute, and
 continue to dump affected files.
 .TP 5
@@ -611,8 +614,11 @@ is run with the
 option individual files can be "tagged" so that
 .I xfsdump
 will not include them in a dump.  Files are tagged by assigning that file
-an extended attribute with the name "SGI_XFSDUMP_SKIP_FILE".  This can be
-done with the
+an extended attribute with the name
+.hy 0
+"SGI_XFSDUMP_SKIP_FILE".
+.hy
+This can be done with the
 .IR attr (1)
 command:
 .EX
