@@ -87,7 +87,7 @@ each successive invocation of \f2xfsrestore\f1 must specify the same alternate
 directory.
 .TP 5
 \f3\-b\f1 \f2blocksize\f1
-Specifies the blocksize to be used for the restore. 
+Specifies the blocksize, in bytes, to be used for the restore. 
 For other drives such as DAT or 8 mm , the same blocksize used for the
 xfsdump operation must be specified to restore the tape.
 The default block size is 1Mb.
@@ -591,6 +591,43 @@ For this reason,
 large dumps are broken into a number
 of reasonably sized media files.
 The restore resumes with the next media file.
+.SS Quotas
+When
+.I xfsdump
+dumps a filesystem with quotas, it creates a file in the root of the
+dump called
+.IR xfsdump_quotas .
+.I xfsrestore
+can restore this file like any other file included in the dump.  This
+file can be processed by the
+.IR xfsrq (8)
+command to reactivate the quotas.  However, the
+.I xfsdump_quotas
+file contains information which may first require modification;
+specifically the filesystem name and the user ids.  If you are
+restoring the quotas for the same users on the same filesystem from
+which the dump was taken, then no modification will be necessary.
+However, if you are restoring the dump to a different filesystem, you
+will need to:
+.HP
+-
+ensure the new filesystem is mounted with the
+quota
+option
+.HP
+-
+modify the
+.I xfsdump_quotas
+file to contain the new filesystem name
+.HP
+-
+ensure the uids in the
+.I xfsdump_quotas
+file are correct
+.P
+Once the quota information has been verified,
+.I xfsrq (8)
+can be used to apply the quota limits to the filesystem.
 .SH FILES
 .TP 25
 /var/xfsdump/inventory
@@ -599,6 +636,7 @@ dump inventory database
 rmt(8),
 xfsdump(8),
 xfsinvutil(8),
+xfsrq(8),
 attr_set(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion,

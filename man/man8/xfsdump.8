@@ -94,7 +94,7 @@ However, the current implementation in Linux does not yet support the
 \f3\-a\f1 option.
 .TP 5
 \f3\-b\f1 \f2blocksize\f1
-Specifies the blocksize to be used for the dump. 
+Specifies the blocksize, in bytes, to be used for the dump. 
 The same blocksize must be specified to restore the tape.
 If the \f3\-m\f1 option is not used, then \f3\-b\f1 does not need
 to be specified. Instead, a default blocksize of 1Mb will be used.
@@ -103,6 +103,14 @@ to be specified. Instead, a default blocksize of 1Mb will be used.
 Use the specified program to alert the operator when a media change is
 required. The alert program is typically a script to send a mail or
 flash a window to draw the operator's attention.
+.TP 5
+\f3\-d\f1 \f2filesize\f1
+Specifies the size, in megabytes, of dump media files.  xfsdump will
+dump data to tape in one or more media files.  It will attempt to
+estimate the ideal media file size based on the tape device being
+used, and the amount of data to be written.  The media file size may
+need to be adjusted if, for example, xfsdump cannot fit a media file
+onto a single tape.
 .TP 5
 \f3\-f\f1 \f2destination\f1
 Specifies a dump destination.
@@ -489,14 +497,33 @@ and level 2 on Sunday, Tuesday, and Thursday.
 The Monday and Wednesday dumps would take longer,
 but the worst case restore requires the
 accumulation of just three dumps, one each at level 0, level 1, and level 2.
+.SS Quotas
+If the filesystem being dumped contains quotas,
+.I xfsdump
+will use 
+.IR xfsdq (8)
+to store the quotas in a file called
+.I xfsdump_quotas 
+in the root of the filesystem to be dumped. This file will then be
+included in the dump.  Upon restoration, 
+.I xfsrq (8)
+can be used to reactivate the quotas for the filesystem.  Note,
+however, that the
+.I xfsdump_quotas
+file will probably require modification to change the filesystem or
+UIDs if the filesystem has been restored to a different partition or
+system.
 .SH FILES
 .TP 25
 /var/xfsdump/inventory
 dump inventory database
 .SH SEE ALSO
 rmt(8),
+xfsdq(8),
 xfsrestore(8),
 xfsinvutil(8),
+xfsdq(8),
+xfsrq(8),
 attr_get(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion, non-zero if an error
