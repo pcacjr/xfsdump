@@ -41,7 +41,7 @@
  * facilitating easy changes.
  */
 
-#define GETOPT_CMDSTRING	"ab:c:d:f:hl:mop:qs:v:AB:CEFG:H:I:JL:M:NO:PRSTUVWY:Z"
+#define GETOPT_CMDSTRING	"ab:c:d:f:hl:mop:qs:v:z:AB:CEFG:H:I:JL:M:NO:PRSTUVWY:Z"
 
 #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
 #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
@@ -55,6 +55,7 @@
 #define GETOPT_PROGRESS		'p'	/* interval between progress reports */
 #define	GETOPT_SUBTREE		's'	/* subtree dump (content_inode.c) */
 #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4 ) */
+#define GETOPT_MAXDUMPFILESIZE	'z'	/* prune files over specified size */
 #define	GETOPT_NOEXTATTR	'A'	/* do not dump ext. file attributes */
 #define	GETOPT_BASED		'B'	/* specify session to base increment */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */

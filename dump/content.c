@@ -82,6 +82,10 @@
 #undef SYNCDIR
 #define SYNCDIR
 
+/* max "unsigned long long int"
+ */
+#define ULONGLONG_MAX	18446744073709551615LLU
+
 /* legal range of dump levels
  */
 #define LEVEL_DEFAULT	0
@@ -394,6 +398,11 @@ char *media_change_alert_program = NULL;
 #ifdef DMEXTATTR
 hsm_fs_ctxt_t *hsm_fs_ctxtp = NULL;
 #endif /* DMEXTATTR */
+#ifdef SIZEEST
+u_int64_t min_recmfilesz = 0;
+u_int64_t hdr_mfilesz = 0;
+#endif /* SIZEEST */
+u_int64_t maxdumpfilesize = 0;
 
 /* definition of locally defined static variables *****************************/
 
@@ -641,6 +650,26 @@ content_init( intgen_t argc,
 				return BOOL_FALSE;
 			}
 			subtreecnt++;
+			break;
+		case GETOPT_MAXDUMPFILESIZE:
+			if ( ! optarg || optarg [ 0 ] == '-' ) {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+				      "-%c argument missing\n",
+				      optopt );
+				usage( );
+				return BOOL_FALSE;
+			}
+			maxdumpfilesize = strtoull(optarg, NULL, 0);
+			if ( maxdumpfilesize == 0 ||
+			     maxdumpfilesize > ULONGLONG_MAX / 1024 ||
+			     ( maxdumpfilesize == ULONGLONG_MAX && errno == ERANGE ) ) {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+				      "-%c argument is not a valid file size\n",
+				      optopt );
+				usage( );
+				return BOOL_FALSE;
+			}
+			maxdumpfilesize *= 1024;
 			break;
 		case GETOPT_RESUME:
 			resumereqpr = BOOL_TRUE;
@@ -1528,18 +1557,20 @@ baseuuidbypass:
 	nondircnt = scwhdrtemplatep->cih_inomap_nondircnt;
 	datasz = scwhdrtemplatep->cih_inomap_datasz;
 	inocnt = dircnt + nondircnt;
-	size_estimate = GLOBAL_HDR_SZ
+	hdr_mfilesz =	GLOBAL_HDR_SZ
 			+
 			inomap_getsz( )
 			+
-			inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ )
+			inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 );
+	size_estimate = hdr_mfilesz
 			+
-			inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 )
+			inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ )
 			+
 			datasz;
 	mlog( MLOG_VERBOSE,
 	      "estimated dump size: %llu bytes\n",
 	      size_estimate );
+	min_recmfilesz = 4 * hdr_mfilesz;
 #endif /* SIZEEST */
 
 	/* extract the progress stat denominators from the write hdr
@@ -5811,8 +5842,28 @@ position:
 					goto changemedia;
 				}
 			}
-			virginmediapr = BOOL_TRUE; /* like a virgin */
-			goto write;
+
+			if ( ! ( dcaps & DRIVE_CAP_OVERWRITE )) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				      "unable to overwrite\n" );
+				goto changemedia;
+			} else {
+				intgen_t status;
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
+				      "repositioning to overwrite\n" );
+				ASSERT( dcaps & DRIVE_CAP_BSF );
+				status = 0;
+				rval = ( * dop->do_bsf )( drivep, 0, &status );
+				ASSERT( rval == 0 );
+				if ( status == DRIVE_ERROR_DEVICE ) {
+					return RV_DRIVE;
+				}
+
+				virginmediapr = BOOL_FALSE;
+
+				goto write;
+			}
+			
 		case DRIVE_ERROR_OVERWRITE:
 			prevmediapresentpr = mediapresentpr;
 			mediapresentpr = BOOL_TRUE;

@@ -250,6 +250,9 @@ struct drive_context {
 	bool_t dc_singlemfilepr;
 			/* use only one media file
 			 */
+	off64_t dc_filesz;
+			/* media file size given as argument
+			 */
 };
 
 typedef struct drive_context drive_context_t;
@@ -263,6 +266,12 @@ typedef struct drive_context drive_context_t;
 /* declarations of externally defined global variables ***********************/
 
 extern void usage( void );
+#ifdef DUMP
+#ifdef SIZEEST
+extern u_int64_t min_recmfilesz;
+extern u_int64_t hdr_mfilesz;
+#endif /* SIZEEST */
+#endif /* DUMP */
 
 /* remote tape protocol declarations (should be a system header file)
  */
@@ -366,11 +375,11 @@ static bool_t isxfsdumperasetape( drive_t *drivep );
  */
 #ifdef RMT
 #ifdef RMTDBG
-static int dbgrmtopen( char *, int, ... );
+static int dbgrmtopen( char *, int );
 static int dbgrmtclose( int );
-static int dbgrmtioctl( int, int, ... );
-static int dbgrmtread( int, void*, uint);
-static int dbgrmtwrite( int, const void *, uint);
+static int dbgrmtioctl( int, int, void * );
+static int dbgrmtread( int, void *, uint);
+static int dbgrmtwrite( int, void *, uint);
 #endif /* RMTDBG */
 #endif /* RMT */
 
@@ -525,6 +534,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	contextp->dc_ringpinnedpr = BOOL_FALSE;
 	contextp->dc_recchksumpr = BOOL_FALSE;
 	contextp->dc_unloadokpr = BOOL_FALSE;
+	contextp->dc_singlemfilepr = BOOL_FALSE;
+	contextp->dc_filesz = 0;
 	contextp->dc_isQICpr = BOOL_FALSE;
 	optind = 1;
 	opterr = 0;
@@ -570,9 +581,40 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	      			"Overwrite command line option \n" );
 			break;
 		case GETOPT_SINGLEMFILE:
+			if (contextp->dc_filesz > 0) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c and -%c options cannot be used together\n",
+				      optopt,
+				      GETOPT_FILESZ );
+				return BOOL_FALSE;
+			}
 			contextp->dc_singlemfilepr = BOOL_TRUE;
 			mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      			"Single media file command line option \n" );
+			break;
+		case GETOPT_FILESZ:
+			if (contextp->dc_singlemfilepr == BOOL_TRUE) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c and -%c options cannot be used together\n",
+				      optopt,
+				      GETOPT_SINGLEMFILE );
+				return BOOL_FALSE;
+			}
+			if ( ! optarg || optarg [ 0 ] == '-' ) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c argument missing\n",
+				      optopt );
+				return BOOL_FALSE;
+			}
+			contextp->dc_filesz = (off64_t)atoi( optarg ) * 1024 * 1024;
+			if (contextp->dc_filesz <= 0) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c argument must be a "
+				      "positive number (MB): ignoring %u\n",
+				      optopt,
+				      contextp->dc_filesz );
+				return BOOL_FALSE;
+			}
 			break;
 #endif
 		}
@@ -2304,6 +2346,7 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 #endif
 	intgen_t skipped;
+	intgen_t rval;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "rmt drive op: bsf: count %d\n",
@@ -2313,15 +2356,29 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 
 	*statp = 0;
 
-	/* first move to the left of the last file mark.
-	 * if BOT encountered, return 0. also check for
-	 * being at BOT or file mark and count == 0: no motion needed
-	 */
-
 	/* back space - places us to left of previous file mark
+	 * if we hit BOT, return
 	 */
 	ASSERT( drivep->d_capabilities & DRIVE_CAP_BSF );
-	( void )bsf_and_verify( drivep );
+	rval = bsf_and_verify( drivep );
+	if (rval) {
+		if (errno == ENOSPC/*IRIX*/ || errno == EIO/*Linux*/) {
+			if ( count ) {
+				mlog( MLOG_DEBUG | MLOG_DRIVE,
+				      "rmt drive op: bsf reached BOT "
+					    "unexpectedly (%d files to go)\n",
+				       count);
+				/* set statp - BOT is unexpected */
+			} else {
+				mlog( MLOG_DEBUG | MLOG_DRIVE,
+				      "rmt drive op: bsf reached BOT\n");
+				/* don't set statp, BOT is fine */
+				return 0;
+			}
+		}
+		*statp = DRIVE_ERROR_DEVICE;
+		return 0;
+	}
 
 	/* now loop, skipping media files
 	 */
@@ -2330,10 +2387,31 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
 		/* move to the left of the next file mark on the left.
 		 * check for BOT.
 		 */
-		( void )bsf_and_verify( drivep );
+		rval = bsf_and_verify( drivep );
+		if (rval) {
+			if (errno == ENOSPC/*IRIX*/ || errno == EIO/*Linux*/) {
+				if ( count - skipped - 1 ) {
+					mlog( MLOG_DEBUG | MLOG_DRIVE,
+					      "rmt drive op: bsf reached BOT "
+					      "unexpectedly (%d files to go)\n",
+					      count - skipped - 1);
+					/* set statp - BOT is unexpected */
+					*statp = DRIVE_ERROR_DEVICE;
+					return skipped + 1;
+				} else {
+					mlog( MLOG_DEBUG | MLOG_DRIVE,
+					      "rmt drive op: bsf reached BOT\n");
+					/* don't set statp - BOT is fine */
+					return skipped + 1;
+				}
+				*statp = DRIVE_ERROR_DEVICE;
+				return skipped;
+			}
+		}
 	}
 
-	/* finally, move to the right side of the file mark
+	/* we're not at BOT, so we need to move to the right side of
+	 * the file mark
 	 */
 	( void )fsf_and_verify( drivep );
 
@@ -2742,6 +2820,45 @@ set_recommended_sizes( drive_t *drivep, int isQICpr )
 			"Set media file size to 0x%llx bytes\n", 
 			OFF64MAX );
 	}
+	else if (contextp->dc_filesz > 0) {
+		fsize = contextp->dc_filesz;
+#ifdef DUMP
+#ifdef SIZEEST
+		if ( hdr_mfilesz > fsize ) {
+			mlog( MLOG_WARNING,
+			      "recomended media file size of %llu Mb less than "
+			      "estimated file header size %llu Mb for %s\n",
+			      fsize / ( 1024 * 1024 ),
+			      hdr_mfilesz / ( 1024 * 1024 ),
+			      drivep->d_pathname );
+		}
+#endif /* SIZEEST */
+#endif /* DUMP */
+	}
+#ifdef DUMP
+#ifdef SIZEEST
+	else {
+		/* override with minimum recommended file size */
+		if ( min_recmfilesz > fsize ) {
+			mlog( MLOG_NOTE,
+			      "recommended media file size adjusted from "
+			      "%llu Mb to %llu Mb for %s",
+			      min_recmfilesz / ( 1024 * 1024 ),
+			      fsize / ( 1024 * 1024 ),
+			      drivep->d_pathname );
+			fsize = min_recmfilesz;
+		}
+	}
+
+	mlog( MLOG_NITTY,
+	      "hdr_mfilesz %lluMb, min_recmfilesize %lluMb, "
+	      "fsize %lluMb, marksep %lluMb\n",
+	      hdr_mfilesz / ( 1024 * 1024 ),
+	      min_recmfilesz / ( 1024 * 1024 ),
+	      fsize / ( 1024 * 1024 ),
+	      marksep / ( 1024 * 1024 ));
+#endif /* SIZEEST */
+#endif /* DUMP */
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "recommended tape media file size set to 0x%llx bytes\n",
@@ -3940,8 +4057,7 @@ bsf_and_verify( drive_t *drivep )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 
-	( void )mt_op( contextp->dc_fd, MTBSF, 1 );
-	return 0;
+	return mt_op( contextp->dc_fd, MTBSF, 1 );
 }
 
 #ifdef CLRMTAUD

@@ -267,6 +267,9 @@ struct drive_context {
 	bool_t dc_overwritepr;
 			/* overwrite tape without checking whats on it
 			 */
+	bool_t dc_singlemfilepr;
+			/* use only one media file
+			 */
 	off64_t dc_filesz;
                         /* file size given as argument
                          */
@@ -311,6 +314,12 @@ typedef long mtstat_t;
 /* declarations of externally defined global variables ***********************/
 
 extern void usage( void );
+#ifdef DUMP
+#ifdef SIZEEST
+extern u_int64_t min_recmfilesz;
+extern u_int64_t hdr_mfilesz;
+#endif /* SIZEEST */
+#endif /* DUMP */
 
 /* remote tape protocol declarations (should be a system header file)
  */
@@ -415,11 +424,11 @@ static bool_t isefsdump( drive_t *drivep );
  */
 #ifdef RMT
 #ifdef RMTDBG
-static int dbgrmtopen( char *, int, ... );
+static int dbgrmtopen( char *, int );
 static int dbgrmtclose( int );
-static int dbgrmtioctl( int, int, ... );
+static int dbgrmtioctl( int, int, void *);
 static int dbgrmtread( int, void*, uint);
-static int dbgrmtwrite( int, const void *, uint);
+static int dbgrmtwrite( int, void *, uint);
 #endif /* RMTDBG */
 #endif /* RMT */
 
@@ -522,7 +531,9 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
                 if (is_scsi_driver(drivep->d_pathname)) {
 			return 10;
 		}
-		return -10;
+		else {
+			return -10;
+		}
 	}
 }
 
@@ -563,6 +574,8 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	contextp->dc_ringlen = RINGLEN_DEFAULT;
 	contextp->dc_ringpinnedpr = BOOL_FALSE;
 	contextp->dc_recchksumpr = BOOL_FALSE;
+	contextp->dc_singlemfilepr = BOOL_FALSE;
+	contextp->dc_filesz = 0;
 	contextp->dc_isQICpr = BOOL_FALSE;
 #ifdef DUMP
 	contextp->dc_filesz = 0;
@@ -614,7 +627,28 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			cmdlineblksize = ( u_int32_t )atoi( optarg );
 			break;
 #ifdef DUMP
+		case GETOPT_OVERWRITE:
+			contextp->dc_overwritepr = BOOL_TRUE;
+			break;
+		case GETOPT_SINGLEMFILE:
+			if (contextp->dc_filesz > 0) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c and -%c options cannot be used together\n",
+				      optopt,
+				      GETOPT_FILESZ );
+			}
+			contextp->dc_singlemfilepr = BOOL_TRUE;
+			mlog( MLOG_DEBUG | MLOG_DRIVE,
+				"Single media file command line option \n" );
+			break;
 		case GETOPT_FILESZ:
+			if (contextp->dc_singlemfilepr == BOOL_TRUE) {
+				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+				      "-%c and -%c options cannot be used together\n",
+				      optopt,
+				      GETOPT_SINGLEMFILE );
+				return BOOL_FALSE;
+			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 				      "-%c argument missing\n",
@@ -625,15 +659,12 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			contextp->dc_filesz = (off64_t)atoi( optarg ) * 1024 * 1024;
                         if (contextp->dc_filesz <= 0) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
-				      "-%c argument must be "
+				      "-%c argument must be a "
 				      "positive number (Mb): ignoring %u\n",
 				      optopt,
 				      contextp->dc_filesz );
 				return BOOL_FALSE;
                         }
-			break;
-		case GETOPT_OVERWRITE:
-			contextp->dc_overwritepr = BOOL_TRUE;
 			break;
 #endif
 		}
@@ -2580,7 +2611,7 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
  *	Position the tape at the beginning of the recorded media.
  *
  * RETURNS:
- *	0 on sucess
+ *	0 on success
  *	DRIVE_ERROR_* on failure
  */
 static intgen_t
@@ -2611,7 +2642,7 @@ do_rewind( drive_t *drivep )
  *	erase media from beginning
  *
  * RETURNS:
- *	0 on sucess
+ *	0 on success
  *	DRIVE_ERROR_* on failure
  */
 static intgen_t
@@ -2656,7 +2687,7 @@ do_erase( drive_t *drivep )
  *	pop the tape out - may be a nop on some drives
  *
  * RETURNS:
- *	0 on sucess
+ *	0 on success
  *	DRIVE_ERROR_DEVICE on failure
  */
 static intgen_t
@@ -3276,12 +3307,53 @@ set_recommended_sizes( drive_t *drivep )
 	    fsize = 0x3200000ll;		/* 50 MB */
         }
 
-#ifdef DUMP
         /* override with argument given */
-        if (contextp->dc_filesz > 0) {
-            fsize = contextp->dc_filesz;
+	if ( contextp->dc_singlemfilepr ) {	/* use only one media file */
+		fsize = OFF64MAX;		/* hence set fsize to max */
+		mlog( MLOG_DEBUG | MLOG_DRIVE,
+			"Single media file specified. "
+			"Set media file size to 0x%llx bytes\n",
+			OFF64MAX );
+	}
+	else if (contextp->dc_filesz > 0) {
+		fsize = contextp->dc_filesz;
+#ifdef DUMP
+#ifdef SIZEEST
+		if ( hdr_mfilesz > fsize ) {
+			mlog( MLOG_WARNING,
+			      "recommended media file size of %llu Mb less than"
+			      " estimated file header size %llu Mb for %s\n",
+			      fsize / ( 1024 * 1024 ),
+			      hdr_mfilesz / ( 1024 * 1024 ),
+			      drivep->d_pathname );
+		}
+#endif /* SIZEEST */
+#endif /* DUMP */
         }
-#endif
+#ifdef DUMP
+#ifdef SIZEEST
+	else {
+		/* override with minimum recommended file size */
+		if ( min_recmfilesz > fsize ) {
+			mlog( MLOG_NOTE,
+			      "recommended media file size adjusted "
+			      "from %llu Mb to %llu Mb for %s\n",
+			      min_recmfilesz / ( 1024 * 1024 ),
+			      fsize / ( 1024 * 1024 ),
+			      drivep->d_pathname );
+			fsize = min_recmfilesz;
+                }
+        }
+
+	mlog( MLOG_NITTY,
+	      "hdr_mfilesz %lluMb, min_recmfilesize %lluMb, "
+	      "fsize %lluMb, marksep %lluMb\n",
+	      hdr_mfilesz / ( 1024 * 1024 ),
+	      min_recmfilesz / ( 1024 * 1024 ),
+	      fsize / ( 1024 * 1024 ),
+	      marksep / ( 1024 * 1024 ));
+#endif /* SIZEEST */
+#endif /* DUMP */
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "recommended tape media file size set to 0x%llx bytes\n",
@@ -3305,7 +3377,7 @@ set_recommended_sizes( drive_t *drivep )
  *      The current blk size comes from the mt_dsreg field.
  *
  * RETURNS:
- *	TRUE on sucess
+ *	TRUE on success
  *	FALSE on failure
  */
 static bool_t
@@ -3345,7 +3417,7 @@ mt_blkinfo( intgen_t fd, struct mtblkinfo *minfo )
  *	Issue MTIOCTOP ioctl operation to the tape device.
  *
  * RETURNS:
- *	0 on sucess
+ *	0 on success
  *	-1 on failure
  */
 static intgen_t

@@ -74,7 +74,7 @@ extern size_t pgsz;
 #ifdef DMEXTATTR
 extern hsm_fs_ctxt_t *hsm_fs_ctxtp;
 #endif /* DMEXTATTR */
-
+extern u_int64_t maxdumpfilesize;
 
 /* forward declarations of locally defined static functions ******************/
 
@@ -171,7 +171,6 @@ static void mln_free( void );
 static ix_t *inomap_statphasep;
 static ix_t *inomap_statpassp;
 static size64_t *inomap_statdonep;
-static bool_t inomap_pruneneeded;
 
 /* definition of locally defined global functions ****************************/
 
@@ -341,6 +340,12 @@ inomap_build( jdm_fshandle_t *fshandlep,
 				     bstatbufp,
 				     bstatbuflen );
 
+		if ( rval ) {
+			gdrecursearray_free( );
+			free( ( void * )bstatbufp );
+			free( ( void * )getdentbufp );
+			return BOOL_FALSE;
+		}
 		if ( preemptchk( PREEMPT_FULL )) {
 			gdrecursearray_free( );
 			free( ( void * )bstatbufp );
@@ -349,22 +354,13 @@ inomap_build( jdm_fshandle_t *fshandlep,
 		}
 
 		*inomap_statpassp = 1;
-		inomap_pruneneeded = BOOL_FALSE;
 		(void) supprt_prune( &rootdump,
 				     fshandlep,
 				     fsfd,
 				     rootstatp,
 				     NULL );
-		if (pruneneeded == BOOL_FALSE)
-			pruneneeded = inomap_pruneneeded;
 		*inomap_statphasep = 0;
 		*inomap_statpassp = 0;
-		if ( rval ) {
-			gdrecursearray_free( );
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
 
 		if ( preemptchk( PREEMPT_FULL )) {
 			gdrecursearray_free( );
@@ -398,7 +394,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	cb_accuminit_ctx( inomap_state_contextp );
 
 	/* calculate the total dump space needed for non-directories.
-	 * no needed if no pruning was done, since already done during
+	 * not needed if no pruning was done, since already done during
 	 * phase 2.
 	 */
 	if ( pruneneeded || subtreecnt > 0 ) {
@@ -622,6 +618,7 @@ cb_add( void *arg1,
 	register time_t ctime = statp->bs_ctime.tv_sec;
 	register time_t ltime = max( mtime, ctime );
 	register mode_t mode = statp->bs_mode & S_IFMT;
+	xfs_off_t estimated_size = 0;
 	xfs_ino_t ino = statp->bs_ino;
 	bool_t changed;
 	bool_t resumed;
@@ -673,9 +670,24 @@ cb_add( void *arg1,
 			map_add( ino, MAP_DIR_CHANGE );
 			cb_dircnt++;
 		} else {
+			estimated_size = estimate_dump_space( statp );
+
+			/* skip if size is greater than prune size
+			 */
+			if ( maxdumpfilesize > 0 &&
+			    estimated_size > maxdumpfilesize ) {
+				mlog( MLOG_DEBUG | MLOG_INOMAP,
+				      "ino %llu pruned, estimated size %llu > maxdumpfilesuze %llu\n",
+				      statp->bs_ino,
+				      estimated_size,
+				      maxdumpfilesize );
+				map_add( ino, MAP_NDR_NOCHNG );
+				return 0;
+			}
+
 			map_add( ino, MAP_NDR_CHANGE );
 			cb_nondircnt++;
-			cb_datasz += estimate_dump_space( statp );
+			cb_datasz += estimated_size;
 		}
 	} else if ( resumed ) {
 		ASSERT( mode != S_IFDIR );
@@ -788,7 +800,7 @@ cb_prune( void *arg1,
  * (-> nochng) on the way back up after examining all descendents.
  */
 /* ARGSUSED */
-static bool_t			/* has dump size been modified? */
+static bool_t			/* false, used as diriter callback */
 supprt_prune( void *arg1,	/* ancestors marked as changed? */
 	      jdm_fshandle_t *fshandlep,
 	      intgen_t fsfd,
@@ -817,8 +829,13 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 		if ( state == MAP_DIR_SUPPRT ) {
 			if ( changed_below == BOOL_FALSE ) {
 				map_set( statp->bs_ino, MAP_DIR_NOCHNG );
-				cb_dircnt--;	/* dump size change! */
-				inomap_pruneneeded = BOOL_TRUE;
+				cb_dircnt--;	/* dump size just changed! */
+			}
+			else {
+				/* Directory entries back up the hierarchy */
+				/* to be dumped - as either MAP_DIR_SUPPRT */
+				/* or as MAP_DIR_CHANGE in inode state map */
+				*( bool_t * )arg1 = BOOL_TRUE;
 			}
 		}
 		else if ( state == MAP_DIR_CHANGE ) {
@@ -829,7 +846,7 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 		return cbrval;
 	}
 
-	if ( *(bool_t *)arg1 == BOOL_TRUE ) {	/* changed, skip map_get */
+	if ( *(bool_t *)arg1 == BOOL_TRUE ) {	/* shortcut, sibling changed */
 		return cbrval;
 	}
 

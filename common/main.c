@@ -982,6 +982,7 @@ usage( void )
 #endif /* DMEXTATTR */
 	ULO( "<blocksize>",                             GETOPT_BLOCKSIZE );
 	ULO( "<media change alert program> ",		GETOPT_ALERTPROG );
+	ULO( "<dump media file size> ",			GETOPT_FILESZ );
 	ULO( "<destination> ...",			GETOPT_DUMPDEST );
 	ULO( "(help)",					GETOPT_HELP );
 	ULO( "<level>",					GETOPT_LEVEL );
@@ -990,6 +991,7 @@ usage( void )
 	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
 	ULO( "<subtree> ...",				GETOPT_SUBTREE );
 	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
+	ULO( "<maximum file size>",			GETOPT_MAXDUMPFILESIZE );
 #ifdef EXTATTR
 	ULO( "(don't dump extended file attributes)",	GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
