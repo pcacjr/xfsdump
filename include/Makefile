@@ -33,7 +33,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = builddefs.in buildmacros buildrules
+LSRCFILES = builddefs.in buildmacros buildrules quotaio_xfs.h
 
 default install install-dev :
 

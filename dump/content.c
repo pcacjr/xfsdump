@@ -42,9 +42,12 @@
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
-#include <linux/quota.h>
-#include <xqm.h>
+#include <sys/quota.h>
 #include <malloc.h>
+
+#ifdef linux
+#include <quotaio_xfs.h>
+#endif
 
 #ifdef EXTATTR
 #include <attributes.h>

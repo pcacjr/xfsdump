@@ -38,7 +38,10 @@
 #include <sys/quota.h>
 #include <pwd.h>
 #include <grp.h>
-#include <xqm.h>
+
+#ifdef linux
+#include <quotaio_xfs.h>
+#endif
 
 static char *progname;
 
