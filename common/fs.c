@@ -212,7 +212,7 @@ fs_mounted( char *typs, char *chrs, char *mnts, uuid_t *idp )
 intgen_t
 fs_getid( char *mnts, uuid_t *idb )
 {
-	uuid_t uuid;
+	xfs_fsop_geom_t geo;
 	int fd;
 
 	fd = open( mnts, O_RDONLY );
@@ -220,13 +220,13 @@ fs_getid( char *mnts, uuid_t *idb )
 		uuid_clear( *idb );
 		return -1;
 	}
-	if ( ioctl(fd, XFS_IOC_GETFSUUID, &uuid ) ) {
+	if ( ioctl(fd, XFS_IOC_FSGEOMETRY, &geo ) ) {
 		uuid_clear( *idb );
 		close(fd);
 		return -1;
 	}
 	close(fd);
-	uuid_copy( *idb, uuid );
+	uuid_copy( *idb, geo.uuid );
 
 	return 0;
 }

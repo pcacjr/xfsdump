@@ -1,3 +1,9 @@
+[current]
+	- effectively no-op change (cleanup) - switch over to using
+	  XFS_IOC_FSGEOMETRY instead of XFS_IOC_GETFSUUID ioctl, so
+	  we can deprecate that "special" UUID ioctl at some point
+	  in the distant future.
+
 xfsdump-1.1.14 (16 January 2002)
 	- fix xfsrestore so that cumulative restores (with -r)
 	  will successfully delete removed directories whose
