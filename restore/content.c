@@ -2058,7 +2058,7 @@ content_stream_restore( ix_t thrdix )
 					display_dump_label( BOOL_TRUE,/* lock */
 							    MLOG_VERBOSE, _(
 							    "dump "
-							    "description:\n"),
+							    "description: \n"),
 							    grhdrp,
 							    mrhdrp,
 							    crhdrp,
@@ -9314,12 +9314,12 @@ display_dump_label( bool_t lockpr,
 	      _(" resumed")
 	      :
 	      "" );
-	mlog( mllevel | MLOG_NOLOCK,
+	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
 	      _("session label: ") );
 	mlog( mllevel | MLOG_NOLOCK,
 	      "\"%s\"\n",
 	      grhdrp->gh_dumplabel );
-	mlog( mllevel | MLOG_NOLOCK,
+	mlog( mllevel | MLOG_NOLOCK | MLOG_BARE,
 	      _("media label: ") );
 	mlog( mllevel | MLOG_NOLOCK,
 	      "\"%s\"\n",
