@@ -179,7 +179,7 @@ qlock_init( bool_t miniroot )
 	 */
 	rval = usconfig( CONF_ARENATYPE, ( u_intgen_t )US_SHAREDONLY );
 	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 		      "unable to configure shared arena for auto unlink: %s\n",
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -189,7 +189,7 @@ qlock_init( bool_t miniroot )
 	 */
 	qlock_usp = usinit( arenaname );
 	if ( ! qlock_usp ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 		      "unable to allocate shared arena for thread locks: %s\n",
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -225,7 +225,7 @@ qlock_thrdinit( void )
 	 */
 	rval = usadd( qlock_usp );
 	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 		      "unable to add thread to shared arena: %s\n",
 		      strerror( errno ));
 		return BOOL_FALSE;
@@ -311,7 +311,7 @@ qlock_lock( qlockh_t qlockh )
 	/* assert that this lock not already held
 	 */
 	if ( QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord )) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
 		      "lock already held: thrd %d pid %d ord %d map %x\n",
 		      thrdix,
 		      pid,
@@ -323,7 +323,7 @@ qlock_lock( qlockh_t qlockh )
 	/* assert that no locks with a lesser ordinal are held by this thread
 	 */
 	if ( QLOCK_ORDMAP_CHK( *ordmapp, qlockp->ql_ord )) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
 		      "lock ordinal violation: thrd %d pid %d ord %d map %x\n",
 		      thrdix,
 		      pid,
@@ -456,7 +456,7 @@ qsemP( qsemh_t qsemh )
 	 */
 	rval = uspsema( usemap );
 	if ( rval != 1 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 		      "unable to \"P\" semaphore: "
 		      "rval == %d, errno == %d (%s)\n",
 		      rval,
@@ -483,7 +483,7 @@ qsemV( qsemh_t qsemh )
 	 */
 	rval = usvsema( usemap );
 	if ( rval != 0 ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 		      "unable to \"V\" semaphore: "
 		      "rval == %d, errno == %d (%s)\n",
 		      rval,

@@ -181,16 +181,29 @@ stream_find( pid_t pid, stream_state_t s[], int nstates )
 					return p;
 		}
 
-	mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
-	      "stream_find(): no stream with pid: %d and state%s:",
-	      pid, nstates == 1 ? "" : "s" );
-	for (i = 0; i < nstates; i++)
+#ifdef STREAM_DEBUG
+	{
+		static const char *state_strings[] = { "S_FREE", "S_RUNNING", "S_ZOMBIE" };
 		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
-		      " %s", state_strings[s[i]]);
-	mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE, "\n");
+		      "stream_find(): no stream with pid: %d and state%s:",
+		      pid, nstates == 1 ? "" : "s" );
+		for (i = 0; i < nstates; i++)
+			mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+			      " %s", state_strings[s[i]]);
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE, "\n");
+	}
+#endif /* STREAM_DEBUG */
 
 	return (spm_t *) NULL;
 }
+
+/*
+ * Note, the following function is called from two places:
+ * main.c:sighandler(), and mlog.c:mlog_va() in the first case we
+ * aren't allowed to take locks, and in the second locking may be
+ * disabled and we are already protected by another lock. So no
+ * locking is done in this function.
+ */
 
 intgen_t
 stream_getix( pid_t pid )
@@ -198,10 +211,8 @@ stream_getix( pid_t pid )
 	stream_state_t states[] = { S_RUNNING };
 	spm_t *p;
 	intgen_t ix;
-	lock();
 	p = stream_find( pid, states, N(states) );
 	ix = p ? p->s_ix : -1;
-	unlock();
 	return ix;
 }
 
@@ -219,7 +230,7 @@ stream_getix( pid_t pid )
 	pid_t mypid = getpid();						\
 									\
 	if (mypid != (pid)) {						\
-		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,\
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,		\
 		      "stream_set_" #field_name "(): "			\
 		      "foreign stream (pid %d) "			\
 		      "not permitted to update this stream (pid %d)\n",	\

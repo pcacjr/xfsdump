@@ -566,7 +566,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 	rvp = rv_getdesc(rv);
 
 
-	mlog( MLOG_DEBUG | MLOG_NOLOCK | MLOG_BARE,
+	mlog( MLOG_DEBUG | MLOG_NOLOCK,
 	      "%s: %d: mlog_exit called: "
 	      "exit_code: %s return: %s (%s)\n",
 	      file, line,
@@ -574,7 +574,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 	      rvp->rv_string, rvp->rv_desc);
 
 	if (rv < 0 || rv >= _RV_NUM) {
-		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
 		      "mlog_exit(): bad return code");
 		return exit_code;
 	}
@@ -627,14 +627,14 @@ _mlog_exit_hint( const char *file, int line, rv_t rv )
 	pid = getpid();
 	rvp = rv_getdesc(rv);
 	
-	mlog( MLOG_DEBUG | MLOG_NOLOCK | MLOG_BARE,
+	mlog( MLOG_DEBUG | MLOG_NOLOCK,
 	      "%s: %d: mlog_exit_hint called: "
 	      "hint: %s (%s)\n",
 	      file, line,
 	      rvp->rv_string, rvp->rv_desc);
 
 	if (rv < 0 || rv >= _RV_NUM) {
-		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
 		      "mlog_exit_hint(): bad return code");
 		return;
 	}
@@ -660,7 +660,10 @@ mlog_get_hint( void )
 	/* REFERENCED */
 	bool_t ok;
 	rv_t hint;
-	
+
+	if (getpid() == parentpid)
+		return mlog_main_exit_hint;
+
 	ok = stream_get_exit_status(getpid(), states, N(states),
 				    NULL, NULL, NULL, NULL, &hint);
 	assert(ok);
