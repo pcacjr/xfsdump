@@ -2492,6 +2492,7 @@ content_complete( void )
 			      elapsed );
 		} else {
 			quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE);
+			quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE);
 
 			mlog( MLOG_VERBOSE,
 			      "restore complete"
