@@ -115,7 +115,7 @@ const	char		*mountpoint,
 {
 	dmf_fs_ctxt_t	*dmf_fs_ctxtp;
 	void		*fshanp;
-	size_t		fshlen;
+	size_t		fshlen=0;
 	dm_fsid_t	fsid;
 	int		error;
 
@@ -345,7 +345,7 @@ const	xfs_bstat_t	*statp)
 	XFSattrvalue1_t	*dmfattrp;
 	int		attrlen;
 	void		*hanp;
-	size_t		hlen;
+	size_t		hlen=0;
 	dm_ino_t	ino;
 	dm_igen_t	igen;
 	int		fd;

@@ -1242,7 +1242,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			 */
 			if (restoredmpr) {
 				void	*fshanp;
-				size_t	fshlen;
+				size_t	fshlen=0;
 
 				if(path_to_fshandle(dstdir, &fshanp, &fshlen)) {
 					mlog( MLOG_NORMAL, _(
@@ -9473,7 +9473,7 @@ static int
 reopen_invis(char *path, int oflags)
 {
 	void	*hanp;
-	size_t	hlen;
+	size_t	hlen=0;
 	int	fd;
 	
 	oflags &= ~(O_EXCL|O_CREAT);
@@ -9502,7 +9502,7 @@ do_fssetdm_by_handle(
 	fsdmidata_t	*fdmp)
 {
 	void		*hanp;
-	size_t		hlen;
+	size_t		hlen=0;
 	int		rc;
 
 	if (path_to_handle(path, &hanp, &hlen)) {

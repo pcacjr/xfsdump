@@ -5133,12 +5133,11 @@ dump_filehdr( drive_t *drivep,
 
 	( void )memset( ( void * )fhdrp, 0, sizeof( *fhdrp ));
 	if ( statp ) {
-		copy_xfs_bstat(&fhdrp->fh_stat, statp);
 #ifdef DMEXTATTR
 		if (hsm_fs_ctxtp) {
-			HsmModifyInode(contextp->cc_hsm_f_ctxtp,
-				(xfs_bstat_t *)&fhdrp->fh_stat);
+			HsmModifyInode(contextp->cc_hsm_f_ctxtp, statp);
 		}
+		copy_xfs_bstat(&fhdrp->fh_stat, statp);
 #endif	/* DMEXTATTR */
 	}
 	fhdrp->fh_offset = offset;
