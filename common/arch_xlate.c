@@ -30,20 +30,6 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-#ifdef __linux__
-/*
- * Linux hack : asm/byteorder #includes the architecture specific
- *              byte swap functions. They're declared "extern inline"
- *              meaning they can _only_ be used inline. If -O isn't
- *              on, we don't inline, and hence we get undefined symbols.
- *              This hack removes the "extern" and defines one set of
- *              real functions we can use in libsim and elsewhere
- */
-# define extern /* empty */
-# include <asm/byteorder.h>
-# undef extern
-#endif /* __linux__ */
-
 #include <libxfs.h>
 #include <jdm.h>
 
@@ -59,8 +45,10 @@
 #include "inv_priv.h"
 #include "mlog.h"
 
-#define IXLATE(a,c)	INT_XLATE(a##1->##c, a##2->##c, dir, ARCH_CONVERT)
-#define BXLATE(a)	bcopy(&ptr1->##a, &ptr2->##a, sizeof(ptr1->##a))
+#define IXLATE(a1,a2,MEMBER)	\
+	INT_XLATE((a1)->MEMBER, (a2)->MEMBER, dir, ARCH_CONVERT)
+#define BXLATE(MEMBER)		\
+	bcopy(&(ptr1)->MEMBER, &(ptr2)->MEMBER, sizeof((ptr1)->MEMBER))
 
 /*
  * xlate_global_hdr - endian convert struct global_hdr
@@ -74,10 +62,10 @@ xlate_global_hdr(global_hdr_t *gh1, global_hdr_t *gh2, int dir)
 	global_hdr_t *ptr1 = gh1;
 	global_hdr_t *ptr2 = gh2;
 
-	IXLATE(gh, gh_version);
-	IXLATE(gh, gh_timestamp);
-	IXLATE(gh, gh_ipaddr);
-	IXLATE(gh, gh_checksum);
+	IXLATE(gh1, gh2, gh_version);
+	IXLATE(gh1, gh2, gh_timestamp);
+	IXLATE(gh1, gh2, gh_ipaddr);
+	IXLATE(gh1, gh2, gh_checksum);
 
 	if (dir < 0) {
 		ptr1 = gh2;
@@ -137,10 +125,9 @@ xlate_drive_hdr(drive_hdr_t *dh1, drive_hdr_t *dh2, int dir)
 	drive_hdr_t *ptr1 = dh1;
 	drive_hdr_t *ptr2 = dh2;
 
-
-	IXLATE(dh, dh_drivecnt);
-	IXLATE(dh, dh_driveix);
-	IXLATE(dh, dh_strategyid);
+	IXLATE(dh1, dh2, dh_drivecnt);
+	IXLATE(dh1, dh2, dh_driveix);
+	IXLATE(dh1, dh2, dh_strategyid);
 
 	if (dir < 0) {
 		ptr1 = dh2;
@@ -192,12 +179,12 @@ xlate_media_hdr(media_hdr_t *mh1, media_hdr_t *mh2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_media_hdr\n");
 
-	IXLATE(mh, mh_mediaix);
-	IXLATE(mh, mh_mediafileix);
-	IXLATE(mh, mh_dumpfileix);
-	IXLATE(mh, mh_dumpmediafileix);
-	IXLATE(mh, mh_dumpmediaix);
-	IXLATE(mh, mh_strategyid);
+	IXLATE(mh1, mh2, mh_mediaix);
+	IXLATE(mh1, mh2, mh_mediafileix);
+	IXLATE(mh1, mh2, mh_dumpfileix);
+	IXLATE(mh1, mh2, mh_dumpmediafileix);
+	IXLATE(mh1, mh2, mh_dumpmediaix);
+	IXLATE(mh1, mh2, mh_strategyid);
 
 	if (dir < 0) {
 		ptr1 = mh2;
@@ -227,7 +214,7 @@ xlate_content_hdr(content_hdr_t *ch1, content_hdr_t *ch2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_content_hdr\n");
 
-	IXLATE(ch, ch_strategyid);
+	IXLATE(ch1, ch2, ch_strategyid);
 
 	if (dir < 0) {
 		ptr1 = ch2;
@@ -257,19 +244,19 @@ xlate_content_inode_hdr(content_inode_hdr_t *cih1, content_inode_hdr_t *cih2, in
 
 	mlog(MLOG_NITTY, "xlate_content_inode_hdr\n");
 
-	IXLATE(cih, cih_mediafiletype);
-	IXLATE(cih, cih_dumpattr);
-	IXLATE(cih, cih_level);
-	IXLATE(cih, cih_last_time);
-	IXLATE(cih, cih_resume_time);
-	IXLATE(cih, cih_rootino);
-	IXLATE(cih, cih_inomap_hnkcnt);
-	IXLATE(cih, cih_inomap_segcnt);
-	IXLATE(cih, cih_inomap_dircnt);
-	IXLATE(cih, cih_inomap_nondircnt);
-	IXLATE(cih, cih_inomap_firstino);
-	IXLATE(cih, cih_inomap_lastino);
-	IXLATE(cih, cih_inomap_datasz);
+	IXLATE(cih1, cih2, cih_mediafiletype);
+	IXLATE(cih1, cih2, cih_dumpattr);
+	IXLATE(cih1, cih2, cih_level);
+	IXLATE(cih1, cih2, cih_last_time);
+	IXLATE(cih1, cih2, cih_resume_time);
+	IXLATE(cih1, cih2, cih_rootino);
+	IXLATE(cih1, cih2, cih_inomap_hnkcnt);
+	IXLATE(cih1, cih2, cih_inomap_segcnt);
+	IXLATE(cih1, cih2, cih_inomap_dircnt);
+	IXLATE(cih1, cih2, cih_inomap_nondircnt);
+	IXLATE(cih1, cih2, cih_inomap_firstino);
+	IXLATE(cih1, cih2, cih_inomap_lastino);
+	IXLATE(cih1, cih2, cih_inomap_datasz);
 
 	if (dir < 0) {
 		ptr1 = cih2;
@@ -293,10 +280,10 @@ xlate_startpt(startpt_t *sp1, startpt_t *sp2, int dir)
 {
 	mlog(MLOG_NITTY, "xlate_startpt\n");
 
-	IXLATE(sp, sp_ino);
-	IXLATE(sp, sp_offset);
-	IXLATE(sp, sp_flags);
-	IXLATE(sp, sp_pad1);
+	IXLATE(sp1, sp2, sp_ino);
+	IXLATE(sp1, sp2, sp_offset);
+	IXLATE(sp1, sp2, sp_flags);
+	IXLATE(sp1, sp2, sp_pad1);
 }
 
 /*
@@ -314,13 +301,13 @@ xlate_hnk(hnk_t *h1, hnk_t *h2, int dir)
 	mlog(MLOG_NITTY, "pre - xlate_hnk\n");
 
 	for(i = 0; i < SEGPERHNK; i++) {
-		IXLATE(h, seg[i].base);
-		IXLATE(h, seg[i].lobits);
-		IXLATE(h, seg[i].mebits);
-		IXLATE(h, seg[i].hibits);
+		IXLATE(h1, h2, seg[i].base);
+		IXLATE(h1, h2, seg[i].lobits);
+		IXLATE(h1, h2, seg[i].mebits);
+		IXLATE(h1, h2, seg[i].hibits);
 	}
 
-	IXLATE(h, maxino);
+	IXLATE(h1, h2, maxino);
 	h2->nextp = NULL;
 
 	if (dir < 0) {
@@ -342,9 +329,9 @@ xlate_filehdr(filehdr_t *fh1, filehdr_t *fh2, int dir)
 	filehdr_t *ptr1 = fh1;
 	filehdr_t *ptr2 = fh2;
 
-	IXLATE(fh, fh_offset);
-	IXLATE(fh, fh_flags);
-	IXLATE(fh, fh_checksum);
+	IXLATE(fh1, fh2, fh_offset);
+	IXLATE(fh1, fh2, fh_flags);
+	IXLATE(fh1, fh2, fh_checksum);
 	xlate_bstat(&fh1->fh_stat, &fh2->fh_stat, dir);
 
 	if (dir < 0) {
@@ -382,29 +369,29 @@ xlate_bstat(bstat_t *bs1, bstat_t *bs2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_bstat\n");
 
-	IXLATE(bs, bs_ino);
-	IXLATE(bs, bs_mode);
-	IXLATE(bs, bs_nlink);
-	IXLATE(bs, bs_uid);
-	IXLATE(bs, bs_gid);
-	IXLATE(bs, bs_rdev);
-	IXLATE(bs, bs_blksize);
-	IXLATE(bs, bs_size);
+	IXLATE(bs1, bs2, bs_ino);
+	IXLATE(bs1, bs2, bs_mode);
+	IXLATE(bs1, bs2, bs_nlink);
+	IXLATE(bs1, bs2, bs_uid);
+	IXLATE(bs1, bs2, bs_gid);
+	IXLATE(bs1, bs2, bs_rdev);
+	IXLATE(bs1, bs2, bs_blksize);
+	IXLATE(bs1, bs2, bs_size);
 
-	IXLATE(bs, bs_atime.tv_sec);
-	IXLATE(bs, bs_atime.tv_nsec);
-	IXLATE(bs, bs_mtime.tv_sec);
-	IXLATE(bs, bs_mtime.tv_nsec);
-	IXLATE(bs, bs_ctime.tv_sec);
-	IXLATE(bs, bs_ctime.tv_nsec);
+	IXLATE(bs1, bs2, bs_atime.tv_sec);
+	IXLATE(bs1, bs2, bs_atime.tv_nsec);
+	IXLATE(bs1, bs2, bs_mtime.tv_sec);
+	IXLATE(bs1, bs2, bs_mtime.tv_nsec);
+	IXLATE(bs1, bs2, bs_ctime.tv_sec);
+	IXLATE(bs1, bs2, bs_ctime.tv_nsec);
 
-	IXLATE(bs, bs_blocks);
-	IXLATE(bs, bs_xflags);
-	IXLATE(bs, bs_extsize);
-	IXLATE(bs, bs_extents);
-	IXLATE(bs, bs_gen);
-	IXLATE(bs, bs_dmevmask);
-	IXLATE(bs, bs_dmstate);
+	IXLATE(bs1, bs2, bs_blocks);
+	IXLATE(bs1, bs2, bs_xflags);
+	IXLATE(bs1, bs2, bs_extsize);
+	IXLATE(bs1, bs2, bs_extents);
+	IXLATE(bs1, bs2, bs_gen);
+	IXLATE(bs1, bs2, bs_dmevmask);
+	IXLATE(bs1, bs2, bs_dmstate);
 
 	if (dir < 0) {
 		ptr1 = bs2;
@@ -426,11 +413,11 @@ xlate_extenthdr(extenthdr_t *eh1, extenthdr_t *eh2, int dir)
 	
 	mlog(MLOG_NITTY, "xlate_extenthdr\n");
 
-	IXLATE(eh, eh_sz);
-	IXLATE(eh, eh_offset);
-	IXLATE(eh, eh_type);
-	IXLATE(eh, eh_flags);
-	IXLATE(eh, eh_checksum);
+	IXLATE(eh1, eh2, eh_sz);
+	IXLATE(eh1, eh2, eh_offset);
+	IXLATE(eh1, eh2, eh_type);
+	IXLATE(eh1, eh2, eh_flags);
+	IXLATE(eh1, eh2, eh_checksum);
 
 	if (dir < 0) {
 		ptr1 = eh2;
@@ -449,10 +436,10 @@ xlate_direnthdr(direnthdr_t *dh1, direnthdr_t *dh2, int dir)
 	direnthdr_t *ptr1 = dh1;
 	direnthdr_t *ptr2 = dh2;
 
-	IXLATE(dh, dh_ino);
-	IXLATE(dh, dh_gen);
-	IXLATE(dh, dh_sz);
-	IXLATE(dh, dh_checksum);
+	IXLATE(dh1, dh2, dh_ino);
+	IXLATE(dh1, dh2, dh_gen);
+	IXLATE(dh1, dh2, dh_sz);
+	IXLATE(dh1, dh2, dh_checksum);
 
 	if (dir < 0) {
 		ptr1 = dh2;
@@ -495,11 +482,11 @@ xlate_extattrhdr(extattrhdr_t *eh1, extattrhdr_t *eh2, int dir)
 {
 	mlog(MLOG_NITTY, "xlate_extattrhdr\n");
 
-	IXLATE(eh, ah_sz);
-	IXLATE(eh, ah_valoff);
-	IXLATE(eh, ah_flags);
-	IXLATE(eh, ah_valsz);
-	IXLATE(eh, ah_checksum);
+	IXLATE(eh1, eh2, ah_sz);
+	IXLATE(eh1, eh2, ah_valoff);
+	IXLATE(eh1, eh2, ah_flags);
+	IXLATE(eh1, eh2, ah_valsz);
+	IXLATE(eh1, eh2, ah_checksum);
 }
 #endif /* EXTATTR */
 
@@ -514,16 +501,16 @@ xlate_rec_hdr(rec_hdr_t *rh1, rec_hdr_t *rh2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_rec_hdr\n");
 
-	IXLATE(rh, magic);
-	IXLATE(rh, version);
-	IXLATE(rh, blksize);
-	IXLATE(rh, recsize);
-	IXLATE(rh, capability);
-	IXLATE(rh, file_offset);
-	IXLATE(rh, first_mark_offset);
-	IXLATE(rh, rec_used);
-	IXLATE(rh, checksum);
-	IXLATE(rh, ischecksum);
+	IXLATE(rh1, rh2, magic);
+	IXLATE(rh1, rh2, version);
+	IXLATE(rh1, rh2, blksize);
+	IXLATE(rh1, rh2, recsize);
+	IXLATE(rh1, rh2, capability);
+	IXLATE(rh1, rh2, file_offset);
+	IXLATE(rh1, rh2, first_mark_offset);
+	IXLATE(rh1, rh2, rec_used);
+	IXLATE(rh1, rh2, checksum);
+	IXLATE(rh1, rh2, ischecksum);
 
 	if (dir < 0) {
 		ptr1 = rh2;
@@ -546,10 +533,10 @@ xlate_invt_seshdr(invt_seshdr_t *ish1, invt_seshdr_t *ish2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_invt_seshdr\n");
 
-	IXLATE(ish, sh_sess_off);
-	IXLATE(ish, sh_streams_off);
-	IXLATE(ish, sh_time);
-	IXLATE(ish, sh_flag);
+	IXLATE(ish1, ish2, sh_sess_off);
+	IXLATE(ish1, ish2, sh_streams_off);
+	IXLATE(ish1, ish2, sh_time);
+	IXLATE(ish1, ish2, sh_flag);
 
 	if (dir < 0) {
 		ptr1 = ish2;
@@ -569,8 +556,8 @@ xlate_invt_session(invt_session_t *is1, invt_session_t *is2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_invt_session\n");
 
-	IXLATE(is, s_cur_nstreams);
-	IXLATE(is, s_max_nstreams);
+	IXLATE(is1, is2, s_cur_nstreams);
+	IXLATE(is1, is2, s_max_nstreams);
 
 	if (dir < 0) {
 		ptr1 = is2;
@@ -603,8 +590,8 @@ xlate_invt_breakpt(invt_breakpt_t *ib1, invt_breakpt_t *ib2, int dir)
 {
 	mlog(MLOG_NITTY, "xlate_invt_breakpt\n");
 
-	IXLATE(ib, ino);
-	IXLATE(ib, offset);
+	IXLATE(ib1, ib2, ino);
+	IXLATE(ib1, ib2, offset);
 }
 
 void
@@ -615,10 +602,10 @@ xlate_invt_stream(invt_stream_t *ist1, invt_stream_t *ist2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_invt_stream\n");
 
-	IXLATE(ist, st_firstmfile);
-	IXLATE(ist, st_lastmfile);
-	IXLATE(ist, st_nmediafiles);
-	IXLATE(ist, st_interrupted);
+	IXLATE(ist1, ist2, st_firstmfile);
+	IXLATE(ist1, ist2, st_lastmfile);
+	IXLATE(ist1, ist2, st_nmediafiles);
+	IXLATE(ist1, ist2, st_interrupted);
 
 	if (dir < 0) {
 		ptr1 = ist2;
@@ -640,10 +627,10 @@ xlate_invt_mediafile(invt_mediafile_t *im1, invt_mediafile_t *im2, int dir)
 
 	mlog(MLOG_NITTY, "xlate_invt_mediafile\n");
 
-	IXLATE(im, mf_nextmf);
-	IXLATE(im, mf_prevmf);
-	IXLATE(im, mf_mfileidx);
-	IXLATE(im, mf_size);
+	IXLATE(im1, im2, mf_nextmf);
+	IXLATE(im1, im2, mf_prevmf);
+	IXLATE(im1, im2, mf_mfileidx);
+	IXLATE(im1, im2, mf_size);
 
 	if (dir < 0) {
 		ptr1 = im2;
@@ -658,6 +645,3 @@ xlate_invt_mediafile(invt_mediafile_t *im1, invt_mediafile_t *im2, int dir)
 	xlate_invt_breakpt(&im1->mf_startino, &im2->mf_startino, dir);
 	xlate_invt_breakpt(&im1->mf_endino,   &im2->mf_endino,   dir);
 }
-
-#undef IXLATE
-#undef BXLATE

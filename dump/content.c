@@ -4332,21 +4332,15 @@ init_extent_group_context( jdm_fshandle_t *fshandlep,
 			   xfs_bstat_t *statp,
 			   extent_group_context_t *gcp )
 {
-#ifdef HIDDEN
 	bool_t isrealtime;
-#endif
 	intgen_t oflags;
 	struct flock fl;
 
-#ifdef HIDDEN
 	isrealtime = ( bool_t )(statp->bs_xflags & XFS_XFLAG_REALTIME );
-#endif
 	oflags = O_RDONLY;
-#ifdef HIDDEN
 	if ( isrealtime ) {
 		oflags |= O_DIRECT;
 	}
-#endif
 	( void )memset( ( void * )gcp, 0, sizeof( *gcp ));
 	gcp->eg_bmap[ 0 ].bmv_offset = 0;
 	gcp->eg_bmap[ 0 ].bmv_length = -1;
@@ -4409,13 +4403,9 @@ dump_extent_group( drive_t *drivep,
 {
 	struct dioattr da;
 	drive_ops_t *dop = drivep->d_opsp;
-#ifdef HIDDEN
 	bool_t isrealtime = ( bool_t )( statp->bs_xflags
 					&
 					XFS_XFLAG_REALTIME );
-#else
-	bool_t isrealtime = BOOL_FALSE;
-#endif
 	off64_t nextoffset;
 	off64_t bytecnt;	/* accumulates total bytes sent to media */
 	intgen_t rval;
@@ -4424,16 +4414,14 @@ dump_extent_group( drive_t *drivep,
 	/*
 	 * Setup realtime I/O size.
 	 */
-#ifdef HIDDEN
 	if ( isrealtime ) {
-		if ( (fcntl(gcp->eg_fd, F_DIOINFO, &da) < 0) ) {
+		if ( (ioctl(gcp->eg_fd, XFS_IOC_DIOINFO, &da) < 0) ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING,
 			      "dioinfo failed ino %llu\n",
 			      statp->bs_ino );
 			da.d_miniosz = PGSZ;
 		}
 	}
-#endif /* HIDDEN */
 
 	/* dump extents until the recommended extent length is achieved
 	 */

@@ -6143,7 +6143,7 @@ pi_neededobjs_free( bag_t *bagp )
 	bagiter_init( bagp, &bagiter );
 
 	bagobjp = 0;
-	while ( bagelemp = bagiter_next( &bagiter, ( void ** )&bagobjp )) {
+	while (( bagelemp = bagiter_next( &bagiter, ( void ** )&bagobjp ) )) {
 		bag_remove( bagp, bagelemp, &dummykey, &dummypayloadp );
 		ASSERT( bagobjp );
 		ASSERT( bagobjp == ( bagobj_t * )dummypayloadp );
@@ -7157,19 +7157,15 @@ restore_reg( drive_t *drivep,
 			fd = -1;
 		} else {
 			intgen_t oflags;
-#ifdef HIDDEN
 			bool_t isrealtime;
 
 			isrealtime = ( bool_t )( bstatp->bs_xflags
 						 &
 						 XFS_XFLAG_REALTIME );
-#endif
 			oflags = O_CREAT | O_RDWR;
-#ifdef HIDDEN
 			if ( persp->a.dstdirisxfspr && isrealtime ) {
 				oflags |= O_DIRECT;
 			}
-#endif
 			
 			fd = open( path, oflags, S_IRUSR | S_IWUSR );
 			if ( fd < 0 ) {
@@ -8123,10 +8119,8 @@ restore_extent( filehdr_t *fhdrp,
 	off64_t off = ehdrp->eh_offset;
 	off64_t sz = ehdrp->eh_sz;
 	off64_t new_off;
-#ifdef HIDDEN
 	struct dioattr da;
 	bool_t isrealtime = BOOL_FALSE;
-#endif
 
 	*bytesreadp = 0;
 
@@ -8151,9 +8145,8 @@ restore_extent( filehdr_t *fhdrp,
 		}
 		ASSERT( new_off == off );
 	}
-#ifdef HIDDEN
 	if ( (fd != -1) && (bstatp->bs_xflags & XFS_XFLAG_REALTIME) ) {
-		if ( (fcntl(fd, F_DIOINFO, &da) < 0) ) {
+		if ( (ioctl(fd, XFS_IOC_DIOINFO, &da) < 0) ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING,
 			      "dioinfo %s failed: "
 			      "%s: discarding ino %llu\n",
@@ -8164,7 +8157,6 @@ restore_extent( filehdr_t *fhdrp,
 		} else
 			isrealtime = BOOL_TRUE;
 	}
-#endif
 
 	/* move from media to fs.
 	 */
@@ -8253,7 +8245,6 @@ restore_extent( filehdr_t *fhdrp,
 					ASSERT( remaining
 						<=
 						( size_t )INTGENMAX );
-#ifdef HIDDEN
 					/*
 					 * Realtime files must be written
 					 * to the end of the block even if
@@ -8274,7 +8265,6 @@ restore_extent( filehdr_t *fhdrp,
 						remaining += da.d_miniosz - 
 						   (remaining % da.d_miniosz);
 					}
-#endif
 					rval = write( fd, bufp, remaining );
 					if ( rval < 0 ) {
 						nwritten = rval;

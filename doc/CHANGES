@@ -1,4 +1,11 @@
 
+xfsdump-1.0.7 (07 May 2001)
+	- fix warnings, remove last -Wall filter
+	- configure script default man path now /usr/share/man
+	- support realtime files in dump/restore
+	- cleanup arch-specific code, esp. the byteswab routines
+	- as a result, move to -O1 as default for extern inlines
+
 xfsdump-1.0.6 (01 May 2001)
 	- remove spurious warnings when dumping quota information
 
