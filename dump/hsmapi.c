@@ -497,6 +497,7 @@ const	xfs_bstat_t	*statp)
 	case DMF_ST_DUALSTATE:
 	case DMF_ST_UNMIGRATING:
 	case DMF_ST_PARTIAL:
+	case DMF_ST_OFFLINE:
 		/* We have a DMF file that can be treated as offline */
 		dmf_f_ctxtp->candidate = 1;
 		dmf_f_ctxtp->filesize = statp->bs_size;
