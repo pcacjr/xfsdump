@@ -148,7 +148,7 @@ main(int argc, char **argv)
 			break;
 		case 'V':
 			printf("%s version %s\n", basename(argv[0]), VERSION);
-			break;
+			exit(0);
 		default:
 		case 'h':
 			usage(argv[0]);
