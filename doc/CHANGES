@@ -1,0 +1,6 @@
+
+xfsdump-1.0.0 (15 January 2001)
+	- dump, restore, fsr and co. abstracted from xfs-cmds package
+        - completed Debian packaging
+        - late beta code
+
