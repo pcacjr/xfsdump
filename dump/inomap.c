@@ -623,11 +623,20 @@ cb_add( void *arg1,
 	bool_t changed;
 	bool_t resumed;
 
+#ifdef DEBUG_INOMAP
+	mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: ino %llu,"
+                                "mtime = %d, ctime = %d\n", 
+                                 ino, mtime, ctime);
+#endif
+
 	( *inomap_statdonep )++;
 
 	/* skip if no links
 	 */
 	if ( statp->bs_nlink == 0 ) {
+#ifdef DEBUG_INOMAP
+		mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: skip as no links\n");
+#endif
 		return 0;
 	}
 
@@ -642,14 +651,34 @@ cb_add( void *arg1,
 	 */
 	if ( cb_resume && ! cb_inoinresumerange( ino )) {
 		if ( ltime >= cb_resumetime ) {
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+                              "cb_add/resume: changed ltime %d, resume %d\n",
+                                ltime, cb_resumetime);
+#endif
 			changed = BOOL_TRUE;
 		} else {
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+				"cb_add/resume: NOT changed ltime %d, resume %d\n", 
+				ltime, cb_resumetime);
+#endif
 			changed = BOOL_FALSE;
 		}
 	} else if ( cb_last ) {
 		if ( ltime >= cb_lasttime ) {
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+			    "cb_add/last: changed ltime %d, last %d\n", 
+			    ltime, cb_lasttime);
+#endif
 			changed = BOOL_TRUE;
 		} else {
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+			    "cb_add/last: NOT changed ltime %d, last %d\n", 
+			    ltime, cb_lasttime);
+#endif
 			changed = BOOL_FALSE;
 		}
 	} else {
@@ -666,6 +695,9 @@ cb_add( void *arg1,
 	}
 
 	if ( changed ) {
+#ifdef DEBUG_INOMAP
+		mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: changed %llu\n", ino);
+#endif
 		if ( mode == S_IFDIR ) {
 			map_add( ino, MAP_DIR_CHANGE );
 			cb_dircnt++;
@@ -686,6 +718,10 @@ cb_add( void *arg1,
 			}
 
 			map_add( ino, MAP_NDR_CHANGE );
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+			    "cb_add: map_add ino %llu ndr_chng\n", ino);
+#endif
 			cb_nondircnt++;
 			cb_datasz += estimated_size;
 		}
@@ -699,6 +735,10 @@ cb_add( void *arg1,
 			map_add( ino, MAP_DIR_SUPPRT );
 			cb_dircnt++;
 		} else {
+#ifdef DEBUG_INOMAP
+			mlog( MLOG_DEBUG | MLOG_INOMAP, 
+			    "cb_add: map_add ino %llu ndr_nochng\n", ino);
+#endif
 			map_add( ino, MAP_NDR_NOCHNG );
 		}
 	}

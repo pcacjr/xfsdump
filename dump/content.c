@@ -3864,6 +3864,8 @@ dump_file( void *arg1,
 		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 			contextp->cc_stat_lastino = statp->bs_ino;
 		}
+		mlog( MLOG_DEBUG, "skip as no links for ino %llu\n", 
+			statp->bs_ino);
 		return RV_OK;
 	}
 
@@ -3873,6 +3875,8 @@ dump_file( void *arg1,
 		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 			contextp->cc_stat_lastino = statp->bs_ino;
 		}
+		mlog( MLOG_DEBUG, "skip as ino %llu is prior to starpoint\n", 
+			statp->bs_ino);
 		return RV_OK;
 	}
 
@@ -3885,6 +3889,8 @@ dump_file( void *arg1,
 				if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 					contextp->cc_stat_lastino = statp->bs_ino;
 				}
+				mlog( MLOG_DEBUG, "skip as ino %llu is at/beyond starpoint\n", 
+					statp->bs_ino);
 				return RV_NOMORE;
 			}
 		} else {
@@ -3892,6 +3898,8 @@ dump_file( void *arg1,
 				if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 					contextp->cc_stat_lastino = statp->bs_ino;
 				}
+				mlog( MLOG_DEBUG, "skip as ino %llu is at/beyond starpoint\n", 
+					statp->bs_ino);
 				return RV_NOMORE;
 			}
 		}
@@ -3918,6 +3926,10 @@ dump_file( void *arg1,
 		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 			contextp->cc_stat_lastino = statp->bs_ino;
 		}
+		mlog( MLOG_DEBUG, "skip as ino %llu is not marked as changed in inomap\n", 
+			statp->bs_ino);
+		mlog( MLOG_DEBUG, "ino %llu is in state %d\n", 
+			statp->bs_ino, state);
 		return RV_OK;
 	}
 

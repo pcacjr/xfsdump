@@ -182,10 +182,10 @@ static int _rmt_open (char *path, int oflag, int mode)
             struct uname_table *p;
 		
 	    if (user != login) {
-		snprintf(cmd, sizeof(cmd), "rsh -l %s %s uname", login, system); 
+		snprintf(cmd, sizeof(cmd), "%s -l %s %s uname", rsh_path, login, system); 
 	    }
 	    else {
-		snprintf(cmd, sizeof(cmd), "rsh %s uname", system); 
+		snprintf(cmd, sizeof(cmd), "%s %s uname", rsh_path, system); 
 	    }
 
 	    rmt_f = popen(cmd, "r");
@@ -265,8 +265,9 @@ again:
 /*
  *	bad problems if we get here
  */
-
-		perror("can't find rsh(1) or rmt(1)");
+		fprintf(stderr,
+		    "librmt: problem finding either RSH(%s) or RMT(%s): %s\n", 
+		    rsh_path, rmt_path, strerror(errno));
 		exit(1);
 	}
 
