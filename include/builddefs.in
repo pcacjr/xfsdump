@@ -45,7 +45,7 @@ LIBXFS = @libxfs@
 LIBATTR = @libattr@
 LIBUUID = @libuuid@
 LIBHANDLE = @libhdl@
-CPPFLAGS = -I/usr/include/xfs -I/usr/include/attr
+CPPFLAGS += -I/usr/include/xfs -I/usr/include/attr
 
 PKG_NAME = @pkg_name@
 PKG_RELEASE = @pkg_release@

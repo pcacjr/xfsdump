@@ -116,7 +116,7 @@ AC_ARG_ENABLE(shared,
 	enable_shared=yes)
 AC_SUBST(enable_shared)
 
-CPPFLAGS="-I/usr/include/xfs"
+CPPFLAGS="$CPPFLAGS -I/usr/include/xfs"
 AC_SUBST(CPPFLAGS)
 
 dnl Checks for UUID header and library.
@@ -164,10 +164,15 @@ AC_CHECK_LIB(handle, attr_list_by_handle,, [
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
+
 libxfs="-lxfs"
+test -f `pwd`/../xfsprogs/libxfs/libxfs.la && libxfs="`pwd`/../xfsprogs/libxfs/libxfs.la"
 test -f /usr/lib/libxfs.la && libxfs="/usr/lib/libxfs.la"
+
 libhdl="-lhandle"
+test -f `pwd`/../xfsprogs/libhandle/libhandle.la && libhdl="`pwd`/../xfsprogs/libhandle/libhandle.la"
 test -f /usr/lib/libhandle.la && libhdl="/usr/lib/libhandle.la"
+
 AC_SUBST(libxfs)
 AC_SUBST(libhdl)
 
@@ -198,7 +203,9 @@ AC_CHECK_LIB(dm, dm_make_handle,, [
 	echo 'Alternatively, run "make install-dev" from the dmapi source.'
 	exit 1
 ])
+
 libdm="-ldm"
+test -f `pwd`/../dmapi/libdm/libdm.la && libdm="`pwd`/../dmapi/libdm/libdm.la"
 test -f /usr/lib/libdm.la && libdm="/usr/lib/libdm.la"
 AC_SUBST(libdm)
 
@@ -218,6 +225,7 @@ AC_CHECK_LIB(attr, attr_get,, [
 	exit 1
 ])
 libattr="-lattr"
+test -f `pwd`/../attr/libattr/libattr.la && libattr="`pwd`/../attr/libattr/libattr.la"
 test -f /usr/lib/libattr.la && libattr="/usr/lib/libattr.la"
 AC_SUBST(libattr)
 
