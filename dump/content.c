@@ -48,7 +48,6 @@
 
 #ifdef EXTATTR
 #include <attributes.h>
-#include "attr.h"
 #endif /* EXTATTR */
 
 #ifdef DMEXTATTR

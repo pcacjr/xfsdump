@@ -56,7 +56,6 @@ COMMINCL = \
 	types.h \
 	util.h \
 	sproc.h \
-	attr.h \
 	rec_hdr.h
 
 INVINCL = \
@@ -93,8 +92,7 @@ COMMON = \
 	ring.c \
 	stream.c \
 	util.c \
-	sproc.c \
-	attr.c
+	sproc.c
 
 LOCALS = \
 	content.c \

@@ -1,3 +1,11 @@
+xfsdump (2.0.0-1) unstable; urgency=low
+
+  * Major new upstream release
+  * Several system call changes - THIS WILL NOT WORK WITH OLD KERNELS!
+  * Uses the new shared ext2/ext3/XFS extended attributes interfaces
+
+ -- Nathan Scott <nathans@debian.org>  Thu,  7 Feb 2002 13:25:26 +1100
+
 xfsdump (1.1.14-1) unstable; urgency=low
 
   * New upstream bug-fix release

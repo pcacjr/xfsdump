@@ -56,7 +56,6 @@
 #include "inomap.h"
 #include "arch_xlate.h"
 #include "exit.h"
-#include "attr.h"
 #include <attributes.h>
 
 /* structure definitions used locally ****************************************/

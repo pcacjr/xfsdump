@@ -157,9 +157,9 @@ AC_CHECK_HEADER(xfs/handle.h,, [
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
-AC_CHECK_LIB(handle, fssetdm_by_handle,, [
+AC_CHECK_LIB(handle, attr_list_by_handle,, [
 	echo
-	echo 'FATAL ERROR: could not find a valid XFS handle library.'
+	echo 'FATAL ERROR: could not find a current XFS handle library.'
 	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
@@ -171,11 +171,13 @@ test -f /usr/lib/libhandle.la && libhdl="/usr/lib/libhandle.la"
 AC_SUBST(libxfs)
 AC_SUBST(libhdl)
 
-dnl check xfs_types.h defines IRIX_MKDEV for userspace
-AC_MSG_CHECKING([macros in xfs/xfs_types.h])
-AC_TRY_LINK([#include <libxfs.h>], [int x = IRIX_MKDEV(0,0)], [echo ok], [
-	echo
-	echo 'FATAL ERROR: could not find IRIX_MKDEV macro in the XFS headers.'
+dnl Check xfsprogs-dev has needed macros
+AC_MSG_CHECKING([macros in xfs/xfs_fs.h])
+AC_TRY_LINK([#include <libxfs.h>],
+	[ int x = XFS_IOC_ATTRLIST_BY_HANDLE; ],
+	[ echo ok ],
+	[ echo
+	echo 'FATAL ERROR: could not find needed macros in the XFS headers.'
 	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
@@ -219,6 +221,18 @@ libattr="-lattr"
 test -f /usr/lib/libattr.la && libattr="/usr/lib/libattr.la"
 AC_SUBST(libattr)
 
+dnl Check attr-dev is recent enough
+AC_MSG_CHECKING([macros in attr/attributes.h])
+AC_TRY_LINK([
+#include <linux/types.h>
+#include <attr/attributes.h>],
+	[ int x = ATTR_SHIFT; ],
+	[ echo
+	echo 'FATAL ERROR: incorrect macros present in attributes.h header file.'
+	echo 'Upgrade the attr-devel (rpm) or the attr-dev (deb) package.'
+	echo 'Alternatively, run "make install-dev" from the attr source.'
+	exit 1 ],
+	[ echo ok ])
 
 dnl alternate root and usr prefixes
 test -z "$ROOT_PREFIX" && ROOT_PREFIX=""

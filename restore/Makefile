@@ -35,7 +35,6 @@ include $(TOPDIR)/include/builddefs
 
 COMMINCL = \
 	arch_xlate.h \
-	attr.h \
 	cldmgr.h \
 	content.h \
 	content_inode.h \
@@ -73,7 +72,6 @@ INVCOMMON = \
 
 COMMON = \
 	arch_xlate.c \
-	attr.c \
 	cldmgr.c \
 	dlog.c \
 	drive.c \

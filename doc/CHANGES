@@ -1,8 +1,12 @@
-[current]
+xfsdump-2.0.0 (07 February 2002)
+	- rework all code dealing with extended attributes to use
+	  the new system calls (requires attr-2.0.0 or greater)
+	- also, the attrctl-by-handle ioctl is history, replaced
+	  by libhandle routines - more like what we have in IRIX
+	  (requires xfsprogs-2.0.0 or greater)
 	- effectively no-op change (cleanup) - switch over to using
 	  XFS_IOC_FSGEOMETRY instead of XFS_IOC_GETFSUUID ioctl, so
-	  we can deprecate that "special" UUID ioctl at some point
-	  in the distant future.
+	  we can deprecate that "special" UUID ioctl in the kernel.
 	- add -q description to xfsdump/xfsrestore man pages and
 	  usage text.
 	- change failed bulkstat WARNING to a TRACE message to that
