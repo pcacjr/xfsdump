@@ -802,7 +802,6 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 		bool_t changed_below = BOOL_FALSE;
 
 		state = map_get( statp->bs_ino );
-		ASSERT( state != MAP_INO_UNUSED );
 		ASSERT( state != MAP_NDR_CHANGE );
 		ASSERT( state != MAP_NDR_NOCHNG );
 

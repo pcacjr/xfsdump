@@ -126,8 +126,10 @@ default: $(LINKS) $(LTCOMMAND)
 include $(BUILDRULES)
 
 install: default
+	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
-	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+	$(INSTALL) -S $(PKG_SBIN_DIR)/$(LTCOMMAND) $(PKG_BIN_DIR)/$(LTCOMMAND)
 install-dev:
 
 $(COMMINCL) $(COMMON):

@@ -48,9 +48,14 @@ do
 	esac
 done
 
-[ -x /usr/bin/perl ] || "Error: cannot find /usr/bin/perl"
-[ -x /usr/bin/expr ] || "Error: cannot find /usr/bin/expr"
-[ -x /usr/sbin/setquota ] || "Error: cannot find /usr/sbin/setquota"
+_error()
+{
+	echo "Error: $@"
+	exit 1
+}
+[ -x /usr/bin/perl ] || _error "cannot find /usr/bin/perl"
+[ -x /usr/bin/expr ] || _error "cannot find /usr/bin/expr"
+[ -x /usr/sbin/setquota ] || _error "cannot find /usr/sbin/setquota"
 
 set -- extra $@
 shift $OPTIND

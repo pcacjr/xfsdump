@@ -4,7 +4,7 @@ package=xfsdump
 
 dirtmp = debian/tmp
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
-stdenv = GZIP=-q; export GZIP;
+stdenv = @GZIP=-q; export GZIP;
 
 options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
 checkdir = test -f debian/rules
@@ -32,6 +32,11 @@ clean:
 
 binary-indep:
 
+# Note1: dev pkg with .so symlinks to base pkg confuses debstd;
+# so the .so 'Dangling symlink' message is benign.
+# Note2: absolute symlinks (required by policy) confuse debstd;
+# so we'll filter out symlink messages entirely now.
+# 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
@@ -39,7 +44,7 @@ binary-arch: checkroot built
 	$(pkgtmp) $(MAKE) -C . install
 	$(pkgtmp) $(MAKE) -C build src-manifest
 	@echo "== dpkg-buildpackage: debstd" 1>&2
-	$(stdenv) debstd -m
+	$(stdenv) debstd -m | grep -v 'Dangling symlink'
 	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
 	chown -R root.root $(dirtmp)
 	chmod -R go=rX $(dirtmp)

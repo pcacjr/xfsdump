@@ -6,6 +6,8 @@ xfsdump-1.1.0 (18 July 2001)
 	- re-enable use of libdm.so for DMAPI support
 	- remove some more unused "common" files
 	- man page updates for xfsdump and xfsrestore
+	- moved certain binaries from /usr/sbin into /sbin to
+	  be available for recovery when only root is mounted
 
 xfsdump-1.0.12 (13 July 2001)
 	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore 
