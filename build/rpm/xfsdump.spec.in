@@ -38,8 +38,7 @@ if [ -f .census ] ; then
    fi
 else
 %setup
-touch .census
-./configure
+@make@ configure
 fi
 
 %build

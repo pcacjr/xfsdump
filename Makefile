@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -40,7 +40,7 @@ endif
 CONFIGURE = configure include/builddefs
 LSRCFILES = configure configure.in Makepkgs install-sh README VERSION
 
-LDIRT = config.log config.status config.cache confdefs.h conftest* \
+LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 SUBDIRS = include librmt \
@@ -62,7 +62,17 @@ endif
 
 $(CONFIGURE):
 	autoconf
-	./configure
+	./configure \
+		--prefix=/ \
+		--exec-prefix=/ \
+		--sbindir=/sbin \
+		--bindir=/usr/sbin \
+		--libdir=/lib \
+		--libexecdir=/usr/lib \
+		--includedir=/usr/include \
+		--mandir=/usr/share/man \
+		--datadir=/usr/share \
+		$$LOCAL_CONFIGURE_OPTIONS
 	touch .census
 
 install: default
