@@ -7,21 +7,10 @@
 
 <h3>Table Of Contents</h3>
 <ul>
-  <li><a href="caveat">Linux Caveats</a>
-  <li><a href="#control_flow">Control Flow of xfsdump</a>
-  <ul>
-    <li><a href="#run_time_structure">Run Time Structure</a>
-    <li><a href="#main">Main</a>
-    <ul>
-      <li><a href="#drive_init1">drive_init1</a> 
-      <li><a href="#content_init">content_init</a> 
-    </ul>
-    <li><a href="#dump_tape">Dumping to Tape</a>
-    <ul>
-       <li><a href="#content_stream_dump">content_stream_dump</a>
-       <li><a href="#dump_file_reg">dump_file_reg</a>
-    </ul>
-  </ul>
+  <li><a href="#caveat">Linux Caveats</a>
+
+  <li><a href="#intro">What's in a dump</a>
+
   <li><a href="#dump_format">Dump Format</a>
   <ul>
     <li><a href="#media_files">Media Files</a>
@@ -29,17 +18,44 @@
     <li><a href="#dirs">Directories</a>
     <li><a href="#non_dirs">Non-directory files</a>
   </ul>
+
   <li><a href="#tape_format">Format on Tape</a>
-  <li><a href="#reg_split">Splitting a Regular File</a>
-  <ul>
-    <li><a href="#split_mstream">Splitting a dump over multiple streams</a>
-    <li><a href="#partial_reg">Partial Registry</a>
-  </ul>
-  <li><a href="#dirent_tree">Restore's directory entry tree</a>
-  <li><a href="#cum_restore">Cumulative Restore</a>
-  <ul>
-    <li><a href="#tree_post">Cumulative Restore Tree Postprocessing</a>
-  </ul>
+
+  <li><a href="#run_time_structure">Run Time Structure</a>
+
+  <li><a href="#xfsdump">xfsdump</a>
+     <ul>
+      <li><a href="#control_flow_dump">Control Flow of xfsdump</a>
+      <ul>
+	<li><a href="#main">The main function of xfsdump</a>
+	<ul>
+	  <li><a href="#drive_init1">drive_init1</a> 
+	  <li><a href="#content_init_dump">content_init</a> 
+	</ul>
+	<li><a href="#dump_tape">Dumping to Tape</a>
+	<ul>
+	   <li><a href="#content_stream_dump">content_stream_dump</a>
+	   <li><a href="#dump_file_reg">dump_file_reg</a>
+	</ul>
+      </ul>
+      <li><a href="#reg_split">Splitting a Regular File</a>
+      <ul>
+	<li><a href="#split_mstream">Splitting a dump over multiple streams</a>
+	<li><a href="#partial_reg">Partial Registry</a>
+      </ul>
+     </ul>
+
+  <li><a href="#xfsrestore">xfsrestore</a>
+    <ul>
+      <li><a href="#control_flow_restore">Control Flow of xfsrestore</a>
+      <li><a href="#pers_inv">Persistent Inventory and State File</a>
+      <li><a href="#dirent_tree">Restore's directory entry tree</a>
+      <li><a href="#cum_restore">Cumulative Restore</a>
+      <ul>
+	<li><a href="#tree_post">Cumulative Restore Tree Postprocessing</a>
+      </ul>
+    </ul>
+
   <li><a href="#Q&A">Questions and Answers</a>
   <ul>
     <li><a href="#DMF">How is -a and -z handled by xfsdump ?</a>
@@ -59,9 +75,170 @@ pertain to xfsdump/xfsrestore in Linux. Also, the DMF support in xfsdump
 is not yet useful for Linux. 
 
 <hr>
-<h3><a name="control_flow">Control Flow of xfsdump</a></h3>
+<h3><a name="intro">What's in a dump</a></h3>
+Xfsdump is used to dump out an XFS filesystem to a file, tape
+or stdout. The dump includes all the filesystem objects of:
+<ul>
+<li>directories (S_IFDIR)
+<li>regular files (S_IFREG)
+<li>sockets (S_IFSOCK) 
+<li>symlinks (S_IFLNK)
+<li>character special files (S_IFCHR)
+<li>block special files (S_IFBLK)
+<li>named pipes (S_FIFO)
+<li>XENIX named pipes (S_IFNAM) 
+</ul>
+but not mount point types (S_IFMNT).
+It also does not dump files from <i>/var/xfsdump</i> which
+is where the xfsdump inventory is located.
+Other data which is stored:
+<ul>
+<li> file attributes (stored in stat data) of owner, group, permissions,
+and date stamps 
+<li> any extended attributes associated with these file objects
+<li> extent information is stored allowing holes to be reconstructed
+on restoral
+<li> actual file data of the extents
+</ul>
 
-<h4><a name="run_time_structure">Run Time Structure</a></h4>
+<hr>
+<h3><a name="dump_format">Dump Format</a></h3>
+
+The dump format is the layout of the data for storage in a dump.
+This is mostly done at an abstraction above the media dump format
+(tape or data file).
+The tape format, for example, will have extra header records.
+The tape format will be done in multiple media files, whereas
+the data file format will use 1 media file.
+<p>
+
+
+<h4><a name="media_files">Media Files</a></h4>
+<img src="media_files.gif">
+<p>
+Media files are probably used to provide a way of
+recovering more data in xfsrestore(1) should there be
+some media error. They provide a self-contained unit
+for restoration.
+If the dump media is a disk file (drive_simple.c) then I
+believe that only one media-file is used. Whereas on tape
+media, multiple media files are used depending upon the size
+of the media file. The size of the media file is set depending
+on the drive type: QIC: 50Mb; DAT: 512Mb; Exabyte: 2Gb; DLT: 4Gb;
+others: 256Mb. This value is likely to be changable via a command-line
+option in the future. Also, on tape, the dump is finished by an inventory
+media file followed by a terminating null media file.
+<p>
+A global header is placed at the start of each media file.
+<hr>
+<img src="global_hdr.gif" align=right>
+<pre>
+<b>global_hdr_t</b> (4K bytes)
+magic# = "xFSdump0"
+version#
+checksum
+time of dump
+ip address
+dump id
+hostname
+dump label
+pad to 1K bytes
+<b>drive_hdr_t</b> (3K bytes)
+    drive count
+    drive index
+    strategy id = on-file, on-tape, on-rmt-tape
+    pad to 512 bytes
+
+    specific (512 bytes)
+        tape:
+	    <b>rec_hdr</b>
+	    magic# - tape magic = 0x13579bdf02468acell
+	    version#
+	    block size
+	    record size
+	    drive capabilities
+	    record's byte offset in media file
+	    byte offset of rirst mark set
+	    size (bytes) of record containing user data
+	    checksum (if -C used)
+	    ischecksum (= 1 if -C used)
+	    dump uuid
+	    pad to 512 bytes
+
+    upper: (2K bytes)
+	<b>media_hdr_t</b>
+	media-label
+	previous media-label
+	media-id
+	previous media-id
+	5 media indexes - (indices of object/file within stream/media-object)
+	strategy id = on-file, on-tape, on-rmt-tape
+	strategy specific data:
+	  field to denote if media file is a terminator (old fmt)
+	upper: (to 2K) 
+</pre>
+<hr>
+   
+
+<h4><a name="inode_map">Inode Map</a></h4>
+<img src="inode_map.gif">
+
+
+<h4><a name="dirs">Directories</a></h4>
+<img src="directories.gif">
+
+
+<h4><a name="non_dirs">Non-directory files</a></h4>
+<img src="files.gif">
+<br>
+Regular files, as can be seen from above, have a list
+of extents followed by the file's extended attributes.
+If the file is large and/or the dump is to multiple streams,
+then the file can be dumped in multiple records or extent groups.
+(See <a href="#reg_split">Splitting a Regular File</a>).
+
+<h3><a name="tape_format">Format on Tape</a></h3>
+At the beginning of each tape record is a header. However, for
+the first record of a media file, the record header is buried
+inside the global header at byte offset 1536 (1K + 512), as is shown in 
+the global header diagram. 
+Reproduced again:
+<pre>
+<b>rec_hdr</b>
+magic# - tape magic = 0x13579bdf02468acell
+version#
+block-size
+record-size
+drive capabilities
+record's byte offset in media file
+byte offset of rirst mark set
+size (bytes) of record containing user data
+checksum (if -C used)
+ischecksum (= 1 if -C used)
+dump uuid
+pad to 512 bytes
+</pre>
+<p>
+I can not see where the block-size ("tape_blksz") is ever used !  
+The record-size ("tape_recsz") is used as the byte count to do
+the actual write and read system calls.
+<p>
+There is another layer of s/ware for the actual data on the tape.
+Although, one may write out an inode-map or directory entries,
+one doesn't just give these record buffers straight to the 
+write system call to write out. Instead, these data objects are
+written to buffers (akin to &lt;stdio&gt). Another thread reads
+from these buffers (unless its running single-threaded) and writes
+them to tape.
+Specifically, inside a loop,
+one calls <b>do_get_write_buf</b>,
+copies over the data one wants stored and then 
+calls <b>do_write_buf</b>, until the entire data buffer
+has been copied over.
+
+<hr> 
+
+<h3><a name="run_time_structure">Run Time Structure</a></h3>
 
 This section reviews the run time structure and failure handling in 
 dump/restore (see IRIX PV 784355).
@@ -142,10 +319,98 @@ point they drop out of the message processing loop and always signal success.
 <p>
 Thus the only child processes that can affect the return status of
 dump or restore are the stream managers, and these processes take
-their exit status from the values returned by content_stream_dump and
-content_stream_restore.
+their exit status from the values returned by 
+<b>content_stream_dump</b> and <b>content_stream_restore</b>.
 
-<h4><a name="main">Main</a></h4>
+<hr>
+
+<h3><a name="xfsdump">xfsdump</a></h3>
+
+<h4><a name="control_flow_dump">Control Flow of xfsdump</a></h4>
+
+Below is a higher level summary of the control flow. Further details
+are given later.
+<ul>
+<li> initialize the drive strategy for a tape, file, minimal remote tape
+<li> create the global header
+</ul>
+
+<p>
+<b>content_init</b> (xfsdump version)
+<p>
+Do up to 5 phases, which create and prune the inode map,
+calculate an estimate of the file data size and using that
+create inode-ranges for multi-stream dumps if pertinent.
+<ul>
+<li> <b>phase 1</b>: create a subtree list based on the -s subtree spec.
+<li> <b>phase 2</b>: create the inode map <br>
+  The inode map stores the type of the inode: directory or non-directory,
+  and a state value to say whether it has changed or not.
+  The inode map is built by processing each inode (using bulkstat) and
+  in order to work out if it should be marked as changed, 
+  by comparing its date stamp with the date of the base or interrupted
+  dump. 
+  We also update the size for non-dir regular files (bs_blocks * bs_blksize)
+<li><b>phase 3</b>: prune the unneeded subtrees due to the set of
+  unchanged directories or the subtrees specified in -s (phase 1).
+  This works by marking higher level directories as unchanged 
+  (MAP_DIR_NOCHNG) in the inode map. 
+<li><b>phase 4</b>: estimate non-dir (file) size if pruning was done
+  since phase 2.
+  It calculates this by processing each inode (using bulkstat)
+  and looking up the inode map to see if it is a changed non-dir (file).
+  If it is then it uses (bs_blocks * bs_blksize) as in phase 2.
+<li><b>phase 5</b>: if we have multiple streams, then
+  it splits up the dump to try to give each stream a set of inodes
+  which has an equal amount of file data. 
+  See the section on "Splitting a dump over multiple streams" below.
+</ul>
+
+<ul>
+<li> if 1 stream, then we call <b>content_stream_dump</b> and
+  if multi stream, then we create children sprocs which call
+  <b>content_stream_dump</b>.
+</ul>
+
+<p>
+<b>content_stream_dump</b>
+<ul>
+<li> write global header
+<li> loop dumping media files
+    <ul>
+    <li> dump the changed/needed directories by processing all inodes from bulkstat
+      <ul>
+      <li> dump the filehdr based on the bulkstat structure
+      <li> dump the directory entries (using getdents())
+      <li> dump a null dirent terminator
+      <li> dump extended attributes on directory if it has them
+      </ul>
+    <li> dump the changed/needed files by processing all inodes from bulkstat
+      (check the multistream range to see if it should be dumped by
+       this particular stream)
+      <ul>
+      <li> dump the filehdr
+      <li> dump the extents (called extent groups - max at 16Mb)
+        <ul>
+	<li> align to page boundary by dumping EXTENTHDR_TYPE_ALIGN records
+	<li> dump data as EXTENTHDR_TYPE_DATA records
+        </ul>
+      <li> dump a null terminator, EXTENTHDR_TYPE_LAST
+      </ul>
+    <li> if not EOM then write null file header
+    <li> end the media file
+    <li> update online inventory
+    </ul>
+<li> if multiple-media dump (i.e. tape dump and not file dump) then 
+  <ul>
+  <li> dump the session inventory to a media file
+  <li> dump the terminator to a media file
+  </ul>
+</ul>
+   
+<hr>
+
+<h5><a name="main">The main function of xfsdump</a></h5>
 
 <pre>
 * <b><a name="drive_init1">drive_init1</a></b> - initialize drive manager for each stream
@@ -185,7 +450,7 @@ content_stream_restore.
 * if have sprocs, then install signal handlers and hold the
   signals (don't deliver but keep 'em pending)
 
-* <b><a name="content_init">content_init</a></b>
+* <b><a name="content_init_dump">content_init</a></b>
 
   * inomap_build() - stores stream start-points and builds inode map
 
@@ -314,7 +579,7 @@ content_stream_restore.
 </pre>
 
 <hr>
-<h4><a name="dump_tape">Dumping to Tape</a></h4>
+<h5><a name="dump_tape">Dumping to Tape</a></h5>
 
 <pre>
 * <b><a name="content_stream_dump">content_stream_dump</a></b>
@@ -485,141 +750,8 @@ content_stream_restore.
 </pre>
 
 <hr>
-<h3><a name="dump_format">Dump Format</a></h3>
 
-The dump format is the layout of the data for storage in a dump.
-This is mostly done at an abstraction above the media dump format
-(tape or data file).
-The tape format, for example, will have extra header records.
-The tape format will be done in multiple media files, whereas
-the data file format will use 1 media file.
-<p>
-
-
-<h4><a name="media_files">Media Files</a></h4>
-<img src="media_files.gif">
-<p>
-Media files are probably used to provide a way of
-recovering more data in xfsrestore(1) should there be
-some media error. They provide a self-contained unit
-for restoration.
-If the dump media is a disk file (drive_simple.c) then I
-believe that only one media-file is used. Whereas on tape
-media, multiple media files are used depending upon the size
-of the media file. The size of the media file is set depending
-on the drive type: QIC: 50Mb; DAT: 4Mb; Exabyte: 2Gb; DLT: 4Gb;
-others: 256Mb. This value is likely to be changable via a command-line
-option in the future. Also, on tape, the dump is finished by an inventory
-media file followed by a terminating null media file.
-<p>
-A global header is placed at the start of each media file.
-<hr>
-<img src="global_hdr.gif" align=right>
-<pre>
-<b>global_hdr_t</b> (4K bytes)
-magic# = "xFSdump0"
-version#
-checksum
-time of dump
-ip address
-dump id
-hostname
-dump label
-pad to 1K bytes
-<b>drive_hdr_t</b> (3K bytes)
-    drive count
-    drive index
-    strategy id = on-file, on-tape, on-rmt-tape
-    pad to 512 bytes
-
-    specific (512 bytes)
-        tape:
-	    <b>rec_hdr</b>
-	    magic# - tape magic = 0x13579bdf02468acell
-	    version#
-	    block size
-	    record size
-	    drive capabilities
-	    record's byte offset in media file
-	    byte offset of rirst mark set
-	    size (bytes) of record containing user data
-	    checksum (if -C used)
-	    ischecksum (= 1 if -C used)
-	    dump uuid
-	    pad to 512 bytes
-
-    upper: (2K bytes)
-	<b>media_hdr_t</b>
-	media-label
-	previous media-label
-	media-id
-	previous media-id
-	5 media indexes - (indices of object/file within stream/media-object)
-	strategy id = on-file, on-tape, on-rmt-tape
-	strategy specific data:
-	  field to denote if media file is a terminator (old fmt)
-	upper: (to 2K) 
-</pre>
-<hr>
-   
-
-<h4><a name="inode_map">Inode Map</a></h4>
-<img src="inode_map.gif">
-
-
-<h4><a name="dirs">Directories</a></h4>
-<img src="directories.gif">
-
-
-<h4><a name="non_dirs">Non-directory files</a></h4>
-<img src="files.gif">
-<br>
-Regular files, as can be seen from above, have a list
-of extents followed by the file's extended attributes.
-If the file is large and/or the dump is to multiple streams,
-then the file can be dumped in multiple records or extent groups.
-(See <a href="#reg_split">Splitting a Regular File</a>).
-
-<h3><a name="tape_format">Format on Tape</a></h3>
-At the beginning of each tape record is a header. However, for
-the first record of a media file, the record header is buried
-inside the global header at byte offset 1536 (1K + 512), as is shown in 
-the global header diagram. 
-Reproduced again:
-<pre>
-<b>rec_hdr</b>
-magic# - tape magic = 0x13579bdf02468acell
-version#
-block-size
-record-size
-drive capabilities
-record's byte offset in media file
-byte offset of rirst mark set
-size (bytes) of record containing user data
-checksum (if -C used)
-ischecksum (= 1 if -C used)
-dump uuid
-pad to 512 bytes
-</pre>
-<p>
-I can not see where the block-size ("tape_blksz") is ever used !  
-The record-size ("tape_recsz") is used as the byte count to do
-the actual write and read system calls.
-<p>
-There is another layer of s/ware for the actual data on the tape.
-Although, one may write out an inode-map or directory entries,
-one doesn't just give these record buffers straight to the 
-write system call to write out. Instead, these data objects are
-written to buffers (akin to &lt;stdio&gt). Another thread reads
-from these buffers (unless its running single-threaded) and writes
-them to tape.
-Specifically, inside a loop,
-one calls <b>do_get_write_buf</b>,
-copies over the data one wants stored and then 
-calls <b>do_write_buf</b>, until the entire data buffer
-has been copied over.
-
-<h3><a name="reg_split">Splitting a Regular File</a></h3>
+<h4><a name="reg_split">Splitting a Regular File</a></h4>
 If a regular file is greater than 16Mb 
 (maxextentcnt = drivep->d_recmarksep 
               = recommended max. separation between marks), 
@@ -649,6 +781,7 @@ proceed on to the next stream. At this point we have 3 actions:
 <img src="split_algorithm.gif">
 <p>
 
+<hr>
 <h4><a name="partial_reg">Partial Registry</a></h4>
 
 The partial registry is a data structure used in <i>xfsrestore</i> 
@@ -716,7 +849,243 @@ file (because they are offline!). These type of files which do not
 restore data is now special cased.
 <p>
 
-<h3><a name="dirent_tree">Restore's directory entry tree</a></h3>
+<hr>
+
+<h3><a name="xfsrestore">xfsrestore</a></h3>
+
+<h4><a name="control_flow_restore">Control Flow of xfsrestore</a></h4>
+
+<b>content_init</b> (xfsrestore version)
+<p>
+Initialize the mmap files of:
+<ul>
+<li>"$dstdir/xfsrestorehousekeepingdir/state"
+<li>"$dstdir/xfsrestorehousekeepingdir/dirattr"
+<li>"$dstdir/xfsrestorehousekeepingdir/dirextattr"
+<li>"$dstdir/xfsrestorehousekeepingdir/namreg"
+<li>"$dstdir/xfsrestorehousekeepingdir/inomap"
+<li>"$dstdir/xfsrestorehousekeepingdir/tree"
+</ul>
+
+<b>content_stream_restore</b>
+
+<ul>
+<li> one stream does while others wait:
+  <ul>
+  <li> validates command line dump spec against the online inventory
+  <li> incorporates the online inventory into the persistent inventory
+  </ul>
+
+<li> one stream does while others wait:
+  <ul>
+  <li> if which session to restore is still unknown then
+     <ul>
+     <li> search media files of dump to match command args or ask the
+       user to select the media file
+     <li> add found media file to persistent inventory
+     </ul>
+  </ul>
+
+<li> one stream does while others wait:
+  <ul>
+  <li> search for directory dump
+  <li> calls <b>dirattr_init</b> if necessary
+  <li> calls <b>namreg_init</b> if necessary
+  <li> initialize the directory tree (<b>tree_init</b>) 
+  <li> read the dirents into the tree 
+       (<a href="#applydirdump"><b>applydirdump</b></a>)
+  </ul>
+
+<li> one stream does while others wait:
+  <ul>
+  <li> do tree post processing (<b>treepost</b>)
+    <ul>
+    <li> create the directories (<b>mkdir</b>)
+    <li> cumulative restore file system fixups
+    </ul>
+  </ul>
+
+<li> all threads can process each media file of their dumps for
+  restoring the non-directory files
+  <ul> 
+  <li>loop over each media file 
+     <ul>
+     <li> read in file header
+     <li> call <b>applynondirdump</b> for file hdr 
+	 <ul> 
+	 <li> restore extended attributes for file 
+	      (if it is last extent group of file) 
+	 <li> restore file
+	    <ul>
+	    <li>loop thru all hardlink paths from tree for inode 
+                (<b>tree_cb_links</b>) and call <b>restore_file_cb</b>
+                <ul>
+                <li> if a hard link then link(path1, path2)
+                <li> else restore the non-dir object:
+                   <ul>
+                   <li> S_IFREG -> <b>restore_reg</b> - restore regular file
+                      <ul>
+                      <li>if realtime set O_DIRECT
+                      <li>truncate file to bs_size
+                      <li>set the bs_xflags for extended attributes
+                      <li>set DMAPI fields if necessary
+                      <li>loop processing the extent headers
+                         <ul>
+                         <li>if type LAST then exit loop 
+                         <li>if type ALIGN then eat up the padding
+                         <li>if type HOLE then ignore
+                         <li>if type DATA then copy the data into 
+                             the file for the extent; 
+                             seeking to extent start if necessary
+                         </ul>
+                      <li>register the extent group in the partial registry
+                      <li>set timestamps using utime(2)
+                      <li>set permissions using fchmod(2)
+                      <li>set owner/group using fchown(2)
+                      </ul>
+                   <li> S_IFLNK -> <b>restore_symlink</b>
+                   <li> else -> <b>restore_spec</b>
+                   </ul>
+                </ul>
+            <li>if no hardlinks references for inode in tree then
+                restore file into orphanage directory
+	    </ul>
+	 <li> update stats
+	 <li> loop
+	   <ul>
+	   <li> get mark
+	   <li> read file header
+	   <li> if corrupt then go to next mark
+	   <li> else exit loop
+	   </ul>
+	 </ul> 
+     </ul>
+  </ul> 
+
+<li> one stream does while others wait:
+  <ul>
+  <li> finalize
+      <ul>
+      <li> restore directory attributes
+      <li> remove orphanage directory
+      <li> remove persistent inode map
+      </ul>
+  </ul>
+</ul>
+
+<hr>
+
+<b>content_init</b> in a bit more detail(xfsrestore version)
+<ul>
+<li> create house-keeping-directory for persistent mmap file data
+  structures. For cumulative and interrupted restores, 
+  we need to keep restore session data between invocations of xfsrestore.
+<li> mmap the "state" file and create if not already existing.
+  Initially just mmap the header.  (More details below)
+<li> if continuing interrupted session then
+  <ul>
+  <li> initialize and mmap the directory attribute data
+    and dirextattr file (<b>dirattr_init</b>)
+  <li> initialize name registry data (<b>namreg_init</b>)
+  <li> initialize and mmap the inode map (<b>inomap_sync_pers</b>)
+  <li> initialize and mmap the dirent tree (<b>tree_sync</b>)
+  <p>
+  <li> finalize -> restore directory attributes, delete inode map
+  </ul>
+<li> mmap the state file for the header and the subtree selections
+<li> update the state header with the command line predicates
+<li> update the subtree selections via the -s option
+<li> create extended attribute buffers for each stream
+<li> mmap the state file for the persistent inventory descriptors
+<p>
+<li> initialize and mmap the directory attribute data
+  and dirextattr file (<b>dirattr_init</b>)
+<li> initialize name registry data (<b>namreg_init</b>)
+<li> initialize and mmap the inode map (<b>inomap_sync_pers</b>)
+<li> initialize and mmap the dirent tree (<b>tree_sync</b>)
+</ul>
+
+<hr>
+
+<h4><a name="pers_inv">Persistent Inventory and State File</a></h4>
+
+The persistent inventory is found inside the "state" file.
+The state file is an mmap'ed file called 
+<b>$dstdir/xfsrestorehousekeepingdir/state</b>.
+The state file (<i>struct pers</i> from content.c) contains 
+a header of:
+<ul>
+<li>command line arguments from 1st session,
+<li>partial registry data structure for use with multiple streams
+    and extended attributes, 
+<li>various session state such as
+    dumpid, dump lable, number of inodes restored so far, etc.
+</ul>
+<br>
+Followed by pages for the subtree selections and then
+the persistent inventory.
+<br>
+So the 3 main sections look like:
+<pre>
+<b>"state" mmap file</b>
+---------------------
+| State Header      |
+| (number of pages  |
+|  to hold pers_t)  |
+| pers_t:           |
+| accum. state      |
+|   - cmd opts      |
+|   - etc...        |
+| session state     |
+|   - dumpid        |
+|   - accum.time    |
+|   - ino count     |
+|   - etc...        |
+|   - stream head   |
+---------------------
+| Subtree           |
+| Selections        |
+| (stpgcnt * pgsz)  |
+---------------------
+| Persistent        |
+| Inventory         |
+| Descriptors       |
+| (descpgcnt * pgsz)|
+|                   |
+---------------------
+</pre>
+
+
+<b>Persistent Inventory Tree</b>
+<pre>
+e.g. drive1         drive2        drive3
+|-------------|  |---------|   |---------|
+| stream1     |->| stream2 |-->| stream3 |
+|(pers_strm_t)|  |         |   |         |
+|-------------|  |---------|   |---------|
+		    ||
+		    \/
+                 e.g. tape21        tape22         tape23
+		 |------------|   |---------|   |---------|
+		 |  obj1      |-->|  obj2   |-->|  obj3   |
+		 |(pers_obj_t)|   |         |   |         |
+		 |------------|   |---------|   |---------|
+				    ||
+				    \/
+				 |-------------|   |---------|   |---------|
+				 | file1       |-->|  file2  |-->|  file3  |
+				 |(pers_file_t)|   |         |   |         |
+				 |-------------|   |---------|   |---------|
+</pre>
+
+
+
+
+[TODO: persistent inventory needs investigation]
+
+<hr>
+<h4><a name="dirent_tree">Restore's directory entry tree</a></h4>
+
 As can be seen in the directory dump format above, part of the dump
 consists of directories and their associated directory entries.
 The other part consists of the files which are just identified by
@@ -726,7 +1095,8 @@ tree of directory nodes. This tree can then be used to associate
 the file with it's directory and so restored to the correct location
 in the directory structure.
 <p>
-The tree is a mmap'ed file called <b>xfsrestorehousekeepingdir/tree</b>.
+The tree is an mmap'ed file called 
+<b>$dstdir/xfsrestorehousekeepingdir/tree</b>.
 Different sections of it will be mmap'ed separately.
 It is of the following format:
 <pre>
@@ -842,7 +1212,7 @@ each node using the first 8 bytes (ignoring node fields).
 </pre>
 
 
-<h4><a name="win_abs">Window Abstraction</a></h4>
+<h5><a name="win_abs">Window Abstraction</a></h5>
 The window abstraction manages the mapping and unmapping of the 
 segments (of nodes) of the dirent tree.
 In the node allocation, mentioned above, if our node-freelist is
@@ -997,7 +1367,7 @@ and adding to the tree and other auxiliary structures:
   treepost() - tree post processing where mkdirs happen
   ...
 
-<b>applydirdump</b>()
+<a name="applydirdump"><b>applydirdump</b>()</a>
   ...
   inomap_restore_pers() - read ino map 
   read directories and their entries
@@ -1041,7 +1411,8 @@ and adding to the tree and other auxiliary structures:
 
 <p>
 
-<h3><a name="cum_restore">Cumulative Restore</a></h3>
+<hr>
+<h4><a name="cum_restore">Cumulative Restore</a></h4>
 A cumulative restore seems a bit different than one might expect.
 It tries to restore the state of the filesystem at the time of
 the incremental dump. As the man page states:
@@ -1073,7 +1444,7 @@ It is elaborated further below.
 
 <h4><a name="tree_post">Cumulative Restore Tree Postprocessing</a></h4>
 After the dirent tree is created or updated from the directory dump
-cumulative restoral, it does a 4 step postprocessing:
+cumulative restoral, it does a 4 step postprocessing (<b>treepost</b>):
 <p>
 <table border>
 <caption><b>Steps of Tree Postprocessing</b></caption>
@@ -1331,6 +1702,7 @@ It only adds this data size into the media file size.
 <li>Where are tape_recsz and tape_blksz used ?
     <ul><li>Tape_recsz is used for the read/write byte cnt but 
     I don't think tape_blksz is used.</ul>
+<li>What is the persistent inventory used for ?
 </ul>
 
 </body>
