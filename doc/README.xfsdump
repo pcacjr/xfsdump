@@ -122,6 +122,22 @@ The Linux ext2 dump program and tar(1) would not have this problem
 as they use 10K default blocks which can be increased using the
 -b option (up to a maximum of 64K blocks for dump(1)). 
 
+Using a smaller block size
+--------------------------
+Sometimes a tape device will not support large blocksizes of 1Mb.
+The scsi tape driver outputs the maximum block size the tape
+supports in the syslog.
+For example:
+  st0: Block limits 1 - 245760 bytes.
+Unfortunately, the scsi tape driver does not export the maximum
+block size (other than via the syslog), therefore xfsdump/xfsrestore
+can not adjust the blocksize automatically.
+In this case, one should specify this maximum blocksize as
+the blocksize for xfsdump/xfsrestore to use with the -b option.
+For example:
+  xfsdump -b 245760 -f /dev/st0 -M media -L session /
+Blocksizes of less than 240K have not be tested.
+
 
 Restoring an IRIX dump tape onto a Linux xfs filesystem
 -------------------------------------------------------
@@ -146,5 +162,8 @@ by the scsi tape driver (max_sg_segs) as mentioned above.
 TODO List
 ---------
 
-* fix up running multi-threaded (needs locking code)
-* complete the port of xfs_copy (needs locking code)
+* fix up xfsdump/xfsrestore to run multi-threaded 
+  (needs pthreads & locking code)
+* complete the port of xfs_copy 
+  (needs pthreads & locking code)
+* port the xfsinvutil interactive code from IRIX
