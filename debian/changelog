@@ -1,3 +1,10 @@
+xfsdump (2.2.14-1) unstable; urgency=low
+
+  * New upstream release
+  * Update DMAPI package dependency information.
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 18 Oct 2003 10:32:47 +1000
+
 xfsdump (2.2.13-1) unstable; urgency=low
 
   * New upstream release

@@ -1,4 +1,7 @@
-xfsdump-2.2.13 (21 Jul 2003)
+xfsdump-2.2.14 (18 October 2003)
+	- update Debian packaging to require latest dmapi packages.
+
+xfsdump-2.2.13 (21 July 2003)
 	- fix ST/TS tape driver compatibility issues in drive_scsitape.
 	- fix multiple backups to a single tape (TS AND ST).
 
