@@ -3,7 +3,7 @@ Section: admin
 Priority: optional
 Maintainer: Nathan Scott <nathans@debian.org>
 Build-Depends: xfslibs-dev (>= 1.3.1), attr-dev (>= 1.1.0), dmapi-dev, uuid-dev, autoconf, debmake
-Standards-Version: 3.1.1
+Standards-Version: 3.5.5
 
 Package: xfsdump
 Depends: ${shlibs:Depends}, xfsprogs (>= 1.3.1), attr (>= 1.1.0), dmapi

@@ -5,6 +5,7 @@ xfsdump-1.1.0 (18 July 2001)
 	- enable use of (shared) libhandle.so and libattr.so
 	- re-enable use of libdm.so for DMAPI support
 	- remove some more unused "common" files
+	- man page updates for xfsdump and xfsrestore
 
 xfsdump-1.0.12 (13 July 2001)
 	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore 
