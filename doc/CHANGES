@@ -1,3 +1,8 @@
+xfsdump-1.1.8 (14 November 2001)
+	- allow xfsdump to exclude files based on whether they have
+	  a certain extended attribute set
+	- don't include /var/lib/xfsdump in the dump
+
 xfsdump-1.1.7 (18 October 2001)
 	- xfsrestore -t will no longer fail if the current working
 	  directory is not xfs
