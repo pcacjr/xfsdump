@@ -264,7 +264,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 		drivep->d_strategyp = bestsp;
 		drivep->d_recmarksep = bestsp->ds_recmarksep;
 		drivep->d_recmfilesz = bestsp->ds_recmfilesz;
-		mlog( MLOG_NORMAL,
+		mlog( MLOG_VERBOSE,
 		      "using %s strategy\n",
 		      bestsp->ds_description );
 		ok = ( * bestsp->ds_instantiate )( argc,
