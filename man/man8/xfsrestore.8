@@ -275,6 +275,10 @@ filesystem is restored, files that had been in migrated state will not be
 recallable by DMF. Note that dumping of extended file attributes is
 also optional.
 .TP 5
+.B \-B
+Change the ownership and permissions of the destination directory
+to match those of the root directory of the dump.
+.TP 5
 .B \-D
 Restore DMAPI (Data Management Application Programming Interface)
 event settings. If the restored filesystem will be managed within the same
