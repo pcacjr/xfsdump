@@ -53,6 +53,7 @@ COMMINCL = \
 	qlock.h \
 	ring.h \
 	stream.h \
+	ts_mtio.h \
 	types.h \
 	util.h \
 	sproc.h \

@@ -39,15 +39,10 @@
 #include <errno.h>
 
 #include "rmtlib.h"
-#include "config.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_TS_MTIO_H
-#include <ts/mtio.h>
-#else  /* HAVE_TS_MTIO_H */
 #include <sys/mtio.h>
-#endif /* HAVE_TS_MTIO_H */
 #include <sys/param.h>
 
 /* 

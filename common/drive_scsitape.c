@@ -33,8 +33,6 @@
 #include <libxfs.h>
 #include <jdm.h>
 
-#include "config.h"
-
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -44,11 +42,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/sysmacros.h>
-#ifdef HAVE_TS_MTIO_H
-#include <ts/mtio.h>
-#else  /* HAVE_TS_MTIO_H */
-#include <sys/mtio.h>
-#endif /* HAVE_TS_MTIO_H */
 #include <sys/signal.h>
 #include <malloc.h>
 #include <sched.h>
@@ -67,6 +60,7 @@
 #include "ring.h"
 #include "rec_hdr.h"
 #include "arch_xlate.h"
+#include "ts_mtio.h"
 
 /* drive_scsitape.c - drive strategy for all scsi tape devices
  */
@@ -307,14 +301,6 @@ typedef struct drive_context drive_context_t;
 	/* tape is positioned at early warning			*/
         /* not supported by linux tape drivers                  */
 #define IS_EW(mtstat)		(0)
-
-/* needed for Linux */
-#ifndef HAVE_TS_MTIO_H
-struct mtblkinfo {
-        unsigned maxblksz;      /* maximum block size */
-        unsigned curblksz;      /* current block size */
-};
-#endif	/* HAVE_TS_MTIO_H */
 
 typedef long mtstat_t;
 
@@ -3442,7 +3428,6 @@ mt_blkinfo( intgen_t fd, struct mtblkinfo *minfo )
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "tape op: get block size info\n" );
 
-#ifdef HAVE_TS_MTIO_H
 	if (TS_ISDRIVER) { /* Use TS ioctl MTIOCGETBLKINFO so we don't
 			    * have to hard code the max block size  */
 		struct mtblkinfo ts_blkinfo;
@@ -3459,7 +3444,6 @@ mt_blkinfo( intgen_t fd, struct mtblkinfo *minfo )
 		minfo->maxblksz = ts_blkinfo.maxblksz;
 	}
 	else {
-#endif /* HAVE_TS_MTIO_H */
 		if ( ioctl(fd, MTIOCGET, &mt_stat) < 0 ) {
 			/* failure
 			 */
@@ -3472,9 +3456,7 @@ mt_blkinfo( intgen_t fd, struct mtblkinfo *minfo )
 		minfo->curblksz = (mt_stat.mt_dsreg >> MT_ST_BLKSIZE_SHIFT) &
 				  MT_ST_BLKSIZE_MASK;
 		minfo->maxblksz = STAPE_MAX_LINUX_RECSZ;
-#ifdef HAVE_TS_MTIO_H
 	}
-#endif /* HAVE_TS_MTIO_H */
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
 	      "max=%u cur=%u\n",
