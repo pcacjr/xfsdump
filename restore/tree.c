@@ -1682,7 +1682,7 @@ tree_cb_links( xfs_ino_t ino,
 		/* skip if not in selected subtree
 		 */
 		if ( ! ( flags & NF_SUBTREE )) {
-			mlog( MLOG_NITTY + 1 | MLOG_TREE,
+			mlog( (MLOG_NITTY + 1) | MLOG_TREE,
 			      "skipping %s (ino %llu gen %u): %s\n",
 			      path,
 			      ino,
@@ -2078,9 +2078,9 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 
 		/* if unrefed, unreal, free node etc. (sel doesn't matter)
 		 */
-		if ( ! isrealpr && ! isrefpr && ! isselpr
+		if ( (! isrealpr && ! isrefpr && ! isselpr)
 		     ||
-		     ! isrealpr && ! isrefpr &&   isselpr ) {
+		     (! isrealpr && ! isrefpr &&   isselpr) ) {
 			mlog( MLOG_NITTY | MLOG_TREE,
 			      "freeing node %x: not real, not referenced\n",
 			      nh );
@@ -2132,11 +2132,11 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 		 * real and referenced, leave alone (sel doesn't matter).
 		 * consider as a lnk src, since real and not going away.
 		 */
-		if (   isrealpr && ! isrefpr && ! isselpr
+		if (   (isrealpr && ! isrefpr && ! isselpr)
 		       ||
-		       isrealpr &&   isrefpr && ! isselpr
+		       (isrealpr &&   isrefpr && ! isselpr)
 		       ||
-		       isrealpr &&   isrefpr &&   isselpr ) {
+		       (isrealpr &&   isrefpr &&   isselpr) ) {
 			mlog( MLOG_NITTY | MLOG_TREE,
 			      "skipping node %x: %s\n",
 			      nh,
