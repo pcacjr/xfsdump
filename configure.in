@@ -147,6 +147,15 @@ libhdl="-lhandle"
 AC_SUBST(libxfs)
 AC_SUBST(libhdl)
 
+dnl check xfs_types.h defines IRIX_MKDEV for userspace
+AC_MSG_CHECKING([macros in xfs/xfs_types.h])
+AC_TRY_LINK([#include <libxfs.h>], [int x = IRIX_MKDEV(0,0)], [echo ok], [
+	echo
+	echo 'FATAL ERROR: could not find IRIX_MKDEV macro in the XFS headers.'
+	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	exit 1
+])
+
 dnl Checks for Extended Attributes header and library.
 AC_CHECK_HEADER(attr/attributes.h,, [
 	echo
