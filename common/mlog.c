@@ -462,7 +462,7 @@ struct rv_map {
 
 static struct rv_map
 rvs[_RV_NUM] = {
-	/* Return Code	Displayed Code	Explanation */
+       /* Return Code	Displayed Code	Explanation */
 	{ RV_OK,	"OK",		"success" }, 
 	{ RV_NOTOK,	"ERASE_FAILED",	"media erase request denied" },
 	{ RV_NOMORE,	"NOMORE",	"no more work to do" },
@@ -486,7 +486,9 @@ rvs[_RV_NUM] = {
 	{ RV_INCOMPLETE,"INCOMPLETE",	"the " PROGSTR " is incomplete" },
 	{ RV_KBD_INTR,	"KEYBOARD_INTERRUPT", "keyboard interrupt" },
 	{ RV_INV,	"INVENTORY",	"error updating session inventory" },
-	{ RV_NONE,	"NONE",		"no error code specified" },
+	{ RV_USAGE,	"USAGE_ONLY",	"printing usage only" },
+	{ RV_EXISTS,	"EXISTS",	"file or directory already exists" },
+	{ RV_NONE,	"NONE",		"no error code" },
 	{ RV_UNKNOWN,	"UNKNOWN",	"unknown error" },
 };
 
@@ -670,18 +672,20 @@ mlog_get_hint( void )
 	return hint;
 }
 
-bool_t
-is_incomplete(rv_t rv)
-{
-    int j;
-    rv_t errors[] = { RV_CORRUPT, RV_INCOMPLETE, RV_EOD, RV_EOF, RV_EOM };
 
-    for (j = 0; j < N(errors); j++)
-	if (rv == errors[j])
-	    return BOOL_TRUE;
+#define IS_INCOMPLETE(rv)			\
+	((rv) == RV_CORRUPT ||			\
+	 (rv) == RV_INCOMPLETE ||		\
+	 (rv) == RV_EOD ||			\
+	 (rv) == RV_EOF ||			\
+	 (rv) == RV_EOM)
 
-    return BOOL_FALSE;
-}
+#define VALID_EXIT_CODE(code)			\
+	((code) == EXIT_NORMAL ||		\
+	 (code) == EXIT_ERROR ||		\
+	 (code) == EXIT_INTERRUPT ||		\
+	 (code) == EXIT_FAULT)
+
 
 void
 mlog_exit_flush(void)
@@ -692,6 +696,7 @@ mlog_exit_flush(void)
 	stream_state_t states[] = { S_RUNNING, S_ZOMBIE };
 	bool_t incomplete = BOOL_FALSE;
 	bool_t quit = BOOL_FALSE;
+	bool_t interrupt = BOOL_FALSE;
 	const char *status_str;
 	rv_t rv;
 
@@ -727,48 +732,50 @@ mlog_exit_flush(void)
 
 			/* hint takes priority over return */
 			rv = (exit_hint != RV_NONE) ? exit_hint : exit_return;
-			if (rv != RV_NONE) {
-				/* then an mlog_*() call was made otherwise we
-				 * don't know anything about it...
-				 */
-				rvp = rv_getdesc(rv);
-				fprintf(mlog_fp,
-					"%s:   stream %d (pid %d) %s "
-					"%s (%s)\n",
-					progname,
-					streamix,
-					pids[i],
-					drivepp[streamix]->d_pathname,
-					rvp->rv_string,
-					rvp->rv_desc);
-			}
+
+			/* print status of this stream */
+			rvp = rv_getdesc(rv);
+			fprintf(mlog_fp,
+				"%s:   stream %d (pid %d) %s "
+				"%s (%s)\n",
+				progname,
+				streamix,
+				pids[i],
+				drivepp[streamix]->d_pathname,
+				rvp->rv_string,
+				rvp->rv_desc);
 
 			/* If the following conditions are true for any stream
 			 * then they are true for the entire dump/restore.
 			 */
-			if (! incomplete && is_incomplete(rv))
-			    incomplete = BOOL_TRUE;
-
-			if (! quit && rv == RV_QUIT)
-			    quit = BOOL_TRUE;
+			if (rv == RV_INTR) interrupt = BOOL_TRUE;
+			else if (rv == RV_QUIT) quit = BOOL_TRUE;
+			else if (IS_INCOMPLETE(rv)) incomplete = BOOL_TRUE;
 		}
 	}
 
-	/* Check return codes for the main process
+	/* Also check return codes for the main process
 	 */
-	rv = (mlog_main_exit_hint != RV_NONE)
-	    ? mlog_main_exit_hint : mlog_main_exit_return;
+	rv = (mlog_main_exit_hint != RV_NONE) ? mlog_main_exit_hint
+	    : mlog_main_exit_return;
 
-	if (! incomplete && is_incomplete(rv))
-	    incomplete = BOOL_TRUE;
+	if (rv == RV_INTR) interrupt = BOOL_TRUE;
+	else if (rv == RV_QUIT) quit = BOOL_TRUE;
+	else if (IS_INCOMPLETE(rv)) incomplete = BOOL_TRUE;
 
-	if (! quit && rv == RV_QUIT)
-	    quit = BOOL_TRUE;
-		
-	/* now print the overall state of the dump/restore */
-	if (incomplete) status_str = "INCOMPLETE";
+	/* if we don't have an exit code here there is a problem */
+	ASSERT(VALID_EXIT_CODE(mlog_main_exit_code));
+	if (interrupt) status_str = "INTERRUPT";
 	else if (quit) status_str = "QUIT";
+	else if (incomplete) status_str = "INCOMPLETE";
+#ifdef NDEBUG
+	/* We should never get here, but if we do make sure we don't die
+	   horribly when not running debug. */
+	else if (! VALID_EXIT_CODE(mlog_main_exit_code)) status_str = "UNKNOWN";
+#endif /* NDEBUG */
 	else status_str = exit_strings[mlog_main_exit_code];
+
+	/* now print the overall state of the dump/restore */
 	fprintf(mlog_fp, "%s: " PROGSTR_CAPS " Status: %s\n", progname, status_str);
 	fflush(mlog_fp);
 }

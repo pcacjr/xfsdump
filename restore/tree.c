@@ -44,6 +44,7 @@
 #include <sys/ioctl.h>
 
 #include "types.h"
+#include "exit.h"
 #include "util.h"
 #include "cldmgr.h"
 #include "path.h"
@@ -4709,6 +4710,7 @@ mkdir_r(char *path)
     else if ((sbuf.st_mode & S_IFDIR) == 0) {
 	mlog( MLOG_TRACE | MLOG_ERROR | MLOG_TREE,
 	"%s is not a directory\n", path);
+	mlog_exit(EXIT_ERROR, RV_EXISTS);
 	exit(1);
     }
     return 0;

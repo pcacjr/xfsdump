@@ -1544,6 +1544,7 @@ sighandler( int signo )
 		} else {
 			rval = EXIT_INTERRUPT;
 		}
+		mlog_exit(rval, RV_NONE);
 		exit( rval );
 	}
 
@@ -1557,7 +1558,7 @@ sighandler( int signo )
 		return;
 	}
 
-	/* if niether parent nor managed child nor slave, exit
+	/* if neither parent nor managed child nor slave, exit
 	 */
 	if ( pid != parentpid && stix == -1 ) {
 		exit( 0 );
@@ -1665,6 +1666,7 @@ sighandler( int signo )
 			/* should not be any other captured signals:
 			 * request a core dump
 			 */
+			mlog_exit( EXIT_FAULT, RV_NONE );
 			exit( EXIT_FAULT );
 			return;
 		}

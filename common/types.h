@@ -103,6 +103,8 @@ typedef int bool_t;
 #define BOOL_ERROR	( -2 )
 
 /* useful return code scheme
+ * NOTE: that there are macros and error messages in common/types.h that should
+ * be updated when new error codes are added here.
  */
 typedef enum { RV_OK,		/* mission accomplished */
 	       RV_NOTOK,	/* media erase request denied */
@@ -128,6 +130,7 @@ typedef enum { RV_OK,		/* mission accomplished */
 	       RV_KBD_INTR,	/* keyboard interrupt */
 	       RV_INV,		/* session inventory error */
 	       RV_USAGE,	/* print command usage only */
+	       RV_EXISTS,	/* file or directory already exists */
 	       RV_NONE,		/* no error code available */
 	       RV_UNKNOWN,	/* there was an error but we don't know which one */
 	       _RV_NUM		/* number of return codes */

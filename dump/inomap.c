@@ -1437,6 +1437,7 @@ map_add( xfs_ino_t ino, intgen_t state )
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP, 
 		  "map_add(%llu, %d): ino(%llu) <= last_ino(%llu)\n",
 		  ino, state, ino, last_ino_added);
+		mlog_exit(EXIT_ERROR, RV_NONE);
 		exit(EXIT_ERROR);
 	}
 
