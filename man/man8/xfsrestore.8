@@ -85,13 +85,9 @@ each successive invocation of \f2xfsrestore\f1 must specify the same alternate
 directory.
 .TP 5
 \f3\-b\f1 \f2blocksize\f1
-Specifies the blocksize to be used for the restore. This option is
-specified only with the minimal rmt option (see the
-.B \-m
-option below). For a QIC drive , blocksize must always be 512.
+Specifies the blocksize, in bytes, to be used for the restore. 
 For other drives such as DAT or 8 mm , the same blocksize used for the
 xfsdump operation must be specified to restore the tape.
-When specified , this blocksize applies to all remote tape sources.
 The default block size is 1Mb.
 .TP 5
 \f3\-c\f1 \f2progname\f1
