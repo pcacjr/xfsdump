@@ -41,7 +41,6 @@
       <li><a href="#reg_split">Splitting a Regular File</a>
       <ul>
 	<li><a href="#split_mstream">Splitting a dump over multiple streams</a>
-	<li><a href="#partial_reg">Partial Registry</a>
       </ul>
      </ul>
 
@@ -54,6 +53,7 @@
       <ul>
 	<li><a href="#tree_post">Cumulative Restore Tree Postprocessing</a>
       </ul>
+      <li><a href="#partial_reg">Partial Registry</a>
     </ul>
 
   <li><a href="#drive_strategy">Drive Strategies</a>
@@ -138,9 +138,10 @@ If the dump media is a disk file (drive_simple.c) then I
 believe that only one media-file is used. Whereas on tape
 media, multiple media files are used depending upon the size
 of the media file. The size of the media file is set depending
-on the drive type: QIC: 50Mb; DAT: 512Mb; Exabyte: 2Gb; DLT: 4Gb;
-others: 256Mb. This value is likely to be changable via a command-line
-option in the future. Also, on tape, the dump is finished by an inventory
+on the drive type (in IRIX): QIC: 50Mb; DAT: 512Mb; Exabyte: 2Gb; DLT: 4Gb;
+others: 256Mb. This value (media file size) is now able to be changed 
+by the "-d" option.
+. Also, on tape, the dump is finished by an inventory
 media file followed by a terminating null media file.
 <p>
 A global header is placed at the start of each media file.
@@ -191,6 +192,20 @@ pad to 1K bytes
 	  field to denote if media file is a terminator (old fmt)
 	upper: (to 2K) 
 </pre>
+
+<p>
+Note that the <i>strategy id</i> is checked on restore so that
+the dump strategy and the strategy used by restore 
+are the same with the exception that drive_scsitape matches with 
+drive_minrmt. This strategy check has caused problems with customers 
+in the past.
+In particular, if one sends xfsdump's stdout to a tape 
+(i.e. xfsdump -L test -M test - / >/dev/tape) then one can not
+restore this tape using xfsrestore by specifying the tape with the -f option.
+There was also a problem for a time where if one used a drive with
+the TS tape driver, xfsdump wouldn't recognise this driver and
+would select the drive_simple strategy.
+
 <hr>
    
 
@@ -774,7 +789,7 @@ own filehdr_t's.
 A regular file can also be split, if we are dumping to multiple
 streams and the file would span the stream boundary.
 
-<h4><a name="split_mstream">Splitting a dump over multiple streams</a></h4>
+<h4><a name="split_mstream">Splitting a dump over multiple streams (Phase 5)</a></h4>
 If one is dumping to multiple streams, then xfsdump calculates an
 estimate of the dump size and divides by the number of streams to
 determine how much data we should allocate for a stream. 
@@ -793,74 +808,6 @@ proceed on to the next stream. At this point we have 3 actions:
 
 <p>
 <img src="split_algorithm.gif">
-<p>
-
-<hr>
-<h4><a name="partial_reg">Partial Registry</a></h4>
-
-The partial registry is a data structure used in <i>xfsrestore</i> 
-for ensuring that files which have been split into multiple extent groups, 
-do not restore the extended attributes until the entire file has been
-restored. The reason for this is apparently so that DMAPI attributes
-aren't restored until we have the complete file. Each extent group dumped
-has the identical copy of the extended attributes (EAs) for that file, 
-thus without this data-structure we could apply the first EAs we come across.
-<p>
-The data structure is of the form:
-<pre>
-Array of M entries:
--------------------
-0: inode#
-   Array for each drive
-     drive1: <start-offset> <end-offset>
-     ...
-     driveN: <start-offset> <end-offset>
--------------------
-1: inode#
-   Array for each drive
--------------------
-2: inode#
-   Array for each drive
--------------------
-...
--------------------
-M-1: inode#
-     Array for each drive
--------------------
-
-Where N = number of drives (streams); M = 2 * N - 1
-</pre>
-
-There can only be 2*N-1 entries for the partial registry because
-each stream can contribute an entry for its current inode and
-one for a previous inode which is split - except for the 1st inode
-which cannot have a previous split.
-<pre>
-      stream 1        stream 2         stream 3      ...  stream N
-  |---------------|----------------|-------------------|------------|
-  |            ------   -----   ------   -----      -------  -----  |
-  |            C  | P     C        | P     C           |  P    C    |
-  |---------------|----------------|-------------------|------------|
-
-       current       prev.+curr.        prev.+curr.      prev.+curr.
-
-Where C = current; P = previous
-</pre>
-
-So if an extent group is processed which doesn't cover the whole file,
-then it the extent range for this file is updated with the partial
-registry. If the file doesn't exist in the array then a new entry is
-added. If the file does exist in the array then the extent group for
-the given drive is updated. It is worth remembering that one drive
-(stream) can have multiple extent groups (if it is >16Mb) in which 
-case the extent group is just extended (they are split up in order). 
-<p>
-A bug was discovered in this area of code, for <i>DMF offline</i> files
-which have an associated file size but no data blocks allocated and
-thus no extents. The Offline files were wrongly added to the partial
-registry because on restore they did not complete the size of the
-file (because they are offline!). These type of files which do not
-restore data is now special cased.
 <p>
 
 <hr>
@@ -1033,7 +980,7 @@ a header of:
 <li>partial registry data structure for use with multiple streams
     and extended attributes, 
 <li>various session state such as
-    dumpid, dump lable, number of inodes restored so far, etc.
+    dumpid, dump label, number of inodes restored so far, etc.
 </ul>
 <br>
 Followed by pages for the subtree selections and then
@@ -1115,15 +1062,15 @@ Different sections of it will be mmap'ed separately.
 It is of the following format:
 <pre>
 --------------------
-|  Tree Header     |
+|  Tree Header     | <--- ptr to root of tree, hash size,...
 |  (pgsz = 16K)    |
 --------------------
-|  Hash Table      |
+|  Hash Table      | <--- inode# ==map==> tree node
 --------------------
-|  Node Header     |
+|  Node Header     | <--- describes allocation of nodes
 |  (pgsz = 16K)    |
 --------------------
-|  Node Segment#1  |
+|  Node Segment#1  | <--- typically 1 million tree nodes
 --------------------
 |  ...             |
 |                  |
@@ -1187,9 +1134,13 @@ it contains fields to help in the allocation of nodes.
 All the directory entries are stored in a node segment. Each segment
 holds around 1 million nodes (NODESPERSEGMIN). The value is greater
 because the size in bytes must be a multiple of the node size and
-the page size. I have proposed a <i>-w</i> option which bases the
-initial number of nodes around dircnt+nondircnt in an attempt to
-fit most of the entries into 1 segment. 
+the page size. However, the code handling the number of nodes was changed
+recently due to problems at a site.
+The number of nodes is now based on the
+value of <i>dircnt+nondircnt</i> in an attempt to
+fit most of the entries into 1 segment. As the value of
+<i>dircnt+nondircnt</i> is an approximation to the number of directory
+entries, we cap below at 1 million entries as was done previously.
 <p>
 Each segment is mmap'ed separately. In fact, the actual allocation
 of nodes is handled by a few abstractions.
@@ -1366,8 +1317,8 @@ nodes are gone then
 
 </pre>
 
-Pseudo-code of snippets of directory tree creation functions (from notes).
-Gives one an idea of the flow of control for processing dirents
+Pseudo-code of snippets of directory tree creation functions (from notes)
+gives one an idea of the flow of control for processing dirents
 and adding to the tree and other auxiliary structures:
 <pre>
 
@@ -1386,10 +1337,10 @@ and adding to the tree and other auxiliary structures:
   inomap_restore_pers() - read ino map 
   read directories and their entries
     loop 'til null hdr
-       dirh = tree_begindir(fhdr, dah) - process dir filehdr
+       dirh = <b>tree_begindir</b>(fhdr, dah) - process dir filehdr
        loop 'til null entry
          rv = read_dirent()
-         tree_addent(dirh, dhdrp->dh_ino, dh_gen, dh_name, namelen)
+         <b>tree_addent</b>(dirh, dhdrp->dh_ino, dh_gen, dh_name, namelen)
        endloop
        tree_enddir(dirh)
     endloop
@@ -1530,6 +1481,75 @@ should not happen now since it is done earlier.
 
 <p>
 <hr>
+<h4><a name="partial_reg">Partial Registry</a></h4>
+
+The partial registry is a data structure used in <i>xfsrestore</i> 
+for ensuring that files which have been split into multiple extent groups, 
+do not restore the extended attributes until the entire file has been
+restored. The reason for this is apparently so that DMAPI attributes
+aren't restored until we have the complete file. Each extent group dumped
+has the identical copy of the extended attributes (EAs) for that file, 
+thus without this data-structure we could apply the first EAs we come across.
+<p>
+The data structure is of the form:
+<pre>
+Array of M entries:
+-------------------
+0: inode#
+   Array for each drive
+     drive1: <start-offset> <end-offset>
+     ...
+     driveN: <start-offset> <end-offset>
+-------------------
+1: inode#
+   Array for each drive
+-------------------
+2: inode#
+   Array for each drive
+-------------------
+...
+-------------------
+M-1: inode#
+     Array for each drive
+-------------------
+
+Where N = number of drives (streams); M = 2 * N - 1
+</pre>
+
+There can only be 2*N-1 entries for the partial registry because
+each stream can contribute an entry for its current inode and
+one for a previous inode which is split - except for the 1st inode
+which cannot have a previous split.
+<pre>
+      stream 1        stream 2         stream 3      ...  stream N
+  |---------------|----------------|-------------------|------------|
+  |            ------   -----   ------   -----      -------  -----  |
+  |            C  | P     C        | P     C           |  P    C    |
+  |---------------|----------------|-------------------|------------|
+
+       current       prev.+curr.        prev.+curr.      prev.+curr.
+
+Where C = current; P = previous
+</pre>
+
+So if an extent group is processed which doesn't cover the whole file,
+then the extent range for this file is updated with the partial
+registry. If the file doesn't exist in the array then a new entry is
+added. If the file does exist in the array then the extent group for
+the given drive is updated. It is worth remembering that one drive
+(stream) can have multiple extent groups (if it is >16Mb) in which 
+case the extent group is just extended (they are split up in order). 
+<p>
+A bug was discovered in this area of code, for <i>DMF offline</i> files
+which have an associated file size but no data blocks allocated and
+thus no extents. The Offline files were wrongly added to the partial
+registry because on restore they did not complete the size of the
+file (because they are offline!). These types of files which do not
+restore data are now special cased.
+<p>
+<hr>
+
+
 <h3><a name="drive_strategy">Drive Strategies</a></h3>
 The I/O which happens when reading and writing the dump
 can be to a tape, file, stdout or 
@@ -1710,16 +1730,16 @@ on the scsi tape device in IRIX.
 On IRIX (from <i>set_best_blk_and_rec_sz</i>):
 <ul>
 <li>
-local -> tape_recsz = min(STAPE_MAX_RECSZ = 2 Mb, mtinfo.maxblksz)<br>
+local tape -> tape_recsz = min(STAPE_MAX_RECSZ = 2 Mb, mtinfo.maxblksz)<br>
          which typically would mean 2 Mb.
 <li>
-remote -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
+remote tape -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
 </ul>
 <p>
 On Linux:
 <ul>
 <li>
-local -> 
+local tape -> 
     <ul>
     <li>
     tape_recsz = STAPE_MAX_LINUX_RECSZ = 1 Mb<br>
@@ -1728,7 +1748,7 @@ local ->
      which typically would mean cmdlineblksize.
     </ul>
 <li>
-remote -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
+remote tape -> tape_recsz = STAPE_MIN_MAX_BLKSZ = 240 Kb
 </ul>
 <p>
 If we have a fixed size device, then it tries to read
@@ -1862,7 +1882,7 @@ about:
 <h3><a name="inventory">Online Inventory</a></h3>
 xfsdump keeps a record of previous xfsdump executions in the online inventory
 stored in /var/xfsdump/inventory or for Linux, /var/lib/xfsdump/inventory. 
-This inventory is used to determine which previous dump a cumulative dump
+This inventory is used to determine which previous dump a incremental dump
 should be based on.  That is, when doing a level > 0 dump for a filesystem,
 xfsdump will refer to the online inventory to work out when the last dump for
 that filesystem was performed in order to work out which files will be
@@ -1915,6 +1935,12 @@ The files are constructed like so:
 <pre>
 typedef struct invt_counter {
     INVT_COUNTER_FIELDS
+        __uint32_t    ic_vernum;/* on disk version number for posterity */\
+        u_int         ic_curnum;/* number of sessions/invindices recorded \
+                                   so far */                              \
+        u_int         ic_maxnum;/* maximum number of sessions/inv_indices \
+                                   that we can record on this stobj */
+
     char              ic_padding[0x20 - INVT_COUNTER_FIELDS_SIZE];
 } invt_counter_t;
 </pre>
@@ -1949,6 +1975,11 @@ typedef struct invt_fstab {
 <pre>
 typedef struct invt_counter {
     INVT_COUNTER_FIELDS
+        __uint32_t    ic_vernum;/* on disk version number for posterity */\
+        u_int         ic_curnum;/* number of sessions/invindices recorded \
+                                   so far */                              \
+        u_int         ic_maxnum;/* maximum number of sessions/inv_indices \
+                                   that we can record on this stobj */
     char              ic_padding[0x20 - INVT_COUNTER_FIELDS_SIZE];
 } invt_counter_t;
 </pre>
@@ -1981,6 +2012,11 @@ typedef struct invt_entry {
 <pre>
 typedef struct invt_sescounter {
     INVT_COUNTER_FIELDS
+        __uint32_t    ic_vernum;/* on disk version number for posterity */\
+        u_int         ic_curnum;/* number of sessions/invindices recorded \
+                                   so far */                              \
+        u_int         ic_maxnum;/* maximum number of sessions/inv_indices \
+                                   that we can record on this stobj */
     off64_t  ic_eof;   /* current end of the file, where the next
                           media file or stream will be written to */
     char     ic_padding[0x20 - ( INVT_COUNTER_FIELDS_SIZE + sizeof( off64_t) )];
@@ -2065,6 +2101,12 @@ typedef struct invt_mediafile {
   	</td>
   </tr>
 </table>
+
+<p>
+The data structures above converted to a block diagram look something
+like this:
+<p>
+<img src="inventory.gif">
 
 <p>
 The source code for accessing the inventory is contained in the inventory
