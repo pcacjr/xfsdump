@@ -984,7 +984,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 				 */
 				node_t *matchp;
 				matchp = Node_map( matchh );
-				hardp->n_flags |= NF_REFED;
+				matchp->n_flags |= NF_REFED;
 				Node_unmap( matchh, &matchp );
 				mlog( MLOG_DEBUG | MLOG_TREE,
 				      "dirent %s %llu %u: "

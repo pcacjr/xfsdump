@@ -1,3 +1,7 @@
+xfsdump-1.1.9 (28 November 2001)
+	- fix xfsrestore so that it doesn't delete hardlinks
+	  on alternate cumulative restores
+
 xfsdump-1.1.8 (14 November 2001)
 	- allow xfsdump to exclude files based on whether they have
 	  a certain extended attribute set
