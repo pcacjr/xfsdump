@@ -182,7 +182,7 @@ static int _rmt_open (char *path, int oflag, int mode)
             struct uname_table *p;
 		
 	    if (user != login) {
-		snprintf(cmd, sizeof(cmd), "rsh %s@%s uname", system, login); 
+		snprintf(cmd, sizeof(cmd), "rsh -l %s %s uname", login, system); 
 	    }
 	    else {
 		snprintf(cmd, sizeof(cmd), "rsh %s uname", system); 
