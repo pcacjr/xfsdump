@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Silicon Graphics, Inc.; provided copyright in
+ * Copyright (c) 2000-2001 Silicon Graphics, Inc.; provided copyright in
  * certain portions may be held by third parties as indicated herein.
  * All Rights Reserved.
  *
