@@ -600,6 +600,23 @@ attr_get(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion, non-zero if an error
 occurs or the dump is terminated by the operator.
+.P
+For all verbosity levels greater than 0 (\f3silent\f1) the final line of the output
+shows the exit status of the dump. It is of the form:
+.EX
+xfsdump: Dump Status: \f2code\f1
+.EE
+Where \f2code\f1 takes one of the following values:
+\f3SUCCESS\f1 (normal completion),
+\f3INTERRUPT\f1 (interrupted),
+\f3QUIT\f1 (media no longer usable),
+\f3INCOMPLETE\f1 (dump incomplete),
+\f3FAULT\f1 (software error), and
+\f3ERROR\f1 (resource error).
+Every attempt will be made to keep both the syntax and the semantics of this
+log message unchanged in future versions of xfsdump.
+However, it may be necessary to refine or expand the set of exit codes, or
+their interpretation at some point in the future.
 .PP
 The message
 ``xfsdump: WARNING: unable to open directory: ino N: Invalid argument''

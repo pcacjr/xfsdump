@@ -493,6 +493,7 @@ promptinput( char *buf,
 		} else if ( dlog_signo_received == SIGINT ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
 			      "keyboard interrupt\n" );
+			mlog_exit_hint(RV_KBD_INTR);
 			*exceptionixp = sigintix;
 		} else if ( dlog_signo_received == SIGHUP ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
@@ -505,6 +506,7 @@ promptinput( char *buf,
 		} else if ( dlog_signo_received == SIGQUIT ) {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
 			      "keyboard quit\n" );
+			mlog_exit_hint(RV_KBD_INTR);
 			*exceptionixp = sigquitix;
 		} else {
 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,

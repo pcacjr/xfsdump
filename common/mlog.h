@@ -35,6 +35,7 @@
 /* mlog.[hc] - message logging abstraction
  */
 #include <stdarg.h>
+#include "types.h"
 
 /* defined log levels - msg will be logged only if cmdline -v arg
  * is greater than or equal to its level.
@@ -117,6 +118,12 @@ extern void mlog_tell_streamcnt( size_t streamcnt );
  */
 extern void mlog( intgen_t level, char *fmt, ... );
 extern void mlog_va( intgen_t levelarg, char *fmt, va_list args );
+#define mlog_exit( e, r ) _mlog_exit( __FILE__, __LINE__, (e), (r) )
+extern int  _mlog_exit( const char *file, int line, int exit_code, rv_t return_code );
+#define mlog_exit_hint( r ) _mlog_exit_hint( __FILE__, __LINE__, (r) )
+extern void _mlog_exit_hint( const char *file, int line, rv_t rv );
+extern rv_t mlog_get_hint( void );
+extern void mlog_exit_flush( void );
 
 /* the following calls are exported ONLY to dlog.c!
  */

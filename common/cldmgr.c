@@ -171,7 +171,7 @@ cldmgr_died( pid_t pid )
 	}
 	cldp->c_busy = BOOL_FALSE;
 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
-		stream_unregister( pid );
+		stream_dead( pid );
 	}
 }
 

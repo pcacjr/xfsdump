@@ -2272,34 +2272,36 @@ content_stream_dump( ix_t strmix )
 		 */
 		rv = Media_mfile_begin( drivep, contextp, BOOL_TRUE );
 		if ( rv == RV_INTR ) {
-			return EXIT_INTERRUPT;
+			return mlog_exit(EXIT_INTERRUPT, rv);
 		}
 		if ( rv == RV_TIMEOUT ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
 			      "media change timeout will be treated as "
 			      "a request to stop using drive: "
 			      "can resume later\n" );
-			return EXIT_NORMAL;
+			mlog_exit_hint(RV_QUIT);
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_QUIT ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
 			      "media change decline will be treated as "
 			      "a request to stop using drive: "
 			      "can resume later\n" );
-			return EXIT_NORMAL;
+			mlog_exit_hint(RV_QUIT);
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_DRIVE ) {
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_ERROR ) {
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, rv);
 		}
 		if ( rv == RV_CORE ) {
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		ASSERT( rv == RV_OK );
 		if ( rv != RV_OK ) {
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 
 		/* sync up here with other streams if reasonable
@@ -2332,20 +2334,20 @@ content_stream_dump( ix_t strmix )
 		}
 		if ( rv == RV_DRIVE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_ERROR ) {
 			free( ( void * )bstatbufp );
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, rv);
 		}
 		if ( rv == RV_CORE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		ASSERT( rv == RV_OK );
 		if ( rv != RV_OK ) {
 			free( ( void * )bstatbufp );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 
 		/* now dump the directories. use the bigstat iterator
@@ -2364,20 +2366,20 @@ content_stream_dump( ix_t strmix )
 		}
 		if ( rv == RV_DRIVE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_ERROR ) {
 			free( ( void * )bstatbufp );
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, rv);
 		}
 		if ( rv == RV_CORE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		ASSERT( rv == RV_OK );
 		if ( rv != RV_OK ) {
 			free( ( void * )bstatbufp );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 
 		/* finally, dump the non-directory files beginning with this
@@ -2406,7 +2408,7 @@ content_stream_dump( ix_t strmix )
 					     bstatbuflen );
 			if ( rval ) {
 				free( ( void * )bstatbufp );
-				return EXIT_FAULT;
+				return mlog_exit(EXIT_FAULT, RV_CORE);
 			}
 			if ( rv == RV_INTR ) {
 				stop_requested = BOOL_TRUE;
@@ -2421,20 +2423,20 @@ content_stream_dump( ix_t strmix )
 			}
 			if ( rv == RV_DRIVE ) {
 				free( ( void * )bstatbufp );
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, rv);
 			}
 			if ( rv == RV_ERROR ) {
 				free( ( void * )bstatbufp );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, rv);
 			}
 			if ( rv == RV_CORE ) {
 				free( ( void * )bstatbufp );
-				return EXIT_FAULT;
+				return mlog_exit(EXIT_FAULT, rv);
 			}
 			ASSERT( rv == RV_OK || rv == RV_NOMORE );
 			if ( rv != RV_OK && rv != RV_NOMORE ) {
 				free( ( void * )bstatbufp );
-				return EXIT_FAULT;
+				return mlog_exit(EXIT_FAULT, rv);
 			}
 		}
 
@@ -2474,15 +2476,15 @@ decision_more:
 					   FILEHDR_FLAGS_NULL );
 			if ( rv == RV_DRIVE ) {
 				free( ( void * )bstatbufp );
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, rv);
 			}
 			if ( rv == RV_CORE ) {
 				free( ( void * )bstatbufp );
-				return EXIT_FAULT;
+				return mlog_exit(EXIT_FAULT, rv);
 			}
 			if ( rv == RV_ERROR ) {
 				free( ( void * )bstatbufp );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, rv);
 			}
 
 			/* send a mark to detect if the null file header made
@@ -2515,11 +2517,11 @@ decision_more:
 				      hit_eom );
 		if ( rv == RV_DRIVE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		}
 		if ( rv == RV_CORE ) {
 			free( ( void * )bstatbufp );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		mlog( MLOG_VERBOSE,
 		      "media file size %lld bytes\n",
@@ -2651,7 +2653,7 @@ decision_more:
 		if ( ! miniroot ) {
 			if ( stream_cnt( ) > 1 ) {
 				mlog( MLOG_VERBOSE,
-				      "waiting for synchonized "
+				      "waiting for synchronized "
 				      "session inventory dump\n" );
 				sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
 			}
@@ -2686,7 +2688,7 @@ decision_more:
 	      "ending stream: %u seconds elapsed\n",
 	      elapsed );
 
-	return EXIT_NORMAL;
+	return mlog_exit(EXIT_NORMAL, rv);
 }
 
 /* indicates if the dump was complete.
@@ -2735,12 +2737,14 @@ content_complete( void )
 			      "\n",
 			      elapsed,
 			      GETOPT_RESUME );
+			mlog_exit_hint(RV_INTR);
 		} else {
 			mlog( MLOG_VERBOSE | MLOG_NOTE,
 			      "dump interrupted"
 			      ": %u seconds elapsed"
 			      "\n",
 			      elapsed );
+			mlog_exit_hint(RV_INTR);
 		}
 	}
 	return completepr;
@@ -4168,6 +4172,7 @@ dump_file_reg( drive_t *drivep,
 			      "dump interrupted prior to ino %llu offset %lld\n",
 			      statp->bs_ino,
 			      offset );
+			mlog_exit_hint(RV_INTR);
 			rv = RV_INTR;
 			break;
 		}
@@ -5235,6 +5240,7 @@ dump_dirent( drive_t *drivep,
 		      statp->bs_ino,
 		      name,
 		      ino );
+		mlog_exit_hint(RV_INCOMPLETE);
 		return RV_OK;
 	}
 
@@ -5350,11 +5356,13 @@ dump_session_inv( drive_t *drivep,
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
 			      "media change timeout: "
 			      "session inventory not dumped\n" );
+			mlog_exit_hint(RV_INV);
 			return BOOL_FALSE;
 		case RV_QUIT:
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
 			      "media change declined: "
 			      "session inventory not dumped\n" );
+			mlog_exit_hint(RV_INV);
 			return BOOL_FALSE;
 		case RV_DRIVE:
 		case RV_ERROR:
@@ -5414,6 +5422,7 @@ dump_session_inv( drive_t *drivep,
 			      "encountered EOM while writing "
 			      "inventory media file size %lld bytes\n",
 			      ncommitted );
+			mlog_exit_hint(RV_INV);
 		} else {
 			mlog( MLOG_VERBOSE,
 			      "inventory media file size %lld bytes\n",
@@ -5606,6 +5615,7 @@ inv_cleanup( void )
 			      "closing inventory stream %d%s\n",
 			      strmix,
 			      interrupted ? ": interrupted" : "" );
+			if (interrupted) mlog_exit_hint(RV_INTR);
 			ok = inv_stream_close( *inv_stmtp, interrupted );
 			ASSERT( ok );
 		}
@@ -5819,6 +5829,7 @@ position:
 			      "media contains non-xfsdump data "
 			      "or a corrupt xfsdump media file header "
 			      "at beginning of media\n" );
+			mlog_exit_hint(RV_CORRUPT);
 
 			switch( Media_erasechk( drivep,
 						dcaps,
@@ -5952,6 +5963,7 @@ position:
 			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
 			      "encountered corrupt or foreign data: "
 			      "assuming corrupted media\n" );
+			mlog_exit_hint(RV_CORRUPT);
 
 			switch( Media_erasechk( drivep,
 						dcaps,
@@ -5971,19 +5983,22 @@ position:
 				      "but expecting a media "
 				      "stream terminator: "
 				      "assuming corrupted media\n" );
+				mlog_exit_hint(RV_CORRUPT);
 				goto changemedia;
 			} else if ( ! ( dcaps & DRIVE_CAP_OVERWRITE )) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
 				      "encountered corrupt or foreign data: "
 				      "unable to overwrite: "
 				      "assuming corrupted media\n" );
+				mlog_exit_hint(RV_CORRUPT);
 				goto changemedia;
 			} else {
 				intgen_t status;
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,
 				      "encountered corrupt or foreign data: "
 				      "repositioning to overwrite\n" );
-				ASSERT( dcaps & DRIVE_CAP_BSF );
+				mlog_exit_hint(RV_CORRUPT);
+				assert( dcaps & DRIVE_CAP_BSF );
 				status = 0;
 				rval = ( * dop->do_bsf )( drivep, 0, &status );
 				ASSERT( rval == 0 );
@@ -6264,6 +6279,7 @@ Media_mfile_end( drive_t *drivep,
 		mlog( MLOG_VERBOSE | MLOG_MEDIA,
 		      "encountered end of media "
 		      "while ending media file\n" );
+		mlog_exit_hint(RV_EOM);
 		contextp->cc_Media_begin_entrystate = BES_ENDEOM;
 		return RV_EOM;
 	case DRIVE_ERROR_DEVICE:

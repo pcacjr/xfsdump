@@ -201,6 +201,7 @@ main( int argc, char *argv[] )
 	intgen_t exitcode;
 	rlim64_t tmpstacksz;
 	bool_t ok;
+	int rval;
 
 	/* sanity checks
 	 */
@@ -217,19 +218,26 @@ main( int argc, char *argv[] )
 	 */
 	progname = argv[ 0 ];
 
+	/* Get the parent's pid. will be used in signal handling
+	 * to differentiate parent from children.
+	 */
+	parentpid = getpid( );
+	rval = atexit(mlog_exit_flush);
+	assert(rval == 0);
+
 	/* pre-scan the command line for the option file option.
 	 * if found, create a new argv.
 	 */
 	ok = loadoptfile( &argc, &argv );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_OPT);
 	}
 	
 	/* initialize message logging (stage 1)
 	 */
 	ok = mlog_init1( argc, argv );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 	/* scan the command line for the miniroot, info, progress
 	 * report options, and stacksz.
@@ -253,7 +261,7 @@ main( int argc, char *argv[] )
 				      "-%c argument missing\n",
 				      optopt );
 				usage( );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
 			errno = 0;
 			tmpstacksz = strtoull( optarg, 0, 0 );
@@ -265,7 +273,7 @@ main( int argc, char *argv[] )
 				      optopt,
 				      optarg );
 				usage( );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
 			minstacksz = tmpstacksz;
 			break;
@@ -275,7 +283,7 @@ main( int argc, char *argv[] )
 				      "-%c argument missing\n",
 				      optopt );
 				usage( );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
 			errno = 0;
 			tmpstacksz = strtoull( optarg, 0, 0 );
@@ -287,7 +295,7 @@ main( int argc, char *argv[] )
 				      optopt,
 				      optarg );
 				usage( );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
 			maxstacksz = tmpstacksz;
 			break;
@@ -296,6 +304,7 @@ main( int argc, char *argv[] )
                         break;
 		case GETOPT_HELP:
 			infoonly = BOOL_TRUE;
+			mlog_exit_hint(RV_USAGE);
 			break;
 		case GETOPT_PROGRESS:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
@@ -303,7 +312,7 @@ main( int argc, char *argv[] )
 				      "-%c argument missing\n",
 				      optopt );
 				usage( );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
 			progrpt_interval = ( time_t )atoi( optarg );
 			if ( progrpt_interval > 0 ) {
@@ -329,7 +338,7 @@ main( int argc, char *argv[] )
 		      "min is 0x%llx,  max is 0x%llx\n",
 		      minstacksz,
 		      maxstacksz );
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	if ( argc == 1 ) {
@@ -361,7 +370,7 @@ main( int argc, char *argv[] )
 	ok = set_rlimits( &vmsz );
 #endif /* RESTORE */
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* perform an experiment to determine if we are in the miniroot.
@@ -375,16 +384,19 @@ main( int argc, char *argv[] )
 	 */
 	ok = qlock_init( miniroot );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
-	/* initialize message logging (stage 2)
+	/* initialize message logging (stage 2) - allocate the message lock
 	 */
 	ok = mlog_init2( );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
+	/* initialize the critical region lock
+	 */
+	lock_init( );
 	rmt_turnonmsgs(1); /* turn on WARNING msgs for librmt */
 
 	mlog( MLOG_NITTY + 1, "INTGENMAX == %ld (0x%lx)\n", INTGENMAX, INTGENMAX );
@@ -413,14 +425,8 @@ main( int argc, char *argv[] )
 	ASSERT( ( intgen_t )pgsz > 0 );
 	pgmask = pgsz - 1;
 
-	/* initialize the critical region lock
-	 */
-	lock_init( );
-
-	/* Get the parent's pid. will be used in signal handling
-	 * to differentiate parent from children.
-	 */
-	parentpid = getpid( );
+	/* report parent pid
+         */
 	mlog( MLOG_DEBUG | MLOG_PROC,
 	      "parent pid is %d\n",
 	      parentpid );
@@ -433,7 +439,7 @@ main( int argc, char *argv[] )
 		mlog( MLOG_NORMAL | MLOG_ERROR,
 		      "unable to determine current directory: %s\n",
 		      strerror( errno ));
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* if just looking for info, oblige
@@ -444,13 +450,13 @@ main( int argc, char *argv[] )
 		      version,
 		      subversion );
 		usage( );
-		return EXIT_NORMAL; /* normal termination */
+		return mlog_exit(EXIT_NORMAL, RV_OK); /* normal termination */
 	}
 
 	/* if an inventory display is requested, do it and exit
 	 */
 	if ( ! inv_DEBUG_print( argc, argv )) {
-		return EXIT_NORMAL; /* normal termination */
+		return mlog_exit(EXIT_NORMAL, RV_OK); /* normal termination */
 	}
 
 #ifdef DUMP
@@ -465,7 +471,7 @@ main( int argc, char *argv[] )
 	if ( euid != 0 ) {
 		mlog( MLOG_NORMAL,
 		      "effective user ID must be root\n" );
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_PERM);
 	}
 #endif /* DUMP */
 
@@ -473,7 +479,7 @@ main( int argc, char *argv[] )
 	 */
 	ok = dlog_init( argc, argv );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* initialize the stack checking abstraction
@@ -485,7 +491,7 @@ main( int argc, char *argv[] )
 	 */
 	ok = cldmgr_init( );
 	if ( ! ok ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* select and instantiate a drive manager for each stream. this
@@ -496,7 +502,7 @@ main( int argc, char *argv[] )
 	ok = drive_init1( argc, argv, miniroot );
 	if ( ! ok ) {
 		cldmgr_killall( );
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* check the drives to see if we're in a pipeline.
@@ -546,7 +552,7 @@ main( int argc, char *argv[] )
 	 */
 	gwhdrtemplatep = global_hdr_alloc( argc, argv );
 	if ( ! gwhdrtemplatep ) {
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 #endif /* DUMP */
 
@@ -598,7 +604,7 @@ main( int argc, char *argv[] )
 #endif /* RESTORE */
 	if ( ! ok ) {
 		cldmgr_killall( );
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
 	/* if miniroot or a pipeline, go single-threaded
@@ -621,11 +627,11 @@ main( int argc, char *argv[] )
 				  ( global_hdr_t * )0 );
 #endif /* RESTORE */
 		if ( ! ok ) {
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, RV_INIT);
 		}
 		ok = drive_init3( );
 		if ( ! ok ) {
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, RV_INIT);
 		}
 #ifdef DUMP
 		exitcode = content_stream_dump( 0 );
@@ -636,11 +642,11 @@ main( int argc, char *argv[] )
 		if ( exitcode != EXIT_NORMAL ) {
 			( void )content_complete( );
 						/* for cleanup side-effect */
-			return exitcode;
+			return mlog_exit(exitcode, RV_UNKNOWN);
 		} else if ( content_complete( )) {
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, RV_OK);
 		} else {
-			return EXIT_INTERRUPT;
+			return mlog_exit(EXIT_INTERRUPT, RV_UNKNOWN);
 		}
 	}
 
@@ -851,7 +857,10 @@ main( int argc, char *argv[] )
 		 */
 		if ( stop_requested && ! stop_in_progress ) {
 			mlog( MLOG_NORMAL,
-			      "initiating session interrupt\n" );
+			      "initiating session interrupt (timeout in %d second%s)\n",
+			      stop_timeout,
+			      stop_timeout == 1 ? "" : "s" );
+			mlog_exit_hint(RV_INTR);
 			stop_in_progress = BOOL_TRUE;
 			cldmgr_stop( );
 			ASSERT( stop_timeout >= 0 );
@@ -940,9 +949,15 @@ main( int argc, char *argv[] )
 		( void )content_complete( );
 		exitcode = EXIT_ERROR;
 	} else {
-		exitcode = content_complete( ) ? EXIT_NORMAL : EXIT_INTERRUPT;
+		if ( content_complete( ) )
+			exitcode = EXIT_NORMAL;
+		else {
+			exitcode = EXIT_INTERRUPT;
+			if ( mlog_get_hint() == RV_NONE )
+				mlog_exit_hint(RV_INCOMPLETE);
+		}
 	}
-	return exitcode;
+	return mlog_exit(exitcode, RV_UNKNOWN);
 }
 
 #define ULO( f, o )	fprintf( stderr,		\
@@ -1091,6 +1106,12 @@ usage( void )
 	ULN( "- (stdin)" );
 	ULN( "<destination>" );
 #endif /* RESTORE */
+
+	/* anywhere usage is called we will exit shortly after...
+	 * catch all of those cases below
+	 */
+
+	(void) mlog_exit(EXIT_ERROR, RV_OPT);
 }
 
 /* returns TRUE if preemption

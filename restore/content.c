@@ -4490,8 +4490,13 @@ newmedia:
 		 */
 		if ( ( * dop->do_get_device_class )( drivep )
 		     ==
-		     DEVICE_NONREMOVABLE ) {
-			return RV_QUIT;
+		     DEVICE_NONREMOVABLE )
+		{
+		    /* if no error has already been detected then don't log
+		       a failure */
+		    if (mlog_get_hint() == RV_NONE)
+			mlog_exit_hint(RV_OK);
+		    return RV_QUIT;
 		}
 
 		/* check for an interrupt

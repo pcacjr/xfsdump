@@ -38,6 +38,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 #include <time.h>
 #include <getopt.h>
 
@@ -47,9 +48,14 @@
 #include "mlog.h"
 #include "cldmgr.h"
 #include "getopt.h"
+#include "exit.h"
+#include "util.h"
+#include "global.h"
+#include "drive.h"
 
 extern char *progname;
 extern void usage( void );
+extern pid_t parentpid;
 
 #ifdef DUMP
 static FILE *mlog_fp = NULL; /* stderr */;
@@ -82,6 +88,14 @@ static size_t mlog_streamcnt;
 static char mlog_levelstr[ 3 ]; 
 
 #define MLOG_SS_NAME_MAX	10
+#ifdef DUMP
+#define PROGSTR "dump"
+#define PROGSTR_CAPS "Dump"
+#else
+#define PROGSTR "restore"
+#define PROGSTR_CAPS "Restore"
+#endif /* DUMP */
+#define N(a) (sizeof((a)) / sizeof((a)[0]))
 
 static char mlog_ssstr[ MLOG_SS_NAME_MAX + 2 ];
 
@@ -123,6 +137,9 @@ static mlog_sym_t mlog_sym[ ] = {
 };
 
 static qlockh_t mlog_qlockh;
+static int mlog_main_exit_code = -1;
+static rv_t mlog_main_exit_return = RV_NONE;
+static rv_t mlog_main_exit_hint = RV_NONE;
 
 bool_t
 mlog_init1( intgen_t argc, char *argv[ ] )
@@ -392,14 +409,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 		}
 		if ( streamix != -1 && mlog_streamcnt > 1 ) {
 			fprintf( mlog_fp,
-				 "%s%s%s%s: "
-#ifdef DUMP
-				 "drive "
-#endif /* DUMP */
-#ifdef RESTORE
-				 "drive "
-#endif /* RESTORE */
-				 "%d: ",
+				 "%s%s%s%s: drive %d: ",
 				 progname,
 				 mlog_tsstr,
 				 mlog_ssstr,
@@ -433,6 +443,329 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 	if ( ! ( levelarg & MLOG_NOLOCK )) {
 		mlog_unlock( );
 	}
+}
+
+
+static const char *exit_strings[] =
+	{ "SUCCESS", "ERROR", "INTERRUPT", "", "FAULT" };
+
+
+/*
+ * Map RV codes to actual error messages.
+ */
+
+struct rv_map {
+	int		rv;
+	const char *	rv_string;
+	const char *	rv_desc;
+};
+
+static struct rv_map
+rvs[_RV_NUM] = {
+	/* Return Code	Displayed Code	Explanation */
+	{ RV_OK,	"OK",		"success" }, 
+	{ RV_NOTOK,	"ERASE_FAILED",	"media erase request denied" },
+	{ RV_NOMORE,	"NOMORE",	"no more work to do" },
+	{ RV_EOD,	"EOD",		"ran out of data" },
+	{ RV_EOF,	"EOF",		"hit end of media file" },
+ 	{ RV_EOM,	"EOM",		"hit end of media" },
+	{ RV_ERROR,	"ERROR",	"operator error or resource exhaustion" },
+	{ RV_DONE,	"ALREADY_DONE",	"another stream completed the operation" },
+	{ RV_INTR,	"INTERRUPT",	PROGSTR " interrupted" },
+	{ RV_CORRUPT,	"CORRUPTION",	"corrupt data encountered" },
+	{ RV_QUIT,	"QUIT",		"media is no longer usable" },
+	{ RV_DRIVE,	"DRIVE_ERROR",	"drive error" },
+	{ RV_TIMEOUT,	"TIMEOUT",	"operation timed out" },
+	{ RV_MEDIA,	"NO_MEDIA",	"no media in drive" },
+	{ RV_PROTECTED,	"WRITE_PROTECTED","object write protected" },
+	{ RV_CORE,	"CORE",		"fatal error - core dumped" },
+	{ RV_OPT,	"OPT_ERROR",	"bad command line option" },
+	{ RV_INIT,	"INIT_ERROR",	"could not initialise subsystem" },
+	{ RV_PERM,	"NO_PERMISSION","insufficient privilege" },
+	{ RV_COMPAT,	"INCOMPATIBLE",	"cannot apply - dump incompatible" },
+	{ RV_INCOMPLETE,"INCOMPLETE",	"the " PROGSTR " is incomplete" },
+	{ RV_KBD_INTR,	"KEYBOARD_INTERRUPT", "keyboard interrupt" },
+	{ RV_INV,	"INVENTORY",	"error updating session inventory" },
+	{ RV_NONE,	"NONE",		"no error code specified" },
+	{ RV_UNKNOWN,	"UNKNOWN",	"unknown error" },
+};
+
+static struct rv_map 
+rv_unknown = {
+	  _RV_NUM,	"???",		"unknown error code"
+};
+
+static const struct rv_map *
+rv_getdesc(rv_t rv)
+{
+	int rvidx;
+
+	if (rv < 0 || rv >= _RV_NUM) {
+		return &rv_unknown;
+	}
+
+	for (rvidx = 0; rvidx < _RV_NUM; rvidx++)
+		if (rv == rvs[rvidx].rv)
+			return &rvs[rvidx];
+
+	return &rv_unknown;
+}
+
+
+/*
+ * mlog_exit takes two arguments an exit code (EXIT_*) and the internal
+ * return code (RV_*) that was signalled prior to the exit. mlog_exit
+ * stores these values in a per-stream structure managed by the stream_*
+ * functions.
+ *
+ * mlog_exit is called for: all returns from the content threads
+ * (content_stream_dump and content_stream_restore); for returns from
+ * the main process; and also from a couple of other locations where an
+ * error is known to directly lead to the termination of the program.
+ *
+ * For example, in the places mentioned above "return EXIT_ERROR;" has
+ * now been replaced with a call like
+ * "return mlog_exit(EXIT_ERROR, RV_DRIVE);" that specifies both the exit
+ * code, and the reason why the program is terminating.
+ *
+ * mlog_exit_flush uses the per-stream exit information recorded using
+ * mlog_exit to print a detailed status report, showing both the exit
+ * status of each stream, and the overall exit status of the
+ * program. This additional log information allows the user to detect
+ * failures that cannot be distinguished by looking at the exit code
+ * alone.  In particular, the exit code does not currently allow the
+ * user to distinguish EOM conditions from user interruptions, and to
+ * detect an incomplete dump (caused, for example, by drive errors or
+ * corruption).
+ *
+ * Note, that to maintain backwards compatibility the exit codes
+ * returned by dump/restore have _not_ been changed. For more
+ * information see PV #784355.
+ *
+ * While mlog_exit provides considerably more information about the
+ * reasons for a dump terminating, there are a number of cases where
+ * dump maps return codes that have specific values such as RV_DRIVE,
+ * to return codes with less specific values such as RV_INTR, and in
+ * doing so throws away information that would have been useful in
+ * diagnosing the reasons for a failure. To alleviate this, an
+ * additional function mlog_exit_hint is provided that allows a "hint"
+ * to be made about the real reason a stream is terminating. A call to
+ * mlog_exit_hint should be made anywhere in the code a change in
+ * program state has occured that might lead to the termination of the
+ * dump. The mlog_exit_flush routine uses this additional information
+ * help work out what really happened.
+ */
+
+int
+_mlog_exit( const char *file, int line, int exit_code, rv_t rv )
+{
+	pid_t pid;
+	const struct rv_map *rvp;
+
+	pid = getpid();
+	rvp = rv_getdesc(rv);
+
+
+	mlog( MLOG_DEBUG | MLOG_NOLOCK | MLOG_BARE,
+	      "%s: %d: mlog_exit called: "
+	      "exit_code: %s return: %s (%s)\n",
+	      file, line,
+	      exit_strings[exit_code],
+	      rvp->rv_string, rvp->rv_desc);
+
+	if (rv < 0 || rv >= _RV_NUM) {
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		      "mlog_exit(): bad return code");
+		return exit_code;
+	}
+
+	/*
+	 * NOTE: we record the first call only. Exit codes can be mapped from
+	 * more specific values to less specific values as we return up the
+	 * call chain. We assume therefore that the first call contains the
+	 * most accurate information about the termination condition.
+	 */
+
+	if (pid == parentpid) {
+		if (mlog_main_exit_code == -1) {
+			mlog_main_exit_code = exit_code;
+			mlog_main_exit_return = rv;
+		}
+	}
+	else {
+		stream_state_t states[] = { S_RUNNING };
+		stream_state_t state;
+		intgen_t streamix;
+		int exit_code;
+		rv_t exit_return, exit_hint;
+
+		if (stream_get_exit_status(pid,
+					   states,
+					   N(states),
+					   &state,
+					   &streamix,
+					   &exit_code,
+					   &exit_return,
+					   &exit_hint))
+		{
+			if (exit_code == -1) {
+				stream_set_code(pid, exit_code);
+				stream_set_return(pid, rv);
+			}
+		}
+	}
+
+	return exit_code;
+}
+
+void
+_mlog_exit_hint( const char *file, int line, rv_t rv )
+{
+	pid_t pid;
+	const struct rv_map *rvp;
+
+	pid = getpid();
+	rvp = rv_getdesc(rv);
+	
+	mlog( MLOG_DEBUG | MLOG_NOLOCK | MLOG_BARE,
+	      "%s: %d: mlog_exit_hint called: "
+	      "hint: %s (%s)\n",
+	      file, line,
+	      rvp->rv_string, rvp->rv_desc);
+
+	if (rv < 0 || rv >= _RV_NUM) {
+		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
+		      "mlog_exit_hint(): bad return code");
+		return;
+	}
+
+	/*
+	 * NOTE: we use the last hint before exit. Unlike exit codes we've added
+	 * calls to mlog_exit_hint to improve error reporting. In general the
+	 * call closest to the final exit point will provide the most accurate
+	 * information about the termination condition.
+	 */
+
+	if (pid == parentpid)
+		mlog_main_exit_hint = rv;
+	else 
+		stream_set_hint( pid, rv );
+
+}
+
+rv_t
+mlog_get_hint( void )
+{
+	stream_state_t states[] = { S_RUNNING };
+	bool_t ok;
+	rv_t hint;
+	
+	ok = stream_get_exit_status(getpid(), states, N(states),
+				    NULL, NULL, NULL, NULL, &hint);
+	assert(ok);
+	return hint;
+}
+
+bool_t
+is_incomplete(rv_t rv)
+{
+    int j;
+    rv_t errors[] = { RV_CORRUPT, RV_INCOMPLETE, RV_EOD, RV_EOF, RV_EOM };
+
+    for (j = 0; j < N(errors); j++)
+	if (rv == errors[j])
+	    return BOOL_TRUE;
+
+    return BOOL_FALSE;
+}
+
+void
+mlog_exit_flush(void)
+{
+	pid_t pids[STREAM_MAX];
+	int i, npids;
+	const struct rv_map *rvp;
+	stream_state_t states[] = { S_RUNNING, S_ZOMBIE };
+	bool_t incomplete = BOOL_FALSE;
+	bool_t quit = BOOL_FALSE;
+	const char *status_str;
+	rv_t rv;
+
+	if (mlog_level_ss[MLOG_SS_GEN] == MLOG_SILENT)
+		return;
+
+	if (mlog_main_exit_hint == RV_USAGE)
+		return;
+
+	npids = stream_find_all(states, N(states), pids, STREAM_MAX);
+	if (npids > 0) {
+
+		/* print the state of all the streams */
+		fprintf(mlog_fp, "%s: " PROGSTR_CAPS " Summary:\n", progname);
+
+		for (i = 0; i < npids; i++) {
+			stream_state_t state;
+			intgen_t streamix;
+			int exit_code;
+			rv_t exit_return, exit_hint;
+			bool_t ok;
+
+			ok = stream_get_exit_status(pids[i],
+						    states,
+						    N(states),
+						    &state,
+						    &streamix,
+						    &exit_code,
+						    &exit_return,
+						    &exit_hint);
+			assert(ok);
+
+			/* hint takes priority over return */
+			rv = (exit_hint != RV_NONE) ? exit_hint : exit_return;
+			if (rv != RV_NONE) {
+				/* then an mlog_*() call was made otherwise we
+				 * don't know anything about it...
+				 */
+				rvp = rv_getdesc(rv);
+				fprintf(mlog_fp,
+					"%s:   stream %d (pid %d) %s "
+					"%s (%s)\n",
+					progname,
+					streamix,
+					pids[i],
+					drivepp[streamix]->d_pathname,
+					rvp->rv_string,
+					rvp->rv_desc);
+			}
+
+			/* If the following conditions are true for any stream
+			 * then they are true for the entire dump/restore.
+			 */
+			if (! incomplete && is_incomplete(rv))
+			    incomplete = BOOL_TRUE;
+
+			if (! quit && rv == RV_QUIT)
+			    quit = BOOL_TRUE;
+		}
+	}
+
+	/* Check return codes for the main process
+	 */
+	rv = (mlog_main_exit_hint != RV_NONE)
+	    ? mlog_main_exit_hint : mlog_main_exit_return;
+
+	if (! incomplete && is_incomplete(rv))
+	    incomplete = BOOL_TRUE;
+
+	if (! quit && rv == RV_QUIT)
+	    quit = BOOL_TRUE;
+		
+	/* now print the overall state of the dump/restore */
+	if (incomplete) status_str = "INCOMPLETE";
+	else if (quit) status_str = "QUIT";
+	else status_str = exit_strings[mlog_main_exit_code];
+	fprintf(mlog_fp, "%s: " PROGSTR_CAPS " Status: %s\n", progname, status_str);
+	fflush(mlog_fp);
 }
 
 static intgen_t

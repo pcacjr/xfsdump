@@ -104,7 +104,7 @@ typedef int bool_t;
 /* useful return code scheme
  */
 typedef enum { RV_OK,		/* mission accomplished */
-	       RV_NOTOK,	/* request denied */
+	       RV_NOTOK,	/* media erase request denied */
 	       RV_NOMORE,	/* no more work to do */
 	       RV_EOD,		/* ran out of data */
 	       RV_EOF,		/* hit end of media file */
@@ -117,8 +117,19 @@ typedef enum { RV_OK,		/* mission accomplished */
 	       RV_DRIVE,	/* drive quit working */
 	       RV_TIMEOUT,	/* operation timed out */
 	       RV_MEDIA,	/* no media object in drive */
-	       RV_WRITEPOTECTED,/* want to write but write-protected */
-	       RV_CORE		/* really bad - dump core! */
+	       RV_PROTECTED,	/* want to write but write-protected */
+	       RV_CORE,		/* really bad - dump core! */
+	       RV_OPT,		/* bad command line option */
+	       RV_INIT,		/* could not initialise subsystem */
+	       RV_PERM,		/* insufficient privilege */
+	       RV_COMPAT,	/* dump incompatible */
+	       RV_INCOMPLETE,	/* some part of the dump is incomplete */
+	       RV_KBD_INTR,	/* keyboard interrupt */
+	       RV_INV,		/* session inventory error */
+	       RV_USAGE,	/* print command usage only */
+	       RV_NONE,		/* no error code available */
+	       RV_UNKNOWN,	/* there was an error but we don't know which one */
+	       _RV_NUM		/* number of return codes */
 } rv_t;
 
 /* typedefs I'd like to see ...

@@ -698,8 +698,24 @@ xfsrq(8),
 attr_set(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion,
-and non-zero if an error occurred
-or the restore was terminated by the operator.
+and non-zero if an error occurred or the restore was terminated by the operator.
+.P
+For all verbosity levels greater than 0 (\f3silent\f1) the final line of the output
+shows the exit status of the restore. It is of the form:
+.EX
+xfsdump: Restore Status: \f2code\f1
+.EE
+Where \f2code\f1 takes one of the following values:
+\f3SUCCESS\f1 (normal completion),
+\f3INTERRUPT\f1 (interrupted),
+\f3QUIT\f1 (media no longer usable),
+\f3INCOMPLETE\f1 (restore incomplete),
+\f3FAULT\f1 (software error), and
+\f3ERROR\f1 (resource error).
+Every attempt will be made to keep both the syntax and the semantics of this
+log message unchanged in future versions of xfsrestore.
+However, it may be necessary to refine or expand the set of exit codes, or
+their interpretation at some point in the future.
 .SH BUGS
 Pathnames of restored non-directory files
 (relative to the \f2dest\f1 directory)
