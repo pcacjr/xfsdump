@@ -78,6 +78,7 @@
 #include "inventory.h"
 #include "mmap.h"
 #include "arch_xlate.h"
+#include "win.h"
 
 /* content.c - manages restore content
  */
@@ -556,6 +557,7 @@ struct tran {
 		 */
 	size64_t t_dircnt;
 	size64_t t_dirdonecnt;
+	size64_t t_direntcnt;
 		/* for displaying stats on directory reconstruction
 		 */
 	size64_t t_vmsz;
@@ -615,6 +617,8 @@ struct tran {
 		/* to establish critical regions while updating pers
 		 * inventory
 		 */
+	bool_t t_largewindowpr;
+		/* whether we should use a large window map for tree */
 };
 
 typedef struct tran tran_t;
@@ -782,13 +786,15 @@ static void pi_show( char *introstring );
 static void pi_show_nomloglock( void );
 
 #ifdef EXTATTR
-static bool_t extattr_init( void );
+static bool_t extattr_init( size_t drivecnt );
+static char * get_extattrbuf( ix_t which );
 static rv_t restore_extattr( drive_t *drivep,
 			     filehdr_t *fhdrp,
 			     char *path1,
 			     char *path2,
 			     bool_t ahcs,
 			     bool_t isdirpr,
+			     bool_t onlydoreadpr,
 			     dah_t dah );
 static bool_t restore_extattr_cb( void *ctxp,
 				  bool_t islinkpr,
@@ -901,6 +907,10 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	/* record the start time for stats display
 	 */
 	tranp->t_starttime = time( 0 );
+
+	/* do large window support by default
+	 */
+	tranp->t_largewindowpr = BOOL_TRUE;
 
 	/* get command line options
 	 */
@@ -1141,6 +1151,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			sesscpltpr = BOOL_TRUE;
 			break;
 #endif /* SESSCPLT */
+		case GETOPT_SMALLWINDOW:
+			tranp->t_largewindowpr = BOOL_FALSE;
+			break;
 		}
 	}
 
@@ -1706,7 +1719,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	/* initialize the local extattr abstraction. must be done even if
 	 * we don't intend to restore extended attributes
 	 */
-	ok = extattr_init( );
+	ok = extattr_init( drivecnt );
 	if ( ! ok ) {
 		return BOOL_FALSE;
 	}
@@ -2158,6 +2171,16 @@ content_stream_restore( ix_t thrdix )
 		}
 		while ( tranp->t_sync3 == SYNC_BUSY ) {
 			unlock( );
+#if DEBUG_DUMPSTREAMS
+			{
+			    static int count[STREAM_MAX] = {0};
+			    intgen_t streamix = stream_getix( getpid() );
+			    if (++(count[streamix]) == 30) {
+				mlog( MLOG_NORMAL, "still waiting for dirs to be restored\n");
+				count[streamix] = 0;
+			    }
+			}
+#endif
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
 				Media_end( Mediap );
@@ -2226,7 +2249,8 @@ content_stream_restore( ix_t thrdix )
 					scrhdrp->cih_inomap_nondircnt,
 					tranp->t_vmsz,
 					fullpr,
-					persp->a.restoredmpr );
+					persp->a.restoredmpr,
+					tranp->t_largewindowpr );
 			if ( ! ok ) {
 				Media_end( Mediap );
 				return EXIT_ERROR;
@@ -2241,7 +2265,11 @@ content_stream_restore( ix_t thrdix )
 
 		mlog( MLOG_VERBOSE,
 		      "reading directories\n" );
+		win_locks_off(); /* we are single threaded here */
 		rv = applydirdump( drivep, fileh, scrhdrp, &fhdr );
+		win_locks_on();
+		mlog( MLOG_TRACE,
+		      "number of mmap calls for windows = %lu\n", win_getnum_mmaps());
 		switch ( rv ) {
 		case RV_OK:
 			DH2F( fileh )->f_dirtriedpr = BOOL_TRUE;
@@ -2281,6 +2309,16 @@ content_stream_restore( ix_t thrdix )
 		}
 		while ( tranp->t_sync4 == SYNC_BUSY ) {
 			unlock( );
+#if DEBUG_DUMPSTREAMS
+			{
+			static int count[STREAM_MAX] = {0};
+			intgen_t streamix = stream_getix( getpid() );
+			    if (++(count[streamix]) == 30) {
+				mlog( MLOG_NORMAL, "still waiting for dirs post-processing\n");
+				count[streamix] = 0;
+			    }
+			}
+#endif
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
 				Media_end( Mediap );
@@ -2296,7 +2334,9 @@ content_stream_restore( ix_t thrdix )
 		unlock( );
 		mlog( MLOG_VERBOSE,
 		      "directory post-processing\n" );
+		win_locks_off(); /* we are single threaded here */
 		rv = treepost( path1, path2 );
+		win_locks_on();
 		switch ( rv ) {
 		case RV_OK:
 			break;
@@ -2595,6 +2635,7 @@ content_statline( char **linespp[ ] )
 			 "status at %02d:%02d:%02d: "
 			 "%llu/%llu directories reconstructed, "
 			 "%.1f%%%% complete, "
+			 "%llu directory entries processed, "
 			 "%ld seconds elapsed\n",
 			 tmp->tm_hour,
 			 tmp->tm_min,
@@ -2602,6 +2643,7 @@ content_statline( char **linespp[ ] )
 			 (unsigned long long)tranp->t_dirdonecnt,
 			 (unsigned long long)tranp->t_dircnt,
 			 percent,
+			 tranp->t_direntcnt,
 			 elapsed );
 		ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
 		
@@ -2854,6 +2896,7 @@ applydirdump( drive_t *drivep,
 
 		tranp->t_dircnt = scrhdrp->cih_inomap_dircnt;
 		tranp->t_dirdonecnt = 0;
+		tranp->t_direntcnt = 0;
 
 		mlog( MLOG_TRACE,
 		      "reading the directories \n" );
@@ -2910,6 +2953,7 @@ applydirdump( drive_t *drivep,
 						      0,
 						      ahcs,
 						      BOOL_TRUE, /* isdirpr */
+						      BOOL_FALSE, /* onlydoreadpr */
 						      dah );
 				if ( rv != RV_OK ) {
 					return rv;
@@ -2926,6 +2970,8 @@ applydirdump( drive_t *drivep,
 			 */
 			dah = DAH_NULL;
 			dirh = tree_begindir( fhdrp, &dah );
+			if (dirh == NH_NULL)
+			    return RV_ERROR;
 
 			/* read the directory entries, and populate the
 			 * tree with them. we can tell when we are done
@@ -2940,7 +2986,7 @@ applydirdump( drive_t *drivep,
 						  dhdrp,
 						  direntbufsz,
 						  dhcs );
-				if ( rv ) {
+				if ( rv != RV_OK ) {
 					return rv;
 				}
 
@@ -2956,11 +3002,15 @@ applydirdump( drive_t *drivep,
 
 				/* add this dirent to the tree.
 				 */
-				tree_addent( dirh,
+				rv = tree_addent( dirh,
 					     dhdrp->dh_ino,
 					     ( size_t )dhdrp->dh_gen,
 					     dhdrp->dh_name,
 					     namelen );
+				if ( rv != RV_OK ) {
+					return rv;
+				}
+				tranp->t_direntcnt++;
 			}
 
 			tree_enddir( dirh );
@@ -2969,6 +3019,9 @@ applydirdump( drive_t *drivep,
 		}
 		persp->s.dirdonepr = BOOL_TRUE;
 	}
+
+	mlog( MLOG_VERBOSE, "%llu directories and %llu entries processed\n",
+		tranp->t_dirdonecnt, tranp->t_direntcnt);
 
 	return RV_OK;
 }
@@ -2986,6 +3039,9 @@ eatdirdump( drive_t *drivep,
 {
 	bool_t fhcs;
 	bool_t dhcs;
+#ifdef EXTATTR
+	bool_t ahcs;
+#endif /* EXTATTR */
 	char _direntbuf[ sizeof( direnthdr_t )
 			+
 			NAME_MAX + 1
@@ -3005,6 +3061,13 @@ eatdirdump( drive_t *drivep,
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
+#ifdef EXTATTR
+	ahcs = ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_EXTATTRHDR_CHECKSUM )
+	       ?
+	       BOOL_TRUE
+	       :
+	       BOOL_FALSE;
+#endif /* EXTATTR */
 
 	mlog( MLOG_DEBUG,
 	      "discarding ino map\n" );
@@ -3043,6 +3106,25 @@ eatdirdump( drive_t *drivep,
 		if ( cldmgr_stop_requested( )) {
 			return RV_INTR;
 		}
+
+#ifdef EXTATTR
+		/* may be an extended attributes file hdr
+		 */
+		if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
+			rv = restore_extattr( drivep,
+					      fhdrp,
+					      0,
+					      0,
+					      ahcs,
+					      BOOL_TRUE, /* isdirpr */
+					      BOOL_TRUE, /* onlydoreadpr */
+					      DAH_NULL );
+			if ( rv != RV_OK ) {
+				return rv;
+			}
+			continue;
+		}
+#endif /* EXTATTR */
 
 		/* read the directory entries.
 		 * we can tell when we are done
@@ -3267,6 +3349,7 @@ applynondirdump( drive_t *drivep,
 					      path2,
 					      ahcs,
 					      BOOL_FALSE, /* isdirpr */
+					      BOOL_FALSE, /* onlydoreadpr */
 					      DAH_NULL );
 			switch( rv ) {
 			case RV_OK:
@@ -3627,6 +3710,16 @@ Media_atnondir( Media_t *Mediap )
  * also supplies fresh hdr pointers and drive manager. in current
  * implementation these do not change, but will when we use new TLM. does
  * fine positioning within media file according to purpose of request.
+ *
+ * Note: 
+ * The difference between rval and rv. 
+ * rval is used for the drive_* functions (e.g. do_begin_read)
+ * and will take on values such as DRIVE_ERROR_*.
+ * However, it also set to 0 for no error and 1 for error.
+ * It is defaulted to 0 for no error.
+ * rv, however, is of type rv_t and is used for functions returning
+ * rv_t and for the result of this function.
+ * It takes on values like RV_OK, RV_EOF.
  */
 static rv_t
 Media_mfile_next( Media_t *Mediap,
@@ -6997,6 +7090,7 @@ restore_file( drive_t *drivep,
 	      char *path1,
 	      char *path2 )
 {
+	rv_t rv;
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	cb_context_t context;
 
@@ -7010,7 +7104,7 @@ restore_file( drive_t *drivep,
 	context.cb_ehcs = ehcs;
 	context.cb_path1 = path1;
 	context.cb_path2 = path2;
-	tree_cb_links( bstatp->bs_ino,
+	rv = tree_cb_links( bstatp->bs_ino,
 		       bstatp->bs_gen,
 		       bstatp->bs_ctime.tv_sec,
 		       bstatp->bs_mtime.tv_sec,
@@ -7018,8 +7112,10 @@ restore_file( drive_t *drivep,
 		       &context,
 		       path1,
 		       path2 );
-	
-	return context.cb_rv;
+	if (context.cb_rv) /* context error result has precedence */
+	    return context.cb_rv; /* this would be set by callback */
+	else
+	    return rv;
 }
 
 /* called for each link to the file described by fhdr. the first
@@ -8349,11 +8445,11 @@ restore_extent( filehdr_t *fhdrp,
 }
 
 #ifdef EXTATTR
-static char *extattrbufp = 0;
-static size_t extattrbufsz = 0;
+static char *extattrbufp = 0; /* ptr to start of all the extattr buffers */
+static size_t extattrbufsz = 0; /* size of each extattr buffer */
 
 static bool_t
-extattr_init( void )
+extattr_init( size_t drivecnt )
 {
 	ASSERT( ! extattrbufp );
 	extattrbufsz = EXTATTRHDR_SZ		/* dump hdr */
@@ -8365,11 +8461,22 @@ extattr_init( void )
 		       ATTR_MAX_VALUELEN;	/* attribute value */
 	extattrbufsz = roundup(extattrbufsz, EXTATTRHDR_ALIGN);
 
-	extattrbufp = memalign( EXTATTRHDR_ALIGN, extattrbufsz );
-	ASSERT( extattrbufp );
+	extattrbufp = memalign( EXTATTRHDR_ALIGN, extattrbufsz * drivecnt );
+	if (extattrbufp == NULL) {
+		mlog( MLOG_NORMAL | MLOG_ERROR,
+		      "Failed to allocate extended attribute buffer\n");
+		return BOOL_FALSE;
+	}
 
 	return BOOL_TRUE;
 }
+
+static char *
+get_extattrbuf( ix_t which )
+{
+        return extattrbufp + (extattrbufsz * which);
+}
+
 
 struct extattr_cb_ctx {
 	extattrhdr_t *ecb_ahdrp;
@@ -8384,10 +8491,11 @@ restore_extattr( drive_t *drivep,
 		 char *path2,
 		 bool_t ahcs,
 		 bool_t isdirpr,
+		 bool_t onlydoreadpr,
 		 dah_t dah )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	extattrhdr_t *ahdrp = ( extattrhdr_t * )extattrbufp;
+	extattrhdr_t *ahdrp = ( extattrhdr_t * )get_extattrbuf( drivep->d_index );
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	bool_t isfilerestored = BOOL_FALSE;
 
@@ -8445,6 +8553,14 @@ restore_extattr( drive_t *drivep,
 			continue;
 		}
 
+		if ( onlydoreadpr )
+			continue;
+
+		/* NOTE: In the cases below, if we get errors then we issue warnings 
+		 * but we do not stop the restoration.
+		 * We can still restore the file possibly without the 
+		 * extended attributes.
+		 */
 		if ( isdirpr ) {
 			ASSERT( ! path1 );
 			ASSERT( ! path2 );
@@ -8456,7 +8572,7 @@ restore_extattr( drive_t *drivep,
 			ASSERT( path1 );
 			ASSERT( path2 );
 			context.ecb_ahdrp = ahdrp;
-			tree_cb_links( bstatp->bs_ino,
+			(void)tree_cb_links( bstatp->bs_ino,
 				       bstatp->bs_gen,
 				       bstatp->bs_ctime.tv_sec,
 				       bstatp->bs_mtime.tv_sec,
@@ -8491,7 +8607,12 @@ restore_extattr_cb( void *ctxp, bool_t islinkpr, char *path1, char *path2 )
 static bool_t
 restore_dir_extattr_cb( char *path, dah_t dah )
 {
-	extattrhdr_t *ahdrp = ( extattrhdr_t * )extattrbufp;
+        /* 
+         * directory extattr's are built during the directory phase
+         * by 1 thread so we only need one extattr buffer
+         * -> we pick the 0th one
+         */
+	extattrhdr_t *ahdrp = ( extattrhdr_t * )get_extattrbuf( 0 );
 	bool_t ok;
 
 	/* ask the dirattr abstraction to call me back for each

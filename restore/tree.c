@@ -67,6 +67,7 @@
 #include "tree.h"
 #include "libgen.h"
 #include "mmap.h"
+#include "exit.h"
 
 /* structure definitions used locally ****************************************/
 
@@ -174,7 +175,7 @@ typedef struct tran tran_t;
 
 /* node structure. each node represents a directory entry
  */
-#define NODESZ	40
+#define NODESZ	48
 
 struct node {
 	xfs_ino_t n_ino;		/* 8  8 ino */
@@ -183,11 +184,13 @@ struct node {
 	nh_t n_hashh;		/* 4 20 hash array */
 	nh_t n_parh;		/* 4 24 parent */
 	nh_t n_sibh;		/* 4 28 sibling list */
-	nh_t n_cldh;		/* 4 32 children list */
-	nh_t n_lnkh;		/* 4 36 hard link list */
-	gen_t n_gen;		/* 2 38 generation count mod 0x10000 */
-	u_char_t n_flags;	/* 1 39 action and state flags */
-	u_char_t n_nodehkbyte;	/* 1 40 given to node abstraction */
+	nh_t n_sibprevh;	/* 4 32 prev sibling list - dbl link list */
+	nh_t n_cldh;		/* 4 36 children list */
+	nh_t n_lnkh;		/* 4 40 hard link list */
+	gen_t n_gen;		/* 2 42 generation count mod 0x10000 */
+	u_char_t n_flags;	/* 1 43 action and state flags */
+	u_char_t n_nodehkbyte;	/* 1 44 given to node abstraction */
+	int32_t pad;		/* 4 48 padding to 8 byte boundary */
 };
 
 typedef struct node node_t;
@@ -334,7 +337,8 @@ tree_init( char *hkdir,
 	   size64_t nondircnt,
 	   size64_t vmsz,
 	   bool_t fullpr,
-	   bool_t restoredmpr )
+	   bool_t restoredmpr,
+	   bool_t largewindowpr )
 {
 	off64_t nodeoff;
 	char *perspath;
@@ -451,7 +455,7 @@ tree_init( char *hkdir,
 			 ( ix_t )offsetofmember( node_t, n_nodehkbyte ),
 		        sizeof( size64_t ), /* node alignment */
 		        vmsz - ( size64_t )nodeoff,
-			dircnt + nondircnt );
+			dircnt + nondircnt, largewindowpr );
 	if ( ! ok ) {
 		return BOOL_FALSE;
 	}
@@ -467,12 +471,16 @@ tree_init( char *hkdir,
 				     NRH_NULL,
 				     DAH_NULL,
 				     NF_ISDIR | NF_REAL );
+	if (persp->p_rooth == NH_NULL)
+		return BOOL_FALSE;
 	link_in( persp->p_rooth );
 	persp->p_orphh = Node_alloc( orphino,
 				     0, /* gen cnt */
 				     namreg_add( orphname, strlen( orphname )),
 				     DAH_NULL,
 				     NF_ISDIR | NF_REAL );
+	if (persp->p_orphh == NH_NULL)
+		return BOOL_FALSE;
 	link_in( persp->p_orphh );
 	adopt( persp->p_rooth, persp->p_orphh, NRH_NULL );
 
@@ -745,6 +753,8 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 				    NRH_NULL,
 				    dah,
 				    NF_ISDIR | NF_NEWORPH );
+		if (hardh == NH_NULL)
+			return NH_NULL;
 		link_in( hardh );
 		adopt( persp->p_orphh, hardh, NRH_NULL );
 		*dahp = dah;
@@ -753,7 +763,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 	return hardh;
 }
 
-void
+rv_t
 tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 {
 	gen_t gen = BIGGEN2GEN( g );
@@ -772,7 +782,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 		      name,
 		      ino,
 		      gen );
-		return;
+		return RV_OK;
 	}
 
 	/* if the parent is null, just ignore
@@ -784,7 +794,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 		      name,
 		      ino,
 		      gen );
-		return;
+		return RV_OK;
 	}
 
 	/* see if one or more links to this ino already exist.
@@ -813,6 +823,8 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 								    NRH_NULL,
 								    DAH_NULL,
 								    0 );
+					if (hardp->n_lnkh == NH_NULL)
+						return RV_ERROR;
 				}
 				if ( hardp->n_lnkh != NH_NULL ) {
 					ASSERT( hardp->n_flags & NF_REAL );
@@ -929,6 +941,8 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 								      NRH_NULL,
 								      DAH_NULL,
 								      0 );
+						if (renameh == NH_NULL)
+							return RV_ERROR;
 						hardp->n_lnkh = renameh;
 					} else {
 						mlog( MLOG_DEBUG | MLOG_TREE,
@@ -1003,6 +1017,8 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 						    NRH_NULL,
 						    DAH_NULL,
 						    NF_REFED );
+				if (linkh == NH_NULL)
+					return RV_ERROR;
 				link_in( linkh );
 				adopt( parh, linkh, nrh );
 				mlog( MLOG_DEBUG | MLOG_TREE,
@@ -1024,6 +1040,8 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 				    NRH_NULL,
 				    DAH_NULL,
 				    NF_REFED );
+		if (hardh == NH_NULL)
+			return RV_ERROR;
 		link_in( hardh );
 		adopt( parh, hardh, nrh );
 		mlog( MLOG_DEBUG | MLOG_TREE,
@@ -1033,6 +1051,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
 		      ino,
 		      gen );
 	}
+	return RV_OK;
 }
 
 /* ARGSUSED */
@@ -1635,7 +1654,7 @@ rename_dirs( nh_t cldh,
 /* will call funcp for all links to be created. will abort if funcp
  * ever returns FALSE;
  */
-void
+rv_t
 tree_cb_links( xfs_ino_t ino,
 	       u_int32_t biggen,
 	       int32_t ctime,
@@ -1769,7 +1788,7 @@ tree_cb_links( xfs_ino_t ino,
 		}
 		ok = ( * funcp )( contextp, path == path2, path1, path2 );
 		if ( ! ok ) {
-			return;
+			return RV_NOTOK;
 		}
 
 		/* set flag, indicating node is now real
@@ -1822,7 +1841,7 @@ tree_cb_links( xfs_ino_t ino,
 				      gen );
 				ok = ( * funcp )( contextp, BOOL_FALSE, 0, 0 );
 				if ( ! ok ) {
-					return;
+					return RV_NOTOK;
 				}
 			} else {
 				char *dir;
@@ -1837,7 +1856,7 @@ tree_cb_links( xfs_ino_t ino,
 				ok = ( * funcp )( contextp, path == path2, 
 					path1, path2 );
 				if ( ! ok ) {
-					return;
+					return RV_NOTOK;
 				}
 			} 
 		} else {
@@ -1851,6 +1870,12 @@ tree_cb_links( xfs_ino_t ino,
 					 NRH_NULL,
 					 DAH_NULL,
 					 NF_REAL | NF_NEWORPH );
+			if (nh == NH_NULL) {
+				mlog( MLOG_ERROR | MLOG_TREE,
+				"node allocation failed when placing ino %llu"
+				" in orphanage\n", ino); 
+				return RV_ERROR; /* allocation failed */
+			}
 			link_in( nh );
 			adopt( persp->p_orphh, nh, NRH_NULL );
 			ok = Node2path( nh, path1, "orphan" );
@@ -1858,6 +1883,7 @@ tree_cb_links( xfs_ino_t ino,
 			( void )( * funcp )( contextp, BOOL_FALSE, path1,path2);
 		}
 	}
+	return RV_OK;
 }
 
 /* uses flags cleared during directory restore (NF_DUMPEDDIR and NF_REFED )
@@ -3272,7 +3298,8 @@ Node_alloc( xfs_ino_t ino, gen_t gen, nrh_t nrh, dah_t dah, size_t flags )
 	node_t *np;
 
 	nh = node_alloc( );
-	ASSERT( nh != NH_NULL );
+	if (nh == NH_NULL)
+	    return NH_NULL;
 	np = Node_map( nh );
 	np->n_ino = ino;
 	np->n_nrh = nrh;
@@ -3280,6 +3307,7 @@ Node_alloc( xfs_ino_t ino, gen_t gen, nrh_t nrh, dah_t dah, size_t flags )
 	np->n_hashh = NH_NULL;
 	np->n_parh = NH_NULL;
 	np->n_sibh = NH_NULL;
+	np->n_sibprevh = NH_NULL;
 	np->n_cldh = NH_NULL;
 	np->n_lnkh = NH_NULL;
 	np->n_gen = gen;
@@ -3306,16 +3334,26 @@ Node_free( nh_t *nhp )
 	np->n_flags = 0;
 	np->n_parh = NH_NULL;
 	np->n_sibh = NH_NULL;
+	np->n_sibprevh = NH_NULL;
 	np->n_cldh = NH_NULL;
 	np->n_lnkh = NH_NULL;
 	Node_unmap( *nhp, &np  );
 	node_free( nhp );
 }
 
+/*
+ * NOTE: Does error handling here and exits.
+ */
 static node_t *
 Node_map( nh_t nh )
 {
-	return ( node_t * )node_map( nh );
+	node_t *n = ( node_t * )node_map( nh );
+	if ( n == NULL ) {
+		mlog( MLOG_ERROR | MLOG_TREE,
+			"failed to map in node (node handle: %u)\n", nh);
+		exit(EXIT_ERROR);
+	}
+	return n;
 }
 
 static void
@@ -3428,13 +3466,31 @@ adopt( nh_t parh, nh_t cldh, nrh_t nrh )
 {
 	node_t *parp;
 	node_t *cldp;
+	node_t *sibp;
 
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE,
+	   "adopt(parent=%llu,child=%llu,node=%llu): \n",
+	   parh, cldh, nrh);
+#endif
+
+	/* fix up our child - put at front of child list */
 	cldp = Node_map( cldh );
 	cldp->n_parh = parh;
 	cldp->n_nrh = nrh;
 	parp = Node_map( parh );
 	cldp->n_sibh = parp->n_cldh;
+	cldp->n_sibprevh = NH_NULL;
 	Node_unmap( cldh, &cldp  );
+
+	/* fix up old first child i.e. child's new sibling */
+	if ( parp->n_cldh != NH_NULL ) { /* if parent has a child */
+	    sibp = Node_map( parp->n_cldh );
+	    sibp->n_sibprevh = cldh;
+	    Node_unmap( parp->n_cldh, &sibp );
+	}
+
+        /* fix up parent */
 	parp->n_cldh = cldh;
 	Node_unmap( parh, &parp  );
 }
@@ -3468,31 +3524,37 @@ disown( nh_t cldh )
 		return nrh;
 	}
 	if ( parp->n_cldh == cldh ) {
+		/* child is the first one in the child list */
 		parp->n_cldh = cldp->n_sibh;
+		if ( cldp->n_sibh != NH_NULL ) {
+			node_t *sibp = Node_map( cldp->n_sibh );
+			sibp->n_sibprevh = NH_NULL; 
+			Node_unmap( cldp->n_sibh, &sibp );
+		}
 	} else {
-		nh_t prevcldh = parp->n_cldh;
-		node_t *prevcldp = Node_map( prevcldh );
-		while ( prevcldp->n_sibh != NH_NULL
-			&&
-			prevcldp->n_sibh != cldh ) {
-			nh_t tmph = prevcldp->n_sibh;
-			Node_unmap( prevcldh, &prevcldp  );
-			prevcldh = tmph;
-			prevcldp = Node_map( prevcldh );
-		}
-		ASSERT( prevcldp->n_sibh != NH_NULL );
-		if ( prevcldp->n_sibh == NH_NULL ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE,
-			      "attempt to disown child "
-			      "with wrong parent!\n" );
-			return nrh;
-		}
-		prevcldp->n_sibh = cldp->n_sibh;
+		/* child is further down the child list */
+		/* use double link list to find previous link */
+		nh_t prevcldh = cldp->n_sibprevh;
+		node_t *prevcldp;
+
+		ASSERT(prevcldh != NH_NULL); /* must be a previous */
+		prevcldp = Node_map( prevcldh );
+
+		/* fix up previous */
+		prevcldp->n_sibh = cldp->n_sibh; 
 		Node_unmap( prevcldh, &prevcldp  );
+
+		/* fix up next */
+		if ( cldp->n_sibh != NH_NULL ) {
+			node_t *sibp = Node_map( cldp->n_sibh );
+			sibp->n_sibprevh = prevcldh; 
+			Node_unmap( cldp->n_sibh, &sibp );
+		}
 	}
 	Node_unmap( parh, &parp  );
 	cldp->n_parh = NH_NULL;
 	cldp->n_sibh = NH_NULL;
+	cldp->n_sibprevh = NH_NULL;
 	Node_unmap( cldh, &cldp  );
 
 	return nrh;
@@ -3693,6 +3755,11 @@ link_in( nh_t nh )
 	gen_t gen;
 	nh_t hardh;
 
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE,
+	    "link_in(%llu): map in node\n", nh);
+#endif
+
 	/* map in the node to read ino and gen
 	 */
 	np = Node_map( nh );
@@ -3707,10 +3774,18 @@ link_in( nh_t nh )
 	 * of hard link (lnk) list.
 	 */
 	if ( hardh == NH_NULL ) {
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE,
+		    "link_in(): hash node in for ino %llu\n", ino);
+#endif
 		hash_in( nh );
 	} else {
 		nh_t prevh = hardh;
 		node_t *prevp = Node_map( prevh );
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE,
+		    "link_in(): put at end of hash list\n");
+#endif
 		while ( prevp->n_lnkh != NH_NULL ) {
 			nh_t nexth = prevp->n_lnkh;
 			Node_unmap( prevh, &prevp  );
@@ -3726,6 +3801,10 @@ link_in( nh_t nh )
 	 */
 	np->n_lnkh = NH_NULL;
 	Node_unmap( nh, &np  );
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE,
+	    "link_in(%llu): UNmap in node\n", nh);
+#endif
 }
 
 static void
@@ -4104,6 +4183,12 @@ hash_find( xfs_ino_t ino, gen_t gen )
 		return NH_NULL;
 	}
 
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE,
+	     "hash_find(%llu,%u): traversing hash link list\n",
+		ino, gen); 
+#endif
+
 	/* walk the list until found.
 	 */
 	np = Node_map( nh );
@@ -4117,6 +4202,11 @@ hash_find( xfs_ino_t ino, gen_t gen )
 		np = Node_map( nh );
 	}
 	Node_unmap( nh, &np  );
+
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE,
+	    "hash_find(): return nh = %llu\n", nh);
+#endif
 
 	return nh;
 }

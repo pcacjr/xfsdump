@@ -1050,6 +1050,7 @@ usage( void )
 	ULO( "<subtree> ...",				GETOPT_SUBTREE );
 	ULO( "(contents only)",				GETOPT_TOC );
 	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
+	ULO( "(use small tree window)",			GETOPT_SMALLWINDOW );
 #ifdef EXTATTR
 	ULO( "(don't restore extended file attributes)",GETOPT_NOEXTATTR );
 #endif /* EXTATTR */

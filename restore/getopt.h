@@ -40,7 +40,7 @@
  * purpose is to contain that command string.
  */
 
-#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:ACDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
+#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wACDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
 
 #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
 #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
@@ -59,6 +59,7 @@
 #define	GETOPT_SUBTREE		's'	/* subtree restore (content.c) */
 #define	GETOPT_TOC		't'	/* display contents only (content.c) */
 #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4 ) */
+#define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
 #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */
 #define GETOPT_SETDM		'D'	/* set DMAPI event mask and state */

@@ -38,6 +38,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <errno.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -100,6 +101,9 @@ struct tran {
 	size_t t_wincnt;
 		/* number of windows allocated
 		 */
+	size_t t_winmmaps;
+		/* number of window mmap calls made
+		 */
 	win_t *t_lruheadp;
 		/* LRU head (re-use from this end)
 		 */
@@ -112,12 +116,39 @@ struct tran {
 	qlockh_t t_qlockh;
 		/* for establishing critical regions
 		 */
-
 };
 
 typedef struct tran tran_t;
 
 static tran_t *tranp = 0;
+static bool_t locksoffpr = BOOL_FALSE;
+
+/*
+ * assumes called in region where only 1 thread can execute it
+ */
+void
+win_locks_off(void)
+{
+	locksoffpr = BOOL_TRUE;
+}
+
+/*
+ * assumes called in region where only 1 thread can execute it
+ */
+void
+win_locks_on(void)
+{
+	locksoffpr = BOOL_FALSE;
+}
+
+/*
+ * tell me how many windows I used for the tree
+ */
+size_t
+win_getnum_mmaps(void)
+{
+	return tranp->t_winmmaps;
+}
 
 void
 win_init( intgen_t fd,
@@ -167,11 +198,21 @@ win_map( off64_t off, void **pp )
 	 */
 	segoff = off - ( off64_t )offwithinseg;
 
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+	     "win_map(off=%lld,addr=%x): off within = %llu, segoff = %lld\n",
+	      off, pp, offwithinseg, segoff);
+#endif
+
 	/* see if segment already mapped. if ref cnt zero,
 	 * remove from LRU list.
 	 */
 	winp = win_bag_find_off( segoff );
 	if ( winp ) {
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+		     "win_map(): requested segment already mapped\n");
+#endif
 		if ( winp->w_refcnt == 0 ) {
 			ASSERT( tranp->t_lruheadp );
 			ASSERT( tranp->t_lrutailp );
@@ -211,6 +252,10 @@ win_map( off64_t off, void **pp )
 	if ( tranp->t_lruheadp ) {
 		/* REFERENCED */
 		intgen_t rval;
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+		     "win_map(): get head from lru freelist & unmap\n");
+#endif
 		ASSERT( tranp->t_lrutailp );
 		winp = tranp->t_lruheadp;
 		tranp->t_lruheadp = winp->w_nextp;
@@ -224,12 +269,16 @@ win_map( off64_t off, void **pp )
 		ASSERT( ! rval );
 		memset( ( void * )winp, 0, sizeof( win_t ));
 	} else if ( tranp->t_wincnt < tranp->t_winmax ) {
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+		     "win_map(): no LRU freelist - create a new window\n");
+#endif
 		winp = ( win_t * )calloc( 1, sizeof( win_t ));
 		ASSERT( winp );
 		tranp->t_wincnt++;
 	} else {
 		ASSERT( tranp->t_wincnt == tranp->t_winmax );
-		*pp = 0;
+		*pp = NULL;
 		critical_end( );
 		mlog( MLOG_NORMAL | MLOG_WARNING,
 		      "all map windows in use. Check virtual memory limits\n" );
@@ -244,12 +293,24 @@ win_map( off64_t off, void **pp )
 		OFF64MAX - segoff - ( off64_t )tranp->t_segsz + 1ll );
 	ASSERT( ! ( tranp->t_segsz % pgsz ));
 	ASSERT( ! ( ( tranp->t_firstoff + segoff ) % ( off64_t )pgsz ));
+#ifdef TREE_DEBUG
+	mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+	     "win_map(): mmap segment at %lld, size = %llu\n",
+	    ( off64_t )( tranp->t_firstoff + segoff ), tranp->t_segsz);
+#endif
+	tranp->t_winmmaps++;
 	winp->w_p = mmap_autogrow(
 			    tranp->t_segsz,
 			    tranp->t_fd,
 			    ( off64_t )( tranp->t_firstoff + segoff ));
-	ASSERT( winp->w_p );
-	ASSERT( winp->w_p != ( void * )( -1 ));
+	if ( winp->w_p == (void *)-1 ) {
+		mlog( MLOG_NORMAL | MLOG_ERROR,
+		      "win_map(): unable to map a node segment of size %d at %d: %s\n",
+		      tranp->t_segsz, tranp->t_firstoff + segoff,
+		      strerror( errno ));
+		*pp = NULL;
+		return;
+	}
 	winp->w_off = segoff;
 	ASSERT( winp->w_refcnt == 0 );
 	winp->w_refcnt++;
@@ -369,11 +430,13 @@ critical_init( void )
 static void
 critical_begin( void )
 {
-	qlock_lock( tranp->t_qlockh );
+	if (!locksoffpr)
+	    qlock_lock( tranp->t_qlockh );
 }
 
 static void
 critical_end( void )
 {
-	qlock_unlock( tranp->t_qlockh );
+	if (!locksoffpr)
+	    qlock_unlock( tranp->t_qlockh );
 }

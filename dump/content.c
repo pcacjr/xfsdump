@@ -578,6 +578,9 @@ content_init( intgen_t argc,
 	u_int64_t nondircnt;
 	u_int64_t datasz;
 	u_int64_t inocnt;
+	u_int64_t inomapsz;
+	u_int64_t direntsz;
+	u_int64_t filesz;
 	u_int64_t size_estimate;
 #endif /* SIZEEST */
 
@@ -1560,19 +1563,39 @@ baseuuidbypass:
 	nondircnt = scwhdrtemplatep->cih_inomap_nondircnt;
 	datasz = scwhdrtemplatep->cih_inomap_datasz;
 	inocnt = dircnt + nondircnt;
+	inomapsz = inomap_getsz( );
+	direntsz = inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 );
+	filesz = inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ );
+
 	hdr_mfilesz =	GLOBAL_HDR_SZ
 			+
-			inomap_getsz( )
+			inomapsz
 			+
-			inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 );
+			direntsz;
 	size_estimate = hdr_mfilesz
 			+
-			inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ )
+			filesz
 			+
 			datasz;
 	mlog( MLOG_VERBOSE,
 	      "estimated dump size: %llu bytes\n",
 	      size_estimate );
+
+	if (drivecnt > 1) {
+	    mlog( MLOG_VERBOSE,
+		  "estimated dump size per stream: %llu bytes\n",
+		    hdr_mfilesz + (filesz + datasz) / drivecnt); 
+	}
+	mlog( MLOG_DEBUG,
+	      "estimated dump header size: %llu bytes\n",
+	      hdr_mfilesz );
+	mlog( MLOG_DEBUG,
+	      "estimated component sizes: global hdr: %llu bytes, "
+	      "inomap: %llu bytes,  dir entries: %llu bytes, "
+	      "file hdrs: %llu bytes, datasz: %llu bytes\n",
+	      GLOBAL_HDR_SZ, inomapsz, direntsz,
+	      filesz, datasz );
+
 	min_recmfilesz = 4 * hdr_mfilesz;
 #endif /* SIZEEST */
 

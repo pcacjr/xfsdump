@@ -38,7 +38,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <assert.h>
 #include <time.h>
 #include <getopt.h>
 
@@ -334,6 +333,31 @@ void
 mlog_unlock( void )
 {
 	qlock_unlock( mlog_qlockh );
+}
+
+/*
+ * Override the -v option.
+ * Useful for debugging at particular points
+ * where doing it program-wide would produce
+ * too much output.
+ */
+void
+mlog_override_level( intgen_t levelarg )
+{
+	intgen_t level;
+	ix_t ss; /* SubSystem */
+
+	level = levelarg & MLOG_LEVELMASK;
+	ss = ( ix_t )( ( levelarg & MLOG_SS_MASK ) >> MLOG_SS_SHIFT );
+
+	if (ss == MLOG_SS_GEN) { /* do level for all subsys */  
+	    for (ss = 0 ; ss < MLOG_SS_CNT ; ss++ ) {
+		mlog_level_ss[ ss ] = level;
+	    }
+	}
+	else { /* do a particular subsys */
+	    mlog_level_ss[ ss ] = level;
+	}
 }
 
 void
@@ -660,7 +684,7 @@ mlog_get_hint( void )
 
 	ok = stream_get_exit_status(getpid(), states, N(states),
 				    NULL, NULL, NULL, NULL, &hint);
-	assert(ok);
+	ASSERT(ok);
 	return hint;
 }
 
@@ -720,7 +744,7 @@ mlog_exit_flush(void)
 						    &exit_code,
 						    &exit_return,
 						    &exit_hint);
-			assert(ok);
+			ASSERT(ok);
 
 			/* hint takes priority over return */
 			rv = (exit_hint != RV_NONE) ? exit_hint : exit_return;

@@ -146,12 +146,12 @@ static void do_quit( drive_t * );
 /* simple drive strategy for file or stdin. referenced by drive.c
  */
 drive_strategy_t drive_strategy_simple = {
-	DRIVE_STRATEGY_SIMPLE,	/* ds_id */
-	"drive_simple",		/* ds_description */
-	ds_match,		/* ds_match */
-	ds_instantiate,		/* ds_instantiate */
-	0x1000000ll,		/* ds_recmarksep */
-	OFF64MAX		/* ds_recmfilesz */
+	DRIVE_STRATEGY_SIMPLE,		/* ds_id */
+	"file dump (drive_simple)",	/* ds_description */
+	ds_match,			/* ds_match */
+	ds_instantiate,			/* ds_instantiate */
+	0x1000000ll,			/* ds_recmarksep */
+	OFF64MAX			/* ds_recmfilesz */
 };
 
 

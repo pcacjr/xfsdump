@@ -438,12 +438,12 @@ static int dbgrmtwrite( int, void *, uint);
 /* scsitape drive strategy. referenced by drive.c
  */
 drive_strategy_t drive_strategy_scsitape = {
-	DRIVE_STRATEGY_SCSITAPE,/* ds_id */
-	"drive_scsitape",	/* ds_description */
-	ds_match,		/* ds_match */
-	ds_instantiate,		/* ds_instantiate */
-	0x1000000ll,		/* ds_recmarksep  16 MB */
-	0x10000000ll,		/* ds_recmfilesz 256 MB */
+	DRIVE_STRATEGY_SCSITAPE,	/* ds_id */
+	"scsi tape (drive_scsitape)",	/* ds_description */
+	ds_match,			/* ds_match */
+	ds_instantiate,			/* ds_instantiate */
+	0x1000000ll,			/* ds_recmarksep  16 MB */
+	0x10000000ll,			/* ds_recmfilesz 256 MB */
 };
 
 

@@ -391,12 +391,12 @@ static int dbgrmtwrite( int, void *, uint);
 /* rmt drive strategy. referenced by drive.c
  */
 drive_strategy_t drive_strategy_rmt = {
-	DRIVE_STRATEGY_RMT,	/* ds_id */
-	"drive_minrmt",		/* ds_description */
-	ds_match,		/* ds_match */
-	ds_instantiate,		/* ds_instantiate */
-	0x1000000ll,		/* ds_recmarksep  16 MB */
-	0x10000000ll,		/* ds_recmfilesz 256 MB */
+	DRIVE_STRATEGY_RMT,			/* ds_id */
+	"minimum scsi tape (drive_minrmt)",	/* ds_description */
+	ds_match,				/* ds_match */
+	ds_instantiate,				/* ds_instantiate */
+	0x1000000ll,				/* ds_recmarksep  16 MB */
+	0x10000000ll,				/* ds_recmfilesz 256 MB */
 };
 
 

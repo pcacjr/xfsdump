@@ -116,6 +116,10 @@ extern bool_t mlog_init2( void );
  */
 extern void mlog_tell_streamcnt( size_t streamcnt );
 
+/* override the -v option
+ */
+void mlog_override_level( intgen_t levelarg );
+
 /* vprintf-based message format
  */
 extern void mlog( intgen_t level, char *fmt, ... );

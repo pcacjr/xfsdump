@@ -45,6 +45,7 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
 {
 	size_t dirlen;
 	size_t pidlen;
+	size_t namelen;
 	char *namebuf;
 
 	if ( strcmp( dirname, "/" )) {
@@ -54,30 +55,30 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
 		dirname = "";
 	}
 
-	if ( pid ) {
-		pidlen = 1 + 6;
-	} else {
-		pidlen = 0;
-	}
-	namebuf = ( char * )calloc( 1,
-				    dirlen
-				    +
-				    1
-				    +
-				    strlen( basename )
-				    +
-				    pidlen
-				    +
-				    1 );
-	ASSERT( namebuf );
-
-	if ( pid ) {
-		( void )sprintf( namebuf, "%s/%s.%d", dirname, basename, pid );
-	} else {
-		( void )sprintf( namebuf, "%s/%s", dirname, basename );
-	}
-
-	return namebuf;
+	/* 
+	 * We could calculate the length of pid string 
+	 * = trunc(log10(pid))+1,
+	 * but we are restricted to 32 bits for pid anyway.
+	 * 32 bits => trunc(log10(2^32))+1 = 10
+	 * And if it ever became 64 bits, 
+	 * 64 bits => trunc(log10(2^64))+1 = 20
+         */
+  	if ( pid ) {
+		pidlen = 1 + 20;
+  	} else {
+  		pidlen = 0;
+  	}
+	namelen = dirlen + 1 + strlen( basename ) + pidlen + 1;
+	namebuf = ( char * )calloc( 1, namelen );
+  	ASSERT( namebuf );
+  
+  	if ( pid ) {
+		( void )snprintf( namebuf, namelen, "%s/%s.%d", dirname, basename, pid );
+  	} else {
+		( void )snprintf( namebuf, namelen, "%s/%s", dirname, basename );
+  	}
+  
+  	return namebuf;
 }
 
 intgen_t

@@ -45,7 +45,8 @@ extern bool_t tree_init( char *hkdir,
 			 size64_t nondircnt,
 			 size64_t vmsz,
 			 bool_t fullpr,
-			 bool_t restoredmpr );
+			 bool_t restoredmpr,
+			 bool_t largewindowpr );
 
 /* tree_sync - synchronizes with an existing tree abstraction
  */
@@ -63,7 +64,7 @@ extern nh_t tree_begindir( filehdr_t *fhdrp, dah_t *dahp );
 
 /* tree_addent - adds a directory entry; takes dirh from above call
  */
-extern void tree_addent( nh_t dirh,
+extern rv_t tree_addent( nh_t dirh,
 			 xfs_ino_t ino,
 			 size_t gen,
 			 char *name,
@@ -95,7 +96,7 @@ extern bool_t tree_subtree_parse( bool_t sensepr, char *path );
 
 extern bool_t tree_post( char *path1, char *path2 );
 
-extern void tree_cb_links( xfs_ino_t ino,
+extern rv_t tree_cb_links( xfs_ino_t ino,
 			   u_int32_t biggen,
 			   int32_t ctime,
 			   int32_t mtime,

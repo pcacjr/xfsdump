@@ -1,3 +1,12 @@
+xfsdump-1.1.11 (13 December 2001)
+	- port back IRIX changes primarily to xfsrestore for
+	  improving performance when one has over a million files
+	- some extra mlogs (messages) for dump estimates, 
+	  dir tree diagnostics, type of dump format being used
+	- various fixes for restore with multiple threads
+	  and extended attributes (note: multiple threads not
+	  implemented on Linux yet)
+
 xfsdump-1.1.10 (10 December 2001)
 	- fix xfsdump to endian convert all of the record header
 	  fields properly just prior to writing the header out
