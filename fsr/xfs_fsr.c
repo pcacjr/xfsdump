@@ -387,7 +387,7 @@ initallfs(char *mtab)
 	/* find all rw xfs file systems */
 	mi = 0;
 	fs = fsbase;
-	while (mp = getmntent(fp)) {
+	while ((mp = getmntent(fp))) {
 		int rw = 0;
 
 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
@@ -514,8 +514,9 @@ fsrallfs(int howlong, char *leftofffile)
 	}
 
 	if (vflag) {
-		fsrprintf("START: pass=%d ino=%lld %s %s\n", 
-		           fs->npass, startino, fs->dev, fs->mnt);
+		fsrprintf("START: pass=%d ino=%llu %s %s\n", 
+			  fs->npass, (unsigned long long)startino,
+			  fs->dev, fs->mnt);
 	}
 
 	signal(SIGABRT, aborter);
@@ -587,7 +588,7 @@ fsrall_cleanup(int timeout)
 		          leftofffile, strerror(errno));
 	else {
 		if (timeout) {
-			ret = sprintf(buf, "%s %d %lld\n", fs->dev, 
+			ret = sprintf(buf, "%s %d %llu\n", fs->dev, 
 			        fs->npass, (unsigned long long)leftoffino);
 			if (write(fd, buf, ret) < strlen(buf))
 				fsrprintf("write(%s) failed: %s\n", leftofffile,
@@ -618,7 +619,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 	jdm_fshandle_t	*fshandlep;
 	xfs_ino_t	lastino = startino;
 
-	fsrprintf("%s startino=%lld\n", mntdir, startino);
+	fsrprintf("%s startino=%llu\n", mntdir, (unsigned long long)startino);
 
 	fshandlep = jdm_getfshandle( mntdir );
 	if ( ! fshandlep ) {
@@ -675,7 +676,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 			}
 
 			/* Don't know the pathname, so make up something */
-			sprintf(fname, "ino=%lld", (unsigned long long)p->bs_ino);
+			sprintf(fname, "ino=%llu", (unsigned long long)p->bs_ino);
 
 			/* Get a tmp file name */
 			tname = tmp_next(mntdir);
@@ -1338,8 +1339,8 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 
 	do {
 		if (ioctl(fd, XFS_IOC_GETBMAP, map) < 0) {
-			fsrprintf("failed reading extents: inode %lld",
-			         sin->bs_ino);
+			fsrprintf("failed reading extents: inode %llu",
+			         (unsigned long long)sin->bs_ino);
 			exit(1);
 		}
 
