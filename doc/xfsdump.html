@@ -37,6 +37,9 @@
   </ul>
   <li><a href="#dirent_tree">Restore's directory entry tree</a>
   <li><a href="#cum_restore">Cumulative Restore</a>
+  <ul>
+    <li><a href="#tree_post">Cumulative Restore Tree Postprocessing</a>
+  </ul>
   <li><a href="#Q&A">Questions and Answers</a>
   <ul>
     <li><a href="#DMF">How is -a and -z handled by xfsdump ?</a>
@@ -1060,14 +1063,87 @@ If the entry alreadys exists then it marks it as <i>NF_REFED</i>.
 <p>
 In case a dirent has gone away between times of incremental dumps,
 xfsrestore does an extra pass in the tree preprocessing 
-(<i>noref_elim_recurse()</i>)
 which traverses the tree looking for non-referenced (not <i>NF_REFED</i>) 
 nodes so that if they exist in the FS (i.e. are <i>NF_REAL</i>) then
 they can be deleted (so that the FS resembles what it was at the time
 of the incremental dump).
 Note there are more conditionals to the code than just that -
 but that is the basic plan.
+It is elaborated further below.
 
+<h4><a name="tree_post">Cumulative Restore Tree Postprocessing</a></h4>
+After the dirent tree is created or updated from the directory dump
+cumulative restoral, it does a 4 step postprocessing:
+<p>
+<table border>
+<caption><b>Steps of Tree Postprocessing</b></caption>
+<tr>
+   <th>Function</th><th>What it does</th>
+</tr>
+<tr>
+   <td><b>1. noref_elim_recurse</b></td>
+   <td><ul>
+   <li>remove deleted dirs
+   <li>rename moved dirs to orphanage	
+   <li>remove extra deleted hard links
+   <li>rename moved non-dirs to orphanage
+   </ul></td>
+</tr>
+<tr>
+   <td><b>2. mkdirs_recurse</b></td>
+   <td><ul>
+   <li>mkdirs on (dir & !real & ref & sel)
+   </ul></td>
+</tr>
+<tr>
+   <td><b>3. rename_dirs</b></td>
+   <td><ul>
+   <li>rename moved dirs from orphanage to destination
+   </ul></td>
+</tr>
+<tr>
+   <td><b>4. proc_hardlinks</b></td>
+   <td><ul>
+   <li>rename moved non-dirs from orphanage to destination
+   <li>remove deleted non-dirs (real & !ref & sel)
+   <li>create a link on rename error (don't understand this one)
+   </ul></td>
+</tr>
+</table>   
+
+<p>
+Step 1 was changed so that files which are deleted and not moved
+are deleted early on, otherwise, it can stop a parent directory
+from being deleted.
+The new step is:
+<p>
+<table border>
+<tr>
+   <th>Function</th><th>What it does</th>
+</tr>
+<tr>
+   <td><b>1. noref_elim_recurse</b></td>
+   <td><ul>
+   <li>remove deleted dirs
+   <li>rename moved dirs to orphanage	
+   <li>remove extra deleted hard links
+   <li>rename moved non-dirs to orphanage
+   <li>remove deleted non-dirs which aren't part of a rename
+   </ul></td>
+</tr>
+</table>   
+<p>
+One will notice that renames are not performed directly.
+Instead entries are renamed to the orphanage, directories are
+created, then entries are moved from the orphanage to the
+intended destination. This would be done as renames may not
+succeed until directories are created. And the directories
+are not created first as we may be able to create the entry
+by just moving an existing one.
+The step of "removing deleted non-dirs" in <i>proc_hardlinks</i>
+should not happen now since it is done earlier.
+
+<p>
 <hr>
 <h3><a name="Q&A">Questions and Answers</a></h3>
 

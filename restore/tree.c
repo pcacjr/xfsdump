@@ -1231,6 +1231,15 @@ noref_elim_recurse( nh_t parh,
 		renameh = cldp->n_lnkh;
 		grandcldh = cldp->n_cldh;
 		nextcldh = cldp->n_sibh;
+
+#ifdef TREE_DEBUG
+		ok = Node2path( cldh, path1, "noref debug" );
+		mlog( MLOG_TRACE | MLOG_TREE,
+		      "noref: %s: isdir = %d, isreal = %d, isref = %d, "
+		      "isrenamedir = %d\n",
+		      path1, isdirpr, isrealpr, isrefpr, isrenamepr );
+#endif
+
 		Node_unmap( cldh, &cldp );
 
 		if ( isdirpr ) {
@@ -1372,6 +1381,12 @@ noref_elim_recurse( nh_t parh,
 				ASSERT( hardh != NH_NULL );
 				canunlinkpr = BOOL_FALSE;
 				neededpr = BOOL_FALSE;
+				/* tes@sgi.com:
+				 * This loop seems to assume that
+				 * REAL files come before NON-REALs
+				 * so that we will break out first
+				 * if we find a REAL file.
+				 */
 				while ( hardh != NH_NULL ) {
 					node_t *hardp;
 					bool_t hardisrefpr;
@@ -1384,7 +1399,6 @@ noref_elim_recurse( nh_t parh,
 					nexthardh = hardp->n_lnkh;
 					Node_unmap( hardh, &hardp );
 					if ( hardh != cldh && hardisrealpr ) {
-						canunlinkpr = BOOL_TRUE;
 						break;
 					}
 					if ( hardisrefpr && ! hardisrealpr ) {
@@ -1395,9 +1409,13 @@ noref_elim_recurse( nh_t parh,
 				if ( neededpr ) {
 					mustorphpr = BOOL_TRUE;
 				}
+				else {
+					canunlinkpr = BOOL_TRUE;
+				}
 			}
 
 			if ( mustorphpr ) {
+				/* rename file to orphanage */
 				nrh_t nrh;
 				ASSERT( ! canunlinkpr );
 				ok = Node2path( cldh,
@@ -2054,6 +2072,23 @@ proc_hardlinks( char *path1, char *path2 )
 }
 
 /* called for every hard head
+ *
+ * tes@sgi.com:
+ * This code processes the hardlinks, extracting out a 
+ * src_list - real & !ref
+ * dest_list - !real & ref
+ * The src_list are the entries to delete and the dst_list
+ * are the new_entries to create.
+ * 1. If we have a src and a dst then we can do a rename.
+ * 2. If we have extra src nodes then we can unlink them.
+ * 3. If we have extra dst nodes then we can link them.
+ * HOWEVER, the linking in of the new nodes is actually handled
+ * in the restore_file_cb() code which on restoral creates
+ * the file and all its hardlinks.
+ * ALSO, I can not see how the src_list can have more than
+ * 1 node in it, since in noref_elim_recurse() it unlinks all
+ * extra deleted entries (real & !ref).
+ * Thus, steps 2 and 3 are handled in noref_elim_recurse().
  */
 static bool_t
 proc_hardlinks_cb( void *contextp, nh_t hardheadh )
@@ -2253,6 +2288,8 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 			successpr = BOOL_TRUE;
 		}
 
+		/* tes@sgi.com: note: loop of one iteration only 
+		 */
 		while ( ! successpr && lnsrch != NH_NULL ) {
 			ok = Node2path( lnsrch, phcbp->path1, "link" );
 
@@ -2301,6 +2338,8 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 	}
 
 	/* finally, pass through remaining src list, unlinking/disowning.
+	 * tes@sgi.com: don't believe this will happen as this step
+	 * should now be done in noref_elim_recurse().
 	 */
 	while ( rnsrcheadh != NH_NULL ) {
 		nh_t srch;
