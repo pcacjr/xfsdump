@@ -1,4 +1,7 @@
 
+xfsdump-1.0.2 (10 January 2001)
+        - support extended attributes in xfsdump and xfsrestore
+
 xfsdump-1.0.1 (30 January 2001)
         - minor rpm and deb packaging work
 
