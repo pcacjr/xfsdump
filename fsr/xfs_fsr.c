@@ -850,16 +850,11 @@ fsrfile_common(
 	int		fd,
 	xfs_bstat_t	*statp)
 {
-	int		pid;
 	int		error;
 	struct statvfs64 vfss;
 	struct fsxattr	fsx;
 	int		do_rt = 0;
 	unsigned long	bsize;
-#ifdef HAVE_CAPABILITIES
-	cap_t		ocap;
-	cap_value_t	cap_setuid = CAP_SETUID;
-#endif
 		
 	if (vflag)
 		fsrprintf("%s\n", fname);
@@ -941,45 +936,18 @@ fsrfile_common(
 		return -1;
 	}
 
-	pid = fork();
-	if (pid < 0) {
-		fsrprintf("fork failed: %s\n", strerror(errno));
-		close(fd);
-		exit(1);
-	} else if (pid == 0) {
-		/* 
-		 * Already checked ownership so we're either
-		 * root or our realuid owns the file and can safely 
-		 * setuid to the file owner.  This is done so
-		 * quotas are maintained for the user.  (No group
-		 * quotas so no setgid).
-		 */
-#ifdef HAVE_CAPABILITIES
-		ocap = cap_acquire(1, &cap_setuid);
-#endif
-		if (setuid(statp->bs_uid) < 0) {
-			fsrprintf("setuid failed: uid=%d %s: %s\n", 
-				  statp->bs_uid, fname, strerror(errno));
-#ifdef HAVE_CAPABILITIES
-			cap_surrender(ocap);
-#endif
-			exit(1);
-		}
-#ifdef HAVE_CAPABILITIES
-		cap_surrender(ocap);
-#endif
+	/* 
+	 * Previously the code forked here, & the child changed it's uid to
+	 * that of the file's owner and then called packfile(), to keep
+	 * quota counts correct.  (defragged files could use fewer blocks).
+	 *
+	 * Instead, just fchown() the temp file to the uid,gid of the
+	 * file we're defragging, in packfile().
+	 */
 
-		error = packfile(fname, tname, fd, statp, do_rt);
-		exit(error);
-	} else if (pid > 0) {
-		wait(&error);
-		close(fd);
-		if (WIFEXITED(error))
-			return(WEXITSTATUS(error));
-		return -1;
-	}
-	/* NOTREACHED */
-	return 0;
+	if ((error = packfile(fname, tname, fd, statp, do_rt)))
+		return error;
+	return -1; /* no error */
 }
 
 
@@ -1225,6 +1193,15 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		close(tfd);
 		return 1; /* no change/no error */
 	}
+
+	/* switch to the owner's id, to keep quota in line */
+        if (fchown(tfd, statp->bs_uid, statp->bs_gid) < 0) {
+                if (vflag)
+                        fsrprintf("failed to fchown tmpfile %s: %s\n",
+                                   tname, strerror(errno));
+		close(tfd);
+                return -1;
+        }
 
 	/* Swap the extents */
 	srval = xfs_swapext(fd, &sx);
