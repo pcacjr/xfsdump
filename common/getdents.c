@@ -39,8 +39,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <syscall.h>
 #include <linux/types.h>
-#include <linux/unistd.h>
 #include "getdents.h"
 
 #ifndef offsetof
@@ -62,7 +63,10 @@ struct kernel_dirent
 	char d_name[256];
 };
 
-_syscall3(int, getdents, uint, fd, struct kernel_dirent *, dirp, uint, count);
+int getdents(unsigned int fd, struct dirent *dirp, unsigned int count)
+{
+	return syscall(SYS_getdents, fd, dirp, count);
+}
 
 /* The problem here is that we cannot simply read the next NBYTES
    bytes.  We need to take the additional field into account.  We use
