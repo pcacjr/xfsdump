@@ -43,6 +43,9 @@ pkg_builder=`id -u -n`@`hostname`
 test -z "$PACKAGE_BUILDER" || pkg_builder="$PACKAGE_BUILDER"
 AC_SUBST(pkg_builder)
 
+dnl output header with cpp defs HAVE_*, etc
+AC_CONFIG_HEADER(include/config.h)
+
 dnl check if user wants their own C compiler
 test -z "$CC" && AC_PROG_CC
 cc=$CC
@@ -288,6 +291,13 @@ AC_TRY_LINK([
 	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1 ],
 	[ echo ok ])
+
+dnl Check if we have a type for the version 1 XFS geometry ioctl
+AC_MSG_CHECKING([for XFS geometry ioctl (v1)])
+AC_TRY_COMPILE(
+	[ #include <libxfs.h> ],
+	[ xfs_fsop_geom_v1_t geom; ],
+AC_DEFINE(HAVE_V1_GEOMETRY) AC_MSG_RESULT(yes) , AC_MSG_RESULT(no))
 
 dnl man pages (source)
 dnl also check if man page source is gzipped

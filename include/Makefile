@@ -33,7 +33,8 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = builddefs.in buildmacros buildrules dqblk_xfs.h
+LSRCFILES = builddefs.in buildmacros buildrules config.h.in dqblk_xfs.h
+LDIRT = config.h
 
 default install install-dev :
 

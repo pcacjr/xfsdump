@@ -1,3 +1,9 @@
+xfsdump (2.2.0-1) unstable; urgency=low
+
+  * New upstream release, fixing compatibility with older kernels
+
+ -- Nathan Scott <nathans@debian.org>  Tue,  3 Sep 2002 09:22:24 +1000
+
 xfsdump (2.1.5-1) unstable; urgency=low
 
   * New upstream release

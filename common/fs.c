@@ -32,6 +32,7 @@
 
 #include <libxfs.h>
 #include <jdm.h>
+#include "config.h"
 
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -212,7 +213,7 @@ fs_mounted( char *typs, char *chrs, char *mnts, uuid_t *idp )
 intgen_t
 fs_getid( char *mnts, uuid_t *idb )
 {
-	xfs_fsop_geom_t geo;
+	xfs_fsop_geom_v1_t geo;
 	int fd;
 
 	fd = open( mnts, O_RDONLY );
@@ -220,7 +221,7 @@ fs_getid( char *mnts, uuid_t *idb )
 		uuid_clear( *idb );
 		return -1;
 	}
-	if ( ioctl(fd, XFS_IOC_FSGEOMETRY, &geo ) ) {
+	if ( ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geo ) ) {
 		uuid_clear( *idb );
 		close(fd);
 		return -1;

@@ -1,3 +1,10 @@
+xfsdump-2.2.0 (03 September 2002)
+	- force use of version 1 XFS geometry ioctl everywhere in xfsdump
+	  package, so that these tools can still work on older kernels
+	  (they don't need the additional information in the new ioctl).
+	- added new config.h.in and configure changes to implement this.
+	- do some additional cleanup after autoconf has run.
+
 xfsdump-2.1.5 (14 August 2002)
 	- minor build fix when using relatively old versions of glibc
 	  which don't provide the SYS_getdents64 symbol.
@@ -18,7 +25,7 @@ xfsdump-2.1.2 (29 July 2002)
 	  with error and if a child did, set the exit_code to EXIT_ERROR.
 
 xfsdump-2.1.1 (04 July 2002)
-	- Build infrastructure updates so that configure options can be
+	- build infrastructure updates so that configure options can be
 	  used to specify paths rather than semi-hard-coded path names
 	  controlled by the ROOT/ROOT_PREFIX environment variables; eg.
 	  now allows /lib64 and /lib32

@@ -32,6 +32,7 @@
 
 #include <libxfs.h>
 #include <jdm.h>
+#include "config.h"
 
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -532,7 +533,7 @@ bool_t
 isinxfs( char *path )
 {
 	intgen_t fd;
-	xfs_fsop_geom_t geo;
+	xfs_fsop_geom_v1_t geo;
 	intgen_t rval;
 	
 	fd = open( path, O_RDONLY );
@@ -543,7 +544,7 @@ isinxfs( char *path )
 		      path );
 		return BOOL_FALSE;
 	}
-        rval = ioctl(fd, XFS_IOC_FSGEOMETRY, &geo);
+        rval = ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geo);
         
 	if ( rval < 0 ) {
 		return BOOL_FALSE;
