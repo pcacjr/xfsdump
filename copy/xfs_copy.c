@@ -1109,7 +1109,8 @@ main(int argc, char **argv)
 
 				fprintf(logerr,
 					_("%s:  using raw device \"%s\"\n"),
-					progname, target_names[i]);
+					progname, target_names[0]);
+
 				fprintf(logerr,
 					_("%s:  continuing...\n"), progname);
 			}
