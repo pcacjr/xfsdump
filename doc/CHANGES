@@ -1,3 +1,10 @@
+xfsdump-1.1.7 (18 October 2001)
+	- xfsrestore -t will no longer fail if the current working
+	  directory is not xfs
+	- xfsrestore will no longer issue (harmless) warnings related
+	  to space pre-allocation if it is writing to a non-xfs
+	  filesystem
+
 xfsdump-1.1.6 (03 October 2001)
 	- get rid of useless stkchk abstraction
 	  (will no longer get stack info messages with -v proc=debug)
