@@ -143,13 +143,15 @@ dnl Checks for UUID header and library.
 AC_CHECK_HEADER(uuid/uuid.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID header.'
-	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
+	echo
+	echo 'Install the Universally Unique Identifiers development package.'
 	exit 1
 ])
 AC_CHECK_LIB(uuid, uuid_generate,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid UUID library.'
-	echo 'Install either the e2fsprogs-devel (rpm) or the uuid-dev (deb) package.'
+	echo
+	echo 'Install the Universally Unique Identifiers library package.'
 	exit 1
 ])
 libuuid="/usr/lib/libuuid.a"
@@ -189,29 +191,33 @@ dnl Checks for base XFS headers and libraries.
 AC_CHECK_HEADER(xfs/libxfs.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS library header.'
-	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo
+	echo 'Install the XFS programs [xfsprogs] development package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_LIB(xfs, libxfs_init,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS base library.'
-	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo
+	echo 'Install the XFS programs [xfsprogs] library package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_HEADER(xfs/handle.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid XFS handle header.'
-	echo 'Install either the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo
+	echo 'Install the XFS programs [xfsprogs] development package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
 AC_CHECK_LIB(handle, attr_list_by_handle,, [
 	echo
 	echo 'FATAL ERROR: could not find a current XFS handle library.'
-	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
-	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
+	echo
+	echo 'Install the XFS programs [xfsprogs] library package.'
+	echo 'Alternatively, run "make install-lib" from the xfsprogs source.'
 	exit 1
 ])
 
@@ -233,7 +239,8 @@ AC_TRY_LINK([#include <libxfs.h>],
 	[ echo ok ],
 	[ echo
 	echo 'FATAL ERROR: could not find needed macros in the XFS headers.'
-	echo 'Upgrade the xfsprogs-devel (rpm) or the xfslibs-dev (deb) package.'
+	echo
+	echo 'Upgrade your XFS programs [xfsprogs] development package.'
 	echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
 	exit 1
 ])
@@ -242,15 +249,17 @@ dnl Checks for the DMAPI library
 AC_CHECK_HEADER(xfs/dmapi.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid DMAPI library header.'
-	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
+	echo
+	echo 'Install the data migration API [dmapi] development package.'
 	echo 'Alternatively, run "make install-dev" from the dmapi source.'
 	exit 1
 ])
 AC_CHECK_LIB(dm, dm_make_handle,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid DMAPI base library.'
-	echo 'Install either the dmapi-devel (rpm) or the dmapi-dev (deb) package.'
-	echo 'Alternatively, run "make install-dev" from the dmapi source.'
+	echo
+	echo 'Install the data migration API [dmapi] library package.'
+	echo 'Alternatively, run "make install" from the dmapi source.'
 	exit 1
 ])
 
@@ -259,18 +268,20 @@ test -f `pwd`/../dmapi/libdm/libdm.la && libdm="`pwd`/../dmapi/libdm/libdm.la"
 test -f /usr/lib/libdm.la && libdm="/usr/lib/libdm.la"
 AC_SUBST(libdm)
 
-dnl Checks for Extended Attributes header and library.
+dnl Checks for extended attributes header and library.
 AC_CHECK_HEADER(attr/attributes.h,, [
 	echo
-	echo 'FATAL ERROR: could not find a valid Extended Attributes header.'
-	echo 'Install either the libattr (rpm) or the attr-dev (deb) package.'
+	echo 'FATAL ERROR: could not find a valid extended attributes header.'
+	echo
+	echo 'Install the extended attributes [attr] development package.'
 	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1
 ])
 AC_CHECK_LIB(attr, attr_get,, [
 	echo
-	echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
-	echo 'Install either the libattr (rpm) or the libattr1 (deb) package.'
+	echo 'FATAL ERROR: could not find a valid extended attributes library.'
+	echo
+	echo 'Install the extended attributes [attr] library package.'
 	echo 'Alternatively, run "make install-lib" from the attr source.'
 	exit 1
 ])
@@ -286,8 +297,9 @@ AC_TRY_LINK([
 #include <attr/attributes.h>],
 	[ int x = ATTR_SHIFT; ],
 	[ echo
-	echo 'FATAL ERROR: incorrect macros present in attributes.h header file.'
-	echo 'Upgrade the attr-devel (rpm) or the attr-dev (deb) package.'
+	echo 'FATAL ERROR: incorrect macros exist in attributes.h header file.'
+	echo
+	echo 'Upgrade the extended attributes [attr] development package.'
 	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1 ],
 	[ echo ok ])
