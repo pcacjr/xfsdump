@@ -1,0 +1,79 @@
+============================================
+Xfsdump/Xfsrestore Troubleshooting Questions
+============================================
+
+SGI Support (relevant for IRIX customers only)
+----------------------------------------------
+* What is the customer support case number?
+* Is there an associated engineering bug number?
+* Do you have any existing contacts within SGI?
+
+General
+-------
+* Have you run xfsdump or xfsrestore before?
+* Is this a new problem?  
+  And if so, what has changed since xfsdump or 
+  xfsrestore last worked correctly?
+
+Operating System (OS)
+---------------------
+* What versions of the OS are you using now and
+  when the dump was made ?
+  (IRIX: uname -Ra or Linux: uname -a, cat /etc/issue)
+* What patches were installed for the OS ?
+* If Linux, what version of the xfsdump package
+  are you using?
+  (rpm -q xfsdump)
+* Is there anything in the /var/adm/SYSLOG file for the period that
+  xfsdump or xfsrestore was run?
+
+
+File System (FS)
+----------------
+* How big is the filesystem being dumped ?
+  (df -kl)
+* Does the filesystem have quotas enabled ?
+  (mount)
+* Is the filesystem managed with DMF ?
+* Does the file system use Security attributes such as ACLs ?
+* Are extended attributes used in the filesystem ?
+* Is the filesystem controlled by CXFS, or the host part of a cluster?
+
+Tape System
+-----------
+* Is TMF or Openvault used to manage the tapes ?  If so, which versions?
+* What kind of tape drive is used ?
+* On IRIX, what kind of tape driver is used - tpsc or ts ?
+  (eg. attr -g _drivername /dev/rmt/tps4d6)
+* Is the drive used in variable or fixed block mode ?
+  (IRIX: look at the path for the tape specification) 
+  (Linux: mt -f /dev/st0 status; and report the blocksize)
+* How many tapes were used for the dump ?
+
+Dump/restore commands
+---------------------
+* What was the xfsdump/xfsrestore command lines used ?
+* What was the output from the commands ?
+* If the FS is not too large,
+  what is the output with the -v5 option ?
+* How big was the dump ?
+* What drive strategy was used in the commands?
+  (xfsdump -v3 ... |grep "instantiat")
+  (xfsrestore -v3 ... |grep "instantiat")
+  If you have the -v5 output, then just grep for "instantiat".
+* If dumping/restoring to/from a remote host, 
+  what is the OS version of that host?
+* If xfsdump/xfsrestore seem to take a really long time, use the -p
+  option to get progress output.
+* What is the output of 'xfsdump -I' ?
+
+
+Misc
+----
+* If the problem is related to files not being dumped or restored, and
+  you know the inode numbers from the xfsdump/xfsrestore output, what
+  files are they associated with?
+  (IRIX: xfs_ncheck -i <ino /dev/dsk/<disk_device)
+  (Linux: find /<mntpt -local -inum <ino )
+
+---------------------------------------------------------------------------

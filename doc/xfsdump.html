@@ -1,0 +1,1261 @@
+<html>
+<head><title>xfsdump Internals</title> </head>
+<body bgcolor="#ffffff">
+
+<h2>xfsdump Internals<br></h2>
+<hr>
+
+<h3>Table Of Contents</h3>
+<ul>
+  <li><a href="caveat">Linux Caveats</a>
+  <li><a href="#control_flow">Control Flow of xfsdump</a>
+  <ul>
+    <li><a href="#run_time_structure">Run Time Structure</a>
+    <li><a href="#main">Main</a>
+    <ul>
+      <li><a href="#drive_init1">drive_init1</a> 
+      <li><a href="#content_init">content_init</a> 
+    </ul>
+    <li><a href="#dump_tape">Dumping to Tape</a>
+    <ul>
+       <li><a href="#content_stream_dump">content_stream_dump</a>
+       <li><a href="#dump_file_reg">dump_file_reg</a>
+    </ul>
+  </ul>
+  <li><a href="#dump_format">Dump Format</a>
+  <ul>
+    <li><a href="#media_files">Media Files</a>
+    <li><a href="#inode_map">Inode Map</a>
+    <li><a href="#dirs">Directories</a>
+    <li><a href="#non_dirs">Non-directory files</a>
+  </ul>
+  <li><a href="#tape_format">Format on Tape</a>
+  <li><a href="#reg_split">Splitting a Regular File</a>
+  <ul>
+    <li><a href="#split_mstream">Splitting a dump over multiple streams</a>
+    <li><a href="#partial_reg">Partial Registry</a>
+  </ul>
+  <li><a href="#dirent_tree">Restore's directory entry tree</a>
+  <li><a href="#cum_restore">Cumulative Restore</a>
+  <li><a href="#Q&A">Questions and Answers</a>
+  <ul>
+    <li><a href="#DMF">How is -a and -z handled by xfsdump ?</a>
+    <li><a href="#dump_size_est">How does it compute estimated dump size ?</a>
+    <li><a href="#dump_size_ac">Is the dump size message accurate ?</a>
+  </ul>
+  <li><a href="#out_quest">Outstanding Questions</a>
+
+</ul>
+
+<hr>
+<h3><a name="caveat">Linux Caveats</a></h3>
+These notes are written for xfsdump and xfsrestore in IRIX. Therefore,
+it refers to some features that aren't supported in Linux.
+For example, the references to multiple streams/threads/drives do not
+pertain to xfsdump/xfsrestore in Linux. Also, the DMF support in xfsdump
+is not yet useful for Linux. 
+
+<hr>
+<h3><a name="control_flow">Control Flow of xfsdump</a></h3>
+
+<h4><a name="run_time_structure">Run Time Structure</a></h4>
+
+This section reviews the run time structure and failure handling in 
+dump/restore (see IRIX PV 784355).
+
+The diagram below gives a schematic of the runtime structure
+of a dump/restore session to multiple drives.
+<p>
+<pre>
+
+1.           main process	main.c
+	       /  |   \
+	      /   |    \
+2.	stream  stream  stream	dump/content.c restore/content.c
+       manager  manager manager
+	   |      |      |
+3.	 drive  drive   drive	common/drive.[hc]
+	object  object  object
+	   |      |      |
+4.	   O      O      O	ring buffers common/ring.[ch]
+           |      |      |
+5.	 slave  slave   slave	ring_create(... ring_slave_entry ...)
+	thread  thread  thread
+	   |      |      |
+6.	 drive  drive   drive	physical drives
+	device  device  device
+
+</pre>
+<p>
+Each stream is broken into two threads of control: a stream manager;
+and a drive manager. The drive manager provides an abstraction of the
+tape device that allows multiple classes of device to be handled
+(including normal files). The stream manager implements the actual
+dump or restore functionality. The main process and stream managers
+interact with the drive managers through a set of device ops
+(e.g.: do_write, do_set_mark, ... etc).
+<p>
+The process hierachy is shown above. main() first initialises
+the drive managers with calls to the drive_init functions. In
+addition to choosing and assigning drive strategies and ops for each
+drive object, the drive managers intialise a ring buffer and (for
+devices other than simple UNIX files) sproc off a slave thread that
+that handles IO to the tape device. This initialisation happens in the
+drive_manager code and is not directly visible from main().
+<p>
+main() takes direct responsibility for initialising the stream
+managers, calling the child management facility to perform the
+sprocs. Each child begins execution in childmain(), runs either
+content_stream_dump or content_stream_restore and exits with the
+return code from these functions.
+<p>
+Both the stream manager processes and the drive manager slaves
+set their signal disposition to ignore HUP, INT, QUIT, PIPE,
+ALRM, CLD (and for the stream manager TERM as well).
+<p>
+The drive manager slave processes are much simpler, and are
+initialised with a call to ring_create, and begin execution in
+ring_slave_func. The ring structure must also be initialised with
+two ops that are called by the spawned thread: a ring read op, and a write op.
+The stream manager communicates with the tape manager across this ring
+structure using Ring_put's and Ring_get's.
+<p>
+The slave thread sits in a loop processing messages that come across
+the ring buffer. It ignores signals and does not terminate until it
+receives a RING_OP_DIE message. It then exits 0.
+<p>
+The main process sleeps waiting for any of its children to die
+(ie. waiting for a SIGCLD). All children that it cares about (stream
+managers and ring buffer slaves) are registered through the child
+manager abstraction. When a child dies wait status and other info is
+stored with its entry in the child manager. main() ignores the deaths
+of children (and grandchildren) that are not registered through the child
+manager. The return status of these subprocesses is checked
+and in the case of an error is used to determine the overall exit code.
+<p>
+We do not expect slave threads to ever die unexpectedly: they ignore
+most signals and only exit when they receive a RING_OP_DIE at which
+point they drop out of the message processing loop and always signal success.
+<p>
+Thus the only child processes that can affect the return status of
+dump or restore are the stream managers, and these processes take
+their exit status from the values returned by content_stream_dump and
+content_stream_restore.
+
+<h4><a name="main">Main</a></h4>
+
+<pre>
+* <b><a name="drive_init1">drive_init1</a></b> - initialize drive manager for each stream
+  - go thru cmd options looking for -f device
+  - each device requires a drive-manager and hence an sproc 
+    (sproc = IRIX lightweight process)
+  - if supposed to run single threaded then can only
+    support one device
+
+  - ?? each drive but drive-0 can complete file from other stream
+  - allocate drive structures for each one -f d1,d2,d3
+  - if "-" specified for std out then only one drive allowed
+
+  - for each drive it tries to pick best strategy manager
+    - there are 3 strategies 
+      1) simple - for dump on file
+      2) scsitape - for dump on tape
+      3) minrmt - minimal protocol for remote tape (non-SGI)
+    - for given drive it is scored by each strategy given
+      the drive record which basically has device name,
+      and args
+    - set drive's strategy to the best one and
+      set its strategy's mark separation and media file size
+    - instantiate the strategy
+      - set flags given the args
+      - for drive_scsitape/ds_instantiate
+	  - if single-threaded then allocate a buffer of
+	    STAPE_MAX_RECSZ page aligned
+	  - otherwise, create a ring buffer
+      - note if remote tape (has ":" in name)
+      - set capabilities of BSF, FSF, etc.
+
+* <b>create global header</b> 
+  - store magic#, version, date, hostid, uuid, hostname
+  - process args for session-id, dump-label, ...
+
+* if have sprocs, then install signal handlers and hold the
+  signals (don't deliver but keep 'em pending)
+
+* <b><a name="content_init">content_init</a></b>
+
+  * inomap_build() - stores stream start-points and builds inode map
+
+  - <b>phase1</b>: parsing subtree selections (specified by -s options) 
+    <b>INPUT</b>: 
+	- sub directory entries (from -s)
+    <b>FLOW</b>:
+	- go thru each subtree and 
+	  call diriter(callback=subtreelist_parse_cb)
+	  - diriter on subtreelist_parse_cb  
+	    - open_by_handle() on dir handle
+	    - getdents()
+	    - go thru each entry
+		- bulkstat for given entry inode
+		- gets stat buf for callback - use inode# and mode (type)
+		- call callback (subtreelist_parse_cb())
+	  * subtreelist_parse_cb
+	    - ensure arg subpath matches dir.entry subpath
+	    - if so then add to subtreelist
+	    - recurse thru rest of subpaths (i.e. each dir in path)
+    <b>OUTPUT</b>:
+	- linked list of inogrp_t = pagesize of inode nums
+	- list of inodes corresponding to subtree path names
+
+  - premptchk: progress report, return if got a signal
+  
+  - <b>phase2</b>: creating inode map (initial dump list)
+    <b>INPUT</b>: 
+      - bulkstat records on all the inodes in the file system
+    <b>FLOW</b>:
+      - bigstat_init on cb_add()
+	  - loops doing bulkstats (using syssgi() or ioctl())
+	    until system call returns non-zero value
+	  - each bulkstat returns a buffer of xfs_bstat_t records
+	    (buffer of size bulkreq.ocount)
+	  - loop thru each xfs_bstat_t record for an inode  
+	    calling cb_add()
+	  * cb_add
+	    - looks at latest mtime|ctime and 
+	      if inode is resumed:
+		 compares with cb_resumetime for change 
+	      if have cb_last:
+		 compares with cb_lasttime for change
+	    - add inode to map (map_add) and note if has changed or not
+	    - call with state of either 
+		changed - MAP_DIR_CHANGE, MAP_NDR_CHANGE
+		not changed - MAP_DIR_SUPPRT or MAP_NDR_NOCHNG
+	    - for changed non-dir REG inode, 
+	      data size for its dump is added by bs_blocks * bs_blksize
+	    - for non-changed dir, it sets flag for &lt;pruneneeded&gt;
+	      => we don't want to process this later !
+	  * map_add
+	    - segment = &lt;base, 64-low, 64-mid, 64-high&gt;
+		      = like 64 * 3-bit values (use 0-5)
+		      i.e. for 64 inodes, given start inode number
+		#define MAP_INO_UNUSED  0 /* ino not in use by fs - 
+                                             Used for lookup failure */
+		#define MAP_DIR_NOCHNG  1 /* dir, ino in use by fs, 
+                                             but not dumped */
+		#define MAP_NDR_NOCHNG  2 /* non-dir, ino in use by fs, 
+                                             but not dumped */
+		#define MAP_DIR_CHANGE  3 /* dir, changed since last dump */
+
+		#define MAP_NDR_CHANGE  4 /* non-dir, changed since last dump */
+
+		#define MAP_DIR_SUPPRT  5 /* dir, unchanged 
+                                             but needed for hierarchy */
+		- hunk = 4 pages worth of segments, max inode#, next ptr in list
+	    - i.e. map = linked list of 4 pages of segments of 64 inode states
+    <b>OUTPUT</b>:
+	- inode map = list of all inodes of file system and 
+	  for each one there is an associated state variable
+	  describing type of inode and whether it has changed
+	- the inode numbers are stored in chunks of 64 
+	  (with only the base inode number explicitly stored)
+
+  - premptchk: progress report, return if got a signal
+
+  - if &lt;pruneneeded&gt; (i.e. non-changed dirs) OR subtrees specified (-s)
+    - <b>phase3</b>:  pruning inode map (pruning unneeded subtrees) 
+	<b>INPUT</b>:
+	    - subtree list
+	    - inode map
+	<b>FLOW</b>:
+	- bigstat_iter on cb_prune() per inode
+	* cb_prune
+	  - if have subtrees and subtree list contains inode
+	    -> need to traverse every group (inogrp_t) and 
+               every page of inode#s
+	    - diriter on cb_count_in_subtreelist
+	      * cb_count_in_subtreelist:
+	      - looks up each inode# (in directory iteration) in subtreelist
+	      - if exists then increment counter
+	    - if at least one inode in list 
+	      - diriter on cb_cond_del
+	      * cb_cond_del:
+            - TODO
+
+	<b>OUTPUT</b>:
+            - TODO
+
+- TODO: phase4 and phase5
+
+- if single-threaded (miniroot or pipeline) then
+    * drive_init2
+	- for each drive
+	    * drive_allochdrs
+	    * do_init
+    * <b>content_stream_dump</b>
+    - return
+
+- else (multithreaded std. case)
+    * drive_init2 (see above)
+    * drive_init3
+	- for each drive
+	    * do_sync
+    - for each stream create a child manager
+	* cldmgr_create
+	    * childmain
+		* <b>content_stream_dump</b>
+		* do_quit
+
+- loop waiting for children to die
+* content_complete
+
+</pre>
+
+<hr>
+<h4><a name="dump_tape">Dumping to Tape</a></h4>
+
+<pre>
+* <b><a name="content_stream_dump">content_stream_dump</a></b>
+  * Media_mfile_begin
+    write out global header (includes media header; see below)
+
+  - loop dumping media files
+    * inomap_dump()
+      - dumps out the linked list of hunks of state maps of inodes
+
+    * dump_dirs()
+      - bulkstat through all inodes of file system
+
+      * dump_dir()
+        - lookup inode# in inode map
+        - if state is UNSUSED or NOCHANGED then skip inode dump
+        - jdm_open() = open_by_handle() on directory
+        * dump_filehdr()
+          - write out 256 padded file header
+          - header = &lt;offset, flags, checksum, 128-byte bulk stat structure &gt;
+          - bulkstat struct derived from xfs_bstat_t 
+            - stnd. stat stuff + extent size, #of extents, DMI stuff
+          - if EXTATTR and HSM context then 
+            - modify bstat struct to make it offline
+        - loops calling getdents()
+          - does a bulkstat or bulkstat-single of dir inode 
+          * dump_dirent()
+            - fill in direnthdr_t record
+            - &lt;ino, gen & DENTGENMASK, record size, 
+                  checksum, variable length name (8-char padded)&gt;
+              - gen is from statbuf.bs_gen
+            - write out record 
+        - dump null direnthdr_t record
+        - if EXTATTR and dumpextattr flag on and it 
+          has extended attributes (check bs_xflags)
+          * dump_extattrs 
+            * dump_filehdr() with flags of FILEHDR_FLAGS_EXTATTR
+              - for root and non-root attributes
+                - get attribute list (attr_list_by_handle())
+            * dump_extattr_list
+              - TODO
+
+    - bigstat iter on dump_file()
+      - go thru each inode in file system and apply dump_file 
+      * dump_file()
+	- if file's inode# is less than the start-point then skip it
+	  -> presume other sproc handling dumping of that inode
+	- if file's inode# is greater than the end-point then stop the loop
+	- look-up inode# in inode map
+	- if not in inode-map OR hasn't changed then skip it
+	- elsif stat is NOT a non-dir then we have an error
+	- if EXTATTR and have an hsm context then initialize context 
+	- call dump function depending on file type (S_IFREG, S_IFCHR, etc.)
+
+	  * <b>dump_file_reg</b> (for S_IFREG):
+	    -> see below
+
+	  * dump_file_spec (for S_IFCHAR|BLK|FIFO|NAM|LNK|SOCK):
+	    - dump file header
+	    - if file is S_IFLNK (symlink) then
+	      - read link by handle into buffer
+	      - dump extent header of type, EXTENTHDR_TYPE_DATA
+	      - write out link buffer (i.e. symlink string)
+
+	  - if EXTATTR and dumpextattr flag on and it 
+	    has extended attributes (check bs_xflags)
+	    * dump_extattrs (see the same call in the dir case above)
+
+    - set mark
+
+    - if haven't hit EOM (end of media) then
+      - write out null file header
+      - set mark
+
+    - end media file by do_end_write()
+
+    - if got an inventory stream then
+      * inv_put_mediafile
+	- create an inventory-media-file struct (invt_mediafile_t)
+	  - &lt; media-obj-id, label, index, start-ino#, start-offset, 
+		 end-ino#, end-offset, size = #recs in media file, flag &gt;
+	* stobj_put_mediafile
+
+  - end of loop of media file dumping
+  - lock and increment the thread done count
+
+  - if dump supports multiple media files (tapes do but dump-files don't) then
+    - if multi-threaded then 
+      - wait for all threads to have finished dumping
+        (loops sleeping for 1 second each iter)
+    * dump_session_inv
+      * inv_get_sessioninfo
+        (get inventory session data buffer)
+        * stobj_get_sessinfo
+        * stobj_pack_sessinfo
+      * Media_mfile_begin
+      - write out inventory buffer
+      * Media_mfile_end
+      * inv_put_mediafile (as described above)
+    * dump_terminator
+      * Media_mfile_begin
+      * Media_mfile_end
+</pre>
+<hr>
+
+<pre>
+* <b><a name="dump_file_reg">dump_file_reg</a></b> (for S_IFREG):
+  - if this is the start inode, then set the start offset
+  - fixup offset for resumed dump
+  * init_extent_group_context 
+    - init context - reset getbmapx struct fields with offset=0, len=-1
+    - open file by handle 
+    - ensure Mandatory lock not set
+  - loop dumping extent group
+    - dump file header
+    * dump_extent_group() [content.c]
+      - set up realtime I/O size
+      - loop over all extents
+	- dump extent
+	  - stop if we reach stop-offset
+	  - stop if offset is past file size i.e. reached end
+	  - stop if exceeded per-extent size
+
+	  - if next-bmap is at or past end-bmap then get a bmap
+	    - fcntl( gcp->eg_fd, F_GETBMAPX, gcp->eg_bmap[] )
+	    - if EXTATTR and have an hsm context then
+	      - call HsmModifyExtentMap()
+	    - next-bmap = eg_bmap[1]
+	    - end-bmap = eg_bmap[eg_bmap[0].bmv_entries+1]
+
+	  - if bmap entry is a hole (bmv_block == -1) then
+	    - if EXTATTR and dumping ext.attributes then
+	      - dump extent header with bmap's offset, 
+		extent-size and type EXTENTHDR_TYPE_HOLE
+
+	    - move onto next bmap
+	      - if bmap's (offset + len)*512 > next-offset then 
+		update next-offset to this
+	      - inc ptr
+
+	  - if bmap entry has zero length then
+	    - move onto next bmap
+
+	  - get extsz and offset from bmap's bmv_offset*512 and bmv_length*512
+
+	  - about 8 different conditions to test for
+	    - cause function to return OR
+	    - cause extent size to change OR...
+
+	  - if realtime or extent at least a PAGE worth then
+	    - align write buffer to a page boundary
+	    - dump extent header of type, EXTENTHDR_TYPE_ALIGN
+
+	  - dump extent header of type, EXTENTHDR_TYPE_DATA
+	  - loop thru extent data to write extsz worth of bytes
+	    - ask for a write buffer of extsz but get back actualsz
+	    - lseek to offset
+	    - read data of actualsz from file into buffer
+	    - write out buffer
+	    - if at end of file and have left over space in the extent then
+	      - pad out the rest of the extent 
+	    - if next offset is at or past next-bmap's offset+len then
+	      - move onto next bmap
+    - dump null extent header of type, EXTENTHDR_TYPE_LAST
+    - update bytecount and media file size
+  - close the file
+
+</pre>
+
+<hr>
+<h3><a name="dump_format">Dump Format</a></h3>
+
+The dump format is the layout of the data for storage in a dump.
+This is mostly done at an abstraction above the media dump format
+(tape or data file).
+The tape format, for example, will have extra header records.
+The tape format will be done in multiple media files, whereas
+the data file format will use 1 media file.
+<p>
+
+
+<h4><a name="media_files">Media Files</a></h4>
+<img src="media_files.gif">
+<p>
+Media files are probably used to provide a way of
+recovering more data in xfsrestore(1) should there be
+some media error. They provide a self-contained unit
+for restoration.
+If the dump media is a disk file (drive_simple.c) then I
+believe that only one media-file is used. Whereas on tape
+media, multiple media files are used depending upon the size
+of the media file. The size of the media file is set depending
+on the drive type: QIC: 50Mb; DAT: 4Mb; Exabyte: 2Gb; DLT: 4Gb;
+others: 256Mb. This value is likely to be changable via a command-line
+option in the future. Also, on tape, the dump is finished by an inventory
+media file followed by a terminating null media file.
+<p>
+A global header is placed at the start of each media file.
+<hr>
+<img src="global_hdr.gif" align=right>
+<pre>
+<b>global_hdr_t</b> (4K bytes)
+magic# = "xFSdump0"
+version#
+checksum
+time of dump
+ip address
+dump id
+hostname
+dump label
+pad to 1K bytes
+<b>drive_hdr_t</b> (3K bytes)
+    drive count
+    drive index
+    strategy id = on-file, on-tape, on-rmt-tape
+    pad to 512 bytes
+
+    specific (512 bytes)
+        tape:
+	    <b>rec_hdr</b>
+	    magic# - tape magic = 0x13579bdf02468acell
+	    version#
+	    block size
+	    record size
+	    drive capabilities
+	    record's byte offset in media file
+	    byte offset of rirst mark set
+	    size (bytes) of record containing user data
+	    checksum (if -C used)
+	    ischecksum (= 1 if -C used)
+	    dump uuid
+	    pad to 512 bytes
+
+    upper: (2K bytes)
+	<b>media_hdr_t</b>
+	media-label
+	previous media-label
+	media-id
+	previous media-id
+	5 media indexes - (indices of object/file within stream/media-object)
+	strategy id = on-file, on-tape, on-rmt-tape
+	strategy specific data:
+	  field to denote if media file is a terminator (old fmt)
+	upper: (to 2K) 
+</pre>
+<hr>
+   
+
+<h4><a name="inode_map">Inode Map</a></h4>
+<img src="inode_map.gif">
+
+
+<h4><a name="dirs">Directories</a></h4>
+<img src="directories.gif">
+
+
+<h4><a name="non_dirs">Non-directory files</a></h4>
+<img src="files.gif">
+<br>
+Regular files, as can be seen from above, have a list
+of extents followed by the file's extended attributes.
+If the file is large and/or the dump is to multiple streams,
+then the file can be dumped in multiple records or extent groups.
+(See <a href="#reg_split">Splitting a Regular File</a>).
+
+<h3><a name="tape_format">Format on Tape</a></h3>
+At the beginning of each tape record is a header. However, for
+the first record of a media file, the record header is buried
+inside the global header at byte offset 1536 (1K + 512), as is shown in 
+the global header diagram. 
+Reproduced again:
+<pre>
+<b>rec_hdr</b>
+magic# - tape magic = 0x13579bdf02468acell
+version#
+block-size
+record-size
+drive capabilities
+record's byte offset in media file
+byte offset of rirst mark set
+size (bytes) of record containing user data
+checksum (if -C used)
+ischecksum (= 1 if -C used)
+dump uuid
+pad to 512 bytes
+</pre>
+<p>
+I can not see where the block-size ("tape_blksz") is ever used !  
+The record-size ("tape_recsz") is used as the byte count to do
+the actual write and read system calls.
+<p>
+There is another layer of s/ware for the actual data on the tape.
+Although, one may write out an inode-map or directory entries,
+one doesn't just give these record buffers straight to the 
+write system call to write out. Instead, these data objects are
+written to buffers (akin to &lt;stdio&gt). Another thread reads
+from these buffers (unless its running single-threaded) and writes
+them to tape.
+Specifically, inside a loop,
+one calls <b>do_get_write_buf</b>,
+copies over the data one wants stored and then 
+calls <b>do_write_buf</b>, until the entire data buffer
+has been copied over.
+
+<h3><a name="reg_split">Splitting a Regular File</a></h3>
+If a regular file is greater than 16Mb 
+(maxextentcnt = drivep->d_recmarksep 
+              = recommended max. separation between marks), 
+then it is broken up into multiple extent groups each with their 
+own filehdr_t's.
+A regular file can also be split, if we are dumping to multiple
+streams and the file would span the stream boundary.
+
+<h4><a name="split_mstream">Splitting a dump over multiple streams</a></h4>
+If one is dumping to multiple streams, then xfsdump calculates an
+estimate of the dump size and divides by the number of streams to
+determine how much data we should allocate for a stream. 
+The inodes are processed in order from <i>bulkstat</i> in the function 
+<i>cb_startpt</i>. Thus we start allocating inodes to the first stream
+until we reach the allocated amount and then need to decide how to
+proceed on to the next stream. At this point we have 3 actions:
+<dl>
+<dt>Hold
+<dd>Include this file in the current stream.
+<dt>Bump 
+<dd>Start a new stream beginning with this file.
+<dt>Split
+<dd>Split this file across 2 streams in different extent groups.
+</dl>
+
+<p>
+<img src="split_algorithm.gif">
+<p>
+
+<h4><a name="partial_reg">Partial Registry</a></h4>
+
+The partial registry is a data structure used in <i>xfsrestore</i> 
+for ensuring that files which have been split into multiple extent groups, 
+do not restore the extended attributes until the entire file has been
+restored. The reason for this is apparently so that DMAPI attributes
+aren't restored until we have the complete file. Each extent group dumped
+has the identical copy of the extended attributes (EAs) for that file, 
+thus without this data-structure we could apply the first EAs we come across.
+<p>
+The data structure is of the form:
+<pre>
+Array of M entries:
+-------------------
+0: inode#
+   Array for each drive
+     drive1: <start-offset> <end-offset>
+     ...
+     driveN: <start-offset> <end-offset>
+-------------------
+1: inode#
+   Array for each drive
+-------------------
+2: inode#
+   Array for each drive
+-------------------
+...
+-------------------
+M-1: inode#
+     Array for each drive
+-------------------
+
+Where N = number of drives (streams); M = 2 * N - 1
+</pre>
+
+There can only be 2*N-1 entries for the partial registry because
+each stream can contribute an entry for its current inode and
+one for a previous inode which is split - except for the 1st inode
+which cannot have a previous split.
+<pre>
+      stream 1        stream 2         stream 3      ...  stream N
+  |---------------|----------------|-------------------|------------|
+  |            ------   -----   ------   -----      -------  -----  |
+  |            C  | P     C        | P     C           |  P    C    |
+  |---------------|----------------|-------------------|------------|
+
+       current       prev.+curr.        prev.+curr.      prev.+curr.
+
+Where C = current; P = previous
+</pre>
+
+So if an extent group is processed which doesn't cover the whole file,
+then it the extent range for this file is updated with the partial
+registry. If the file doesn't exist in the array then a new entry is
+added. If the file does exist in the array then the extent group for
+the given drive is updated. It is worth remembering that one drive
+(stream) can have multiple extent groups (if it is >16Mb) in which 
+case the extent group is just extended (they are split up in order). 
+<p>
+A bug was discovered in this area of code, for <i>DMF offline</i> files
+which have an associated file size but no data blocks allocated and
+thus no extents. The Offline files were wrongly added to the partial
+registry because on restore they did not complete the size of the
+file (because they are offline!). These type of files which do not
+restore data is now special cased.
+<p>
+
+<h3><a name="dirent_tree">Restore's directory entry tree</a></h3>
+As can be seen in the directory dump format above, part of the dump
+consists of directories and their associated directory entries.
+The other part consists of the files which are just identified by
+their inode# which is sourced from <i>bulkstat</i> during the dump.
+When restoring a dump, the first step is reconstructing the
+tree of directory nodes. This tree can then be used to associate
+the file with it's directory and so restored to the correct location
+in the directory structure.
+<p>
+The tree is a mmap'ed file called <b>xfsrestorehousekeepingdir/tree</b>.
+Different sections of it will be mmap'ed separately.
+It is of the following format:
+<pre>
+--------------------
+|  Tree Header     |
+|  (pgsz = 16K)    |
+--------------------
+|  Hash Table      |
+--------------------
+|  Node Header     |
+|  (pgsz = 16K)    |
+--------------------
+|  Node Segment#1  |
+--------------------
+|  ...             |
+|                  |
+--------------------
+|  Node Segment#N  |
+--------------------
+</pre>
+
+<p>
+The tree header is described by restore/tree.c/treePersStorage,
+and it has such things as pointers to the root of the tree and
+the size of the hash table.
+<pre>
+        ino64_t p_rootino - ino of root
+        nh_t p_rooth - handle of root node
+        nh_t p_orphh - handle to orphanage node
+        size64_t p_hashsz - size of hash array
+        size_t p_hashmask - hash mask (private to hash abstraction)
+        bool_t p_ownerpr - whether to restore directory owner/group attributes
+        bool_t p_fullpr - whether restoring a full level 0 non-resumed dump
+        bool_t p_ignoreorphpr - set if positive subtree or interactive
+        bool_t p_restoredmpr - restore DMI event settings
+</pre>
+<p>
+The hash table maps the inode number to the tree node. It is a
+chained hash table with the "next" link stored in the tree node
+in the <i>n_hashh</i> field of struct node in restore/tree.c.
+The size of the hash table is based on the number of directories
+and non-directories (which will approximate the number of directory
+entries - won't include extra hard links). The size of the table 
+is capped below at 1 page and capped above at virtual-memory-limit/4/8
+(i.e. vmsz/32) or the range of 2^32 whichever is the smaller.
+<p>
+The node header is described by restore/node.c/node_hdr_t and
+it contains fields to help in the allocation of nodes.
+<pre>
+        size_t nh_nodesz -  internal node size
+        ix_t nh_nodehkix -
+        size_t nh_nodesperseg - num nodes per segment
+        size_t nh_segsz - size in bytes of segment
+        size_t nh_winmapmax - maximum number of windows
+                              based on using up to vmsz/4
+        size_t nh_nodealignsz - node alignment
+        nix_t nh_freenix - pointer to singly linked freelist
+        off64_t nh_firstsegoff - offset to 1st segment
+        off64_t nh_virgsegreloff - (see diagram)
+                 offset (relative to beginning of first segment) into
+                 backing store of segment containing one or
+                 more virgin nodes. relative to beginning of segmented
+                 portion of backing store. bumped only when all of the
+                 nodes in the segment have been placed on the free list.
+                 when bumped, nh_virginrelnix is simultaneously set back
+                 to zero.
+        nix_t nh_virgrelnix - (see diagram)
+                 relative node index within the segment identified by
+                 nh_virgsegreloff of the next node not yet placed on the
+                 free list. never reaches nh_nodesperseg: instead set
+                 to zero and bump nh_virgsegreloff by one segment.
+</pre>
+<p>
+All the directory entries are stored in a node segment. Each segment
+holds around 1 million nodes (NODESPERSEGMIN). The value is greater
+because the size in bytes must be a multiple of the node size and
+the page size. I have proposed a <i>-w</i> option which bases the
+initial number of nodes around dircnt+nondircnt in an attempt to
+fit most of the entries into 1 segment. 
+<p>
+Each segment is mmap'ed separately. In fact, the actual allocation
+of nodes is handled by a few abstractions.
+There is a <b>node abstraction</b> and a <b>window abstraction</b>.
+At the node abstraction when one wants to allocate a node
+using <i><b>node_alloc()</b></i>, one first checks the free-list of
+nodes. If the free list is empty then a new window is mapped and
+a chunk of 8192 nodes are put on the free list by linking
+each node using the first 8 bytes (ignoring node fields).
+<p>
+<pre>
+
+  SEGMENT (default was about 1 million nodes)
+|----------|
+| |------| |
+| |      | |
+| | 8192 | |
+| | nodes| |   nodes already used in tree
+| | used | | 
+| |      | | 
+| |------| |
+|          |
+| |------| |     
+| |   --------| <-----nh_freenix (ptr to node-freelist)
+| |node1 | |  |
+| |------| |  | node-freelist (linked list of free nodes) 
+| |   ----<---| 
+| |node2 | |
+| |------| |
+............
+|----------|
+
+
+</pre>
+
+
+<h4><a name="win_abs">Window Abstraction</a></h4>
+The window abstraction manages the mapping and unmapping of the 
+segments (of nodes) of the dirent tree.
+In the node allocation, mentioned above, if our node-freelist is
+empty we call <i><b>win_map()</b></i> to map in a chunk of 8192 nodes
+for the node-freelist.
+<p>
+Consider the <i><b>win_map</b>(offset, return_memptr)</i> function:
+<pre>
+One is asking for an offset within a segment.
+It looks up its <i>bag</i> for the segment (given the offset), and 
+if it's already mapped then 
+    if the window has a refcnt of zero, then remove it from the win-freelist
+    it uses that address within the mmap region and
+    increments refcnt.
+else if it's not in the bag then
+    if win-freelist is not empty then
+        munmap the oldest mapped segment
+	remove head of win-freelist
+        remove the old window from the bag 
+    else /* empty free-list */
+        allocate a new window
+    endif
+    mmap the segment
+    increment refcnt
+    insert window into bag of mapped segments
+endif
+</pre>
+<p>
+The window abstraction maintains an LRU win-freelist not to be
+confused with the node-freelist. The win-freelist consists
+of windows (stored in a bag) which are doubly linked ordered by
+the time they were used.
+Whereas the node-freelist, is used to get a new node
+in the node allocation.
+<p>
+Note that the windows are stored in 2 lists. They are doubly
+linked in the LRU win-freelist and are also stored in a <i>bag</i>.
+A bag is just a doubly linked searchable list where
+the elements are allocated using <i>calloc()</i>. 
+It uses the bag as a container of mmaped windows which can be
+searched using the bag key of window-offset. 
+<pre>
+
+BAG:  |--------|     |--------|     |--------|     |--------|     |-------|
+      | win A  |<--->| win B  |<--->| win C  |<--->| win D  |<--->| win E |
+      | ref=2  |     | ref=1  |     | ref=0  |     | ref=0  |     | ref=0 |
+      | offset |     | offset |     | offset |     | offset |     | offset|
+      |--------|     |--------|     |--------|     |--------|     |-------|
+                                      ^                               ^
+                                      |                               |
+                                      |                               |
+                     |----------------|       |-----------------------|
+LRU             |----|---|               |----|---|
+win-freelist:   | oldest |               | 2nd    |
+                | winptr |<------------->| oldest |<----....
+                |        |               | winptr |
+                |--------|               |--------|
+
+</pre>
+
+<p>
+<b>Call Chain</b><br>
+
+Below are some call chain scenarios of how the allocation of 
+dirent tree nodes are done at different stages.
+<p>
+<pre>
+1st time we allocate a dirent node:
+
+applydirdump()
+  Go thru each directory entry (dirent)
+    tree_addent()
+      if new entry then
+         Node_alloc()
+           node_alloc()
+             win_map()
+               mmap 1st segment/window
+               insert win into bag
+	       refcnt++
+             make node-freelist of 8192 nodes (linked list)
+             remove list node from freelist
+             win_unmap()
+               refcnt--
+               put win on win-freelist (as refcnt==0)
+             return node
+
+2nd time we call tree_addent():
+
+      if new entry then
+         Node_alloc()
+           node_alloc()
+             get node off node-freelist (8190 nodes left now)
+             return node
+ 
+8193th time when we have used up 8192 nodes and node-freelist is emtpy:
+
+      if new entry then
+         Node_alloc()
+           node_alloc()
+             there is no node left on node-freelist
+             win_map at the address after the old node-freelist
+               find this segment in bag
+                 refcnt==0, so remove from LRU win-freelist
+                 refcnt++
+                 return addr
+             make a node-freelist of 8192 nodes from where left off last time
+             win_unmap 
+               refcnt--
+               put on LRU win-freelist as refcnt==0
+             get node off node-freelist (8191 nodes left now)
+             return node
+             
+When whole segment used up and thus all remaining node-freelist 
+nodes are gone then
+(i.e. in old scheme would have used up all 1 million nodes
+ from first segment):
+
+      if new entry then
+         Node_alloc()
+           node_alloc()
+             if no node-freelist then
+               win_map()
+                 new segment not already mapped
+                 LRU win-freelist is not empty (we have 1st segment)
+                 remove head from LRU win-freelist
+                 remove win from bag
+                 munmap its segment
+                 mmap the new segment
+                 add to bag
+                 refcnt++
+               make a new node-freelist of 8192 nodes
+               win_unmap()
+                 refcnt--
+                 put on LRU win-freelist as refcnt==0
+               get node off node-freelist (8191 nodes left now)
+               return node
+
+</pre>
+
+Pseudo-code of snippets of directory tree creation functions (from notes).
+Gives one an idea of the flow of control for processing dirents
+and adding to the tree and other auxiliary structures:
+<pre>
+
+<b>content_stream_restore</b>()
+  ...
+  Get next media file
+  dirattr_init() - initialize directory attribute structure
+  namereg_init() - initialize name registry structure
+  tree_init() - initialize dirent tree
+  applydirdump() - process the directory dump and create tree - see below
+  treepost() - tree post processing where mkdirs happen
+  ...
+
+<b>applydirdump</b>()
+  ...
+  inomap_restore_pers() - read ino map 
+  read directories and their entries
+    loop 'til null hdr
+       dirh = tree_begindir(fhdr, dah) - process dir filehdr
+       loop 'til null entry
+         rv = read_dirent()
+         tree_addent(dirh, dhdrp->dh_ino, dh_gen, dh_name, namelen)
+       endloop
+       tree_enddir(dirh)
+    endloop
+  ...
+
+<b>tree_beginddir</b>(fhdrp - fileheader, dahp - dirattrhandle)
+  ...
+  ino = fhdrp->fh_stat.bs_ino
+  hardh = link_hardh(ino, gen) - lookup inode in tree
+  if (hardh == NH_NULL) then
+    new directory - 1st time seen
+    dah = dirattr_add(fhdrp) - add dir header to dirattr structure
+    hardh = Node_alloc(ino, gen,....,NF_ISDIR|NF_NEWORPH)
+    link_in(hardh) - link into tree 
+    adopt(p_orphh, hardh, NRH_NULL) - put dir in orphanage directory
+  else
+    ...
+  endif
+
+<b>tree_addent</b>(parent, inode, size, name, namelen)
+  hardh = link_hardh(ino, gen)
+  if (hardh == NH_NULL) then
+    new entry - 1st time seen
+    nrh = namreg_add(name, namelen)
+    hardh = Node_alloc(ino, gen, NRH_NULL, DAH_NULL, NF_REFED)
+    link_in(hardh)
+    adopt(parent, hardh, nrh)
+  else
+    ...
+  endif
+
+</pre>
+
+<p>
+
+<h3><a name="cum_restore">Cumulative Restore</a></h3>
+A cumulative restore seems a bit different than one might expect.
+It tries to restore the state of the filesystem at the time of
+the incremental dump. As the man page states:
+"This can involve adding, deleting, renaming, linking, 
+ and unlinking files and directories." From a coding point of view,
+this means we need to know what the dirent tree was like previously
+compared with what the dirent tree is like now. We need this so
+we can see what was added and deleted. So this means that the 
+dirent tree, which is stored as an mmap'ed file in 
+<i>restoredir/xfsrestorehousekeepingdir/tree</i> should not be deleted
+between cumulative restores (as we need to keep using it).
+<p>
+So on the first level 0 restore, the dirent tree is created.
+When the directories are restored and the files are restored,
+the corresponding tree nodes are marked as <i>NF_REAL</i>.
+On the next level cumulative restore, when it is processing the
+dirents, it looks them up in the tree (created on previous restore).
+If the entry alreadys exists then it marks it as <i>NF_REFED</i>.
+<p>
+In case a dirent has gone away between times of incremental dumps,
+xfsrestore does an extra pass in the tree preprocessing 
+(<i>noref_elim_recurse()</i>)
+which traverses the tree looking for non-referenced (not <i>NF_REFED</i>) 
+nodes so that if they exist in the FS (i.e. are <i>NF_REAL</i>) then
+they can be deleted (so that the FS resembles what it was at the time
+of the incremental dump).
+Note there are more conditionals to the code than just that -
+but that is the basic plan.
+
+<hr>
+<h3><a name="Q&A">Questions and Answers</a></h3>
+
+<dl>
+
+<dt><b><a name="DMF">How is -a and -z handled by xfsdump ?</a></b>
+<dd>
+If -a is NOT used then it looks like nothing special happens
+for files which have dmf state attached to them.
+So if the file uses too many blocks compared to our maxsize param (-z)
+then it will not get dumped. No inode nor data. 
+The only evidence will be its entry in the inode
+map (which is dumped) which says its the state of a no-change-non-dir and
+the directory entry in the directories dump. The latter will mean
+that an <i>ls</i> in xfsrestore will show the file but it can
+not be restored. 
+<p>
+If -a <b>is</b> used and the file has some DMF state then we do some magic.
+However, the magic really only seems to occur for dual-state files
+(or possibly also unmigrating files).
+<p>
+A file is marked as dual-state/unmigrating by looking at the DMF attribute,
+dmfattrp->state[1]. i.e = DMF_ST_DUALSTATE or DMF_ST_UNMIGRATING
+If this is the case, then we set, dmf_f_ctxtp->candidate = 1.
+If we have such a changed dual-state file then we
+mark it as changed in the inode-map so it can be dumped. 
+If it is a dual state file, then its apparent size will be zero, so it
+will go onto the dumping stage.
+<p>
+When we go to dump the extents of the dual-state file, we
+do something different. We store the extents as only 1 extent
+which is a hole. I.e. this is the "NOT dumping data" bit.
+<p>
+When we go to dump the file-hdr of the dual-state file, we
+set, statp->bs_dmevmask |= (1<<DM_EVENT_READ);
+<p>
+When we go to dump the extended-attributes of the dual-state file, we
+skip dumping the DMF attribute ones !
+However, at the end of dumping the attributes, we then go
+and add a new DMF attribute for it:
+<pre>
+        dmfattrp->state[1] = DMF_ST_OFFLINE;
+        *valuepp = (char *)dmfattrp;
+        *namepp = DMF_ATTR_NAME;
+        *valueszp = DMF_ATTR_LEN;
+</pre>
+<br>
+<b>Summary:</b>
+<ul>
+<li>dual state files (and unmigrating files) dumped with -a, 
+    cause magic to happen:
+    <ul>
+    <li>if file has changed then it will _always_ be marked
+       to be dumped out (irrespective of file size/blocks)
+    <li>its extent data will be dumped as 1 extent with a hole
+    <li>its DMF attributes won't be dumped but a replacement
+       DMF attribute will be dumped in its place
+    <li>the stat buf's bs_devmask will be or'ed with DM_EVENT_READ
+    </ul>
+<li>for all other cases,
+     if the file has changed and its blocks cause it to exceed the
+     maxsize param (-z) then the file will be marked as NOT-CHANGED
+     in the inode map and so will NOT be dumped at all 
+</ul>
+<p>
+
+<dt><b><a name="dump_size_est">How does it compute estimated dump size ?</a></b>
+<dd>
+A dump consists of media files (only 1 in the case of a dump to a file,
+and usually many when dumped to a tape (depending on device type)).
+A media file consists of:
+<ul>
+  <li> global header
+  <li> inode map (inode# + state(e.g.dump or not?) )
+  <li> directories
+  <li> non-directory files
+</ul>
+<p>
+A directory consists of a header, directory-entry-headers for
+its entries <inode#,gen#,entry-sz,csum,entry-name>
+and extended-attribute header and attributes.
+<p>
+A non-directory file consists of a file header, extent-headers
+(for each extent), file data and extended-attribute header 
+and attributes. Some types of files don't have extent headers or data.
+<p>
+The xfsdump code says:
+<pre>
+        size_estimate = GLOBAL_HDR_SZ
+                        +
+                        inomap_getsz( )
+                        +
+                        inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ )
+                        +
+                        inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 )
+                        +
+                        datasz;
+</pre>
+
+So this accounts for the:
+<ul>
+  <li>global header
+  <li>inode map
+  <li>all the files
+  <li>all the direntory entries 
+     ( "+8" presumably to account for average file name length range,
+       where 8 chars already included in header; as this structure
+       is padded to the next 8 byte boundary, it accounts for names
+       with lengths between 8-15 chars)
+  <li>data
+</ul>
+
+<p>
+What estimate doesn't seem to account for (that I can think of):
+<ul>
+  <li> no extended attributes
+  <li> assumes that a file will only have one extent
+  <li> no tape block headers (for tape media)
+</ul>
+
+<p>
+"Datasz" is calculated by adding up for every regular inode file,
+its (number of data blocks) * (block size).
+However, if "-a" is used, then instead of doing this,
+if the file is dualstate/offline then the file's
+data won't be dumped and it adds zero for it.
+<p>
+
+
+<dt><b><a name="dump_size_ac">Is the "dump size (non-dir files) : 910617928 bytes" the actual number of bytes it wrote to that tape ?</a></b>
+
+<dd>
+It is the number of bytes it wrote to the dump for the non-directory
+files' extents (not including file header nor extent header terminator).
+(I don't think this includes the tape block headers for a tape dump
+either.)
+It includes for each file:
+<ul>
+  <li>any hole hdrs
+  <li>alignment hdrs
+  <li>alignment padding 
+  <li>extent headers for data
+  <li>actual _data_ of extents
+</ul>
+
+From code:
+<pre>
+    bytecnt += sizeof( filehdr_t );
+    dump_extent_group(...,&bc,...);
+	bytecnt = 0;
+	bytecnt += sizeof( extenthdr_t );  /* extent header for hole */
+	bytecnt += sizeof( extenthdr_t );  /* ext. alignment header */
+	bytecnt += ( off64_t )cnt_to_align /* alignment padding */
+	bytecnt += sizeof( extenthdr_t );  /* extent header for data */
+	bytecnt += ( off64_t )actualsz;    /* actual extent data in file */  
+	bytecnt += ( off64_t )reqsz; /* write padding to make up extent size */
+    sc_stat_datadone += ( size64_t )bc;
+</pre>
+
+
+It doesn't include the initial file header:
+<pre>
+    rv = dump_filehdr( ... );
+    bytecnt += sizeof( filehdr_t );
+</pre>
+nor the extent hdr terminator:
+<pre>
+    rv = dump_extenthdr( ..., EXTENTHDR_TYPE_LAST,...);
+    bytecnt += sizeof( extenthdr_t );
+    contextp->cc_mfilesz += bytecnt;
+</pre>
+It only adds this data size into the media file size.
+ 
+</dl>
+
+
+<hr>
+<h3><a name="out_quest">Outstanding Questions</a></h3>
+<ul>
+<li>How is the inode map on the tape used by xfsrestore ?
+<li>Is the final inventory media file on the media ever used/restored ?
+<li>How are tape marks used and written ?
+<li>What is the difference between a record and a block ?
+    <ul><li>I don't think there is a difference.</ul>
+<li>Where are tape_recsz and tape_blksz used ?
+    <ul><li>Tape_recsz is used for the read/write byte cnt but 
+    I don't think tape_blksz is used.</ul>
+</ul>
+
+</body>
+</html>
