@@ -134,7 +134,7 @@ stat64_to_xfsbstat( xfs_bstat_t *dstp, struct stat64 *srcp )
 	dstp->bs_nlink = srcp->st_nlink;
 	dstp->bs_uid = srcp->st_uid;
 	dstp->bs_gid = srcp->st_gid;
-	dstp->bs_rdev = srcp->st_rdev;
+	dstp->bs_rdev = IRIX_MKDEV(major(srcp->st_rdev), minor(srcp->st_rdev));
 	dstp->bs_blksize = ( int32_t )srcp->st_blksize;
 	dstp->bs_size = srcp->st_size;
 	dstp->bs_atime.tv_sec = srcp->st_atime;

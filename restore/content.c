@@ -7549,7 +7549,7 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 		 */
 		rval = mknod( path,
 			      ( mode_t )bstatp->bs_mode,
-			      ( dev_t )bstatp->bs_rdev );
+			      ( dev_t )IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
 		if ( rval && rval != EEXIST ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
 			      "unable to create %s "
