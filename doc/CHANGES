@@ -1,3 +1,10 @@
+xfsdump-2.0.2 (8 May 2002)
+	- in xfsdump, check for ERANGE as well as E2BIG for testing
+	  of the existence of the SGI_XFSDUMP_SKIP_FILE extended
+	  attribute. This only affects dumping using the -e option. 
+	  This was motivated by an XFS kernel change from returning
+	  E2BIG into returning ERANGE.
+
 xfsdump-2.0.1 (13 April 2002)
 	- minor build system updates
 

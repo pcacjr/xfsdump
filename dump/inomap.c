@@ -751,7 +751,7 @@ cb_add( void *arg1,
 						       (char *)&attrop,
 						       1,
 						       0 );
-				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG) ) {
+				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG || attrop.am_error == ERANGE) ) {
 					mlog( MLOG_DEBUG | MLOG_EXCLFILES,
 					      "pruned ino %llu, owner %u, estimated size %llu: skip attribute set\n",
 					      statp->bs_ino,
