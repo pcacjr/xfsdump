@@ -89,6 +89,10 @@ main (int argc, char *argv[])
 	case GETOPT_INTERACTIVE:
 	    interactive_option = BOOL_TRUE;
 	    break;
+	case GETOPT_NONINTERACTIVE:
+	    interactive_option = BOOL_FALSE;
+	    force = BOOL_TRUE;
+	    break;
 	case GETOPT_UUID:
 	    if (check_option) {
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
@@ -751,7 +755,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 		{
 		    char *chp;
 
-		    printf("\nDo you want to prune this entry: [y/n]");
+		    printf("\nDo you want to prune this entry: [y/n] ");
 		    fgets( response, GEN_STRLEN, stdin );
 		    chp = strchr( response, '\n');  
 		    if (chp)
