@@ -1,3 +1,15 @@
+xfsdump (1.0.9) unstable; urgency=low
+
+  * Correctly [xfs]restore the suid and guid mode bits
+
+ -- Nathan Scott <nathans@debian.org>  Tue, 15 May 2001 14:40:03 +1000
+
+xfsdump (1.0.8) unstable; urgency=low
+
+  * Add a build dependency on xfslibs-dev 1.2.5 (closes: #97097)
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 12 May 2001 08:52:27 +1000
+
 xfsdump (1.0.7) unstable; urgency=low
 
   * Fix numerous warnings, remove last -Wall filter
@@ -15,7 +27,7 @@ xfsdump (1.0.6) unstable; urgency=low
 
 xfsdump (1.0.5) unstable; urgency=low
 
-  * Initial release (closes #83832).
+  * Initial release (closes: #83832).
 
  -- Nathan Scott <nathans@debian.org>  Wed, 25 Apr 2001 12:19:15 +1000
 

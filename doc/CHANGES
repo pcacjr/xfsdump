@@ -1,3 +1,8 @@
+xfsdump-1.0.9 (15 May 2001)
+	- correctly [xfs]restore the suid and guid mode bits
+ 
+xfsdump-1.0.8 (12 May 2001)
+	- added build dependency for Debian on latest devel package
 
 xfsdump-1.0.7 (07 May 2001)
 	- fix warnings, remove last -Wall filter
