@@ -1,3 +1,8 @@
+xfsdump-2.1.4 (01 August 2002)
+	- xfsinvutil -m option added (merge from IRIX).
+	- add missing GPL/copyright headers to several xfsinvutil files.
+	- correct several uses of uuid_compare in xfsinvutil.
+
 xfsdump-2.1.3 (30 July 2002)
 	- small xfsinvutil fixups to preserve compatibility with old -n
 	  option.

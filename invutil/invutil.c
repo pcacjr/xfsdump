@@ -29,6 +29,7 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
+
 #include <libxfs.h>
 #include <jdm.h>
 
@@ -65,7 +66,7 @@ invutil_interactive(char *path, char *mountpt, uuid_t *uuidp, time_t timeSecs)
 #endif
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
     int c = 0;
     bool_t check_option = BOOL_FALSE;
@@ -74,6 +75,7 @@ main (int argc, char *argv[])
     bool_t interactive_option = BOOL_FALSE;
     static char version[32];
     char *mntPoint = NULL;
+    char *r_mf_label = NULL;
     uuid_t uuid;
 
     snprintf(version, sizeof(version), "version %s", VERSION);
@@ -115,6 +117,13 @@ main (int argc, char *argv[])
 			 c );
 		usage();
 	    }
+	    if (r_mf_label) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
+			 g_programName,
+			 GETOPT_PRUNEMEDIALABEL,
+			 c );
+		usage();
+	    }
 	    if (uuid_option) {
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
 			 g_programName,
@@ -138,6 +147,16 @@ main (int argc, char *argv[])
 	    mntpnt_option = BOOL_TRUE;
 	    mntPoint = optarg;
 	    break;
+	case GETOPT_PRUNEMEDIALABEL:
+	    if (check_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
+			 g_programName,
+			 GETOPT_CHECKPRUNEFSTAB,
+			 c );
+		usage();
+	    }
+	    r_mf_label = optarg;
+	    break;
 	default:
 	    usage();
 	    break;
@@ -157,7 +176,8 @@ main (int argc, char *argv[])
     if (check_option) {
         char *tempstr = "test";
         time_t temptime = 0;
-        CheckAndPruneFstab(inventory_path, BOOL_TRUE, tempstr, &uuid, temptime);
+        CheckAndPruneFstab(inventory_path, BOOL_TRUE, tempstr, &uuid,
+		temptime, NULL);
     }
     else if (uuid_option || mntpnt_option) {
         char *dateStr;
@@ -176,7 +196,9 @@ main (int argc, char *argv[])
 	    printf("\n");
 	}
 	else {
-	    CheckAndPruneFstab(inventory_path, BOOL_FALSE , mntPoint, &uuid, timeSecs);
+	    CheckAndPruneFstab(
+		    inventory_path, BOOL_FALSE , mntPoint, &uuid,
+		    timeSecs, r_mf_label);
 	}
     }
     else if ( interactive_option ) {
@@ -278,8 +300,8 @@ ParseDate(char *strDate)
     }
 
 #ifdef INV_DEBUG
-    printf("the date entered is %s\n", strDate);
-    printf("the hour parsed from string is %d\n", tm.tm_hour);
+    printf("INV_DEBUG: the date entered is %s\n", strDate);
+    printf("INV_DEBUG: the hour parsed from string is %d\n", tm.tm_hour);
 #endif
 
     if (*fmt == NULL || (date = mktime(&tm)) < 0) {
@@ -297,9 +319,9 @@ ParseDate(char *strDate)
     }
 
 #ifdef INV_DEBUG
-    printf("the date entered is %s\n", strDate);
-    printf("the hour parsed from string is %d\n", tm.tm_hour);
-    printf("the date entered in secs is %ld\n", date);
+    printf("INV_DEBUG: the date entered is %s\n", strDate);
+    printf("INV_DEBUG: the hour parsed from string is %d\n", tm.tm_hour);
+    printf("INV_DEBUG: the date entered in secs is %ld\n", date);
 #endif /* INV_DEBUG */
 
     return date;
@@ -351,7 +373,8 @@ GetFstabFullPath(char *inv_path)
 }
 
 void
-CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuidp, time_t prunetime)
+CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
+	uuid_t *uuidp, time_t prunetime, char *r_mf_label)
 {
     char	*fstabname;
     char	*mapaddr;
@@ -401,7 +424,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 	printf("   Found entry for %s\n" , fstabentry[i].ft_mountpt);
 
 	for (j = i +1 ; j < counter->ic_curnum ; j++ ) {
-	    if (uuid_compare(fstabentry[i].ft_uuid, fstabentry[j].ft_uuid))
+	    if (uuid_compare(fstabentry[i].ft_uuid, fstabentry[j].ft_uuid) == 0)
 	    {
 		printf("     duplicate fstab entry\n");
 		removeflag = BOOL_TRUE;
@@ -416,8 +439,9 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 	    invname = GetNameOfInvIndex(inv_path, fstabentry[i].ft_uuid);
 
 #ifdef INV_DEBUG
-	    printf("ft_mountpt = %s, mountPt = %s\n", 
-		   fstabentry[i].ft_mountpt, mountPt);
+	    printf("INV_DEBUG: ft_mountpt = %s, mountPt = %s, r_mf_label = %s\n", 
+		   fstabentry[i].ft_mountpt, mountPt,
+		   (r_mf_label ? r_mf_label : "(NULL)"));
 #endif
 
 	    if ( checkonly == BOOL_FALSE ) {
@@ -425,8 +449,8 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 		    printf("     Match on hostname and path\n");
 		    IdxCheckOnly = BOOL_FALSE;
 		}
-		else if((uuid_is_null(*uuidp))
-		   && uuid_compare(*uuidp, fstabentry[i].ft_uuid)) {
+		else if((!uuid_is_null(*uuidp))
+		   && (uuid_compare(*uuidp, fstabentry[i].ft_uuid) == 0)) {
 		    printf("     Match on UUID only\n");
 		    IdxCheckOnly = BOOL_FALSE;
 		}
@@ -436,7 +460,8 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 		}
 	    }
 
-	    if ( CheckAndPruneInvIndexFile( IdxCheckOnly, invname , prunetime ) == -1 ) {
+	    if (CheckAndPruneInvIndexFile(
+			IdxCheckOnly, invname , prunetime, r_mf_label) == -1 ) {
 		removeflag = BOOL_TRUE;
 	    }
 
@@ -491,7 +516,8 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt, uuid_t *uuid
 int
 CheckAndPruneInvIndexFile( bool_t checkonly,
 			   char *idxFileName,
-			   time_t prunetime ) 
+			   time_t prunetime,
+			   char *r_mf_label) 
 {
     char	*temp;
     int		fd;
@@ -551,8 +577,8 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 	    IdxCheckOnly = BOOL_FALSE;
 	    printf("          Mount point match\n");
 	}
-	if (CheckAndPruneStObjFile( IdxCheckOnly, 
-				    invIndexEntry[i].ie_filename, prunetime) == -1) {
+	if (CheckAndPruneStObjFile(IdxCheckOnly, invIndexEntry[i].ie_filename,
+		    prunetime, r_mf_label) == -1) {
 	    removeflag = BOOL_TRUE; /* The StObj is gone */
 	}
 
@@ -608,7 +634,8 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 int
 CheckAndPruneStObjFile( bool_t checkonly,
 			char *StObjFileName,
-			time_t prunetime ) 
+			time_t prunetime,
+		        char *r_mf_label) 
 {
     char	response[GEN_STRLEN];
     char	*temp;
@@ -720,15 +747,16 @@ CheckAndPruneStObjFile( bool_t checkonly,
 	}
 
 #ifdef INV_DEBUG
-        printf("sh_time = %ld, prunetime = %ld\n", 
+        printf("INV_DEBUG: sh_time = %ld, prunetime = %ld\n", 
 	       StObjhdr->sh_time, prunetime);
-        printf("checkonly = %d, sh_pruned = %d\n",
+        printf("INV_DEBUG: checkonly = %d, sh_pruned = %d\n",
                checkonly, StObjhdr->sh_pruned); 
 #endif
 
 	if ((checkonly == BOOL_FALSE)
 	    && (! StObjhdr->sh_pruned)
-	    && (StObjhdr->sh_time < prunetime)) {
+	    && (StObjhdr->sh_time < prunetime)
+	    && (uses_specified_mf_label(StObjhdr, StObjses, temp, r_mf_label))){
 	    bool_t GotResponse = BOOL_FALSE;
 
 	    uuid_unparse( StObjses->s_sesid, str );
@@ -772,8 +800,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 	    printf("-------------------------------------------------\n\n");
 	}
 
-	if (removeflag == BOOL_TRUE)
-	{
+	if (removeflag == BOOL_TRUE) {
 	    /* Mark this entry as pruned */
 	    StObjhdr->sh_pruned = 1;
 	    removedcount++;
@@ -805,6 +832,43 @@ CheckAndPruneStObjFile( bool_t checkonly,
     }
 
     return(0);
+}
+
+/* If any of the media objects have a label which matches the one supplied
+ * by the user, or if none is supplied, say the session is prunable.
+ * Otherwise, say it should be bypassed.
+ */
+
+int
+uses_specified_mf_label(
+	invt_seshdr_t *StObjhdr,
+	invt_session_t *StObjses,
+	char *temp,
+	char *r_mf_label)
+{
+    int			s, m;
+    invt_stream_t	*StObjstrm;
+    invt_mediafile_t	*StObjmed;
+
+    if (!r_mf_label) {
+	return 1;	/* prune */
+    }
+    for ( s = 0; s < (int) StObjses->s_cur_nstreams; s++ ) {
+	StObjstrm = (invt_stream_t *)
+	    (temp + StObjhdr->sh_streams_off + (s * sizeof(invt_stream_t)));
+	for ( m = 0; m < StObjstrm->st_nmediafiles; m++) {
+	    StObjmed = (invt_mediafile_t *)
+		(temp + StObjstrm->st_firstmfile + (m * sizeof(invt_mediafile_t)));
+	    if (!strncmp(StObjmed->mf_label, r_mf_label, 
+			sizeof(StObjmed->mf_label))) {
+		printf("\t\tSpecified media label \"%s\" found - "
+			"pruning session \"%s\"\n",
+			r_mf_label, StObjses->s_label);
+		return 1;	/* prune */
+	    }
+	}
+    }
+    return 0;	/* don't prune */
 }
 
 
@@ -937,7 +1001,7 @@ open_and_lock(char * path, Open_t open_type, uint lock_wait_flag)
 
 	switch(lock_mode) {
 	case LOCK_EX: lstr = inv_DEBUG_lock_str(lock_mode); break;
-	default:      lstr = "NO_LOCK";
+	default:       lstr = "NO_LOCK";
 	}
 
 	fprintf(stderr, "open_and_lock: DEBUG open_mode %s"
@@ -1049,8 +1113,9 @@ usage (void)
 #endif /* REVEAL */
     ULO( "(don't prompt)", GETOPT_FORCE );
     ULO( "<mountpoint> (prune mountpoint)", GETOPT_PRUNEMNT );
+    ULO( "<medialabel> (prune specific media)", GETOPT_PRUNEMEDIALABEL );
     ULO( "(check inventory inconsistencies)", GETOPT_CHECKPRUNEFSTAB );
-    ULN( "<mm/dd/yy> (date for mountpoint and uuid prune)" );
+    ULN( "<mm/dd/yyyy> (date for mountpoint and uuid prune)" );
 
     exit(1);
 }

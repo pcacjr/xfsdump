@@ -3,12 +3,10 @@
 xfsinvutil \- \&xfsdump inventory database checking and pruning utility
 .SH SYNOPSIS
 .nf
-\f3xfsinvutil\f1 [ \f3\-M\f1 mountpoint mm/dd/yyyy (prune all entries
-		older than specified date for the mountpoint) ] 
-        [ \f3\-C\f1 (check and fix xfsdump inventory database
-		inconsistencies)]
-        [ \f3-n\f1 (no questions)]
-        [ \f3-i\f1 (interactive mode)]
+\f3xfsinvutil\f1 [\-F|\-i] [\-u \f2UUID\f1] [\-M \f2mount_point\f1]
+		 [\-m \f2media_label\f1] \f2mm/dd/yyyy\f1
+\f3xfsinvutil\f1 \-i
+\f3xfsinvutil\f1 \-C
 .fi
 .SH DESCRIPTION
 .I xfsdump 
@@ -97,6 +95,13 @@ This includes the host name and the mount path.
 Specifies the filesystem universally unique identifier (UUID) of
 inventory entries to be selected for pruning.  This option is
 equivalent to the \f3\-M\f1 option.
+.TP 5
+\f3\-m\f1 \f2media_label\f1
+If specified, only sessions with at least one media file whose label
+matches this value will be eligible for pruning.  This restriction is
+in addition to those imposed by the date and the \f3\-M\f1 or
+\f3\-u\f1 options.  This option allows the pruning of all inventory
+references to media which may have been overwritten or lost.
 .TP 5
 .B \-n
 With this option, 
