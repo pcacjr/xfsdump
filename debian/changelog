@@ -1,9 +1,10 @@
-xfsdump (2.2.3-1) unstable; urgency=low
+xfsdump (2.2.4-1) unstable; urgency=low
 
   * New upstream release
   * Update packaging dependencies to reflect renamed libattr1-dev
+  * Switch from using curses library to ncurses library directly
 
- -- Nathan Scott <nathans@debian.org>  Thu, 31 Oct 2002 21:20:25 +1100
+ -- Nathan Scott <nathans@debian.org>  Fri,  8 Nov 2002 09:58:50 +1100
 
 xfsdump (2.2.2-1) unstable; urgency=low
 

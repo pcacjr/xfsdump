@@ -1,3 +1,9 @@
+xfsdump-2.2.4 (08 November 2002)
+	- configure now looks for, and xfsinvutil uses, the ncurses
+	  header and library rather than the curses version - this
+	  resolves an issue in those distributions that don't make
+	  the compatibility library available.
+
 xfsdump-2.2.3 (31 October 2002)
 	- minor update to Debian packaging dependencies.
 	- inventory related bugfix.
