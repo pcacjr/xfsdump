@@ -88,9 +88,6 @@ int		RealUid;
 int		tmp_agi;
 static __int64_t	minimumfree = 2048;
 
-#undef O_DIRECT
-#define O_DIRECT 0	/* TODO - remove this when direct IO done */
-
 #define MNTTYPE_XFS             "xfs"
 
 #define SMBUFSZ		1024
@@ -153,7 +150,7 @@ fsdesc_t	*fs, *fsbase, *fsend;
 int		fsbufsize = 10;	/* A starting value */
 int		nfrags = 0;	/* Debug option: Coerse into specific number
 				 * of extents */
-int		openopts = O_CREAT|O_EXCL|O_RDWR;
+int		openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
 
 int 
 xfs_fsgeometry(int fd, xfs_fsop_geom_t *geom)
@@ -1018,23 +1015,12 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			fsrprintf("%s set temp attr\n", tname);
 	}
 
-#if  0
-	/* Setup direct I/O */
-	if((fcntl(tfd, F_SETFL, FDIRECT)) < 0 ) {
-		fsrprintf("could not set FDIRECT on tmp: %s:\n", tname);
-		close(tfd);
-		return -1;
-	}
-	if( (ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
+	if ((ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
 		fsrprintf("could not get I/O info on tmp: %s\n", tname);
 		close(tfd);
 		return -1;
 	}
-#else
-	/* Until direct I/O really works fake out XFS_IOC_DIOINFO call */
-	dio.d_miniosz =  dio.d_maxiosz = 4069*10;
-	dio.d_mem = 4096;
-#endif
+
 	if (do_rt) {
 		int rt_textsize = fsgeom.rtextsize * fsgeom.blocksize;
 
