@@ -370,14 +370,14 @@ static rv_t dump_extattr_list( drive_t *drivep,
 	       		       jdm_fshandle_t *fshandlep,
 			       xfs_bstat_t *statp,
 			       attrlist_t *listp,
-			       bool_t isrootpr,
+			       int flag,
 			       bool_t *abortprp );
 static char *dump_extattr_buildrecord( xfs_bstat_t *statp,
 				       char *dumpbufp,
 				       char *dumpbufendp,
 				       char *namesrcp,
 				       u_int32_t valuesz,
-				       bool_t isrootpr,
+				       int flag,
 				       char **valuepp );
 static rv_t dump_extattrhdr( drive_t *drivep,
 			     context_t *contextp,
@@ -3306,15 +3306,23 @@ dump_extattrs( drive_t *drivep,
 		return rv;
 	}
 
-	/* loop twice: once for the non-root and again for the root
-	 * attributes.
+	/* loop three times: once for the non-root, once for root, and
+	 * again for the secure attributes.
 	 */
-	for ( pass = 0, flag = 0 ; pass < 2 ; pass++, flag = ATTR_ROOT ) {
+	for ( pass = 0; pass < 3 ; pass++ ) {
 		bool_t more;
+
+		if ( pass == 0 )
+			flag = 0;
+		else if ( pass == 1)
+			flag = ATTR_ROOT;
+		else
+			flag = ATTR_SECURE;
 
 		mlog( MLOG_NITTY,
 		      "dumping %s extended attributes for %s ino %llu\n",
-		      ( flag & ATTR_ROOT ) ? "root" : "non-root",
+		      ( flag & ATTR_ROOT ) ? _("root") : (( flag & ATTR_SECURE ) ?
+		      _("secure") : _("non-root")),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
 		      statp->bs_ino );
 
@@ -3340,7 +3348,8 @@ dump_extattrs( drive_t *drivep,
 					      "attributes for "
 					      "%s ino %llu: %s (%d)\n"),
 					      ( flag & ATTR_ROOT )
-					      ? "root" : "non-root",
+					      ? _("root") : (( flag & ATTR_SECURE )
+					      ? _("secure") : _("non-root")),
 					      (( statp->bs_mode & S_IFMT )
 					       == S_IFDIR) ? "dir" : "nondir",
 					      statp->bs_ino,
@@ -3403,7 +3412,7 @@ dump_extattr_list( drive_t *drivep,
 		   jdm_fshandle_t *fshandlep,
 		   xfs_bstat_t *statp,
 		   attrlist_t *listp,
-		   bool_t isrootpr,
+		   int flag,
 		   bool_t *abortprp )
 {
 	size_t listlen = ( size_t )listp->al_count;
@@ -3450,13 +3459,14 @@ dump_extattr_list( drive_t *drivep,
 
 				if (!HsmFilterExistingAttribute(
 				    contextp->cc_hsm_f_ctxtp, entp->a_name,
-				    entp->a_valuelen, (isrootpr ? 1 : 0),
+				    entp->a_valuelen, flag,
 				    &skip_entry)) {
 					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		    "HSM could not filter %s "
 					    "attribute %s for %s ino %llu\n"),
-			      		    isrootpr? _("root") : _("non-root"),
-					    entp->a_name,
+			      		    (flag & ATTR_ROOT) ? _("root") :
+					    ((flag & ATTR_SECURE) ? _("secure") :
+					     _("non-root")), entp->a_name,
       		(statp->bs_mode & S_IFMT) == S_IFDIR ? _("dir") : _("nondir"),
 			      		    statp->bs_ino);
 					*abortprp = BOOL_TRUE;
@@ -3474,7 +3484,7 @@ dump_extattr_list( drive_t *drivep,
 							     dumpbufendp,
 							     entp->a_name,
 							     entp->a_valuelen,
-							     isrootpr,
+							     flag,
 							     &valuep );
 			if ( dumpbufp > dumpbufendp ) {
 				break;		/* won't fit in buffer */
@@ -3484,7 +3494,7 @@ dump_extattr_list( drive_t *drivep,
 				opp->am_attrname = entp->a_name;
 				opp->am_attrvalue = valuep;
 				opp->am_length = ( int )entp->a_valuelen;
-				opp->am_flags = isrootpr ? ATTR_ROOT : 0;
+				opp->am_flags = flag;
 				opp->am_error = 0;
 				opp->am_opcode = ATTR_OP_GET;
 				rtrvix++;
@@ -3510,7 +3520,9 @@ dump_extattr_list( drive_t *drivep,
 					      "could not retrieve %s "
 					      "attributes for "
 					      "%s ino %llu: %s (%d)\n"),
-					isrootpr ? _("root") : _("non-root"),
+					(flag & ATTR_ROOT) ? _("root") :
+				        ((flag & ATTR_SECURE) ? _("secure") :
+					 _("non-root")),
 					( statp->bs_mode & S_IFMT ) == S_IFDIR?
 					      _("dir") : _("nondir"),
 					      statp->bs_ino,
@@ -3538,11 +3550,25 @@ dump_extattr_list( drive_t *drivep,
 				attr_multiop_t *opp;
 				opp = &contextp->cc_extattrrtrvarrayp[ rtrvix ];
 				if ( opp->am_error ) {
+					if ( opp->am_error == ENOATTR &&
+					     flag & ATTR_SECURE ) {
+						/* Security attributes are supported by
+						 * the kernel but jdm_attr_multi() returns
+						 * ENOATTR for every 'user' space attribute
+						 * during the 'security' pass of the extended
+						 * attribute loop (pass==3).  Suppress the
+						 * following error message with a no-op. The
+						 * jdm_attr_multi() problem is fixed in mod
+						 * xfs-linux:xfs-kern:167038a (PV 907903).
+						continue;
+					}
 					mlog( MLOG_NORMAL | MLOG_WARNING, _(
 					     "attr_multi indicates error while "
 					     "retrieving %s attribute [%s] for "
 					     "%s ino %llu: %s (%d)\n"),
-					     isrootpr ? "root" : "non-root",
+					     (flag & ATTR_ROOT) ? _("root") :
+					     ((flag & ATTR_SECURE) ? _("secure") :
+					      _("non-root")),
 					     opp->am_attrname,
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
 					     statp->bs_ino,
@@ -3607,14 +3633,16 @@ dump_extattr_list( drive_t *drivep,
 
 			if (!HsmAddNewAttribute(contextp->cc_hsm_f_ctxtp,
 						hsmcursor,
-						(isrootpr ? 1 : 0),
+						flag,
 						&hsmnamep,
 						&hsmvaluep,
 						&hsmvaluesz)) {
 				mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      		"HSM could not add new %s attribute "
 					"#%d for %s ino %llu\n"),
-			      		isrootpr ? _("root") : _("non-root"),
+			      		(flag & ATTR_ROOT) ? _("root") :
+					((flag & ATTR_SECURE) ? _("secure") :
+					 _("non-root")),
 					hsmcursor,
 			      		(statp->bs_mode & S_IFMT) == S_IFDIR ?
 						_("dir") : _("nondir"),
@@ -3631,7 +3659,7 @@ dump_extattr_list( drive_t *drivep,
 							     dumpbufendp,
 							     hsmnamep,
 							     hsmvaluesz,
-							     isrootpr,
+							     flag,
 							     &valuep );
 
 			if ( dumpbufp < dumpbufendp ) {	/* if fits in buffer */
@@ -3720,7 +3748,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 			  char *dumpbufendp,
 			  char *namesrcp,
 			  u_int32_t valuesz,
-			  bool_t isrootpr,
+			  int flag,
 			  char **valuepp )
 {
 	extattrhdr_t *ahdrp = ( extattrhdr_t * )dumpbufp;
@@ -3744,7 +3772,8 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute name for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
-		      isrootpr ? _("root") : _("non-root"),
+		      (flag & ATTR_ROOT) ? _("root") :
+		      ((flag & ATTR_SECURE) ? _("secure") :_("non-root")),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
 			_("dir") : _("nondir"),
 		      statp->bs_ino,
@@ -3758,7 +3787,8 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s extended attribute value for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
-		      isrootpr ? _("root") : _("non-root"),
+		      (flag & ATTR_ROOT) ? _("root") :
+		      ((flag & ATTR_SECURE) ? _("secure") :_("non-root")),
 		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
 			_("dir") : _("nondir"),
 		      statp->bs_ino,
@@ -3782,7 +3812,9 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 	tmpah.ah_sz = recsz;
 	ASSERT( EXTATTRHDR_SZ + namesz < UINT16MAX );
 	tmpah.ah_valoff = ( u_int16_t )( EXTATTRHDR_SZ + namesz );
-	tmpah.ah_flags = ( u_int16_t )( isrootpr ? EXTATTRHDR_FLAGS_ROOT : 0);
+	tmpah.ah_flags = ( u_int16_t )
+		(( flag & ATTR_ROOT ) ? EXTATTRHDR_FLAGS_ROOT :
+		(( flag & ATTR_SECURE ) ? EXTATTRHDR_FLAGS_SECURE : 0));
 	tmpah.ah_valsz = valuesz;
 	tmpah.ah_checksum = 0;
 #ifdef EXTATTRHDR_CHECKSUM

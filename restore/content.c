@@ -8652,7 +8652,7 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 	static	char dmiattr[] = DMATTR_PREFIXSTRING;
 #endif /* DMEXTATTR */
 
-	bool_t isrootpr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT;
+	int flag = ahdrp->ah_flags;
 	bool_t isdm = BOOL_FALSE;
 	intgen_t rval;
 
@@ -8668,7 +8668,7 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 		     ahdrp->ah_valsz );*/
 
 #ifdef DMEXTATTR
-	isdm = isrootpr &&
+	isdm = (flag & (ATTR_ROOT | ATTR_SECURE)) &&
 		(strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) == 0);
 #endif /* DMEXTATTR */
 
@@ -8683,20 +8683,28 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 			 ( char * )( &ahdrp[ 1 ] ),
 			 ( ( char * )ahdrp ) + ( u_long_t )ahdrp->ah_valoff,
 			 ( intgen_t )ahdrp->ah_valsz,
-			 isrootpr
+			 ( flag & EXTATTRHDR_FLAGS_ROOT )
+ 			 ?
+ 			 ATTR_ROOT | ATTR_DONTFOLLOW
+ 			 :
+			 (( flag & EXTATTRHDR_FLAGS_SECURE )
 			 ?
-			 ATTR_ROOT | ATTR_DONTFOLLOW
+			 ATTR_SECURE | ATTR_DONTFOLLOW
 			 :
-			 ATTR_DONTFOLLOW );
+			 ATTR_DONTFOLLOW ));
 	if ( rval ) {
 		mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 		      "unable to set %s extended attribute for %s: "
 		      "%s (%d)\n"),
-		      isrootpr
+		      ( flag & EXTATTRHDR_FLAGS_ROOT )
+ 		      ?
+ 		      _("root")
+ 		      :
+		      (( flag & EXTATTRHDR_FLAGS_SECURE )
 		      ?
-		      _("root")
+		      _("secure")
 		      :
-		      _("non-root"),
+		      _("non-root")),
 		      path,
 		      strerror( errno ),
 		      errno );

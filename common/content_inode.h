@@ -353,6 +353,10 @@ typedef struct extattrhdr extattrhdr_t;
 	/* checksum is present
 	 */
 
+#define EXTATTRHDR_FLAGS_SECURE		( 1 << 3 )
+	/* a "secure" mode attribute
+	 */
+
 #endif /* EXTATTR */
 
 #endif /* CONTENT_INODE_H */
