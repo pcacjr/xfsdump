@@ -7338,42 +7338,6 @@ restore_reg( drive_t *drivep,
 						}
 					}
 				}
-
-#ifdef EXTATTR
-				/* set the extended attributes
-				 */
-				if ( persp->a.dstdirisxfspr ) {
-					struct fsxattr fsxattr;
-
-					( void )memset((void *)&fsxattr,
-							0,
-						     sizeof( fsxattr ));
-					fsxattr.fsx_xflags =
-					    bstatp->bs_xflags;
-					ASSERT( bstatp->bs_extsize >= 0 );
-					fsxattr.fsx_extsize =
-					    ( u_int32_t )
-					    bstatp->bs_extsize;
-
-					rval = ioctl( fd,
-						      XFS_IOC_FSSETXATTR,
-						     (void *)&fsxattr);
-					if ( rval < 0 ) {
-						mlog(MLOG_NORMAL | MLOG_WARNING,
-						      _("attempt to set "
-						      "extended attributes "
-						      "(xflags 0x%x, "
-						      "extsize = 0x%x)"
-						      "of %s failed: "
-						      "%s\n"),
-						      bstatp->bs_xflags,
-						      bstatp->bs_extsize,
-						      path,
-						      strerror(errno));
-					}
-				}
-#endif
-
 #ifdef DMEXTATTR
 				if ( persp->a.restoredmpr) {
 					fsdmidata_t fssetdm;
@@ -7551,6 +7515,41 @@ restore_reg( drive_t *drivep,
 			      path,
 			      strerror( errno ));
 		}
+
+#ifdef EXTATTR
+		/* set the extended attributes
+		 */
+		if ( persp->a.dstdirisxfspr ) {
+			struct fsxattr fsxattr;
+
+			( void )memset((void *)&fsxattr,
+					0,
+				     sizeof( fsxattr ));
+			fsxattr.fsx_xflags =
+			    bstatp->bs_xflags;
+			ASSERT( bstatp->bs_extsize >= 0 );
+			fsxattr.fsx_extsize =
+			    ( u_int32_t )
+			    bstatp->bs_extsize;
+
+			rval = ioctl( fd,
+				      XFS_IOC_FSSETXATTR,
+				     (void *)&fsxattr);
+			if ( rval < 0 ) {
+				mlog(MLOG_NORMAL | MLOG_WARNING,
+				      _("attempt to set "
+				      "extended attributes "
+				      "(xflags 0x%x, "
+				      "extsize = 0x%x)"
+				      "of %s failed: "
+				      "%s\n"),
+				      bstatp->bs_xflags,
+				      bstatp->bs_extsize,
+				      path,
+				      strerror(errno));
+			}
+		}
+#endif
 
 		rval = close( fd );
 		if ( rval ) {

@@ -111,12 +111,19 @@ onto a single tape.
 .TP 5
 \f3\-e\f1
 Allow files to be excluded from the dump.  This will cause xfsdump to 
-skip those files which are tagged with the
+skip files which are tagged with the
 .hy 0
-"SGI_XFSDUMP_SKIP_FILE"
+"SGI_XFLAG_NODUMP"
 .hy
-attribute.  Without this flag, xfsdump will ignore the attribute, and
-continue to dump affected files.
+inode flag (previously the "SGI_XFSDUMP_SKIP_FILE"
+extended attribute).  Without the
+.B \-e
+flag, xfsdump will ignore the inode flags and continue
+to dump affected files.  The preferred flag has changed
+from "SGI_XFSDUMP_SKIP_FILE" (an extended attribute set
+within an inode) to "SGI_XFLAG_NODUMP" (an inode flag)
+for performance purposes.  The extended attribute
+"SGI_XFSDUMP_SKIP_FILE" remains supported.
 .TP 5
 \f3\-f\f1 \f2dest\f1 [ \f3\-f\f1 \f2dest\f1 ... ]
 Specifies a dump destination.
@@ -501,8 +508,9 @@ program.
 An additional media file is placed
 at the end of each dump stream.
 This media file contains the inventory information for the
-current dump session.
-This is currently unused.
+current dump session.  Its contents may be merged back into
+the online inventory database at a later time using
+.IR xfsrestore (1M).
 .P
 The inventory files stored in
 .I /var/lib/xfsdump
@@ -531,10 +539,6 @@ filesystem to another location or by copying the current contents of
 to a safe place prior to running
 .IR xfsrestore (1M).
 .P
-When operating in the miniroot environment,
-.I xfsdump
-does not create and does not reference the inventory database.
-Thus incremental and resumed dumps are not allowed.
 .SS Labels
 The operator can specify a label to identify the dump
 session
@@ -613,8 +617,28 @@ is run with the
 .B -e
 option individual files can be "tagged" so that
 .I xfsdump
-will not include them in a dump.  Files are tagged by assigning that file
-an extended attribute with the name
+will not include them in a dump.  Files are tagged in one of two ways:
+
+1) By setting an inode flag called
+.hy 0
+"SGI_XFLAG_NODUMP"
+.hy
+on the file.  This can be done with the
+.IR chattr (1)
+command:
+.EX
+$ chattr +d file
+.EE
+To turn the flag off:
+.EX
+$ chattr -d file
+.EE
+This is the preferred method and may result in a slightly
+faster dump, since
+.I xfsdump
+doesn't need to parse an attribute stored in the inode.
+
+2) By assigning the file an extended attribute with the name
 .hy 0
 "SGI_XFSDUMP_SKIP_FILE".
 .hy

@@ -2458,8 +2458,11 @@ setdirattr( dah_t dah, char *path )
 	mode_t mode;
 	struct utimbuf utimbuf;
 	/* REFERENCED */
-	struct fsxattr fsxattr;		/* can we get rid of this? */
+	struct fsxattr fsxattr;
 	intgen_t rval;
+	size_t	hlen;
+	void	*hanp;
+	intgen_t fd;
 
 	if ( dah == DAH_NULL )
 		return;
@@ -2469,10 +2472,7 @@ setdirattr( dah_t dah, char *path )
 
 #ifdef DMEXTATTR
 	if ( persp->p_restoredmpr ) {
-		size_t	hlen;
-		void	*hanp;
 		fsdmidata_t fssetdm;
-		intgen_t fd;
 
 		fssetdm.fsd_dmevmask = dirattr_get_dmevmask( dah );
 		fssetdm.fsd_padding = 0;	/* not used */
@@ -2545,6 +2545,45 @@ setdirattr( dah_t dah, char *path )
 		      path,
 		      strerror( errno ));
 	}
+
+#ifdef EXTATTR
+	/* set the extended attributes
+	 */
+	if (path_to_handle(path, &hanp, &hlen)) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "path_to_handle of %s failed:%s\n"),
+		      path, strerror( errno ));
+		return;
+	}
+		
+	fd = open_by_handle(hanp, hlen, O_RDONLY);
+	if (fd < 0) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			      "open_by_handle of %s failed:%s\n"),
+		      path, strerror( errno ));
+		free_handle(hanp, hlen);
+		return;
+	}
+	free_handle(hanp, hlen);
+	rval = ioctl( fd,
+		      XFS_IOC_FSSETXATTR,
+		      (void *)&fsxattr);
+	if ( rval < 0 ) {
+		mlog(MLOG_NORMAL | MLOG_WARNING,
+		     _("attempt to set "
+		       "extended attributes "
+		       "(xflags 0x%x, "
+		       "extsize = 0x%x)"
+		       "of %s failed: "
+		       "%s\n"),
+		     dirattr_get_xflags( dah ),
+		     dirattr_get_extsize( dah ),
+		     path,
+		     strerror(errno));
+	}
+	( void )close( fd );
+#endif /* EXTATTR */
+
 }
 
 /* deletes orphanage if empty, else warns

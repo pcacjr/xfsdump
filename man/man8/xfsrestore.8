@@ -624,8 +624,25 @@ program.
 An additional media file is placed
 at the end of each dump stream.
 This media file contains the inventory information for the
-current dump session.
-This is currently unused.
+current dump session.  If the online inventory files in
+.I /var/lib/xfsdump/inventory
+are missing information for the current dump session, then
+the inventory information in the media file is automatically
+added to the files in
+.I /var/lib/xfsdump/inventory.
+If you wish to incorporate the inventory information from the
+media file without restoring any data, you may do so using the
+.B \-t
+option:
+.EX
+# xfsrestore -t -f /dev/tape
+.EE
+This is useful to rebuild the inventory database if it
+is ever lost or corrupted.  The only caveat is that
+.I xfsrestore
+needs to read through the entire dump in order to reach
+the inventory media file.  This could become time
+consuming for dump sessions with large media files.
 .SS Media Errors
 \f2xfsdump\f1 is tolerant of media errors,
 but cannot do error correction.

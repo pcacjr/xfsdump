@@ -736,7 +736,17 @@ cb_add( void *arg1,
 			}
 
 #ifdef EXTATTR
-			if (allowexcludefiles_pr && (statp->bs_xflags & XFS_XFLAG_HASATTR)) {
+			if (allowexcludefiles_pr && statp->bs_xflags & XFS_XFLAG_NODUMP) {
+				mlog( MLOG_DEBUG | MLOG_EXCLFILES,
+				      "pruned ino %llu, owner %u, estimated size %llu: skip flag set\n",
+				      statp->bs_ino,
+				      statp->bs_uid,
+				      estimated_size );
+				map_add( ino, MAP_NDR_NOCHNG );
+				inomap_exclude_skipattr++;
+				return 0;
+			}
+			else if (allowexcludefiles_pr && (statp->bs_xflags & XFS_XFLAG_HASATTR)) {
 				int rval;
 				attr_multiop_t attrop;
 				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";

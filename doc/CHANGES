@@ -1,3 +1,18 @@
+
+xfsdump-2.2.16 (05 Dec 2004)
+	- fix xfsrestore to restore new XFS inode flags:  immutable,
+	  append, sync, noatime and nodump.  The inode flags have also
+	  been added to the _mk_fillconfig_ea() routine in common.dump,
+	  called by QA test 063 to test inode flags and xattrs.
+	- fix xfsdump to honor the new nodump xflag, "XFS_XFLAG_NODUMP",
+	  (in conjunction with -e).  The original method to skip files,
+	  -e plus extended attribute "SGI_XFSDUMP_SKIP_FILE", is still
+	  supported.  Admins may choose which method to use.  The
+	  xfsdump man page has been updated to document these changes.
+	- update man pages with a more detailed description of the
+	  inventory media file that gets written to the end of each dump.
+	- remove 'miniroot' reference from xfsdump man page.
+
 xfsdump-2.2.15 (18 Dec 2003)
 	- a mod was added in 2.2.13 to fix the way xfsdump handles
 	  multiple dump sessions to a single tape.  The mod fixed
