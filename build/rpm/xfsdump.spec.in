@@ -7,7 +7,7 @@ Packager: @pkg_builder@
 BuildRoot: @build_root@ 
 Requires: xfsprogs >= 2.0.0, dmapi >= 2.0.0, attr >= 2.0.0
 Source: @pkg_name@-@pkg_version@.src.tar.gz
-Copyright: Copyright (C) 2000-2002 Silicon Graphics, Inc.
+Copyright: Copyright (C) 2000 Silicon Graphics, Inc.
 Vendor: Silicon Graphics, Inc.
 URL: http://oss.sgi.com/projects/xfs/
 Group: Applications/Archiving
