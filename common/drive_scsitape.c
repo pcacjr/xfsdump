@@ -33,6 +33,8 @@
 #include <libxfs.h>
 #include <jdm.h>
 
+#include "config.h"
+
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -42,7 +44,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/sysmacros.h>
+#ifdef HAVE_TS_MTIO_H
+#include <ts/mtio.h>
+#else  /* HAVE_TS_MTIO_H */
 #include <sys/mtio.h>
+#endif /* HAVE_TS_MTIO_H */
 #include <sys/signal.h>
 #include <malloc.h>
 #include <sched.h>
@@ -303,10 +309,12 @@ typedef struct drive_context drive_context_t;
 #define IS_EW(mtstat)		(0)
 
 /* needed for Linux */
+#ifndef HAVE_TS_MTIO_H
 struct mtblkinfo {
         unsigned maxblksz;      /* maximum block size */
         unsigned curblksz;      /* current block size */
 };
+#endif	/* HAVE_TS_MTIO_H */
 
 typedef long mtstat_t;
 
@@ -420,6 +428,7 @@ static mtstat_t fsf_and_verify( drive_t *drivep );
 static void calc_best_blk_and_rec_sz( drive_t *drivep );
 static bool_t set_best_blk_and_rec_sz( drive_t *drivep );
 static bool_t isefsdump( drive_t *drivep );
+static int get_driver_character_major( const char * );
 
 /* RMT trace stubs
  */
@@ -434,6 +443,10 @@ static int dbgrmtwrite( int, void *, uint);
 #endif /* RMT */
 
 /* definition of locally defined global variables ****************************/
+
+/* tape driver
+ */
+int TS_ISDRIVER=0;
 
 /* scsitape drive strategy. referenced by drive.c
  */
@@ -489,6 +502,8 @@ is_scsi_driver(char *pathname)
 {
 	char rp[PATH_MAX];
 	struct stat64 statbuf;
+	xfs_bstat_t * bstatp;
+	int dev_major;
 
 	if (realpath(pathname, rp) == NULL) {
 		return BOOL_FALSE; 
@@ -501,15 +516,47 @@ is_scsi_driver(char *pathname)
 	if ( !S_ISCHR( statbuf.st_mode )) {
 		return BOOL_FALSE;
 	}
-	 
-	/* following what is in Documentation/devices.txt for Linux */
-        /* "mt" is used by devfs */
-	if (strstr(rp, "/nst") == NULL && strstr(rp, "/st") == NULL &&
-	    strstr(rp, "/mt") == NULL) {
+
+	/* In the past, this routine would look at the pathname of the
+	 * file to determine if we had a tape device or not. That method
+	 * worked fine for tape devices residing in one of the directories
+	 * in the list of 'valid' pathnames.  However, that method did not
+	 * work for tape applications like TMF and OpenVault, which allow
+	 * the user the flexibility of creating tape deivces with pathnames
+	 * of their choice.
+	 *
+	 * In order to provide support for such applications, this routine
+	 * will now look at the major number of the character device to
+	 * determine whether we have a tape device or not.  Major number
+	 * 9 is reserved for ST, while major numbers for TS and TMF are not
+	 * officially registered on Linux (and may be subject to change).
+	 * For this reason, we will call the get_driver_character_major()
+	 * routine to get the major numbers for TS and TMF (providing the
+	 * drivers are loaded). We will also look up the major number for
+	 * ST, for sanity and consistency.  We can compare the major number
+	 * of the target device to the major number of each of the tape
+	 * drivers to determine 1) if we have a tape device, and 2) which
+	 * tape driver the device is using.
+	 */
+	bstatp = ( xfs_bstat_t * )calloc( 1, sizeof( xfs_bstat_t ));
+	ASSERT( bstatp );
+	stat64_to_xfsbstat( bstatp, &statbuf );
+	dev_major = major((dev_t)IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
+
+	if (dev_major == get_driver_character_major("st")) {
+		free( bstatp );
+		return BOOL_TRUE;
+	}
+	else if (dev_major == get_driver_character_major("ts") ||
+	         dev_major == get_driver_character_major("tmf")) { 
+		TS_ISDRIVER = 1;
+		free( bstatp );
+		return BOOL_TRUE;
+	}
+	else {
+		free( bstatp );
 		return BOOL_FALSE;
 	}
-
-	return BOOL_TRUE;
 }
 
 /* strategy match - determines if this is the right strategy
@@ -3199,8 +3246,6 @@ set_fixed_blksz( drive_t *drivep, size_t blksz )
 			      errno);
 		}
 
-
-
 		/* see if we were successful (can't look if RMT, so assume
 		 * it worked)
 		 */
@@ -3397,20 +3442,39 @@ mt_blkinfo( intgen_t fd, struct mtblkinfo *minfo )
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "tape op: get block size info\n" );
 
-
-	if ( ioctl(fd, MTIOCGET, &mt_stat) < 0 ) {
-		/* failure
-		 */
-		mlog(MLOG_DEBUG,
-			"tape command MTIOCGET failed : %d (%s)\n",
-	 		errno,
- 	 		strerror( errno ));
-		return BOOL_FALSE;
+#ifdef HAVE_TS_MTIO_H
+	if (TS_ISDRIVER) { /* Use TS ioctl MTIOCGETBLKINFO so we don't
+			    * have to hard code the max block size  */
+		struct mtblkinfo ts_blkinfo;
+		if ( ioctl(fd, MTIOCGETBLKINFO, &ts_blkinfo) < 0 ) {
+			/* failure
+			 */
+			mlog(MLOG_DEBUG,
+				"tape command MTIOCGETBLKINFO failed : %d (%s)\n",
+				errno,
+				strerror( errno ));
+			return BOOL_FALSE;
+		}
+		minfo->curblksz = ts_blkinfo.curblksz;
+		minfo->maxblksz = ts_blkinfo.maxblksz;
 	}
-
-        minfo->curblksz = (mt_stat.mt_dsreg >> MT_ST_BLKSIZE_SHIFT) & MT_ST_BLKSIZE_MASK;
-
-        minfo->maxblksz = STAPE_MAX_LINUX_RECSZ;
+	else {
+#endif /* HAVE_TS_MTIO_H */
+		if ( ioctl(fd, MTIOCGET, &mt_stat) < 0 ) {
+			/* failure
+			 */
+			mlog(MLOG_DEBUG,
+				"tape command MTIOCGET failed : %d (%s)\n",
+	 			errno,
+ 	 			strerror( errno ));
+			return BOOL_FALSE;
+		}
+		minfo->curblksz = (mt_stat.mt_dsreg >> MT_ST_BLKSIZE_SHIFT) &
+				  MT_ST_BLKSIZE_MASK;
+		minfo->maxblksz = STAPE_MAX_LINUX_RECSZ;
+#ifdef HAVE_TS_MTIO_H
+	}
+#endif /* HAVE_TS_MTIO_H */
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
 	      "max=%u cur=%u\n",
@@ -5467,3 +5531,33 @@ open_masked_signals( char *pathname, int oflags )
 }
 
 #endif /* OPENMASKED */
+
+/*
+ * General purpose routine which dredges through procfs trying to
+ * match up device driver names with the associated major numbers
+ * being used in the running kernel. (This routine is based on
+ * the get_driver_block_major() routine in the libdisk library.) 
+ */
+static int
+get_driver_character_major( const char *driver )
+{
+	FILE	*f;
+	char	buf[64], puf[64];
+	int	major = -1;
+
+#define	PROC_DEVICES	"/proc/devices"
+	if ((f = fopen(PROC_DEVICES, "r")) == NULL)
+		return major;
+	while (fgets(buf, sizeof(buf), f))      /* skip to character dev section */
+		if (strncmp("Character devices:\n", buf, sizeof(buf)) == 0)
+			break;
+	while (fgets(buf, sizeof(buf), f))
+		if ((sscanf(buf, "%u %s\n", &major, puf) == 2) &&
+		    (strncmp(puf, driver, sizeof(puf)) == 0))
+			goto found;
+	major = -1;
+found:
+	fclose(f);
+	return major;
+}
+

@@ -1,3 +1,8 @@
+xfsdump-2.2.7 (13 March 2003)
+	- add initial support for TS tape driver.
+	  (19 February 2003)
+	- fix xfsdump -I option to set correct fsid
+
 xfsdump-2.2.6 (19 December 2002)
 	- add initial internationalisation support.
 

@@ -59,4 +59,7 @@ typedef struct xfs_fsop_geom xfs_fsop_geom_v1_t;
 #endif
 #include <locale.h>
 
+/* Define as 1 if you have ts/mtio.h */
+#undef HAVE_TS_MTIO_H
+
 #endif	/* __CONFIG_H__ */

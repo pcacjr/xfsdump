@@ -331,6 +331,10 @@ AC_TRY_LINK([
 	exit 1 ],
 	[ echo ok ])
 
+dnl Check for TS mtio.h header file.
+AC_CHECK_HEADER(ts/mtio.h, [
+	AC_DEFINE([HAVE_TS_MTIO_H])])
+
 dnl Check if we have a type for the version 1 XFS geometry ioctl
 AC_MSG_CHECKING([for XFS geometry ioctl (v1)])
 AC_TRY_COMPILE(

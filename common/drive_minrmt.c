@@ -33,6 +33,8 @@
 #include <libxfs.h>
 #include <jdm.h>
 
+#include "config.h"
+
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -42,7 +44,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/sysmacros.h>
+#ifdef HAVE_TS_MTIO_H
+#include <ts/mtio.h>
+#else  /* HAVE_TS_MTIO_H */
 #include <sys/mtio.h>
+#endif /* HAVE_TS_MTIO_H */
 #include <sys/signal.h>
 #include <malloc.h>
 #include <sched.h>

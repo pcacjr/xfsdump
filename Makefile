@@ -60,7 +60,7 @@ else
 clean:	# if configure hasn't run, nothing to clean
 endif
 
-$(CONFIGURE):
+$(CONFIGURE): configure.in
 	autoconf
 	./configure \
 		--prefix=/ \
