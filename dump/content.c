@@ -46,7 +46,7 @@
 #include <malloc.h>
 
 #ifdef linux
-#include <quotaio_xfs.h>
+#include <dqblk_xfs.h>
 #endif
 
 #ifdef EXTATTR

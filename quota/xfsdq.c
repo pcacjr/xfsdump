@@ -40,7 +40,7 @@
 #include <grp.h>
 
 #ifdef linux
-#include <quotaio_xfs.h>
+#include <dqblk_xfs.h>
 #endif
 
 static char *progname;
