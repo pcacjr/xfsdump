@@ -924,6 +924,7 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 					npreds++;
 					
 					uuid_parse(value, fsid);
+					fs = fsid;
 					break;
 
 				      case OPT_DEV: /* process dev option */
