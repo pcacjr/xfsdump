@@ -72,6 +72,8 @@
 #include <attr/attributes.h>
 #include <xfs/xfs_dfrag.h>
 
+char *progname;
+
 int vflag;
 int gflag;
 static int Mflag;
@@ -106,7 +108,6 @@ static __int64_t	minimumfree = 2048;
 static time_t howlong = 7200;		/* default seconds of reorganizing */
 static char *leftofffile = "/var/tmp/.fsrlast_xfs";/* where we left off last */
 static char *mtab = MOUNTED;
-static char *progname;
 static time_t endtime;
 static time_t starttime;
 static xfs_ino_t	leftoffino = 0;
