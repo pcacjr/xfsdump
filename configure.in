@@ -235,7 +235,7 @@ AC_SUBST(libhdl)
 dnl Check xfsprogs-dev has needed macros
 AC_MSG_CHECKING([macros in xfs/xfs_fs.h])
 AC_TRY_LINK([#include <libxfs.h>],
-	[ int x = XFS_IOC_ATTRLIST_BY_HANDLE; ],
+	[ xfs_mount_t *mp; int x = XFS_AGFL_DADDR(mp); ],
 	[ echo ok ],
 	[ echo
 	echo 'FATAL ERROR: could not find needed macros in the XFS headers.'

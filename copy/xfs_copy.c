@@ -918,7 +918,7 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 	if (source_blocksize > source_sectorsize)  {
 		/* get number of leftover sectors in last block of ag header */
 
-		tmp_residue = ((XFS_AGFL_DADDR + 1) * source_sectorsize)
+		tmp_residue = ((XFS_AGFL_DADDR(mp) + 1) * source_sectorsize)
 					% source_blocksize;
 		first_residue = (tmp_residue == 0) ? 0 :
 			source_blocksize - tmp_residue;
@@ -932,10 +932,10 @@ fprintf(logerr, "\t\tunmounted or mounted read-only.  Copy proceeding...\n");
 		exit(1);
 	}
 
-	first_agbno = (((XFS_AGFL_DADDR + 1) * source_sectorsize)
+	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * source_sectorsize)
 				+ first_residue) / source_blocksize;
 	ASSERT(first_agbno != 0);
-	ASSERT( ((((XFS_AGFL_DADDR + 1) * source_sectorsize)
+	ASSERT( ((((XFS_AGFL_DADDR(mp) + 1) * source_sectorsize)
 				+ first_residue) % source_blocksize) == 0);
 
 	if (!duplicate_uuids)  {

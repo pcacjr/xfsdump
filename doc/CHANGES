@@ -1,3 +1,8 @@
+xfsdump-2.2.5 (19 December 2002)
+	- fix build fallout from macro changes in XFS headers.
+	- add a configure check so that we don't attempt to build
+	  against old versions of the headers.
+
 xfsdump-2.2.4 (08 November 2002)
 	- configure now looks for, and xfsinvutil uses, the ncurses
 	  header and library rather than the curses version - this
