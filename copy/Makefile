@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of version 2 of the GNU General Public License as
@@ -33,25 +33,22 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LTCOMMAND = xfs_copy	# NEEDS FURTHER PORTING WORK
-#LTCOMMAND = 		# <-- don't build, but put source in tarball.
-
+LTCOMMAND = xfs_copy
 CFILES = xfs_copy.c locks.c
 HFILES = locks.h
 LLDLIBS = $(LIBXFS) $(LIBUUID) -lpthread
-LTDEPENDENCIES = $(LIBXFS)
+LLDFLAGS = -static
 
 default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
-CFLAGS += -I../../xfsprogs/include
-
 #install: default
-# Locking code needs to be ported!  (it compiles but doesn't work)
+# Locking code needs to be ported!  (it compiles but needs testing?)
 # Once that's done, uncomment these two lines:
 #	$(INSTALL) -m 755 -d $(PKG_BIN_DIR)
 #	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_BIN_DIR)
+# and move the man page back into the man/... tree.
 
 install: default
 install-dev: default
