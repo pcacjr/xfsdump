@@ -1080,11 +1080,11 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		unlink(ffname);
 	}
 
-	/* Loop through block map copying the file. */
+	/* Loop through block map allocating new extents */
 	for (extent = 0; extent < nextents; extent++) {
 		pos = outmap[extent].bmv_offset;
 		if (outmap[extent].bmv_block == -1) {
-			space.l_whence = 0;
+			space.l_whence = SEEK_SET;
 			space.l_start = pos;
 			space.l_len = outmap[extent].bmv_length;
 			if (ioctl(tfd, XFS_IOC_UNRESVSP64, &space) < 0) {
@@ -1092,7 +1092,6 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 					   tname);
 			}
 			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
-			lseek64(fd, outmap[extent].bmv_length, SEEK_CUR);
 			continue;
 		} else if (outmap[extent].bmv_length == 0) {
 			/* to catch holes at the beginning of the file */
@@ -1110,6 +1109,38 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 				free(fbuf);
 				return -1;
 			}
+			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+		}
+	} /* end of space allocation loop */
+
+	if (lseek64(tfd, 0, SEEK_SET)) {
+		fsrprintf(_("Couldn't rewind on temporary file\n"));
+		close(tfd);
+		free(fbuf);
+		return -1;
+	}
+
+	/* Check if the temporary file has fewer extents */
+	new_nextents = getnextents(tfd);
+	if (dflag)
+		fsrprintf(_("Temporary file has %d extents (%d in original)\n"), new_nextents, cur_nextents);
+	if (cur_nextents <= new_nextents) {
+		if (vflag)
+			fsrprintf(_("No improvement will be made (skipping): %s\n"), fname);
+		close(tfd);
+		return 1; /* no change/no error */
+	}
+
+	/* Loop through block map copying the file. */
+	for (extent = 0; extent < nextents; extent++) {
+		pos = outmap[extent].bmv_offset;
+		if (outmap[extent].bmv_block == -1) {
+			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+			lseek64(fd, outmap[extent].bmv_length, SEEK_CUR);
+			continue;
+		} else if (outmap[extent].bmv_length == 0) {
+			/* to catch holes at the beginning of the file */
+			continue;
 		}
 		for (cnt = outmap[extent].bmv_length; cnt > 0;
 		     cnt -= ct, pos += ct) {
@@ -1194,15 +1225,6 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	sx.sx_fdtmp    = tfd;
 	sx.sx_offset   = 0;
 	sx.sx_length   = statp->bs_size;
-
-	/* Check if the extent count improved */
-	new_nextents = getnextents(tfd);
-	if (cur_nextents <= new_nextents) {
-		if (vflag)
-			fsrprintf(_("No improvement made: %s\n"), fname);
-		close(tfd);
-		return 1; /* no change/no error */
-	}
 
 	/* switch to the owner's id, to keep quota in line */
         if (fchown(tfd, statp->bs_uid, statp->bs_gid) < 0) {

@@ -1,3 +1,7 @@
+xfsdump-2.2.19 (23 Mar 2004)
+	- rearrange fsr algorithm to not copy data unless extent
+	  count has been improved.  Suggested by Chris Wedgwood
+	  <cw at f00f dot org> and Utz Lehmann <xfs at s2y4n2c dot de>
 
 xfsdump-2.2.18 (25 Feb 2004)
 	- add support for the security extended attributes namespace
@@ -88,7 +92,7 @@ xfsdump-2.2.3 (31 October 2002)
 xfsdump-2.2.2 (03 October 2002)
 	- Remove fork/setuid from fsr.  Just chown temp. file to owner.
 	  This gets fsr working again with the restricted RESVSP ioctl.
-	  Chris Wedgwood <cw@f00f.org>
+	  Chris Wedgwood <cw at f00f dot org>
 
 xfsdump-2.2.1 (24 September 2002)
 	- minor troff-version-specific fixups for xfsrestore(8).
