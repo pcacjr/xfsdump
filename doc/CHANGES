@@ -1,3 +1,7 @@
+xfsdump-2.2.3 (31 October 2002)
+	- minor update to Debian packaging dependencies.
+	- inventory related bugfix.
+
 xfsdump-2.2.2 (03 October 2002)
 	- Remove fork/setuid from fsr.  Just chown temp. file to owner.
 	  This gets fsr working again with the restricted RESVSP ioctl.

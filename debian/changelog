@@ -1,3 +1,10 @@
+xfsdump (2.2.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Update packaging dependencies to reflect renamed libattr1-dev
+
+ -- Nathan Scott <nathans@debian.org>  Thu, 31 Oct 2002 21:20:25 +1100
+
 xfsdump (2.2.2-1) unstable; urgency=low
 
   * New upstream release (closes: #162038).
