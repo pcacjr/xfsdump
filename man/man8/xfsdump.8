@@ -219,20 +219,20 @@ of the following values: \f3general\f1, \f3proc\f1, \f3drive\f1, \f3media\f1,
 For example, to dump the root filesystem with tracing activated for
 all subsystems:
 .EX
-# xfsdump -v trace -f /dev/tape /
+# xfsdump \-v trace \-f /dev/tape /
 .EE
 To enable debug-level tracing for drive and media operations:
 .EX
-# xfsdump -v drive=debug,media=debug -f /dev/tape /
+# xfsdump \-v drive=debug,media=debug \-f /dev/tape /
 .EE
 To enable tracing for all subsystems, and debug level tracing for drive operations
 only:
 .EX
-# xfsdump -v trace,drive=debug -f /dev/tape /
+# xfsdump \-v trace,drive=debug \-f /dev/tape /
 .EE
 To list files that will be excluded from the dump:
 .EX
-# xfsdump -e -v excluded_files=debug -f /dev/tape /
+# xfsdump \-e \-v excluded_files=debug \-f /dev/tape /
 .EE
 .TP 5
 \f3\-z\f1 \f2size\f1
@@ -631,7 +631,7 @@ $ chattr +d file
 .EE
 To turn the flag off:
 .EX
-$ chattr -d file
+$ chattr \-d file
 .EE
 This is the preferred method and may result in a slightly
 faster dump, since
@@ -646,11 +646,11 @@ This can be done with the
 .IR attr (1)
 command:
 .EX
-$ attr -s "SGI_XFSDUMP_SKIP_FILE" -V "" file 
+$ attr \-s "SGI_XFSDUMP_SKIP_FILE" \-V "" file 
 .EE
 To remove the attribute:
 .EX
-$ attr -r "SGI_XFSDUMP_SKIP_FILE" file
+$ attr \-r "SGI_XFSDUMP_SKIP_FILE" file
 .EE
 It should be noted that xfsdump will not check directories for this
 attribute.  It should also be noted that this use of extended
@@ -662,7 +662,7 @@ Care should be taken to note which files have been tagged.
 Under normal operation,
 .I xfsdump
 will only report the number of files it will skip.  The
-.B "-v excluded_files=debug"
+.B "\-v excluded_files=debug"
 option, however, will cause
 .I xfsdump
 to list the inode numbers of the individual files affected.
@@ -678,30 +678,30 @@ it will be included in later dumps.
 To perform a level 0, single stream dump of the root filesystem to a locally mounted
 tape drive, prompting for session and media labels when required:
 .EX
-# xfsdump -f /dev/tape /
+# xfsdump \-f /dev/tape /
 .EE
 To specify session and media labels explicitly:
 .EX
-# xfsdump -L session_1 -M tape_0 -f /dev/tape /
+# xfsdump \-L session_1 \-M tape_0 \-f /dev/tape /
 .EE
 To perform a dump to a remote tape using the minimal rmt protocol and a set
 blocksize of 64k:
 .EX
-# xfsdump -m -b 65536 -f otherhost:/dev/tape /
+# xfsdump \-m \-b 65536 \-f otherhost:/dev/tape /
 .EE
 To perform a level 0, multi-stream dump to two locally mounted tape drives:
 .EX
-# xfsdump -L session_2 -f /dev/rmt/tps4d6v -M tape_1 \e
-          -f /dev/rmt/tps5d6v -M tape_2 /
+# xfsdump \-L session_2 \-f /dev/rmt/tps4d6v \-M tape_1 \e
+          \-f /dev/rmt/tps5d6v \-M tape_2 /
 .EE
 To perform a level 1 dump relative to the last level 0 dump recorded in the 
 inventory:
 .EX
-# xfsdump -l 1 -f /dev/tape /
+# xfsdump \-l 1 \-f /dev/tape /
 .EE
 To copy the contents of a filesystem to another directory (see \f2xfsrestore\f1(8)):
 .EX
-# xfsdump -J - / | xfsrestore -J - /new
+# xfsdump \-J \- / | xfsrestore \-J \- /new
 .EE
 .SH FILES
 .TP 25

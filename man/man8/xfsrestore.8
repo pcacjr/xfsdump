@@ -178,10 +178,10 @@ Allows
 .I xfsrestore
 to restore only files newer than \f2file\f1.
 The modification time of \f2file\f1
-(i.e., as displayed with the \f3ls -l\f1 command)
+(i.e., as displayed with the \f3ls \-l\f1 command)
 is compared to the inode modification time
 of each file on the source media
-(i.e., as displayed with the \f3ls -lc\f1 command).
+(i.e., as displayed with the \f3ls \-lc\f1 command).
 A file is restored from media only if its inode modification time
 is greater than or equal to
 the modification time of \f2file\f1.
@@ -249,18 +249,18 @@ of the following values: \f3general\f1, \f3proc\f1, \f3drive\f1, \f3media\f1,
 For example, to restore the root filesystem
 with tracing activated for all subsystems:
 .EX
-# xfsrestore -v trace -f /dev/tape /
+# xfsrestore \-v trace \-f /dev/tape /
 .EE
 .ne 2
 To enable debug-level tracing for drive and media operations:
 .EX
-# xfsrestore -v drive=debug,media=debug -f /dev/tape /
+# xfsrestore \-v drive=debug,media=debug \-f /dev/tape /
 .EE
 .ne 2
 To enable tracing for all subsystems, and debug level tracing for drive operations
 only:
 .EX
-# xfsrestore -v trace,drive=debug -f /dev/tape /
+# xfsrestore \-v trace,drive=debug \-f /dev/tape /
 .EE
 .TP 5
 .B \-w
@@ -298,7 +298,7 @@ inode modification time of corresponding file in the \f2dest\f1
 directory.
 The file is restored only if the on-media version is newer than the version
 in the \f2dest\f1 directory.
-The inode modification time of a file can be displayed with the \f3ls -lc\f1 command.
+The inode modification time of a file can be displayed with the \f3ls \-lc\f1 command.
 .TP 5
 .B \-F
 Inhibit interactive operator prompts.
@@ -635,7 +635,7 @@ media file without restoring any data, you may do so using the
 .B \-t
 option:
 .EX
-# xfsrestore -t -f /dev/tape
+# xfsrestore \-t \-f /dev/tape
 .EE
 This is useful to rebuild the inventory database if it
 is ever lost or corrupted.  The only caveat is that
@@ -700,19 +700,19 @@ can be used to apply the quota limits to the filesystem.
 .SH EXAMPLES
 To restore the root filesystem from a locally mounted tape:
 .EX
-# xfsrestore -f /dev/tape /
+# xfsrestore \-f /dev/tape /
 .EE
 To restore from a remote tape, specifying the dump session id:
 .EX
-# xfsrestore -L session_1 -f otherhost:/dev/tape /new
+# xfsrestore \-L session_1 \-f otherhost:/dev/tape /new
 .EE
 To restore the contents a of a dump to another subdirectory:
 .EX
-# xfsrestore -f /dev/tape /newdir
+# xfsrestore \-f /dev/tape /newdir
 .EE
 To copy the contents of a filesystem to another directory (see \f2xfsdump\f1(8)):
 .EX
-# xfsdump -J - / | xfsrestore -J - /new
+# xfsdump \-J \- / | xfsrestore \-J \- /new
 .EE
 .SH FILES
 .TP 25
