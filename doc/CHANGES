@@ -1,5 +1,9 @@
 
-xfsdump-2.2.16 (05 Dec 2004)
+xfsdump-2.2.17 (13 Feb 2004)
+	- modify calls to libhandle subroutines to account for
+	  changes to the libhandle library.
+
+xfsdump-2.2.16 (05 Dec 2003)
 	- fix xfsrestore to restore new XFS inode flags:  immutable,
 	  append, sync, noatime and nodump.  The inode flags have also
 	  been added to the _mk_fillconfig_ea() routine in common.dump,

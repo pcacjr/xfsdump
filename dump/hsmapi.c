@@ -380,7 +380,7 @@ const	xfs_bstat_t	*statp)
 	   attr_multif-by-handle call when it is available.
 	*/
 
-	fd = open_by_handle(hanp, hlen, O_RDONLY);
+	fd = open_by_fshandle(hanp, hlen, O_RDONLY);
 	dm_handle_free(hanp, hlen);
 	if (fd < 0) {
                 return 0;

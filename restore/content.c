@@ -9483,10 +9483,10 @@ reopen_invis(char *path, int oflags)
 		return -1;
 	}
 	
-	fd = open_by_handle(hanp, hlen, oflags);
+	fd = open_by_fshandle(hanp, hlen, oflags);
 	if (fd < 0) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			"open_by_handle of %s failed:%s\n"),
+			"open_by_fshandle of %s failed:%s\n"),
 			path, strerror( errno ));
 		free_handle(hanp, hlen);
 		return -1;

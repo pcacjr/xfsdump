@@ -2480,6 +2480,12 @@ setdirattr( dah_t dah, char *path )
 
 		/* restore DMAPI event settings etc.
 		 */
+		if (path_to_fshandle(path, &hanp, &hlen)) {
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				"path_to_fshandle of %s failed:%s\n"),
+				path, strerror( errno ));
+			return;
+		}
 		if (path_to_handle(path, &hanp, &hlen)) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 				"path_to_handle of %s failed:%s\n"),
@@ -2487,10 +2493,10 @@ setdirattr( dah_t dah, char *path )
 			return;
 		}
 		
-		fd = open_by_handle(hanp, hlen, O_RDONLY);
+		fd = open_by_fshandle(hanp, hlen, O_RDONLY);
 		if (fd < 0) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-				"open_by_handle of %s failed:%s\n"),
+				"open_by_fshandle of %s failed:%s\n"),
 				path, strerror( errno ));
 			free_handle(hanp, hlen);
 			return;
@@ -2549,17 +2555,23 @@ setdirattr( dah_t dah, char *path )
 #ifdef EXTATTR
 	/* set the extended attributes
 	 */
+	if (path_to_fshandle(path, &hanp, &hlen)) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"path_to_fshandle of %s failed:%s\n"),
+			path, strerror( errno ));
+		return;
+	}
 	if (path_to_handle(path, &hanp, &hlen)) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			      "path_to_handle of %s failed:%s\n"),
+		      "path_to_handle of %s failed:%s\n"),
 		      path, strerror( errno ));
 		return;
 	}
-		
-	fd = open_by_handle(hanp, hlen, O_RDONLY);
+
+	fd = open_by_fshandle(hanp, hlen, O_RDONLY);
 	if (fd < 0) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			      "open_by_handle of %s failed:%s\n"),
+		      "open_by_fshandle of %s failed:%s\n"),
 		      path, strerror( errno ));
 		free_handle(hanp, hlen);
 		return;
