@@ -35,7 +35,6 @@
  * 
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
-#ident	"$Header: /proj/irix6.5m-melb/isms/eoe/lib/librmt/src/RCS/rmtioctl.c,v 1.5 1995/03/15 17:55:47 tap Exp $"
 
 #include <errno.h>
 
@@ -117,21 +116,19 @@ init_mtop_map(void)
 }
 
 
-static int _rmt_ioctl(int, int, char *);
+static int _rmt_ioctl(int, unsigned int, void *);
 
 /*
  *	Do ioctl on file.  Looks just like ioctl(2) to caller.
  */
  
-int rmtioctl (fildes, request, arg)
-int fildes, request, arg;
+int
+rmtioctl(int fildes, unsigned int request, void *arg)
 {
-	if (isrmt (fildes))
-	{
-		return (_rmt_ioctl (fildes - REM_BIAS, request, (char *)arg));
+	if (isrmt (fildes)) {
+		return (_rmt_ioctl (fildes - REM_BIAS, request, arg));
 	}
-	else
-	{
+	else {
 		return (ioctl (fildes, request, arg));
 	}
 }
@@ -150,7 +147,7 @@ int fildes, request, arg;
  */
 
 static int
-_rmt_ioctl(int fildes, int op, char *arg)
+_rmt_ioctl(int fildes, unsigned int op, void *arg)
 {
 	char buffer[BUFMAGIC];
 	int rc, cnt, ssize;
@@ -167,8 +164,7 @@ _rmt_ioctl(int fildes, int op, char *arg)
  *	MTIOCTOP is the easy one. nothing is transfered in binary
  */
 
-	if (op == MTIOCTOP)
-	{
+	if (op == MTIOCTOP) {
 		int mt_op = ((struct mtop *) arg)->mt_op;
 		int mt_count = ((struct mtop *) arg)->mt_count;
 
@@ -199,11 +195,8 @@ _rmt_ioctl(int fildes, int op, char *arg)
 			}
 		}
 
-			
-
 		sprintf(buffer, "I%d\n%d\n", mt_op, mt_count);
-		if (_rmt_command(fildes, buffer) == -1)
-		{
+		if (_rmt_command(fildes, buffer) == -1) {
 			return(-1);
 		}
 		return(_rmt_status(fildes));
@@ -279,11 +272,9 @@ _rmt_ioctl(int fildes, int op, char *arg)
 
 		/* read in all the data */
 		ssize = rc;
-		for (; ssize > 0; ssize -= cnt, p += cnt)
-		{
+		for (; ssize > 0; ssize -= cnt, p += cnt) {
 			cnt = read(READ(fildes), p, ssize);
-			if (cnt <= 0)
-			{
+			if (cnt <= 0) {
 				_rmt_abort(fildes);
 				setoserror( EIO );
 				return(-1);

@@ -88,7 +88,7 @@ retry:
 	sprintf( question,
 		 "please change media in "
 		 "drive %u\n",
-		 drivep->d_index );
+		 (unsigned int)drivep->d_index );
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
 	ASSERT( querycnt <= QUERYMAX );

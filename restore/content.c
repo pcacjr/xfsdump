@@ -2585,8 +2585,8 @@ content_statline( char **linespp[ ] )
 			 tmp->tm_hour,
 			 tmp->tm_min,
 			 tmp->tm_sec,
-			 tranp->t_dirdonecnt,
-			 tranp->t_dircnt,
+			 (unsigned long long)tranp->t_dirdonecnt,
+			 (unsigned long long)tranp->t_dircnt,
 			 percent,
 			 elapsed );
 		ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
@@ -2625,8 +2625,8 @@ content_statline( char **linespp[ ] )
 		 tmp->tm_hour,
 		 tmp->tm_min,
 		 tmp->tm_sec,
-		 inodone,
-		 inocnt,
+		 (unsigned long long)inodone,
+		 (unsigned long long)inocnt,
 		 percent,
 		 elapsed );
 	ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
@@ -2702,8 +2702,8 @@ content_mediachange_query( void )
 		if ( mcflag[ thrdix ] ) {
 			choicetothrdmap[ choicecnt ].thrdix = thrdix;
 			sprintf( choicetothrdmap[ choicecnt ].choicestr,
-				 "drive %d",
-				 thrdix );
+				 "drive %u",
+				 (unsigned int)thrdix );
 			choicestr[ choicecnt ] =
 					choicetothrdmap[ choicecnt ].choicestr;
 			maxdrvchoiceix = choicecnt;
@@ -3498,7 +3498,7 @@ wipepersstate( void )
 	}
 	closedir( dirp );
 
-	( void * )rmdir( tranp->t_hkdir );
+	rmdir( tranp->t_hkdir );
 }
 
 /* Inv abstraction ***********************************************************/
@@ -6712,7 +6712,7 @@ retry:
 		sprintf( question,
 			 "please change media in "
 			 "drive %u\n",
-			 drivep->d_index );
+			 (unsigned int)drivep->d_index );
 	} else {
 		sprintf( question,
 			 "please change media in "
@@ -6868,7 +6868,7 @@ retry:
 			 "the following dump has been found"
 			 " on drive %u"
 			 "\n\n",
-			 thrdix );
+			 (unsigned int)thrdix );
 	} else {
 		sprintf( introstring,
 			 "the following dump has been found"

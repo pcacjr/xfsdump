@@ -3848,7 +3848,7 @@ display_ring_metrics( drive_t *drivep, intgen_t mlog_flags )
 		ASSERT( strlen( bufszbuf ) < sizeof( bufszbuf ));
 		bufszsfxp = "MB";
 	} else {
-		sprintf( bufszbuf, "%u", tape_recsz / 0x400 ); 
+		sprintf( bufszbuf, "%u", (unsigned int)(tape_recsz / 0x400) );
 		bufszsfxp = "KB";
 	}
 

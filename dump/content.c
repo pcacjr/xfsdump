@@ -1860,10 +1860,10 @@ content_statline( char **linespp[ ] )
 				 tmp->tm_hour,
 				 tmp->tm_min,
 				 tmp->tm_sec,
-				 sc_stat_inomapphase,
-				 sc_stat_inomappass,
-				 sc_stat_inomapdone,
-				 sc_stat_inomapcnt,
+				 (unsigned int)sc_stat_inomapphase,
+				 (unsigned int)sc_stat_inomappass,
+				 (unsigned long long)sc_stat_inomapdone,
+				 (unsigned long long)sc_stat_inomapcnt,
 				 elapsed );
 			ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
 		} else {
@@ -1875,9 +1875,9 @@ content_statline( char **linespp[ ] )
 				 tmp->tm_hour,
 				 tmp->tm_min,
 				 tmp->tm_sec,
-				 sc_stat_inomapphase,
-				 sc_stat_inomapdone,
-				 sc_stat_inomapcnt,
+				 (unsigned int)sc_stat_inomapphase,
+				 (unsigned long long)sc_stat_inomapdone,
+				 (unsigned long long)sc_stat_inomapcnt,
 				 elapsed );
 			ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
 		}
@@ -1928,8 +1928,8 @@ content_statline( char **linespp[ ] )
 		 tmp->tm_hour,
 		 tmp->tm_min,
 		 tmp->tm_sec,
-		 nondirdone,
-		 sc_stat_nondircnt,
+		 (unsigned long long)nondirdone,
+		 (unsigned long long)sc_stat_nondircnt,
 		 percent,
 		 elapsed );
 	ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
@@ -1948,7 +1948,7 @@ content_statline( char **linespp[ ] )
 		if ( drivecnt > 1 ) {
 			sprintf( statline[ i + 1 ],
 				 "drive %u: ",
-				 i );
+				 (unsigned int)i );
 		}
 		switch( pdsp->pds_phase ) {
 		case PDS_INOMAP:
@@ -1963,8 +1963,8 @@ content_statline( char **linespp[ ] )
 			sprintf( &statline[ i + 1 ]
 					  [ strlen( statline[ i + 1 ] ) ],
 				 "%llu/%llu directories dumped",
-				 pdsp->pds_dirdone,
-				 sc_stat_dircnt );
+				 (unsigned long long)pdsp->pds_dirdone,
+				 (unsigned long long)sc_stat_dircnt );
 			break;
 		case PDS_INVSYNC:
 			strcat( statline[ i + 1 ],
@@ -2747,8 +2747,8 @@ content_mediachange_query( void )
 		if ( sc_mcflag[ thrdix ] ) {
 			choicetothrdmap[ choicecnt ].thrdix = thrdix;
 			sprintf( choicetothrdmap[ choicecnt ].choicestr,
-				 "drive %d",
-				 thrdix );
+				 "drive %u",
+				 (unsigned int)thrdix );
 			choicestr[ choicecnt ] =
 					choicetothrdmap[ choicecnt ].choicestr;
 			maxdrvchoiceix = choicecnt;
@@ -2854,7 +2854,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		bulkreq.lastip = &lastino;
 		bulkreq.icount = bstatbuflen;
 		bulkreq.ubuffer = bstatbufp;
-		bulkreq.ocount = &buflenout;
+		bulkreq.ocount = (__s32 *)&buflenout;
 
 		rval = ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq);
 
@@ -6271,7 +6271,7 @@ retry:
 	sprintf( question,
 		 "overwrite data on media in "
 		 "drive %u?\n",
-		 drivep->d_index );
+		 (unsigned int)drivep->d_index );
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
 	ASSERT( querycnt <= QUERYMAX );
@@ -6412,7 +6412,7 @@ retry:
 		 "please confirm media erase "
 		 "drive %u\n",
 		 GETOPT_ERASE,
-		 drivep->d_index );
+		 (unsigned int)drivep->d_index );
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
 	ASSERT( querycnt <= QUERYMAX );

@@ -3404,7 +3404,7 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
 	/* append entry name: special case if in orphanage
 	 */
 	if ( parh == persp->p_orphh ) {
-		namelen = sprintf( buf, "%llu.%u", ino, gen );
+		namelen = sprintf( buf, "%llu.%u", (unsigned long long)ino, gen );
 	} else if ( nh == persp->p_orphh ) {
 		namelen = sprintf( buf, "%s", orphname );
 	} else {

@@ -1445,11 +1445,11 @@ DEBUG_sessionprint( inv_session_t *ses, u_int ref, invt_pr_ctx_t *prctx)
 		printf("\t\tstream %d:\n", i );
 		printf( "\t\t\tpathname:\t%s\n", ses->s_streams[i].st_cmdarg );
 		printf( "\t\t\tstart:\t\tino %llu offset %lld\n",
-		        ses->s_streams[i].st_startino,
-		        ses->s_streams[i].st_startino_off );
+		        (unsigned long long)ses->s_streams[i].st_startino,
+		        (long long)ses->s_streams[i].st_startino_off );
 		printf( "\t\t\tend:\t\tino %llu offset %lld\n",
-		        ses->s_streams[i].st_endino,
-		        ses->s_streams[i].st_endino_off );
+		        (unsigned long long)ses->s_streams[i].st_endino,
+		        (long long)ses->s_streams[i].st_endino_off );
 		printf( "\t\t\tinterrupted:\t%s\n",
 		        ses->s_streams[i].st_interrupted ? "YES" : "NO" );
 		printf( "\t\t\tmedia files:\t%d\n",
@@ -1478,17 +1478,17 @@ DEBUG_sessionprint( inv_session_t *ses, u_int ref, invt_pr_ctx_t *prctx)
 				printf( "data\n" );
 			}
 			printf( "\t\t\t\tmfile size:\t%llu\n",
-				mfp->m_size);
+				(unsigned long long)mfp->m_size);
 			
 			if (! mfp->m_isinvdump) {
 				printf( "\t\t\t\tmfile start:"
 					"\tino %llu offset %lld\n",
-					mfp->m_startino,
-					mfp->m_startino_off );
+					(unsigned long long)mfp->m_startino,
+					(long long)mfp->m_startino_off );
 				printf( "\t\t\t\tmfile end:"
 					"\tino %llu offset %lld\n",
-					mfp->m_endino,
-					mfp->m_endino_off );
+					(unsigned long long)mfp->m_endino,
+					(long long)mfp->m_endino_off );
 			}
 
 			printf( "\t\t\t\tmedia label:\t\"%s\"\n",

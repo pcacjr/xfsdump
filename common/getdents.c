@@ -94,7 +94,7 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
 	dp = (struct dirent *) buf;
 	skdp = kdp = malloc (red_nbytes);
 
-	retval = getdents (fd, (struct kernel_dirent *) kdp, red_nbytes);
+	retval = getdents (fd, (struct dirent *) kdp, red_nbytes);
 
 	if (retval == -1)
 		return -1;

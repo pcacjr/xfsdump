@@ -563,9 +563,9 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 			printf( "\t\t\tpathname:\t%s\n",
 				StObjstrm->st_cmdarg);
 			printf( "\t\t\tinode start:\t%lld\n",
-				StObjstrm->st_startino.ino);
+				(long long)StObjstrm->st_startino.ino);
 			printf( "\t\t\tinode   end:\t%lld\n",
-				StObjstrm->st_endino.ino);
+				(long long)StObjstrm->st_endino.ino);
 			printf( "\t\t\tinterrupted:\t%s\n",
 				StObjstrm->st_interrupted ? "YES" : "NO" );
 			printf( "\t\t\tmedia files:\t%d\n",
@@ -576,11 +576,11 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 					(j * sizeof(invt_mediafile_t)));
 				printf( "\t\t\tmfile file %d:\n", j);
 				printf( "\t\t\t\tmfile size:\t%lld\n",
-					StObjmed->mf_size);
+					(long long)StObjmed->mf_size);
 				printf( "\t\t\t\tmfile start:\t%lld\n",
-					StObjmed->mf_startino.ino);
+					(long long)StObjmed->mf_startino.ino);
 				printf( "\t\t\t\tmfile end:\t%lld\n",
-					StObjmed->mf_endino.ino);
+					(long long)StObjmed->mf_endino.ino);
 				printf( "\t\t\t\tmedia label:\t\"%s\"\n",
 					StObjmed->mf_label);
 			}

@@ -959,8 +959,8 @@ void
 usage( void )
 {
 	char linebuf[ 200 ];
-	size_t pfxsz;
-	size_t ps;
+	int pfxsz;
+	int ps;
 	char *ns = "";
 
 	sprintf( linebuf,

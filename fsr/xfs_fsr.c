@@ -179,7 +179,7 @@ xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount,
     bulkreq.lastip = lastip;
     bulkreq.icount = icount;
     bulkreq.ubuffer = ubuffer;
-    bulkreq.ocount =  ocount;
+    bulkreq.ocount =  (__s32 *)ocount;
     return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
 }
 
@@ -588,7 +588,7 @@ fsrall_cleanup(int timeout)
 	else {
 		if (timeout) {
 			ret = sprintf(buf, "%s %d %lld\n", fs->dev, 
-			        fs->npass, (xfs_ino_t)leftoffino);
+			        fs->npass, (unsigned long long)leftoffino);
 			if (write(fd, buf, ret) < strlen(buf))
 				fsrprintf("write(%s) failed: %s\n", leftofffile,
 						strerror(errno));
@@ -675,7 +675,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 			}
 
 			/* Don't know the pathname, so make up something */
-			sprintf(fname, "ino=%lld", p->bs_ino);
+			sprintf(fname, "ino=%lld", (unsigned long long)p->bs_ino);
 
 			/* Get a tmp file name */
 			tname = tmp_next(mntdir);
