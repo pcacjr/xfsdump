@@ -5,6 +5,7 @@ xfsdump-1.0.7 (07 May 2001)
 	- support realtime files in dump/restore
 	- cleanup arch-specific code, esp. the byteswab routines
 	- as a result, move to -O1 as default for extern inlines
+	- fix bug dumping to remote tape device with given user
 
 xfsdump-1.0.6 (01 May 2001)
 	- remove spurious warnings when dumping quota information

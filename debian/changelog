@@ -3,6 +3,7 @@ xfsdump (1.0.7) unstable; urgency=low
   * Fix numerous warnings, remove last -Wall filter
   * Support realtime files in dump/restore
   * Cleanup arch-specific code, esp. the byteswab routines
+  * Fix bug dumping to remote tape device with given user
 
  -- Nathan Scott <nathans@debian.org>  Wed,  9 May 2001 15:23:23 +1000
 
