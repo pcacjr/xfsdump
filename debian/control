@@ -10,12 +10,12 @@ Depends: ${shlibs:Depends}, xfsprogs
 Architecture: any
 Description: Administrative utilities for the XFS filesystem
  The xfsdump package contains xfsdump, xfsrestore and a number of
- other administrative utilities for managing XFS file systems.
+ other administrative utilities for managing XFS filesystems.
  .
  xfsdump examines files in a filesystem, determines which need to be
  backed up, and copies those files to a specified disk, tape or other
  storage medium.  It uses XFS-specific directives for optimizing the
- dump of an XFS file system, and also knows how to backup XFS extended
+ dump of an XFS filesystem, and also knows how to backup XFS extended
  attributes.  Backups created with xfsdump are "endian safe" and can
  thus be transfered between Linux machines of different architectures
  and also between IRIX machines.
