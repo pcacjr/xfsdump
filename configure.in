@@ -206,15 +206,15 @@ dnl Checks for Extended Attributes header and library.
 AC_CHECK_HEADER(attr/attributes.h,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid Extended Attributes header.'
-	echo 'Install either the attr-devel (rpm) or the attr-dev (deb) package.'
+	echo 'Install either the libattr (rpm) or the attr-dev (deb) package.'
 	echo 'Alternatively, run "make install-dev" from the attr source.'
 	exit 1
 ])
 AC_CHECK_LIB(attr, attr_get,, [
 	echo
 	echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
-	echo 'Install either the attr-devel (rpm) or the attr-dev (deb) package.'
-	echo 'Alternatively, run "make install-dev" from the attr source.'
+	echo 'Install either the libattr (rpm) or the libattr1 (deb) package.'
+	echo 'Alternatively, run "make install-lib" from the attr source.'
 	exit 1
 ])
 libattr="-lattr"
