@@ -1,3 +1,9 @@
+xfsdump-2.0.3 (08 May 2002)
+	- fix xfsdump so that it does not cause segmentation fault
+	  when media specific object id (OPT_MOBJID) is specified 
+	  with -I option.
+	- fix similar code for filesystem id (OPT_FSID) option. 
+
 xfsdump-2.0.2 (08 May 2002)
 	- in xfsdump, check for ERANGE as well as E2BIG for testing
 	  of the existence of the SGI_XFSDUMP_SKIP_FILE extended

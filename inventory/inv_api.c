@@ -921,7 +921,7 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 					bywhat = (inv_predicate_t) INV_BY_UUID;
 					npreds++;
 					
-					uuid_unparse(value, fsid);
+					uuid_parse(value, fsid);
 					break;
 
 				      case OPT_DEV: /* process dev option */
@@ -941,9 +941,9 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 					{
 					uuid_t *u;
 					u = malloc ( sizeof( uuid_t ) );
-					uuid_unparse(value, *u);
+					uuid_parse(value, *u);
 					prctx->mobj.type = INVT_MOID;
-					uuid_copy(prctx->mobj.value, *u);
+					prctx->mobj.value = (void *)u;
 				        }
 					npreds2++;
 					break;
