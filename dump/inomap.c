@@ -56,6 +56,8 @@
 #include "inomap.h"
 #include "arch_xlate.h"
 #include "exit.h"
+#include "attr.h"
+#include <attributes.h>
 
 /* structure definitions used locally ****************************************/
 
@@ -75,6 +77,7 @@ extern size_t pgsz;
 extern hsm_fs_ctxt_t *hsm_fs_ctxtp;
 #endif /* DMEXTATTR */
 extern u_int64_t maxdumpfilesize;
+extern bool_t allowexcludefiles_pr;
 
 /* forward declarations of locally defined static functions ******************/
 
@@ -171,6 +174,8 @@ static void mln_free( void );
 static ix_t *inomap_statphasep;
 static ix_t *inomap_statpassp;
 static size64_t *inomap_statdonep;
+static u_int64_t inomap_exclude_filesize = 0;
+static u_int64_t inomap_exclude_skipattr = 0;
 
 /* definition of locally defined global functions ****************************/
 
@@ -307,6 +312,17 @@ inomap_build( jdm_fshandle_t *fshandlep,
 		free( ( void * )bstatbufp );
 		free( ( void * )getdentbufp );
 		return BOOL_FALSE;
+	}
+
+	if ( inomap_exclude_filesize > 0 ) {
+		mlog( MLOG_NOTE | MLOG_VERBOSE,
+		      "pruned %llu files: maximum size exceeded\n",
+		      inomap_exclude_filesize );
+	}
+	if ( inomap_exclude_skipattr > 0 ) {
+		mlog( MLOG_NOTE | MLOG_VERBOSE,
+		      "pruned %llu files: skip attribute set\n",
+		      inomap_exclude_skipattr );
 	}
 
 	/* prune subtrees not called for in the subtree list, and
@@ -707,15 +723,47 @@ cb_add( void *arg1,
 			/* skip if size is greater than prune size
 			 */
 			if ( maxdumpfilesize > 0 &&
-			    estimated_size > maxdumpfilesize ) {
-				mlog( MLOG_DEBUG | MLOG_INOMAP,
-				      "ino %llu pruned, estimated size %llu > maxdumpfilesuze %llu\n",
+			     estimated_size > maxdumpfilesize ) {
+				mlog( MLOG_DEBUG | MLOG_EXCLFILES,
+				      "pruned ino %llu, owner %u, estimated size %llu: maximum size exceeded\n",
 				      statp->bs_ino,
-				      estimated_size,
-				      maxdumpfilesize );
+				      statp->bs_uid,
+				      estimated_size );
 				map_add( ino, MAP_NDR_NOCHNG );
+				inomap_exclude_filesize++;
 				return 0;
 			}
+
+#ifdef EXTATTR
+			if (allowexcludefiles_pr && (statp->bs_xflags & XFS_XFLAG_HASATTR)) {
+				int rval;
+				attr_multiop_t attrop;
+				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
+
+				attrop.am_attrname  = skip_attr_name;
+				attrop.am_attrvalue = NULL;
+				attrop.am_length    = 0;
+				attrop.am_error     = 0;
+				attrop.am_flags     = 0;
+				attrop.am_opcode    = ATTR_OP_GET;
+                                
+				rval = jdm_attr_multi( fshandlep,
+						       statp,
+						       (char *)&attrop,
+						       1,
+						       0 );
+				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG) ) {
+					mlog( MLOG_DEBUG | MLOG_EXCLFILES,
+					      "pruned ino %llu, owner %u, estimated size %llu: skip attribute set\n",
+					      statp->bs_ino,
+					      statp->bs_uid,
+					      estimated_size );
+					map_add( ino, MAP_NDR_NOCHNG );
+					inomap_exclude_skipattr++;
+					return 0;
+				}
+                        }
+#endif /* EXTATTR */
 
 			map_add( ino, MAP_NDR_CHANGE );
 #ifdef DEBUG_INOMAP

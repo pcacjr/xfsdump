@@ -99,13 +99,11 @@ attr_multi_by_handle( jdm_filehandle_t *hanp,	/* handle pointer (fshandle_t) */
 
 	error = ioctl(fsfd, XFS_IOC_ATTRCTL_BY_HANDLE, &attr_hreq);
 
-	if (error > 0) {
-		/* copy return vals */
-		for (i = 0; i < count; i++) {
-			multiops[i].am_error = ops[i].error;
-			if (ops[i].opcode == ATTR_OP_GET)
-				multiops[i].am_length = ops[i].length;
-		}
+	/* copy return vals */
+	for (i = 0; i < count; i++) {
+		multiops[i].am_error = ops[i].error;
+		if (ops[i].opcode == ATTR_OP_GET)
+			multiops[i].am_length = ops[i].length;
 	}
 
 	free(ops);

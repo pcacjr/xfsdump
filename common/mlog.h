@@ -70,7 +70,8 @@
 #ifdef RESTORE
 #define MLOG_SS_TREE	5		/* restore tree */
 #endif /* RESTORE */
-#define MLOG_SS_CNT	6		/* NOTE! bump this when adding ss */	
+#define MLOG_SS_EXCLFILES 6		/* list excluded files */
+#define MLOG_SS_CNT	7		/* NOTE! bump this when adding ss */	
 
 #define MLOG_SS_SHIFT	8
 #define MLOG_SS_MASK	( 0xff << MLOG_SS_SHIFT )
@@ -88,6 +89,7 @@
 #ifdef RESTORE
 #define MLOG_TREE	( MLOG_SS_TREE << MLOG_SS_SHIFT )
 #endif /* RESTORE */
+#define MLOG_EXCLFILES	( MLOG_SS_EXCLFILES << MLOG_SS_SHIFT )
 
 /* mlog_level - set during initialization, exported to facilitate
  * message logging decisions. one per subsystem (see above)

@@ -109,6 +109,12 @@ used, and the amount of data to be written.  The media file size may
 need to be adjusted if, for example, xfsdump cannot fit a media file
 onto a single tape.
 .TP 5
+\f3\-e\f1
+Allow files to be excluded from the dump.  This will cause xfsdump to 
+skip those files which are tagged with the "SGI_XFSDUMP_SKIP_FILE"
+attribute.  Without this flag, xfsdump will ignore the attribute, and
+continue to dump affected files.
+.TP 5
 \f3\-f\f1 \f2dest\f1 [ \f3\-f\f1 \f2dest\f1 ... ]
 Specifies a dump destination.
 A dump destination can be the pathname of a device (such as a tape drive),
@@ -194,7 +200,7 @@ across all dump subsystems. The second form allows the message logging level to
 be controlled on a per-subsystem basis. The two forms can be combined
 (see the example below). The argument \f2subsys\f1 can take one
 of the following values: \f3general\f1, \f3proc\f1, \f3drive\f1, \f3media\f1,
-\f3inventory\f1, and \f3inomap\f1.
+\f3inventory\f1, \f3inomap\f1 and \f3excluded_files\f1.
 
 For example, to dump the root filesystem with tracing activated for
 all subsystems:
@@ -209,6 +215,10 @@ To enable tracing for all subsystems, and debug level tracing for drive operatio
 only:
 .EX
 # xfsdump -v trace,drive=debug -f /dev/tape /
+EE
+To list files that will be excluded from the dump:
+.EX
+# xfsdump -e -v excluded_files=debug -f /dev/tape /
 .EE
 .TP 5
 \f3\-z\f1 \f2size\f1
@@ -217,7 +227,7 @@ dump.  Files over this size, will be excluded from the dump.  The size
 is an estimate based on the number of disk blocks actually used by the
 file, and so does not include holes.  In other words, size refers to
 the amount of space the file would take in the resulting dump.  On an
-interactive restore, the skipped file is visable with xfsrestore's 'ls'
+interactive restore, the skipped file is visible with xfsrestore's 'ls'
 and while you can use the 'add' and 'extract' commands, nothing will be
 restored.
 .TP 5
@@ -487,6 +497,33 @@ This media file contains the inventory information for the
 current dump session.
 This is currently unused.
 .P
+The inventory files stored in
+.I /var/lib/xfsdump
+are not included in the dump, even if that directory is contained
+within the filesystem being dumped.  Including the inventory in the
+dump may lead to loss or corruption of data, should an older version
+be restored overwriting the current version.  To backup the
+.I xfsdump
+inventory, the contents of
+.I /var/lib/xfsdump
+should be copied to another location which may then be safely dumped.
+Upon restoration, those files may be copied back into
+.IR /var/lib/xfsdump ,
+overwriting whatever files may be there, or
+.IR xfsinvutil (1M)
+may be used to selectively merge parts of the restored inventory back
+into the current inventory.  Prior to version 1.1.8, 
+.I xfsdump
+would include the
+.I /var/lib/xfsdump
+directory in the dump.  Care should be taken not to overwrite the
+.I /var/lib/xfsdump
+directory when restoring an old dump, by either restoring the
+filesystem to another location or by copying the current contents of
+.I /var/lib/xfsdump
+to a safe place prior to running
+.IR xfsrestore (1M).
+.P
 When operating in the miniroot environment,
 .I xfsdump
 does not create and does not reference the inventory database.
@@ -556,6 +593,53 @@ however, that the
 file will probably require modification to change the filesystem or
 UIDs if the filesystem has been restored to a different partition or
 system.
+.SS Excluding individual files
+Occasionally it is desirable to be able to exclude particular files or
+directories from the dump.  The
+.B -s
+option can be used to limit the dump to a specified directory, and the
+.B -z
+option can be used to exclude files over a particular size.  Additionally,
+when
+.I xfsdump
+is run with the
+.B -e
+option individual files can be "tagged" so that
+.I xfsdump
+will not include them in a dump.  Files are tagged by assigning that file
+an extended attribute with the name "SGI_XFSDUMP_SKIP_FILE".  This can be
+done with the
+.IR attr (1)
+command:
+.EX
+$ attr -s "SGI_XFSDUMP_SKIP_FILE" -V "" file 
+.EE
+To remove the attribute:
+.EX
+$ attr -r "SGI_XFSDUMP_SKIP_FILE" file
+.EE
+It should be noted that xfsdump will not check directories for this
+attribute.  It should also be noted that this use of extended
+attributes is not the same as that used by the
+.IR chattr (1)
+command.
+.PP
+Care should be taken to note which files have been tagged.
+Under normal operation,
+.I xfsdump
+will only report the number of files it will skip.  The
+.B "-v excluded_files=debug"
+option, however, will cause
+.I xfsdump
+to list the inode numbers of the individual files affected.
+.PP
+If a file was tagged and skipped for a level 0 dump, and subsequently that
+tag was removed, the file would not automatically be included in a higher
+level dump.  The file would only be included if it was modified since the
+last dump.  The
+.IR touch (1)
+command can be used on the file to update its modification time to ensure
+it will be included in later dumps.
 .SH EXAMPLES
 To perform a level 0, single stream dump of the root filesystem to a locally mounted
 tape drive, prompting for session and media labels when required:
@@ -590,6 +674,7 @@ To copy the contents of a filesystem to another directory (see \f2xfsrestore\f1(
 /var/lib/xfsdump/inventory
 dump inventory database
 .SH SEE ALSO
+attr(1),
 rmt(8),
 xfsdq(8),
 xfsrestore(8),

@@ -981,11 +981,12 @@ usage( void )
 	ULO( "<blocksize>",                             GETOPT_BLOCKSIZE );
 	ULO( "<media change alert program> ",		GETOPT_ALERTPROG );
 	ULO( "<dump media file size> ",			GETOPT_FILESZ );
+	ULO( "(allow files to be excluded)",		GETOPT_EXCLUDEFILES );
 	ULO( "<destination> ...",			GETOPT_DUMPDEST );
 	ULO( "(help)",					GETOPT_HELP );
 	ULO( "<level>",					GETOPT_LEVEL );
-	ULO( "<force usage of minimal rmt>",		GETOPT_MINRMT );
-	ULO( "<overwrite tape >",			GETOPT_OVERWRITE );
+	ULO( "(force usage of minimal rmt)",		GETOPT_MINRMT );
+	ULO( "(overwrite tape)",			GETOPT_OVERWRITE );
 	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );
 	ULO( "<subtree> ...",				GETOPT_SUBTREE );
 	ULO( "<verbosity {silent, verbose, trace}>",	GETOPT_VERBOSITY );
@@ -1041,7 +1042,7 @@ usage( void )
 	ULO( "<source> ...",				GETOPT_DUMPDEST );
 	ULO( "(help)",					GETOPT_HELP );
 	ULO( "(interactive)",				GETOPT_INTERACTIVE );
-	ULO( "<force usage of minimal rmt>",		GETOPT_MINRMT );
+	ULO( "(force usage of minimal rmt)",		GETOPT_MINRMT );
 	ULO( "<file> (restore only if newer than)",	GETOPT_NEWER );
 	ULO( "(restore owner/group even if not root)",	GETOPT_OWNER );
 	ULO( "<seconds between progress reports>",	GETOPT_PROGRESS );

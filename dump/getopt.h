@@ -41,12 +41,13 @@
  * facilitating easy changes.
  */
 
-#define GETOPT_CMDSTRING	"ab:c:d:f:hl:mop:qs:v:z:AB:CEFG:H:I:JL:M:NO:PRSTUVWY:Z"
+#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:v:z:AB:CEFG:H:I:JL:M:NO:PRSTUVWY:Z"
 
 #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
 #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
 #define	GETOPT_ALERTPROG	'c'	/* Media Change Alert prog(content.c) */
 #define	GETOPT_FILESZ		'd'	/* Media file size to use in Mb */
+#define GETOPT_EXCLUDEFILES	'e'	/* allow files to be excluded */
 #define	GETOPT_DUMPDEST		'f'	/* dump dest. file (drive.c) */
 #define	GETOPT_HELP		'h'	/* display version and usage */
 #define	GETOPT_LEVEL		'l'	/* dump level (content_inode.c) */

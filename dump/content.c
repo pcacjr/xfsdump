@@ -403,6 +403,7 @@ u_int64_t min_recmfilesz = 0;
 u_int64_t hdr_mfilesz = 0;
 #endif /* SIZEEST */
 u_int64_t maxdumpfilesize = 0;
+bool_t allowexcludefiles_pr = BOOL_FALSE;
 
 /* definition of locally defined static variables *****************************/
 
@@ -669,6 +670,9 @@ content_init( intgen_t argc,
 				return BOOL_FALSE;
 			}
 			maxdumpfilesize *= 1024;
+			break;
+		case GETOPT_EXCLUDEFILES:
+			allowexcludefiles_pr = BOOL_TRUE;
 			break;
 		case GETOPT_RESUME:
 			resumereqpr = BOOL_TRUE;
@@ -1444,11 +1448,6 @@ baseuuidbypass:
 		return BOOL_FALSE;
 	}
 
-	/* ask var to ask inomap to skip files under var if var is in
-	 * the fs being dumped
-	 */
-	var_skip( &fsid, inomap_skip );
-
 	if ( preemptchk( PREEMPT_FULL )) {
 		return BOOL_FALSE;
 	}
@@ -1499,6 +1498,11 @@ baseuuidbypass:
 		return BOOL_FALSE;
 	}
 	
+	/* ask var to ask inomap to skip files under var if var is in
+	 * the fs being dumped
+	 */
+	var_skip( &fsid, inomap_skip );
+
 	/* fill in write header template content info. always produce
 	 * an inomap and dir dump for each media file. flag the checksums
 	 * available if so compiled (see -D...CHECKSUM in Makefile).

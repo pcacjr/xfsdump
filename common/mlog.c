@@ -64,16 +64,7 @@ static FILE *mlog_fp = NULL; /* stderr */;
 static FILE *mlog_fp = NULL; /* stdout */;
 #endif /* RESTORE */
 
-intgen_t mlog_level_ss[ MLOG_SS_CNT ] = {
-	MLOG_VERBOSE,
-	MLOG_VERBOSE,
-	MLOG_VERBOSE,
-	MLOG_VERBOSE,
-#ifdef RESTORE
-	MLOG_VERBOSE,
-#endif /* RESTORE */
-	MLOG_VERBOSE
-};
+intgen_t mlog_level_ss[ MLOG_SS_CNT ];
 
 intgen_t mlog_showlevel = BOOL_FALSE;
 
@@ -87,7 +78,7 @@ static size_t mlog_streamcnt;
 
 static char mlog_levelstr[ 3 ]; 
 
-#define MLOG_SS_NAME_MAX	10
+#define MLOG_SS_NAME_MAX	15
 #ifdef DUMP
 #define PROGSTR "dump"
 #define PROGSTR_CAPS "Dump"
@@ -115,11 +106,12 @@ char *mlog_ss_names[ MLOG_SS_CNT ] = {
 	"media",	/* MLOG_SS_MEDIA */
 	"inventory",	/* MLOG_SS_INV */
 #ifdef DUMP
-	"inomap"	/* MLOG_SS_INOMAP */
+	"inomap",	/* MLOG_SS_INOMAP */
 #endif /* DUMP */
 #ifdef RESTORE
-	"tree"		/* MLOG_SS_TREE */
+	"tree",		/* MLOG_SS_TREE */
 #endif /* RESTORE */
+	"excluded_files" /* MLOG_SS_EXCLFILES */
 };
 
 static mlog_sym_t mlog_sym[ ] = {
