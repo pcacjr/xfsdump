@@ -4,7 +4,7 @@ xfsdq, xfsrq \- XFS dump and restore quota
 .SH SYNOPSIS
 .nf
 \f3xfsdq\f1 [ \f3\-g\f1|\f3-u\f1 ] filesystem
-\f3xfsrq\f1 [ \f3\-g\f1|\f3-u\f1 ] xfsdump_quota
+\f3xfsrq\f1 [ \f3\-g\f1|\f3-u\f1 ] xfsdump_quotas
 .fi
 .SH DESCRIPTION
 .B xfsdq
@@ -29,10 +29,13 @@ order).
 .B xfsdump
 runs
 .B xfsdq
-on those filesystems with quota enabled, and stores the
-output on the dump device in the
-.I xfsdump_quota
-file.
+on those filesystems with quota enabled, and redirects the
+output (from standard output stream) to a file which is
+subsequently stored on the dump device.
+For user quota, this file is named
+.IR xfsdump_quotas ,
+for group quota it is named
+.IR xfsdump_quotas_group .
 Thus,
 the primary purpose of
 .B xfsdq
@@ -46,7 +49,7 @@ is a simple wrapper around
 .BR setquota (8)
 which automates the restoration of quota information
 using this
-.I xfsdump_quota
+.I xfsdump_quotas
 file.
 .PP
 The
@@ -65,19 +68,19 @@ argument should be the filesystem mount point, and not the device.
 In order to restore quota information using the output from
 .BR xfsdq ,
 one must first restore a copy of the
-.I xfsdump_quota
+.I xfsdump_quotas
 file from the dump device.
 .PP
 On Linux, user quota can then be restored using:
 .PP
 .nf
-        # xfsrq -u xfsdump_quota
+        # xfsrq -u xfsdump_quotas
 .fi
 .PP
 On IRIX, the equivalent command is:
 .PP
 .nf
-        # edquota -i xfsdump_quota
+        # edquota -i xfsdump_quotas
 .fi
 .SH NOTES
 Only user quota are supported by both Linux and IRIX.
@@ -94,6 +97,17 @@ and
 report blocks in units of 1024 bytes -
 .B xfsrq
 performs the necessary conversions automatically.
+.SH FILES
+.PD 0
+.TP 20
+.B /etc/mtab
+default filesystems
+.TP
+.B /etc/passwd
+default set of users
+.TP
+.B /etc/passwd
+default set of groups
 .SH SEE ALSO
 quota(1),
 repquota(8),
