@@ -32,7 +32,7 @@
 
 #include <libxfs.h>
 #include <jdm.h>
-#include <curses.h>
+#include <ncurses.h>
 
 #include "cmenu.h"
 

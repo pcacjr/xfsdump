@@ -34,7 +34,7 @@
 #include <jdm.h>
 
 #include <signal.h>
-#include <curses.h>
+#include <ncurses.h>
 #include <sys/mman.h>
 
 #include "types.h"

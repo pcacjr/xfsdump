@@ -161,22 +161,22 @@ savedLIBS="$LIBS"
 savedCFLAGS="$CFLAGS"
 
 dnl Checks for curses header and library.
-AC_CHECK_HEADER(curses.h,, [
+AC_CHECK_HEADER(ncurses.h,, [
 	echo
-	echo 'FATAL ERROR: could not find a valid curses header.'
+	echo 'FATAL ERROR: could not find a valid ncurses header.'
 	exit 1
 ])
-AC_CHECK_LIB(curses, initscr,, [
+AC_CHECK_LIB(ncurses, initscr,, [
 	echo
-	echo 'FATAL ERROR: could not find a valid curses library.'
+	echo 'FATAL ERROR: could not find a valid ncurses library.'
 	exit 1
 ])
-AC_MSG_CHECKING([for bad glibc/curses header interaction])
-libcurses="-lcurses"
+AC_MSG_CHECKING([for bad glibc/ncurses header interaction])
+libcurses="-lncurses"
 LIBS="$LIBS $libcurses"
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 AC_TRY_LINK([
-#include <curses.h>
+#include <ncurses.h>
 #include <signal.h>],
 	[wgetch(stdscr);],
 	[have_curses=yes; AC_MSG_RESULT([ok])],
