@@ -513,7 +513,7 @@ xlate_rec_hdr(rec_hdr_t *rh1, rec_hdr_t *rh2, int dir)
 	rec_hdr_t *ptr2 = rh2;
 
 	mlog(MLOG_NITTY, "xlate_rec_hdr\n");
-
+  
 	IXLATE(rh1, rh2, magic);
 	IXLATE(rh1, rh2, version);
 	IXLATE(rh1, rh2, blksize);
@@ -533,6 +533,50 @@ xlate_rec_hdr(rec_hdr_t *rh1, rec_hdr_t *rh2, int dir)
 	BXLATE(pad1);
 	BXLATE(dump_uuid);
 	BXLATE(pad2);	
+
+	mlog(MLOG_NITTY, "xlate_rec_hdr: pre-xlate\n"
+	     "\tmagic %llu\n"
+	     "\tversion %d\n"
+	     "\tblksize %d\n"
+	     "\trecsize %d\n"
+	     "\tcapability %d\n"
+	     "\tfile_offset %lld\n"
+	     "\tfirst_mark_offset %lld\n"
+	     "\trec_used %u\n"
+	     "\tchecksum %d\n"
+	     "\tischecksum %d\n",
+	     ptr1->magic, 
+	     ptr1->version,
+	     ptr1->blksize,
+	     ptr1->recsize,
+	     ptr1->capability,
+	     ptr1->file_offset,
+	     ptr1->first_mark_offset,
+	     ptr1->rec_used,
+	     ptr1->checksum,
+	     ptr1->ischecksum);
+
+	mlog(MLOG_NITTY, "xlate_rec_hdr: post-xlate\n"
+	     "\tmagic %llu\n"
+	     "\tversion %d\n"
+	     "\tblksize %d\n"
+	     "\trecsize %d\n"
+	     "\tcapability %d\n"
+	     "\tfile_offset %lld\n"
+	     "\tfirst_mark_offset %lld\n"
+	     "\trec_used %u\n"
+	     "\tchecksum %d\n"
+	     "\tischecksum %d\n",
+	     ptr2->magic, 
+	     ptr2->version,
+	     ptr2->blksize,
+	     ptr2->recsize,
+	     ptr2->capability,
+	     ptr2->file_offset,
+	     ptr2->first_mark_offset,
+	     ptr2->rec_used,
+	     ptr2->checksum,
+	     ptr2->ischecksum);
 }
 
 /*

@@ -405,7 +405,8 @@ static int ring_read( void *clientctxp, char *bufp );
 static int ring_write( void *clientctxp, char *bufp );
 static double percent64( off64_t num, off64_t denom );
 static intgen_t getrec( drive_t *drivep );
-static intgen_t write_record(  drive_t *drivep, char *bufp, bool_t chksumpr );
+static intgen_t write_record( drive_t *drivep, char *bufp, bool_t chksumpr,
+                              bool_t xlatepr );
 static ring_msg_t * Ring_get( ring_t *ringp );
 static void Ring_reset(  ring_t *ringp, ring_msg_t *msgp );
 static void Ring_put(  ring_t *ringp, ring_msg_t *msgp );
@@ -1750,8 +1751,7 @@ do_begin_write( drive_t *drivep )
 	drive_hdr_t		*dwhdrp;
 	global_hdr_t		*gwhdrp;
 	rec_hdr_t		*tpwhdrp;
-	rec_hdr_t		rechdr;
-	rec_hdr_t		*rechdrp = &rechdr;
+	rec_hdr_t		*rechdrp;
 	mtstat_t		mtstat;
 	intgen_t		rval;
 	media_hdr_t		*mwhdrp;
@@ -1856,7 +1856,7 @@ do_begin_write( drive_t *drivep )
 	 */
 	global_hdr_checksum_set( tmpgh );
 
-	rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE );
+	rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE, BOOL_FALSE );
 	if ( rval ) {
 		if ( ! contextp->dc_singlethreadedpr ) {
 			Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
@@ -1876,6 +1876,7 @@ do_begin_write( drive_t *drivep )
 
 	/* intialize header in new record
 	 */
+	rechdrp = (rec_hdr_t*)contextp->dc_recp;	
 	rechdrp->magic = STAPE_MAGIC;
 	rechdrp->version = STAPE_VERSION;
 	rechdrp->file_offset = contextp->dc_reccnt * ( off64_t )tape_recsz;
@@ -1885,7 +1886,6 @@ do_begin_write( drive_t *drivep )
 	rechdrp->first_mark_offset = -1LL;
 	uuid_copy( rechdrp->dump_uuid, gwhdrp->gh_dumpid );
 
-	xlate_rec_hdr(rechdrp, ( rec_hdr_t * )contextp->dc_recp, 1);
 	/* set mode now so operators will work
 	 */
 	contextp->dc_mode = OM_WRITE;
@@ -2019,8 +2019,7 @@ static intgen_t
 do_write( drive_t *drivep, char *bufp, size_t retcnt )
 {
 	drive_context_t *contextp;
-	rec_hdr_t rechdr;
-	rec_hdr_t *rechdrp = &rechdr;
+	rec_hdr_t *rechdrp;
 	global_hdr_t *gwhdrp;
 	size_t heldcnt;
 	off64_t last_rec_wrtn_wo_err; /* zero-based index */
@@ -2070,12 +2069,12 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
 	/* record in record header that entire record is used
 	 */
 	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
-	INT_SET(rechdrp->rec_used, ARCH_CONVERT, tape_recsz);
+	rechdrp->rec_used = tape_recsz;
 	
 	/* write out the record buffer and get a new one.
 	 */
 	if ( contextp->dc_singlethreadedpr ) {
-		rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE );
+		rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE, BOOL_TRUE );
 		last_rec_wrtn_wo_err = contextp->dc_reccnt; /* conv cnt to ix */
 	} else {
 		contextp->dc_msgp->rm_op = RING_OP_WRITE;
@@ -2125,7 +2124,7 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
 
 	/* intialize header in new record
 	 */
-	rechdrp = &rechdr;
+	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
 	rechdrp->magic = STAPE_MAGIC;
 	rechdrp->version = STAPE_VERSION;
 	rechdrp->file_offset = contextp->dc_reccnt * ( off64_t )tape_recsz;
@@ -2134,7 +2133,6 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
 	rechdrp->capability = drivep->d_capabilities;
 	rechdrp->first_mark_offset = -1LL;
 	uuid_copy( rechdrp->dump_uuid, gwhdrp->gh_dumpid );
-	xlate_rec_hdr(rechdrp, ( rec_hdr_t * )contextp->dc_recp, 1);
 
 	return rval;
 }
@@ -2245,13 +2243,13 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
 		bufusedcnt = ( size_t )( contextp->dc_nextp
 					 -
 					 contextp->dc_recp );
-		INT_SET(rechdrp->rec_used, ARCH_CONVERT, bufusedcnt);
+		rechdrp->rec_used = bufusedcnt;
 		mlog( MLOG_DEBUG | MLOG_DRIVE,
 		      "writing padded last record\n" );
 		if ( contextp->dc_singlethreadedpr ) {
 			rval = write_record( drivep,
 					     contextp->dc_recp,
-					     BOOL_TRUE );
+					     BOOL_TRUE, BOOL_TRUE );
 		} else {
 			ASSERT( contextp->dc_msgp );
 			contextp->dc_msgp->rm_op = RING_OP_WRITE;
@@ -5051,12 +5049,18 @@ getrec( drive_t *drivep )
  */
 /*ARGSUSED*/
 static intgen_t
-write_record(  drive_t *drivep, char *bufp, bool_t chksumpr )
+write_record(  drive_t *drivep, char *bufp, bool_t chksumpr, bool_t xlatepr )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	intgen_t nwritten;
 	intgen_t saved_errno;
 	intgen_t rval;
+
+        if ( xlatepr ) {
+		rec_hdr_t rechdr;
+		memcpy( &rechdr, bufp, sizeof(rechdr) );
+		xlate_rec_hdr( &rechdr, ( rec_hdr_t * )bufp, 1 );
+	}
 
 	if ( chksumpr ) {
 		tape_rec_checksum_set( contextp, bufp );
@@ -5078,7 +5082,7 @@ write_record(  drive_t *drivep, char *bufp, bool_t chksumpr )
 static int
 ring_write( void *clientctxp, char *bufp )
 {
-	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE );
+	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE, BOOL_TRUE );
 }
 
 static void

@@ -1,3 +1,10 @@
+xfsdump-1.1.10 (10 December 2001)
+	- fix xfsdump to endian convert all of the record header
+	  fields properly just prior to writing the header out
+	  (in particular first_mark_offset).
+	  This caused do_next_mark() assertion failures at some
+	  sites.
+
 xfsdump-1.1.9 (28 November 2001)
 	- fix xfsrestore so that it doesn't delete hardlinks
 	  on alternate cumulative restores
