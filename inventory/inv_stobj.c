@@ -1264,9 +1264,15 @@ stobj_copy_invsess(int fd,
 			}
 
 			/* copy the mediafile into the exported structure */
-			stobj_convert_mfile( &ises->s_streams[i].st_mediafiles[j],
-					     &mf);
-			
+			if (ises->s_streams[i].st_mediafiles) {
+				stobj_convert_mfile( &ises->s_streams[i].st_mediafiles[j],
+						&mf);
+			} else {
+				mlog(MLOG_ERROR, "Failed to get data from media file: "
+						"possible file corruption\n");
+				mlog_exit_hint(RV_CORRUPT);
+				return -1;
+			}
 		}
 		
 	}
