@@ -1,3 +1,8 @@
+xfsdump-2.2.10 (14 April 2003)
+	- fix configure tests that used AC_PATH_PROG incorrectly.
+	- switch from using mktemp to using mkstemp for xfs_copy log.
+	- use a FHS compliant name for the xfs_copy log file.
+
 xfsdump-2.2.9 (27 March 2003)
 	- add -f option to xfsdq(8) to specify an output file instead
 	  of using the standard output stream.  This file is created
@@ -6,14 +11,14 @@ xfsdump-2.2.9 (27 March 2003)
 	  whatever the umask happened to be when xfsdump(8) was run.
 
 xfsdump-2.2.8 (27 March 2003)
-	- Cleanups to the build process, in particular the automatic
+	- cleanups to the build process, in particular the automatic
 	  rpm package generation Makefile and spec file template.
 	- Makepkgs script can now propagate failures back from make.
 
 xfsdump-2.2.7 (13 March 2003)
 	- add initial support for TS tape driver.
 	  (19 February 2003)
-	- fix xfsdump -I option to set correct fsid
+	- fix xfsdump -I option to set correct fsid.
 
 xfsdump-2.2.6 (19 December 2002)
 	- add initial internationalisation support.

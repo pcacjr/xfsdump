@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -47,7 +47,7 @@
 
 /* private */
 
-char LOGFILE_NAME[] = "/usr/tmp/xfs_copy.log.XXXXXX";
+char LOGFILE_NAME[] = "/var/tmp/xfs_copy.log.XXXXXX";
 
 #define MAX_TARGETS	100
 #define MAX_THREADS	(MAX_TARGETS + 2)
@@ -622,22 +622,10 @@ main(int argc, char **argv)
 	textdomain(PACKAGE);
 
 	/* open up log file */
-	logfile_name = mktemp(LOGFILE_NAME);
-	if (*logfile_name == '\0')  {
-		fprintf(stderr,
-			_("%s: could not generate unique logfile name\n"),
+	logfile_name = LOGFILE_NAME;
+	if ((logfd = mkstemp(logfile_name)) < 0)  {
+		fprintf(stderr, _("%s: couldn't open log file\n"),
 			progname);
-		fprintf(stderr,
-			_("%s: check /usr/tmp for xfs_copy.log.* files\n"),
-			progname);
-		perror(_("Aborting XFS copy - reason"));
-		exit(1);
-	}
-
-	if ((logfd = open(logfile_name, O_CREAT|O_TRUNC|O_APPEND|O_WRONLY,
-				0644)) < 0)  {
-		fprintf(stderr, _("%s: couldn't open log file \"%s\"\n"),
-			progname, logfile_name);
 		perror(_("Aborting XFS copy - reason"));
 		exit(1);
 	}
