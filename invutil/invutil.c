@@ -242,9 +242,13 @@ CheckAndPruneFstab(bool_t checkonly, char *mountPt, time_t prunetime)
     fd = open( fstabname, O_RDWR );
     if (fd == -1)
     {
-	fprintf( stderr, "%s: unable to open file %s\n", g_programName, 
-	    fstabname );
-	fprintf( stderr, "%s: abnormal termination\n", g_programName );
+	fprintf( stderr, "%s: unable to open file %s: %s\n",
+		 g_programName, 
+		 fstabname,
+		 strerror(errno) );
+	if(errno == ENOENT) {
+	    fprintf( stderr, "%s: there doesn't seem to be an inventory to process\n", g_programName);
+	}
 	exit(1);
     }
 
