@@ -484,7 +484,7 @@ main( int argc, char *argv[] )
 
 	/* initialize the stack checking abstraction
 	 */
-	stkchk_init( STREAM_SIMMAX * 2 + 1 );
+	stkchk_init( STREAM_MAX * 2 + 1 );
 	stkchk_register( );
 
 	/* initialize the child process manager
@@ -1751,7 +1751,7 @@ prompt_prog_cb( void *uctxp, dlog_pcbp_t pcb, void *pctxp )
  * side affect is to change verbosity level.
  * return code of BOOL_TRUE indicates a stop was requested.
  */
-#define PREAMBLEMAX	( 7 + 2 * STREAM_SIMMAX )
+#define PREAMBLEMAX	( 7 + 2 * STREAM_MAX )
 #define QUERYMAX	3
 #define CHOICEMAX	9
 #define ACKMAX		7

@@ -39,7 +39,7 @@
 #include "lock.h"
 #include "mlog.h"
 
-#define PROCMAX	( STREAM_SIMMAX * 2 + 1 )
+#define PROCMAX	( STREAM_MAX * 2 + 1 )
 #define N(a) (sizeof((a)) / sizeof((a)[0]))
 
 struct spm {
@@ -53,7 +53,7 @@ struct spm {
 
 typedef struct spm spm_t;
 extern pid_t parentpid;
-static spm_t spm[ STREAM_SIMMAX * 3 ];
+static spm_t spm[ STREAM_MAX * 3 ];
 
 void
 stream_init( void )
@@ -86,7 +86,7 @@ stream_register( pid_t pid, intgen_t streamix )
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
-	ASSERT( streamix < STREAM_SIMMAX );
+	ASSERT( streamix < STREAM_MAX );
 
 	lock();
 	for ( ; p < ep ; p++ ) {
@@ -286,7 +286,7 @@ stream_cnt( void )
 	size_t ixcnt;
 	size_t bitix;
 
-	ASSERT( sizeof( ixmap ) * NBBY >= STREAM_SIMMAX );
+	ASSERT( sizeof( ixmap ) * NBBY >= STREAM_MAX );
 	
 	lock();
 	for ( ; p < ep ; p++ ) {
@@ -297,7 +297,7 @@ stream_cnt( void )
 	unlock();
 
 	ixcnt = 0;
-	for ( bitix = 0 ; bitix < STREAM_SIMMAX ; bitix++ ) {
+	for ( bitix = 0 ; bitix < STREAM_MAX ; bitix++ ) {
 		if ( ixmap & ( ( size_t )1 << bitix )) {
 			ixcnt++;
 		}

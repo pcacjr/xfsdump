@@ -165,7 +165,7 @@ struct context {
 			/* pre-allocated buffer for dumping the names and
 			 * values for a list of extended file attributes
 			 */
-#endif EXTATTR
+#endif /* EXTATTR */
 #ifdef DMEXTATTR
 	hsm_f_ctxt_t *cc_hsm_f_ctxtp;
 			/* pre-allocated HSM context used for holding HSM
@@ -462,7 +462,7 @@ static size64_t sc_stat_inomapdone;
 static size64_t sc_stat_dircnt = 0;
 	/* total number of directory inodes to be dumped (strm 0)
 	 */
-static pds_t sc_stat_pds[ STREAM_SIMMAX ];
+static pds_t sc_stat_pds[ STREAM_MAX ];
 	/* per-drive stream status
 	 */
 static size64_t sc_stat_nondircnt = 0;
@@ -490,7 +490,7 @@ static size_t sc_thrdsdonecnt = 0;
 static context_t *sc_contextp;
 	/* an array of per-stream context descriptors
 	 */
-static bool_t sc_mcflag[ STREAM_SIMMAX ];
+static bool_t sc_mcflag[ STREAM_MAX ];
 	/* media change flag
 	 */
 #ifdef EXTATTR
@@ -500,7 +500,7 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
 static bool_t sc_brokenioctl = BOOL_FALSE;
 	/* attr_*_by_handle appears to be missing
          */
-#endif EXTATTR
+#endif /* EXTATTR */
 #ifdef DMEXTATTR
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
@@ -1816,7 +1816,7 @@ baseuuidbypass:
 	 */
 	{
 		ix_t driveix;
-		for ( driveix = 0 ; driveix < STREAM_SIMMAX ; driveix++ ) {
+		for ( driveix = 0 ; driveix < STREAM_MAX ; driveix++ ) {
 			sc_stat_pds[ driveix ].pds_phase = PDS_NULL;
 		}
 	}
@@ -1845,8 +1845,8 @@ baseuuidbypass:
 size_t
 content_statline( char **linespp[ ] )
 {
-	static char statlinebuf[ STREAM_SIMMAX + 1 ][ STATLINESZ ];
-	static char *statline[ STREAM_SIMMAX + 1 ];
+	static char statlinebuf[ STREAM_MAX + 1 ][ STATLINESZ ];
+	static char *statline[ STREAM_MAX + 1 ];
 	size_t statlinecnt;
 	size64_t nondirdone;
 	size64_t datadone;
@@ -1858,7 +1858,7 @@ content_statline( char **linespp[ ] )
 
 	/* build and supply the line array
 	 */
-	for ( i = 0 ; i < STREAM_SIMMAX + 1 ; i++ ) {
+	for ( i = 0 ; i < STREAM_MAX + 1 ; i++ ) {
 		statline[ i ] = &statlinebuf[ i ][ 0 ];
 	}
 	*linespp = statline;
@@ -2764,7 +2764,7 @@ typedef struct { ix_t thrdix; char choicestr[ CHOICESTRSZ ]; } cttm_t;
 char *
 content_mediachange_query( void )
 {
-	cttm_t choicetothrdmap[ STREAM_SIMMAX ];
+	cttm_t choicetothrdmap[ STREAM_MAX ];
 	char *querystr[ QUERYMAX ];
 	size_t querycnt;
 	char *choicestr[ CHOICEMAX ];
@@ -2778,7 +2778,7 @@ content_mediachange_query( void )
 	querystr[ querycnt++ ] = "select a drive to acknowledge media change\n";
 	choicecnt = 0;
 	maxdrvchoiceix = 0;
-	for ( thrdix = 0 ; thrdix < STREAM_SIMMAX ; thrdix++ ) {
+	for ( thrdix = 0 ; thrdix < STREAM_MAX ; thrdix++ ) {
 		if ( sc_mcflag[ thrdix ] ) {
 			choicetothrdmap[ choicecnt ].thrdix = thrdix;
 			sprintf( choicetothrdmap[ choicecnt ].choicestr,
