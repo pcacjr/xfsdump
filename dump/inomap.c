@@ -81,9 +81,9 @@ extern u_int64_t maxdumpfilesize;
 /* inomap construction callbacks
  */
 static void cb_context( bool_t last,
-			time_t,
+			time32_t,
 			bool_t,
-			time_t,
+			time32_t,
 			size_t,
 			drange_t *,
 			size_t,
@@ -184,9 +184,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	      intgen_t fsfd,
 	      xfs_bstat_t *rootstatp,
 	      bool_t last,
-	      time_t lasttime,
+	      time32_t lasttime,
 	      bool_t resume,
-	      time_t resumetime,
+	      time32_t resumetime,
 	      size_t resumerangecnt,
 	      drange_t *resumerangep,
 	      char *subtreebuf[],
@@ -539,9 +539,9 @@ inomap_skip( xfs_ino_t ino )
  * of iterators. below are the callbacks given to these iterators.
  */
 static bool_t cb_last;		/* set by cb_context() */
-static time_t cb_lasttime;	/* set by cb_context() */
+static time32_t cb_lasttime;	/* set by cb_context() */
 static bool_t cb_resume;	/* set by cb_context() */
-static time_t cb_resumetime;	/* set by cb_context() */
+static time32_t cb_resumetime;	/* set by cb_context() */
 static size_t cb_resumerangecnt;/* set by cb_context() */
 static drange_t *cb_resumerangep;/* set by cb_context() */
 static ix_t cb_subtreecnt;	/* set by cb_context() */
@@ -564,9 +564,9 @@ static size_t cb_maxrecursionlevel;
  */
 static void
 cb_context( bool_t last,
-	    time_t lasttime,
+	    time32_t lasttime,
 	    bool_t resume,
-	    time_t resumetime,
+	    time32_t resumetime,
 	    size_t resumerangecnt,
 	    drange_t *resumerangep,
 	    ix_t subtreecnt,
@@ -614,9 +614,9 @@ cb_add( void *arg1,
 	intgen_t fsfd,
 	xfs_bstat_t *statp )
 {
-	register time_t mtime = statp->bs_mtime.tv_sec;
-	register time_t ctime = statp->bs_ctime.tv_sec;
-	register time_t ltime = max( mtime, ctime );
+	register time32_t mtime = statp->bs_mtime.tv_sec;
+	register time32_t ctime = statp->bs_ctime.tv_sec;
+	register time32_t ltime = max( mtime, ctime );
 	register mode_t mode = statp->bs_mode & S_IFMT;
 	xfs_off_t estimated_size = 0;
 	xfs_ino_t ino = statp->bs_ino;

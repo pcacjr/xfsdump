@@ -110,9 +110,9 @@ struct dirattr {
 	mode_t d_mode;
 	uid_t d_uid;
 	gid_t d_gid;
-	time_t d_atime;
-	time_t d_mtime;
-	time_t d_ctime;
+	time32_t d_atime;
+	time32_t d_mtime;
+	time32_t d_ctime;
 	u_int32_t d_xflags;
 	u_int32_t d_extsize;
 	u_int32_t d_dmevmask;
@@ -441,9 +441,9 @@ dirattr_add( filehdr_t *fhdrp )
 	dirattr.d_mode = ( mode_t )fhdrp->fh_stat.bs_mode;
 	dirattr.d_uid = ( uid_t )fhdrp->fh_stat.bs_uid;
 	dirattr.d_gid = ( gid_t )fhdrp->fh_stat.bs_gid;
-	dirattr.d_atime = ( time_t )fhdrp->fh_stat.bs_atime.tv_sec;
-	dirattr.d_mtime = ( time_t )fhdrp->fh_stat.bs_mtime.tv_sec;
-	dirattr.d_ctime = ( time_t )fhdrp->fh_stat.bs_ctime.tv_sec;
+	dirattr.d_atime = ( time32_t )fhdrp->fh_stat.bs_atime.tv_sec;
+	dirattr.d_mtime = ( time32_t )fhdrp->fh_stat.bs_mtime.tv_sec;
+	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
@@ -820,9 +820,9 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	dirattr.d_mode = ( mode_t )fhdrp->fh_stat.bs_mode;
 	dirattr.d_uid = ( uid_t )fhdrp->fh_stat.bs_uid;
 	dirattr.d_gid = ( gid_t )fhdrp->fh_stat.bs_gid;
-	dirattr.d_atime = ( time_t )fhdrp->fh_stat.bs_atime.tv_sec;
-	dirattr.d_mtime = ( time_t )fhdrp->fh_stat.bs_mtime.tv_sec;
-	dirattr.d_ctime = ( time_t )fhdrp->fh_stat.bs_ctime.tv_sec;
+	dirattr.d_atime = ( time32_t )fhdrp->fh_stat.bs_atime.tv_sec;
+	dirattr.d_mtime = ( time32_t )fhdrp->fh_stat.bs_mtime.tv_sec;
+	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
@@ -872,21 +872,21 @@ dirattr_get_gid( dah_t dah )
 	return dtp->dt_cached_dirattr.d_gid;
 }
 
-time_t
+time32_t
 dirattr_get_atime( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_atime;
 }
 
-time_t
+time32_t
 dirattr_get_mtime( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_mtime;
 }
 
-time_t
+time32_t
 dirattr_get_ctime( dah_t dah )
 {
 	dirattr_get( dah );

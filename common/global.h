@@ -60,8 +60,8 @@ struct global_hdr {
 		/* header version */
 	u_int32_t gh_checksum;				/*   4   10 */
 		/* 32-bit unsigned additive inverse of entire header */
-	time_t gh_timestamp;				/*   4   14 */
-		/* time_t of dump */
+	time32_t gh_timestamp;				/*   4   14 */
+		/* time32_t of dump */
 	char gh_pad1[ 4 ];				/*   4   18 */
 		/* alignment */
 	u_int64_t gh_ipaddr;				/*   8   20 */

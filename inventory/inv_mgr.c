@@ -132,7 +132,7 @@ get_sesstoken( inv_idbtoken_t tok )
 	stok = (inv_sestoken_t) malloc( sizeof( invt_sesdesc_entry_t ) );
 	stok->sd_invtok = tok;
 	stok->sd_session_off = stok->sd_sesshdr_off = -1;
-	stok->sd_sesstime = (time_t) 0;
+	stok->sd_sesstime = (time32_t) 0;
 	return stok;
 }
 
@@ -469,12 +469,12 @@ invmgr_inv_check(
 		if ((iarr[i].ie_timeperiod.tp_start != harr[0].sh_time) ||
 		    (iarr[i].ie_timeperiod.tp_end != harr[nsess-1].sh_time)) {
 			printf("INV: Check %d failed.\n", i+1);
-			printf("invidx (%d)\t%ld - %ld\n",
+			printf("invidx (%d)\t%d - %d\n",
 			       i+1,
 			       iarr[i].ie_timeperiod.tp_start,
 			       iarr[i].ie_timeperiod.tp_end);
 			for( s = 0; s < nsess; s++ ) {
-				printf("tm (%d)\t%ld\n", s, harr[s].sh_time);
+				printf("tm (%d)\t%d\n", s, harr[s].sh_time);
 			}
 		}
 		else {
@@ -510,8 +510,8 @@ tm_level_lessthan( int fd, invt_seshdr_t *hdr, void *arg,
 		mlog( MLOG_DEBUG | MLOG_INV, "$ found level %d < %d\n", hdr->sh_level, 
 		     level );
 #endif
-		*tm = calloc( 1, sizeof( time_t ) );
-		memcpy( *tm, &hdr->sh_time, sizeof( time_t ) );
+		*tm = calloc( 1, sizeof( time32_t ) );
+		memcpy( *tm, &hdr->sh_time, sizeof( time32_t ) );
 		return 1;
 	}
 	return 0;

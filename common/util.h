@@ -160,7 +160,12 @@ extern intgen_t diriter( jdm_fshandle_t *fshandlep,
 
 /* ctimennl - ctime(3C) with newline removed
  */
-extern char *ctimennl( const time_t *clockp );
+extern char *ctimennl( const time32_t *clockp );
+
+/* ctime32 - takes a time32_t instead of a time_t
+ */
+extern char *ctime32( const time32_t *timep );
+
 
 
 /* fold_t - a character string made to look like a "fold here"

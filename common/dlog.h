@@ -74,7 +74,7 @@ extern ix_t dlog_multi_query( char *querystr[ ],	/* pre-choices output */
 			      ix_t hiliteix,		/* highlighted choice */
 			      char *defaultstr,		/* to distinguish */
 			      ix_t defaultix,		/* return if cr */
-			      time_t timeout,		/* secs b4 giving up */
+			      time32_t timeout,		/* secs b4 giving up */
 			      ix_t timeoutix,		/* return if timeout */
 			      ix_t sigintix,		/* return if SIGINT */
 			      ix_t sighupix,		/* return if SIGHUP */
@@ -95,7 +95,7 @@ extern ix_t dlog_string_query( dlog_ucbp_t ucb, /* user's print func */
 			       void *uctxp,	/* user's context for above */
 			       char *bufp,	/* typed string returned in */
 			       size_t bufsz,	/* buffer size */
-			       time_t timeout,  /* secs b4 giving up */
+			       time32_t timeout,  /* secs b4 giving up */
 			       ix_t timeoutix,  /* return if timeout */
 			       ix_t sigintix,	/* return if SIGINT */
 			       ix_t sighupix,	/* return if SIGHUP */

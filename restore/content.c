@@ -409,7 +409,7 @@ struct pers {
 			/* only missing or old files may be overwritten (-E)
 			 */
 		bool_t newerpr;
-		time_t newertime;
+		time32_t newertime;
 			/* only files older than example may be overwritten (-n)
 			 */
 		bool_t ownerpr;
@@ -462,7 +462,7 @@ struct pers {
 			 * (A1) at the same time. dirattr abstraction must be
 			 * initialized prior to setting this.
 			 */
-		time_t accumtime;
+		time32_t accumtime;
 			/* for measuring elapsed time of restore
 			 */
 		uuid_t dumpid;
@@ -471,7 +471,7 @@ struct pers {
 		label_t dumplab;
 			/* label of the dump being applied (A2)
 			 */
-		time_t begintime;
+		time32_t begintime;
 			/* set when session begun and each time resumed
 			 */
 		bool_t stat_valpr;
@@ -551,7 +551,7 @@ typedef struct pers pers_t;
  */
 
 struct tran {
-	time_t t_starttime;
+	time32_t t_starttime;
 		/* for measuring elapsed time of restore session
 		 */
 	size64_t t_dircnt;
@@ -838,7 +838,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	bool_t resumepr;/* cmd line resumed restore specification */
 	bool_t existpr;	/* cmd line overwrite inhibit specification */
 	bool_t newerpr;	/* cmd line overwrite inhibit specification */
-	time_t newertime = 0;
+	time32_t newertime = 0;
 	bool_t changepr;/* cmd line overwrite inhibit specification */
 	bool_t interpr;	/* cmd line interactive mode requested */
 	bool_t ownerpr;	/* cmd line chown/chmod requested */
@@ -2505,7 +2505,7 @@ content_complete( void )
 		if ( tranp->t_toconlypr ) {
 			mlog( MLOG_VERBOSE,
 			      "table of contents display complete"
-			      ": %u seconds elapsed"
+			      ": %ld seconds elapsed"
 			      "\n",
 			      elapsed );
 		} else {
@@ -2514,20 +2514,20 @@ content_complete( void )
 
 			mlog( MLOG_VERBOSE,
 			      "restore complete"
-			      ": %u seconds elapsed"
+			      ": %ld seconds elapsed"
 			      "\n",
 			      elapsed );
 		}
 	} else if ( tranp->t_toconlypr ) {
 		mlog( MLOG_VERBOSE | MLOG_NOTE,
 		      "table of contents display interrupted"
-		      ": %u seconds elapsed"
+		      ": %ld seconds elapsed"
 		      "\n",
 		      elapsed );
 	} else {
 		mlog( MLOG_VERBOSE | MLOG_NOTE,
 		      "restore interrupted"
-		      ": %u seconds elapsed"
+		      ": %ld seconds elapsed"
 		      ": may resume later using -%c option"
 		      "\n",
 		      elapsed,
@@ -2600,7 +2600,7 @@ content_statline( char **linespp[ ] )
 			 "status at %02d:%02d:%02d: "
 			 "%llu/%llu directories reconstructed, "
 			 "%.1f%%%% complete, "
-			 "%lu seconds elapsed\n",
+			 "%ld seconds elapsed\n",
 			 tmp->tm_hour,
 			 tmp->tm_min,
 			 tmp->tm_sec,
@@ -2640,7 +2640,7 @@ content_statline( char **linespp[ ] )
 	sprintf( statline[ 0 ],
 		 "status at %02d:%02d:%02d: %llu/%llu files restored, "
 		 "%.1f%%%% complete, "
-		 "%lu seconds elapsed\n",
+		 "%ld seconds elapsed\n",
 		 tmp->tm_hour,
 		 tmp->tm_min,
 		 tmp->tm_sec,
@@ -7410,9 +7410,9 @@ restore_reg( drive_t *drivep,
 		/* set the access and modification times
 		 */
 		utimbuf.actime =
-			    ( time_t )bstatp->bs_atime.tv_sec;
+			    ( time32_t )bstatp->bs_atime.tv_sec;
 		utimbuf.modtime =
-			    ( time_t )bstatp->bs_mtime.tv_sec;
+			    ( time32_t )bstatp->bs_mtime.tv_sec;
 		rval = utime( path, &utimbuf );
 		if ( rval ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
@@ -7616,8 +7616,8 @@ sockbypass:
 
 		/* set the access and modification times
 		 */
-		utimbuf.actime = ( time_t )bstatp->bs_atime.tv_sec;
-		utimbuf.modtime = ( time_t )bstatp->bs_mtime.tv_sec;
+		utimbuf.actime = ( time32_t )bstatp->bs_atime.tv_sec;
+		utimbuf.modtime = ( time32_t )bstatp->bs_mtime.tv_sec;
 		rval = utime( path, &utimbuf );
 		if ( rval ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
@@ -8855,7 +8855,7 @@ content_overwrite_ok( char *path,
 	/* if newer time specified, compare 
 	 */
 	if ( persp->a.newerpr ) {
-		if ( ( time_t )ctime < persp->a.newertime ) {
+		if ( ( time32_t )ctime < persp->a.newertime ) {
 			*reasonstrp = "too old";
 			return BOOL_FALSE;
 		}
@@ -8864,7 +8864,7 @@ content_overwrite_ok( char *path,
 	/* don't overwrite changed files
 	 */
 	if ( persp->a.changepr ) {
-		if ( statbuf.st_ctime >= ( time_t )ctime ) {
+		if ( statbuf.st_ctime >= ( time32_t )ctime ) {
 			*reasonstrp = "existing version is newer";
 			return BOOL_FALSE;
 		}
@@ -9146,6 +9146,7 @@ display_dump_label( bool_t lockpr,
 	char dump_string_uuid[UUID_STR_LEN + 1];
 	char media_string_uuid[UUID_STR_LEN + 1];
 	char fs_string_uuid[UUID_STR_LEN + 1];
+	time_t gh_timestamp = (time_t)grhdrp->gh_timestamp; 
 
 	ASSERT( scrhdrp->cih_level >= 0 );
 	ASSERT( scrhdrp->cih_level < 10 );
@@ -9174,7 +9175,7 @@ display_dump_label( bool_t lockpr,
 	      crhdrp->ch_fsdevice );
 	mlog( mllevel | MLOG_NOLOCK,
 	      "session time: %s",
-	      ctime_r( &grhdrp->gh_timestamp, dateline ));
+	      ctime_r( &gh_timestamp, dateline ));
 	mlog( mllevel | MLOG_NOLOCK,
 	      "level: %s%s\n",
 	      level_string,

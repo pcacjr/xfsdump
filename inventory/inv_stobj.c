@@ -42,6 +42,7 @@
 #include <sys/mman.h>
 
 #include "types.h"
+#include "util.h"
 #include "mlog.h"
 #include "inv_priv.h"
 #include "arch_xlate.h"
@@ -131,7 +132,7 @@ stobj_insert_session( invt_idxinfo_t *idx,
 
 /* ARGSUSED */
 u_int
-stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time_t tm )
+stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time32_t tm )
 {
 	u_int i;
 
@@ -1429,7 +1430,7 @@ DEBUG_sessionprint( inv_session_t *ses, u_int ref, invt_pr_ctx_t *prctx)
 	printf("\tsession %d:\n", ref);
 	printf("\t\tmount point:\t%s\n", ses->s_mountpt);
 	printf("\t\tdevice:\t\t%s\n", ses->s_devpath);
-	printf("\t\ttime:\t\t%s", ctime( &ses->s_time ));
+	printf("\t\ttime:\t\t%s", ctime32( &ses->s_time ));
 	printf("\t\tsession label:\t\"%s\"\n", ses->s_label);
 	uuid_unparse( ses->s_sesid, str );
 	printf("\t\tsession id:\t%s\n", str);

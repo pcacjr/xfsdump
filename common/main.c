@@ -146,7 +146,7 @@ static rlim64_t maxstacksz;
 #ifdef RESTORE
 static size64_t vmsz;
 #endif /* RESTORE */
-static time_t stop_deadline;
+static time32_t stop_deadline;
 static bool_t stop_in_progress;
 static bool_t sighup_received;
 static bool_t sigterm_received;
@@ -160,8 +160,8 @@ static intgen_t prbcld_signo;
 /* REFERENCED */
 static intgen_t sigstray_received;
 static bool_t progrpt_enabledpr;
-static time_t progrpt_interval;
-static time_t progrpt_deadline;
+static time32_t progrpt_interval;
+static time32_t progrpt_deadline;
 
 
 /* definition of locally defined global functions ****************************/
@@ -315,7 +315,7 @@ main( int argc, char *argv[] )
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
-			progrpt_interval = ( time_t )atoi( optarg );
+			progrpt_interval = ( time32_t )atoi( optarg );
 			if ( progrpt_interval > 0 ) {
 				progrpt_enabledpr = BOOL_TRUE;
 			} else {
@@ -706,7 +706,7 @@ main( int argc, char *argv[] )
 		( void )alarm( ( u_intgen_t )progrpt_interval );
 	}
 	for ( ; ; ) {
-		time_t now;
+		time32_t now;
 		bool_t stop_requested = BOOL_FALSE;
 		intgen_t stop_timeout = -1;
 
@@ -865,7 +865,7 @@ main( int argc, char *argv[] )
 			stop_in_progress = BOOL_TRUE;
 			cldmgr_stop( );
 			ASSERT( stop_timeout >= 0 );
-			stop_deadline = now + ( time_t )stop_timeout;
+			stop_deadline = now + ( time32_t )stop_timeout;
 		}
 		
 		/* set alarm if needed (note time stands still during dialog)
@@ -1125,7 +1125,7 @@ preemptchk( int flg )
 	/* see if a progress report needed
 	 */
 	if ( progrpt_enabledpr ) {
-		time_t now = time( 0 );
+		time32_t now = time( 0 );
 		bool_t need_progrptpr = BOOL_FALSE;
 		while ( now >= progrpt_deadline ) {
 			need_progrptpr = BOOL_TRUE;
@@ -2167,11 +2167,11 @@ sigint_dialog( void )
 				if ( ! strlen( buf )) {
 					ackstr[ ackcnt++ ] = "no change\n";
 				} else if ( newinterval > 0 ) {
-					time_t newdeadline;
+					time32_t newdeadline;
 					char intervalbuf[ 64 ];
-					newdeadline = time( 0 ) + ( time_t )newinterval;
+					newdeadline = time( 0 ) + ( time32_t )newinterval;
 					if ( progrpt_enabledpr ) {
-						if ( ( time_t )newinterval == progrpt_interval ) {
+						if ( ( time32_t )newinterval == progrpt_interval ) {
 							ackstr[ ackcnt++ ] = "no change\n";
 						} else {
 							ackstr[ ackcnt++ ] = "changing progress report interval to ";
@@ -2198,7 +2198,7 @@ sigint_dialog( void )
 						progrpt_enabledpr = BOOL_TRUE;
 						progrpt_deadline = newdeadline;
 					}
-					progrpt_interval = ( time_t )newinterval;
+					progrpt_interval = ( time32_t )newinterval;
 				} else {
 					if ( progrpt_enabledpr ) {
 						ackstr[ ackcnt++ ] = "disabling progress reports\n";

@@ -56,6 +56,7 @@ typedef unsigned int u_intgen_t;
 typedef long long_t;
 typedef unsigned long u_long_t;
 typedef size_t ix_t;
+typedef int32_t time32_t;
 
 /* limits
  */
@@ -89,7 +90,7 @@ typedef size_t ix_t;
 #define SIZEMAX		MKUMAX( size_t )
 #define IXMAX		MKUMAX( size_t )
 #define INOMAX		MKUMAX( ino_t )
-#define TIMEMAX		MKSMAX( time_t )
+#define TIMEMAX		MKSMAX( time32_t )
 #define INT16MAX	0x7fff
 #define UINT16MAX	0xffff
 

@@ -169,7 +169,7 @@ typedef struct inv_stream {
 typedef struct inv_session {
 	uuid_t		 s_fsid;	/* file system */
 	uuid_t 		 s_sesid;	/* this session's id:16 bytes*/
-	time_t		 s_time;   	/* time of the dump */
+	time32_t	 s_time;   	/* time of the dump */
 	bool_t		 s_ispartial;	/* was this a partial (dump) ? */
 	bool_t           s_isresumed;   /* was this a resumed (dump) ? */
 	u_char		 s_level;  	/* dump level */
@@ -222,7 +222,7 @@ inv_writesession_open(
         bool_t          isresumed,
 	u_char		level,
 	u_int		nstreams,
-	time_t		time,
+	time32_t	time,
 	char		*mntpt,
 	char		*devpath );	      
 
@@ -264,7 +264,7 @@ extern bool_t
 inv_lasttime_level_lessthan( 
 	inv_idbtoken_t 		tok,
 	u_char  		level,
-	time_t			**time );/* out */
+	time32_t		**time );/* out */
 
 extern bool_t
 inv_lastsession_level_lessthan( 

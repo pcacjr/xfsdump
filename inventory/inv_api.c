@@ -172,7 +172,7 @@ inv_writesession_open(
 	bool_t		isresumed,
 	u_char		level,
 	u_int		nstreams,
-	time_t		time,
+	time32_t	time,
 	char		*mntpt,
 	char		*devpath )
 {
@@ -618,7 +618,7 @@ bool_t
 inv_lasttime_level_lessthan( 
 	inv_idbtoken_t  tok,
 	u_char level,
-	time_t **tm )
+	time32_t **tm )
 {
 	int 	rval;
 	if ( tok != INV_TOKEN_NULL ) {

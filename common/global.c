@@ -79,7 +79,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 
 	/* sanity checks
 	 */
-	ASSERT( sizeof( time_t ) == GLOBAL_HDR_TIME_SZ );
+	ASSERT( sizeof( time32_t ) == GLOBAL_HDR_TIME_SZ );
 	ASSERT( sizeof( uuid_t ) == GLOBAL_HDR_UUID_SZ );
 
 	/* allocate a global hdr
@@ -98,7 +98,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 	/* fill in the timestamp: all changes made at or after this moment
 	 * will be included in increments on this base.
 	 */
-	ghdrp->gh_timestamp = time( ( time_t )0 );
+	ghdrp->gh_timestamp = (time32_t) time( 0 );
 
 	/* fill in the host id: typecast to fit into a 64 bit field
 	 */

@@ -165,7 +165,7 @@ struct context {
 			/* pre-allocated buffer for dumping the names and
 			 * values for a list of extended file attributes
 			 */
-#endif EXTATTR
+#endif /* EXTATTR */
 #ifdef DMEXTATTR
 	hsm_f_ctxt_t *cc_hsm_f_ctxtp;
 			/* pre-allocated HSM context used for holding HSM
@@ -425,7 +425,7 @@ static ix_t sc_level = LEVEL_DEFAULT;
 	/* dump level requested
 	 */
 static bool_t sc_incrpr = BOOL_FALSE;
-static time_t sc_incrbasetime;
+static time32_t sc_incrbasetime;
 static ix_t sc_incrbaselevel;
 static uuid_t sc_incrbaseid;
 	/* if an incremental dump, the base, level and time of the incremental
@@ -433,7 +433,7 @@ static uuid_t sc_incrbaseid;
 	 * base of the original incremental.
 	 */
 static bool_t sc_resumepr = BOOL_FALSE;
-static time_t sc_resumebasetime = 0;
+static time32_t sc_resumebasetime = 0;
 static uuid_t sc_resumebaseid;
 static size_t sc_resumerangecnt = 0;
 static drange_t *sc_resumerangep = 0;
@@ -452,7 +452,7 @@ static xfs_bstat_t *sc_rootxfsstatp = 0;
 static startpt_t *sc_startptp = 0;
 	/* an array of stream ino/offset start points
 	 */
-static time_t sc_stat_starttime = 0;
+static time32_t sc_stat_starttime = 0;
 	/* for cacluating elapsed time
 	 */
 static ix_t sc_stat_inomapphase = 0;
@@ -500,7 +500,7 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
 static bool_t sc_brokenioctl = BOOL_FALSE;
 	/* attr_*_by_handle appears to be missing
          */
-#endif EXTATTR
+#endif /* EXTATTR */
 #ifdef DMEXTATTR
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
@@ -550,12 +550,12 @@ content_init( intgen_t argc,
 	uuid_t fsid;
 	bool_t underfoundpr;
 	ix_t underlevel = ( ix_t )( -1 );
-	time_t undertime = 0;
+	time32_t undertime = 0;
 	uuid_t underid;
 	bool_t underpartialpr = BOOL_FALSE;
 	bool_t underinterruptedpr = BOOL_FALSE;
 	bool_t samefoundpr;
-	time_t sametime = 0;
+	time32_t sametime = 0;
 	uuid_t sameid;
 	bool_t samepartialpr = BOOL_FALSE;
 	bool_t sameinterruptedpr = BOOL_FALSE;
@@ -585,7 +585,6 @@ content_init( intgen_t argc,
 	ASSERT( sizeof( mode_t ) == MODE_SZ );
 	ASSERT( sizeof( timestruct_t ) == TIMESTRUCT_SZ );
 	ASSERT( sizeof( bstat_t ) == BSTAT_SZ );
-	ASSERT( sizeof( xfs_bstat_t ) <= sizeof( bstat_t ));
 	ASSERT( sizeof( filehdr_t ) == FILEHDR_SZ );
 	ASSERT( sizeof( extenthdr_t ) == EXTENTHDR_SZ );
 	ASSERT( sizeof( direnthdr_t ) == DIRENTHDR_SZ );
@@ -1887,7 +1886,7 @@ content_statline( char **linespp[ ] )
 				 "status at %02d:%02d:%02d: "
 				 "inomap phase %u pass %u "
 				 "%llu/%llu inos scanned, "
-				 "%lu seconds elapsed\n",
+				 "%ld seconds elapsed\n",
 				 tmp->tm_hour,
 				 tmp->tm_min,
 				 tmp->tm_sec,
@@ -1902,7 +1901,7 @@ content_statline( char **linespp[ ] )
 				 "status at %02d:%02d:%02d: "
 				 "inomap phase %u "
 				 "%llu/%llu inos scanned, "
-				 "%lu seconds elapsed\n",
+				 "%ld seconds elapsed\n",
 				 tmp->tm_hour,
 				 tmp->tm_min,
 				 tmp->tm_sec,
@@ -1920,7 +1919,7 @@ content_statline( char **linespp[ ] )
 	if ( ! sc_stat_datasz ) {
 		sprintf( statline[ 0 ],
 			 "status at %02d:%02d:%02d: "
-			 "%lu seconds elapsed\n",
+			 "%ld seconds elapsed\n",
 			 tmp->tm_hour,
 			 tmp->tm_min,
 			 tmp->tm_sec,
@@ -1955,7 +1954,7 @@ content_statline( char **linespp[ ] )
 	sprintf( statline[ 0 ],
 		 "status at %02d:%02d:%02d: %llu/%llu files dumped, "
 		 "%.1f%%%% complete, "
-		 "%lu seconds elapsed\n",
+		 "%ld seconds elapsed\n",
 		 tmp->tm_hour,
 		 tmp->tm_min,
 		 tmp->tm_sec,
@@ -2685,7 +2684,7 @@ decision_more:
 	elapsed = time( 0 ) - sc_stat_starttime;
 
 	mlog( MLOG_TRACE,
-	      "ending stream: %u seconds elapsed\n",
+	      "ending stream: %ld seconds elapsed\n",
 	      elapsed );
 
 	return mlog_exit(EXIT_NORMAL, rv);
@@ -2725,14 +2724,14 @@ content_complete( void )
 
 		mlog( MLOG_VERBOSE,
 		      "dump complete"
-		      ": %u seconds elapsed"
+		      ": %ld seconds elapsed"
 		      "\n",
 		      elapsed );
 	} else {
 		if ( sc_inv_updatepr ) {
 			mlog( MLOG_VERBOSE | MLOG_NOTE,
 			      "dump interrupted"
-			      ": %u seconds elapsed"
+			      ": %ld seconds elapsed"
 			      ": may resume later using -%c option"
 			      "\n",
 			      elapsed,
@@ -2741,7 +2740,7 @@ content_complete( void )
 		} else {
 			mlog( MLOG_VERBOSE | MLOG_NOTE,
 			      "dump interrupted"
-			      ": %u seconds elapsed"
+			      ": %ld seconds elapsed"
 			      "\n",
 			      elapsed );
 			mlog_exit_hint(RV_INTR);
@@ -4095,9 +4094,9 @@ dump_file_reg( drive_t *drivep,
 		for ( drangeix = 0 ; drangeix < drangecnt ; drangeix++ ) {
 			drange_t *rp = &drangep[ drangeix ];
 			if ( statp->bs_ino == rp->dr_begin.sp_ino ) {
-				register time_t mtime = statp->bs_mtime.tv_sec;
-				register time_t ctime = statp->bs_ctime.tv_sec;
-				register time_t ltime = max( mtime, ctime );
+				register time32_t mtime = statp->bs_mtime.tv_sec;
+				register time32_t ctime = statp->bs_ctime.tv_sec;
+				register time32_t ltime = max( mtime, ctime );
 				if ( ltime < sc_resumebasetime ) {
 					if ( rp->dr_begin.sp_offset > offset ){
 						offset =rp->dr_begin.sp_offset;
@@ -5077,9 +5076,9 @@ copy_xfs_bstat(bstat_t *dst, xfs_bstat_t *src)
         dst->bs_extsize = src->bs_extsize;
         dst->bs_extents = src->bs_extents;
         dst->bs_gen = src->bs_gen;
-        uuid_clear(dst->bs_uuid);  /* dunno */
+        uuid_clear(dst->bs_uuid);  /* on IRIX this is from projid and pad -> garbage */
         dst->bs_dmevmask = src->bs_dmevmask;
-        dst->bs_dmstate = (u_int16_t) 0; /* dunno */
+        dst->bs_dmstate = src->bs_dmstate;
 }
 
 static rv_t

@@ -485,7 +485,7 @@ oref_resolve_new_stobj(
 	OREF_SET_CHILD(invidx, stobj);
 	
 	/* initialize the start and end times to be the same */
-	ent.ie_timeperiod.tp_start = ent.ie_timeperiod.tp_end = (time_t)0;
+	ent.ie_timeperiod.tp_start = ent.ie_timeperiod.tp_end = (time32_t)0;
 	stobj_makefname( ent.ie_filename );
 
 	if ( firstentry ) {

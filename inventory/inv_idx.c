@@ -55,7 +55,7 @@ u_int
 idx_insert_newentry( int fd, /* kept locked EX by caller */
 		     int *stobjfd, /* OUT */
 		     invt_entry_t *iarr, invt_counter_t *icnt,
-		     time_t tm )
+		     time32_t tm )
 {
 	u_int i;
 	inv_oflag_t forwhat = INV_SEARCH_N_MOD;
@@ -222,7 +222,7 @@ idx_put_newentry(
 
 int
 idx_find_stobj( invt_idxinfo_t *idx,
-	        time_t tm )
+	        time32_t tm )
 {
 
 	int 		stobjfd;
@@ -300,7 +300,7 @@ idx_create( char *fname, inv_oflag_t forwhat )
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 intgen_t
-idx_recons_time( time_t tm, invt_idxinfo_t *idx )
+idx_recons_time( time32_t tm, invt_idxinfo_t *idx )
 {
 	invt_timeperiod_t *tp = &idx->iarr[idx->index].ie_timeperiod;
 	if ( tp->tp_start && IS_WITHIN( tp, tm ) )
@@ -402,7 +402,7 @@ idx_create_entry(
 	memset ( &ent, 0, sizeof( ent ) );
 	
 	/* initialize the start and end times to be the same */
-	ent.ie_timeperiod.tp_start = ent.ie_timeperiod.tp_end = (time_t)0;
+	ent.ie_timeperiod.tp_start = ent.ie_timeperiod.tp_end = (time32_t)0;
 	stobj_makefname( ent.ie_filename );
 
 	if ( firstentry ) {
@@ -518,7 +518,7 @@ idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num )
 		strncpy( s, (char *) iarr[i].ie_filename + k -
 			( INV_UUID_STR_LEN + strlen(INV_STOBJ_PREFIX)), 8 );
 		s[8]= 0;
-		printf("%d. %s \t( %ld - %ld )\n", i, s, 
+		printf("%d. %s \t( %d - %d )\n", i, s, 
 		       iarr[i].ie_timeperiod.tp_start,
 		       iarr[i].ie_timeperiod.tp_end );
 	}

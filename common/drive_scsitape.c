@@ -486,17 +486,29 @@ static u_int32_t cmdlineblksize = 0;
 static bool_t
 is_scsi_driver(char *pathname)
 {
-    char rp[PATH_MAX];
+	char rp[PATH_MAX];
+	struct stat64 statbuf;
 
-    if (realpath(pathname, rp) == NULL) {
-        return BOOL_FALSE; 
-    }
-     
-    /* following what is in Documentation/devices.txt for Linux */
-    if (strstr(rp, "/nst") != NULL || strstr(rp, "/st") != NULL)
-       return BOOL_TRUE;
-    else
-       return BOOL_FALSE;
+	if (realpath(pathname, rp) == NULL) {
+		return BOOL_FALSE; 
+	}
+
+	if ( stat64( pathname, &statbuf ) == -1) {
+		return BOOL_FALSE;
+	}
+
+	if ( !S_ISCHR( statbuf.st_mode )) {
+		return BOOL_FALSE;
+	}
+	 
+	/* following what is in Documentation/devices.txt for Linux */
+        /* "mt" is used by devfs */
+	if (strstr(rp, "/nst") == NULL && strstr(rp, "/st") == NULL &&
+	    strstr(rp, "/mt") == NULL) {
+		return BOOL_FALSE;
+	}
+
+	return BOOL_TRUE;
 }
 
 /* strategy match - determines if this is the right strategy

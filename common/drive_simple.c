@@ -226,7 +226,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		return -1;
 	}
 
-	if ( ( statbuf.st_mode & S_IFMT ) == S_IFDIR ) {
+	if ( S_ISDIR( statbuf.st_mode )) {
 		return -1;
 	}
 
@@ -251,7 +251,6 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	contextp = ( drive_context_t * )memalign( PGSZ,
 						  sizeof( drive_context_t ));
 	ASSERT( contextp );
-	ASSERT( ! ( ( intgen_t )contextp & PGMASK ));
 	ASSERT( ( void * )contextp->dc_buf == ( void * )contextp );
 	memset( ( void * )contextp, 0, sizeof( *contextp ));
 

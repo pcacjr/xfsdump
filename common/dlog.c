@@ -55,7 +55,7 @@ static char *promptstr = " -> ";
 static bool_t promptinput( char *buf,
 			   size_t bufsz,
 			   ix_t *exceptionixp,
-			   time_t timeout,
+			   time32_t timeout,
 			   ix_t timeoutix,
 			   ix_t sigintix,
 			   ix_t sighupix,
@@ -187,7 +187,7 @@ dlog_multi_query( char *querystr[ ],
 		  size_t hiliteix,
 		  char *defaultstr,
 		  ix_t defaultix,
-		  time_t timeout,
+		  time32_t timeout,
 		  ix_t timeoutix,
 		  ix_t sigintix,
 		  ix_t sighupix,
@@ -300,7 +300,7 @@ dlog_string_query( dlog_ucbp_t ucb, /* user's print func */
 		   void *uctxp,	  /* user's context for above */
 		   char *bufp,	  /* typed string returned in */
 		   size_t bufsz,	  /* buffer size */
-		   time_t timeout,  /* secs b4 giving up */
+		   time32_t timeout,  /* secs b4 giving up */
 		   ix_t timeoutix,
 		   ix_t sigintix,
 		   ix_t sighupix,
@@ -378,7 +378,7 @@ static bool_t
 promptinput( char *buf,
 	     size_t bufsz,
 	     ix_t *exceptionixp,
-	     time_t timeout,
+	     time32_t timeout,
 	     ix_t timeoutix,
 	     ix_t sigintix,
 	     ix_t sighupix,

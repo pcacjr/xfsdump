@@ -56,6 +56,33 @@ struct  irix_mtget   {
         int     mt_blkno;         /* block number of current position */
 };
 
+struct linux32_mtget
+{
+    int32_t mt_type;           /* Type of magtape device.  */
+    int32_t mt_resid;          /* Residual count: */
+    /* The following registers are device dependent.  */
+    int32_t mt_dsreg;          /* Status register.  */
+    int32_t mt_gstat;          /* Generic (device independent) status.  */
+    int32_t mt_erreg;          /* Error register.  */
+    /* The next two fields are not always used.  */
+    int32_t mt_fileno;        /* Number of current file on tape.  */
+    int32_t mt_blkno;         /* Current block number.  */
+};
+
+struct linux64_mtget
+{
+    int64_t mt_type;           /* Type of magtape device.  */
+    int64_t mt_resid;          /* Residual count. */
+    /* The following registers are device dependent.  */
+    int64_t mt_dsreg;          /* Status register.  */
+    int64_t mt_gstat;          /* Generic (device independent) status.  */
+    int64_t mt_erreg;          /* Error register.  */
+    /* The next two fields are not always used.  */
+    int32_t mt_fileno;        /* Number of current file on tape.  */
+    int32_t mt_blkno;         /* Current block number.  */
+};
+
+
 /* IRIX tape device status values */
 #define IRIX_MT_EOT          0x01    /* tape is at end of media */
 #define IRIX_MT_BOT          0x02    /* tape is at beginning of media */
@@ -141,9 +168,10 @@ rmtioctl(int fildes, unsigned int request, void *arg)
 /*
  * WARNING: MTIOCGET code is highly dependent on the format
  *          of mtget on different platforms
- *          We only support Linux or IRIX for this case. 
- *          We use the result of uname(1) (in rmtopen()) if it works or
- *          the size of the mtget structure to determine which host it is.
+ *          We only support Linux 32/ia64 and IRIX 32/64 for this case. 
+ *          We use the result of uname(1) (in rmtopen()) and 
+ *          the size of the mtget structure to determine which 
+ *          architecture it is.
  */
 
 static int
@@ -151,8 +179,11 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 {
 	char buffer[BUFMAGIC];
 	int rc, cnt, ssize;
-	char *p = NULL, *irixget = NULL;
+	char *p = NULL, *irixget = NULL, *linux32get = NULL, *linux64get = NULL;
 	struct irix_mtget irix_mtget;
+	struct linux32_mtget linux32_mtget;
+	struct linux64_mtget linux64_mtget;
+	int islinux32 = 1; /* is remote machine Linux 32 bit */
 	static int onetrip = 0;
 
 	if (!onetrip) {
@@ -234,7 +265,13 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			}
 			break;
 		    case UNAME_LINUX:
-			if (sizeof(struct mtget) != rc) {
+			if (sizeof(struct linux32_mtget) == rc) {
+			    islinux32 = 1;	
+			}
+			else if (sizeof(struct linux64_mtget) == rc) {
+			    islinux32 = 0;	
+			}
+			else {
 			    _rmt_msg(RMTWARN, "rmtioctl: Linux mtget structure of wrong size\n");
 			    setoserror( EPROTONOSUPPORT );
 			    return(-1);
@@ -249,10 +286,15 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 		assert(RMTHOST(fildes)==UNAME_LINUX || RMTHOST(fildes)==UNAME_IRIX);
 
 
-		if (RMTHOST(fildes) == UNAME_LINUX) 
-		    p = arg;
-		else
+		if (RMTHOST(fildes) == UNAME_IRIX) {
 		    p = irixget = (char *)&irix_mtget;
+		}
+		else if (islinux32) {
+		    p = linux32get = (char *)&linux32_mtget;
+		}
+		else {
+		    p = linux64get = (char *)&linux64_mtget;
+		}
 
 
 		/* read in all the data */
@@ -285,8 +327,24 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			    irixp->mt_dposn  = INT_SWAP(irixp->mt_dposn, irixp->mt_dposn);
 			}
 		}
-		else { /* LINUX */
-			struct mtget *linuxp = (struct mtget *)arg;
+		else if (islinux32) {
+			struct linux32_mtget *linuxp = (struct linux32_mtget *)linux32get;
+
+			if (linuxp->mt_type > 0xffff) {
+			    /* assume that mt_type should fit in 2 bytes */ 
+
+			    linuxp->mt_type   = INT_SWAP(linuxp->mt_type, linuxp->mt_type);	
+			    linuxp->mt_dsreg  = INT_SWAP(linuxp->mt_dsreg, linuxp->mt_dsreg);
+			    linuxp->mt_erreg  = INT_SWAP(linuxp->mt_erreg, linuxp->mt_erreg);
+			    linuxp->mt_resid  = INT_SWAP(linuxp->mt_resid, linuxp->mt_resid);
+			    linuxp->mt_fileno = INT_SWAP(linuxp->mt_fileno, linuxp->mt_fileno);
+			    linuxp->mt_blkno  = INT_SWAP(linuxp->mt_blkno, linuxp->mt_blkno);
+			    linuxp->mt_gstat  = INT_SWAP(linuxp->mt_gstat, linuxp->mt_gstat);
+
+			}
+		}
+		else {
+			struct linux64_mtget *linuxp = (struct linux64_mtget *)linux64get;
 
 			if (linuxp->mt_type > 0xffff) {
 			    /* assume that mt_type should fit in 2 bytes */ 
@@ -303,10 +361,9 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 		}
 
 		/* 
-		 * now mtget has the correct (byte-swapped if needed)
-		 * data, if we are talking to irix then lets convert
-		 * the data into something that we can use
-		 * else all done
+		 * now mtget has the correct (byte-swapped if needed) data, 
+                 * so we just need to copy over the fields which are possibly
+                 * of different length and different semantics.
 		 */
 		if (RMTHOST(fildes) == UNAME_IRIX) {
 			struct mtget *dstp = (struct mtget *)arg;
@@ -337,7 +394,30 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
 			if (status & IRIX_MT_EW)
 			    ;/* No GMT_ to map it to */
 		}
+		else if (islinux32) {
+			struct mtget *dstp = (struct mtget *)arg;
+			struct linux32_mtget *srcp = (struct linux32_mtget *)linux32get;
 
+			dstp->mt_type = srcp->mt_type;
+			dstp->mt_erreg = srcp->mt_erreg;
+			dstp->mt_resid = srcp->mt_resid;
+			dstp->mt_fileno = srcp->mt_fileno;
+			dstp->mt_blkno = srcp->mt_blkno;
+			dstp->mt_dsreg = srcp->mt_dsreg;
+			dstp->mt_gstat = srcp->mt_gstat;
+		}
+		else {
+			struct mtget *dstp = (struct mtget *)arg;
+			struct linux64_mtget *srcp = (struct linux64_mtget *)linux64get;
+
+			dstp->mt_type = srcp->mt_type;
+			dstp->mt_erreg = srcp->mt_erreg;
+			dstp->mt_resid = srcp->mt_resid;
+			dstp->mt_fileno = srcp->mt_fileno;
+			dstp->mt_blkno = srcp->mt_blkno;
+			dstp->mt_dsreg = srcp->mt_dsreg;
+			dstp->mt_gstat = srcp->mt_gstat;
+		}
 		return(0);
 
 	}

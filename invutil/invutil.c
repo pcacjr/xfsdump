@@ -52,11 +52,11 @@ static bool_t nonInteractive = BOOL_FALSE;
 char *GetFstabFullPath(void);
 char *GetNameOfInvIndex (uuid_t);
 void PruneByMountPoint(int, char **);
-void CheckAndPruneFstab(bool_t , char *, time_t );
-int CheckAndPruneInvIndexFile( bool_t , char *, time_t );
-int CheckAndPruneStObjFile( bool_t , char *, time_t );
+void CheckAndPruneFstab(bool_t , char *, time32_t );
+int CheckAndPruneInvIndexFile( bool_t , char *, time32_t );
+int CheckAndPruneStObjFile( bool_t , char *, time32_t );
 void usage (void);
-time_t ParseDate(char *);
+time32_t ParseDate(char *);
 
 int 
 main (int argc, char *argv[])
@@ -96,12 +96,12 @@ main (int argc, char *argv[])
     }
     if (c_option) {
 	char *tempstr = "test";
-	time_t temptime = 0;
+	time32_t temptime = 0;
 	CheckAndPruneFstab(BOOL_TRUE,tempstr,temptime); 
     }
     else if (m_option) {
         char *dateStr;
-        time_t timeSecs;
+        time32_t timeSecs;
 
         if (optind != (argc - 1) ) {
 	    fprintf( stderr, "%s: Date missing for -M option\n", 
@@ -119,11 +119,11 @@ main (int argc, char *argv[])
     return(0);
 }
 
-time_t
+time32_t
 ParseDate(char *strDate)
 {
     struct tm tm;
-    time_t date = 0;
+    time32_t date = 0;
     char **fmt;
     char *templateStr[] = {
 	"%m/%d/%Y %I:%M:%S %p",
@@ -196,6 +196,13 @@ ParseDate(char *strDate)
     return date;
 }
 
+char *
+ctime32(const time32_t *timep)
+{
+   time_t t = (time_t) *timep;
+   return ctime(&t);
+}
+
 
 char *
 GetNameOfInvIndex (uuid_t uuid)
@@ -229,7 +236,7 @@ GetFstabFullPath(void)
 }
 
 void 
-CheckAndPruneFstab(bool_t checkonly, char *mountPt, time_t prunetime)
+CheckAndPruneFstab(bool_t checkonly, char *mountPt, time32_t prunetime)
 {
     char *fstabname, *mapaddr, *invname;
     int fstabEntries,nEntries;
@@ -347,7 +354,7 @@ CheckAndPruneFstab(bool_t checkonly, char *mountPt, time_t prunetime)
 
 int 
 CheckAndPruneInvIndexFile( bool_t checkonly, char *idxFileName ,
-						 time_t prunetime ) 
+						 time32_t prunetime ) 
 {
     char *temp;
     int fd;
@@ -401,8 +408,8 @@ CheckAndPruneInvIndexFile( bool_t checkonly, char *idxFileName ,
 	       "          %s\n", invIndexEntry[i].ie_filename);
 	if (debug) {
 		printf("          Time:\tbegin  %s\t\tend    %s", 
-			ctime(&(invIndexEntry[i].ie_timeperiod.tp_start)),
-			ctime(&(invIndexEntry[i].ie_timeperiod.tp_end)));
+			ctime32(&(invIndexEntry[i].ie_timeperiod.tp_start)),
+			ctime32(&(invIndexEntry[i].ie_timeperiod.tp_end)));
 	}
 
 	if (( access( invIndexEntry[i].ie_filename, R_OK | W_OK ) == -1)  &&
@@ -462,7 +469,7 @@ CheckAndPruneInvIndexFile( bool_t checkonly, char *idxFileName ,
 
 int 
 CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
-						 time_t prunetime ) 
+						 time32_t prunetime ) 
 {
     char response[GEN_STRLEN];
     char *temp;
@@ -531,7 +538,7 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 		printf("            Session %d: %s %s", 
 			sescount++,
 			StObjses->s_mountpt,
-			ctime( &StObjhdr->sh_time ));
+			ctime32( &StObjhdr->sh_time ));
 	}
 	if (debug) {
 		/* Note that the DMF people use some of this debug
@@ -552,7 +559,7 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 		if (StObjhdr->sh_pruned)
 			printf("            Pruned Session: %s %s", 
 				StObjses->s_mountpt,
-				ctime( &StObjhdr->sh_time ));
+				ctime32( &StObjhdr->sh_time ));
 		printf("\t\tdevice:\t\t%s\n", StObjses->s_devpath);
 		printf("\t\tsession label:\t\"%s\"\n", StObjses->s_label);
 		uuid_unparse(StObjses->s_sesid, str);
@@ -611,7 +618,7 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 			    "LABEL\t\t:\t%s\n"
                             "TIME OF DUMP\t:\t%s",
 			str, StObjses->s_mountpt, StObjses->s_devpath,
-			StObjses->s_label, ctime( &StObjhdr->sh_time ));
+			StObjses->s_label, ctime32( &StObjhdr->sh_time ));
 		    removeflag = BOOL_TRUE;
 		}
                 else {
@@ -620,7 +627,7 @@ CheckAndPruneStObjFile( bool_t checkonly, char *StObjFileName ,
 		    printf( "UUID\t\t:\t%s\nMOUNT POINT\t:\t%s\n"
 			    "DEV PATH\t:\t%s\nTIME OF DUMP\t:\t%s",
 			str, StObjses->s_mountpt, StObjses->s_devpath,
-			ctime( &StObjhdr->sh_time ));
+			ctime32( &StObjhdr->sh_time ));
 		    while ( GotResponse == BOOL_FALSE )
 		    {
 			char *chp;

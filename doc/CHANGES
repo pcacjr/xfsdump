@@ -1,3 +1,7 @@
+xfsdump-1.1.5 (28 September 2001)
+	- changes for ia64 (e.g. time32_t, getdents, librmt mtget changes)
+	- fix dump/restore to be able to use drive_scsitape with devfs
+
 xfsdump-1.1.4 (18 September 2001)
 	- fix librmt to allow a remote path without "/dev" in its name
 	- this allows xfsdump/xfsrestore to remote file

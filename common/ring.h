@@ -145,7 +145,7 @@ struct ring {
 	off64_t r_slave_msgcnt;
 	off64_t r_client_blkcnt;
 	off64_t r_slave_blkcnt;
-	time_t r_first_io_time;
+	time32_t r_first_io_time;
 	off64_t r_all_io_cnt;
 /* ALL BELOW PRIVATE!!! */
 	pid_t r_slavepid;

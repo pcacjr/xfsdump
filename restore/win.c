@@ -60,9 +60,6 @@ struct win {
 	size_t w_refcnt;
 		/* reference count
 		 */
-	time_t w_lasttouched;
-		/* time stamp of most refcnt decrement
-		 */
 	struct win *w_nextp;
 		/* LRU list forward linkage
 		 */
@@ -296,7 +293,6 @@ win_unmap( off64_t off, void **pp )
 	 */
 	ASSERT( winp->w_refcnt > 0 );
 	winp->w_refcnt--;
-	winp->w_lasttouched = time( 0 );
 	ASSERT( ! winp->w_prevp );
 	ASSERT( ! winp->w_nextp );
 	if ( winp->w_refcnt == 0 ) {

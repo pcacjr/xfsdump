@@ -115,7 +115,7 @@ typedef struct inv_session {
 	uuid_t 		 s_sesid;	/* this dump session's id: 16 bytes*/
 	u_int		 s_nstreams;	/* number of media streams recorded */
 	inv_stream_t	*s_streams;	/* array of streams */
-	time_t		 s_time;   	/* time of the dump */
+	time32_t	 s_time;   	/* time of the dump */
 	u_char		 s_level;  	/* dump level */
 	char		 s_label[INV_STRLEN];  /* session label, assigned by the
 						  operator */
@@ -175,7 +175,7 @@ inv_writesession_open(
 	char		*label,
 	u_char		level,
 	u_int		nstreams,
-	time_t		time,
+	time32_t	time,
 	char		*mntpt,
 	char		*devpath );
 
@@ -211,7 +211,7 @@ extern bool_t
 inv_lasttime_level_lessthan( 
 	inv_idbtoken_t 		tok,
 	u_char  		level,
-	time_t			**time );/* out */
+	time32_t		**time );/* out */
 
 extern bool_t
 inv_lastsession_level_lessthan( 

@@ -490,9 +490,16 @@ diriter( jdm_fshandle_t *fshandlep,
 }
 
 char *
-ctimennl( const time_t *clockp )
+ctime32(const time32_t *timep)
 {
-	char *p = ctime( clockp );
+   time_t t = (time_t) *timep;
+   return ctime(&t);
+}
+
+char *
+ctimennl( const time32_t *clockp )
+{
+	char *p = ctime32( clockp );
 
 	if ( p && strlen( p ) > 0 ) {
 		p[ strlen( p ) - 1 ] = 0;

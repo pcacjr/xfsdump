@@ -88,9 +88,9 @@ struct content_inode_hdr {
 		/* dump level */
 	char pad1[ 4 ];					/*   4  10 */
 		/* alignment */
-	time_t cih_last_time;				/*   4  14 */
+	time32_t cih_last_time;				/*   4  14 */
 		/* if an incremental,time of previous dump at a lesser level */
-	time_t cih_resume_time;				/*   4  18 */
+	time32_t cih_resume_time;			/*   4  18 */
 		/* if a resumed dump, time of interrupted dump */
 	xfs_ino_t cih_rootino;				/*   8  20 */
 		/* root inode number */
@@ -151,8 +151,7 @@ typedef struct content_inode_hdr content_inode_hdr_t;
 /* timestruct_t - time structure
  *
  * used in bstat_t below. derived from timestruc_t, to achieve independence
- * from changes to timestruc_t. carefully crafted to make conversion from one
- * to the other as quick as possible.
+ * from changes to timestruc_t.
  */
 #define TIMESTRUCT_SZ	8
 
@@ -167,14 +166,13 @@ typedef struct timestruct timestruct_t;
 /* bstat_t - bulk stat structure
  *
  * used in filehdr_t below. derived from xfs_bstat_t, to achieve independence
- * from changes to xfs_bstat_t. carefully crafted to make conversion from one
- * to the other as quick as possible.
+ * from changes to xfs_bstat_t. 
  */
 #define BSTAT_SZ	128
 #define MODE_SZ		4
 
 struct bstat {				/*		     bytes accum */
-	xfs_ino_t		bs_ino;		/* inode number		 8     8 */
+	xfs_ino_t	bs_ino;		/* inode number		 8     8 */
 	u_int32_t	bs_mode;	/* type and mode	 4     c */
 	u_int32_t	bs_nlink;	/* number of links	 4    10 */
 	int32_t		bs_uid;		/* user id		 4    14 */

@@ -133,7 +133,7 @@ typedef struct invt_seshdr {
 	off64_t		sh_sess_off;    /* offset to rest of the sessioninfo */
 	off64_t		sh_streams_off; /* offset to start of the set of 
 					   stream hdrs */
-	time_t		sh_time;        /* time of the dump */
+	time32_t	sh_time;        /* time of the dump */
 	__uint32_t	sh_flag;        /* for misc flags */
 	u_char		sh_level;       /* dump level */
 	u_char		sh_pruned;      /* pruned by invutil flag */
@@ -186,8 +186,8 @@ typedef struct invt_mediafile {
 
 
 typedef struct invt_timeperiod {
-	time_t	tp_start;
-	time_t	tp_end;
+	time32_t	tp_start;
+	time32_t	tp_end;
 } invt_timeperiod_t;
 
 typedef struct invt_entry {
@@ -249,7 +249,7 @@ typedef struct invt_sesdesc_entry {
 	invt_desc_entry_t *sd_invtok;	/* generic inventory token */
 	off64_t		   sd_session_off;
 	off64_t		   sd_sesshdr_off;
-	time_t		   sd_sesstime;	/* time that session started. 
+	time32_t	   sd_sesstime;	/* time that session started. 
 					   needed for closing the session */
 } invt_sesdesc_entry_t;
 	
@@ -378,12 +378,12 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime);
 
 
 int
-idx_find_stobj( invt_idxinfo_t *idx, time_t tm );
+idx_find_stobj( invt_idxinfo_t *idx, time32_t tm );
 
 u_int
 idx_insert_newentry( int fd, int *stobjfd, invt_entry_t *iarr, 
 		     invt_counter_t *icnt,
-		     time_t tm );
+		     time32_t tm );
 intgen_t
 idx_put_newentry( invt_idxinfo_t *idx, invt_entry_t *ient );
 
@@ -391,7 +391,7 @@ int
 idx_get_stobj( int invfd, inv_oflag_t forwhat, int *index );
 
 intgen_t
-idx_recons_time( time_t tm, invt_idxinfo_t *idx );
+idx_recons_time( time32_t tm, invt_idxinfo_t *idx );
 
 intgen_t
 idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num );
@@ -432,7 +432,7 @@ intgen_t
 stobj_sortheaders( int fd, u_int num );
 
 u_int
-stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time_t tm );
+stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time32_t tm );
 
 intgen_t
 stobj_split( invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt, 
@@ -526,7 +526,7 @@ fstab_DEBUG_print( invt_fstab_t *arr, int num );
 /*----------------------------------------------------------------------*/
 
 intgen_t
-get_invtentry( char *fname, time_t tm, invt_entry_t *buf, size_t bufsz );
+get_invtentry( char *fname, time32_t tm, invt_entry_t *buf, size_t bufsz );
 
 intgen_t
 get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, int, bool_t dolock );
