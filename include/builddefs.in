@@ -39,11 +39,14 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 
+HAVE_CURSES = @have_curses@
+
 LIBRMT = $(TOPDIR)/librmt/librmt.la
 LIBDM = @libdm@
 LIBXFS = @libxfs@
 LIBATTR = @libattr@
 LIBUUID = @libuuid@
+LIBCURSES = @libcurses@
 LIBHANDLE = @libhdl@
 
 prefix = @prefix@

@@ -46,21 +46,43 @@ INVINCL = \
 INVCOMMON = \
 	inv_files.c
 
-COMMON = 
+CURSESCOMMON = \
+	cmenu.c \
+	fstab.c \
+	invidx.c \
+	list.c \
+	menu.c \
+	screen.c \
+	stobj.c
 
-LOCALS = invutil.c 
+CURSESINCL = \
+	cmenu.h \
+	fstab.h \
+	getopt.h \
+	invidx.h \
+	invutil.h \
+	list.h \
+	stobj.h
 
+LOCALS = invutil.c
 
 LTCOMMAND = xfsinvutil
 CFILES = $(COMMON) $(INVCOMMON) $(LOCALS)
 LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
-LLDLIBS = $(LIBUUID) 
+LLDLIBS = $(LIBUUID) $(LIBCURSES)
 
 #LCFLAGS = -DDUMP -DRMT -DEXTATTR -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
 LCFLAGS = -DDUMP -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
 #LCFLAGS = -DINV_DEBUG -DDUMP -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
 
+ifeq ($(HAVE_CURSES), yes)
+CFILES += $(CURSESCOMMON)
+HFILES += $(CURSESINCL)
+LCFLAGS += -DHAVE_CURSES
+else
+LSRCFILES += $(CURSESCOMMON) $(CURSESINCL)
+endif
 
 default: $(LINKS) $(LTCOMMAND)
 

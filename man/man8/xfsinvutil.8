@@ -3,12 +3,12 @@
 xfsinvutil \- \&xfsdump inventory database checking and pruning utility
 .SH SYNOPSIS
 .nf
-\f3xfsinvutil\f1 \c
-[ \f3\-M\f1 mountpoint mm/dd/yyyy (prune all entries older than 
-                specified date for the specified mount point) ] 
-        [ \f3\-C\f1 (check and fix xfsdump inventory database \c
-inconsistencies)]
+\f3xfsinvutil\f1 [ \f3\-M\f1 mountpoint mm/dd/yyyy (prune all entries
+		older than specified date for the mountpoint) ] 
+        [ \f3\-C\f1 (check and fix xfsdump inventory database
+		inconsistencies)]
         [ \f3-n\f1 (no questions)]
+        [ \f3-i\f1 (interactive mode)]
 .fi
 .SH DESCRIPTION
 .I xfsdump 
@@ -22,24 +22,61 @@ dump session,
 stream, and
 media file.
 .P
-Over time, this database may grow too large as xfsdump and xfsrestore do
-not remove entries from the inventory. The database may also develop
-inconsistencies due to various reasons such as operator errors etc., 
-causing xfsdump or xfsrestore to print error or warning messages.
+Over time, this database may grow too large as
+.I xfsdump (8)
+and
+.IR xfsrestore (8)
+do not remove entries from the inventory. The database may also develop
+inconsistencies for various reasons such as operator errors etc., 
+that may cause
+.I xfsdump
+or
+.I xfsrestore
+to print error or warning messages.
 .P
 .I xfsinvutil 
-is an utility to check this inventory database for consistency and
-to remove entries of dump sessions which may no longer be of relevance.
+is an utility to check this inventory database for consistency,
+to remove entries of dump sessions which may no longer be of
+relevance, and to browse the contents of the inventory.
+.P
+.I xfsinvutil
+may be used in three different modes.  In the first mode
+.I xfsinvutil
+steps over each dump session recorded in the inventory and prompts for
+a yes or no response to whether each session should be pruned.  The
+second is a batch mode in which
+.I xfsinvutil
+will prune every entry matching the supplied criteria.  The third mode
+allows the user to browse the inventory in detail, to delete or
+undelete records at will and also to import inventories from other
+hosts.
 .P
 The following command line options are available:
 .P
 .TP 5
-\f3\-M\f1 \f2mountpoint mm/dd/yyyy\f1
+\f3\-F\f1
+Don't prompt the operator.  When
+.I xfsinvutil
+encounters a matching dump session,
+.I xfsinvutil
+will normally ask the operator for permission to delete the
+entry. With this option the deletion is performed, no questions asked.
+.TP 5
+\f3\-i\f1
+Interactive mode.  Causes
+.I xfsinvutil
+to run in a mode that will allow the operator to browse the contents of
+the inventory. Please refer to the
+.B "Interactive Mode"
+section below for more information.
+.TP 5
+\f3\-M\f1 \f2mount_point mm/dd/yyyy\f1
 Specifies the mount point and cut-off date of inventory entries to
-be selected for pruning.
-xfsinvutil prompts the operator when a dump session in the inventory 
-is identified by the mount point and was created prior to the specified
-date. 
+be selected for pruning.  
+.I xfsinvutil
+prompts the operator when a dump session in the inventory is
+identified by the mount point and was created prior to the specified
+date.
 The operator can then select specific dump sessions for removal from
 the inventory database.
 This prompt will not happen if the \f3\-n\f1 option is used; it will
@@ -56,18 +93,101 @@ with the \f3\-I\f1 option.
 This includes the host name and the mount path.
 .RE
 .TP 5
-.B \-C
-With this option, 
-.I xfsinvutil 
-performs consistency checks for all entries in the inventory database.
-It fixes any problems found. If no consistent entries are found , the
-corresponding inventory database file is removed.
+\f3\-u\f1 \f2UUID\f1
+Specifies the filesystem universally unique identifier (UUID) of
+inventory entries to be selected for pruning.  This option is
+equivalent to the \f3\-M\f1 option.
 .TP 5
 .B \-n
 With this option, 
 .I xfsinvutil 
 will not ask any confirmation questions regarding sessions to prune.
 (It is the "Nike" option).
+.TP 5
+.B \-C
+With this option, 
+.I xfsinvutil 
+performs consistency checks for all entries in the inventory database.
+It fixes any problems found. If no consistent entries are found , the
+corresponding inventory database file is removed.
+.SS Interactive Mode
+When run with \f3-i\f1,
+.I xfsinvutil
+will present the operator with a hierarchical representation of the
+.I xfsdump
+inventory.  In this mode, the operator can use the arrow keys (or
+the 
+.B h
+.B j
+.B k
+.B l
+keys)
+to navigate the inventory and also use the following keys and
+functionality:
+.TP 5
+\f3+\f1
+Expand a branch of the tree.
+.TP 5
+\f3-\f1
+Collapse a branch of the tree.
+.TP 5
+\f3*\f1
+Fully expand a branch of the tree.
+.TP 5
+\f3%\f1
+Fully collapse a branch of the tree.
+.TP 5
+\f3h\f1
+Move selection to the parent entry.
+.TP 5
+\f3l\f1
+Move selection to the child entry.
+.TP 5
+\f3j\f1
+Move selection to next entry.
+.TP 5
+\f3k\f1
+Move selection to previous entry.
+.TP 5
+\f3d\f1
+Mark the current record, and all sub-records, to be deleted.
+.TP 5
+\f3u\f1
+Clear the current record and all parent records from being deleted.
+.TP 5
+\f3i\f1
+Import another
+.I xfsdump
+inventory.
+.TP 5
+\f3?\f1
+Show help window.
+.TP 5
+\f3x\f1
+Commit any changes made to the inventory, and exit the program.
+.TP 5
+\f3q\f1
+Exit the program without committing any changes to the inventory.
+.P
+Inventories from other hosts can be imported to create a larger common
+inventory.  It is recommended that the contents of 
+.I /var/lib/xfsdump/inventory
+on the remote host be copied to a temporary local directory prior to
+running
+.IR xfsinvutil .
+When
+.I xfsinvutil
+is run in interactive mode, and the operator hits
+.BR i ,
+they will be prompted for the path to the inventory to be imported.
+.I xfsinvutil
+will then add the contents of the imported inventory to the main
+window, and all entries will be marked as imported.  The operator can
+then delete any of these entries that are not to be imported.  When the
+operator commits the changes,
+.I xfsinvutil
+will import any entries which were not marked as deleted.  Deleted entries are
+not actually deleted from the original imported inventory.
 .SH NOTES
 .SS Inventory
 Each dump session updates an inventory database in \f2/var/lib/xfsdump/inventory\f1.

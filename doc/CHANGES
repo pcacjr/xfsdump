@@ -1,3 +1,8 @@
+xfsdump-2.1.2 (29 July 2002)
+	- xfsinvutil interactive mode
+	- merge of a dump/restore fix from IRIX - test if a child exited
+	  with error and if a child did, set the exit_code to EXIT_ERROR.
+
 xfsdump-2.1.1 (04 July 2002)
 	- Build infrastructure updates so that configure options can be
 	  used to specify paths rather than semi-hard-coded path names
@@ -14,7 +19,7 @@ xfsdump-2.0.4 (14 June 2002)
 	  will report their version from cmd/xfsdump/VERSION.  
 	- changed the messages printed out for the xfsrestore 
 	  interactive mode to emphasize the restore is interactive.
-	  
+  
 xfsdump-2.0.3 (08 May 2002)
 	- fix xfsdump so that it does not cause segmentation fault
 	  when media specific object id (OPT_MOBJID) is specified 
