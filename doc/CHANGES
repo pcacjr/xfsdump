@@ -1,3 +1,10 @@
+xfsdump-1.1.13 (11 January 2002)
+	- fix xfsdump so that if an inode# is reused in the time
+	  between building the inode map and pruning the inode map
+	  (in phase 3 when some dirs are marked as not changed),
+	  that it no longer aborts with an assertion failure.
+	  SGI bug#846374.
+
 xfsdump-1.1.12 (14 December 2001)
 	- add new -B option to xfsrestore to correctly assign
 	  ownership and permissions of the dump root directory

@@ -902,8 +902,16 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 		bool_t changed_below = BOOL_FALSE;
 
 		state = map_get( statp->bs_ino );
-		ASSERT( state != MAP_NDR_CHANGE );
-		ASSERT( state != MAP_NDR_NOCHNG );
+		if ( state != MAP_DIR_CHANGE &&
+                     state != MAP_DIR_NOCHNG &&
+		     state != MAP_DIR_SUPPRT) {
+			/* 
+			 * if file is now a dir then it has
+			 * certainly changed.
+			 */
+			state = MAP_DIR_CHANGE;
+			map_set( statp->bs_ino, state );
+		}
 
 		( void )diriter( fshandlep,
 				 fsfd,
@@ -939,10 +947,15 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 	}
 
 	state = map_get( statp->bs_ino );
-	ASSERT( state != MAP_DIR_CHANGE );
-	ASSERT( state != MAP_DIR_NOCHNG );
-	ASSERT( state != MAP_DIR_SUPPRT );
-
+	if ( state != MAP_NDR_CHANGE &&
+	     state != MAP_NDR_NOCHNG ) {
+		/* 
+		 * if dir is now a file then it has
+		 * certainly changed.
+		 */
+		state = MAP_NDR_CHANGE;
+		map_set( statp->bs_ino, state );
+	}
 	if ( state == MAP_NDR_CHANGE ) {
 		/* Directory entries back up the hierarchy must get */
 		/* dumped - as either MAP_DIR_SUPPRT/MAP_DIR_CHANGE */
