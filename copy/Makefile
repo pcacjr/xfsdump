@@ -34,8 +34,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LTCOMMAND = xfs_copy
-CFILES = xfs_copy.c locks.c
-HFILES = locks.h
+CFILES = xfs_copy.c
 LLDLIBS = $(LIBXFS) $(LIBUUID) -lpthread
 LLDFLAGS = -static
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+ * Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -30,15 +30,30 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 
-
-#define ACTIVE		1
-#define INACTIVE	2
-#define UNUSED		0
-
-extern int	*target_states;
+/*
+ * An on-disk allocation group header is composed of 4 structures,
+ * each of which is 1 disk sector long where the sector size is at
+ * least 512 bytes long (BBSIZE).
+ *
+ * There's one ag_header per ag and the superblock in the first ag
+ * is the contains the real data for the entire filesystem (although
+ * most of the relevant data won't change anyway even on a growfs).
+ *
+ * The filesystem superblock specifies the number of AG's and
+ * the AG size.  That splits the filesystem up into N pieces,
+ * each of which is an AG and has an ag_header at the beginning.
+ */
+typedef struct ag_header  {
+	xfs_sb_t	*xfs_sb;	/* superblock for filesystem or AG */
+	xfs_agf_t	*xfs_agf;	/* free space info */
+	xfs_agi_t	*xfs_agi;	/* free inode info */
+	xfs_agfl_t	*xfs_agfl;	/* AG freelist */
+	char		*residue;
+	int		residue_length;
+} ag_header_t;
 
 /*
- * ugh.  the position/buf_position, length/buf_length, data/buffer pairs
+ * The position/buf_position, length/buf_length, data/buffer pairs
  * exist because of alignment constraints for direct i/o and dealing
  * with scenarios where either the source or target or both is a file
  * and the blocksize of the filesystem where file resides is different
@@ -48,19 +63,23 @@ extern int	*target_states;
  * to read from points "before" the requested starting point and
  * read in more data than requested.
  */
-
-typedef struct working_buffer  {
-	int		id;		/* buffer id */
+typedef struct {
+	int		id;		/* buffer ID */
 	size_t		size;		/* size of buffer -- fixed */
-	size_t		min_io_size;	/* for direct i/o */
+	size_t		min_io_size;	/* for direct I/O */
 	xfs_off_t	position;	/* requested position */
 	size_t		length;		/* length of buffer (bytes) */
 	char		*data;		/* pointer to data buffer */
 } wbuf;
 
-typedef struct thread_state_control  {
+typedef struct {
+	int		id;
+	pthread_mutex_t	wait;
+	int		fd;
+} thread_args;
+
+typedef struct {
 	pthread_mutex_t mutex;
-/*	int		num_threads; */
 	int		num_working;
 	wbuf		*buffer;
 } thread_control;
@@ -69,25 +88,3 @@ typedef int thread_id;
 typedef int tm_index;			/* index into thread mask array */
 typedef __uint32_t thread_mask;		/* a thread mask */
 
-/* function declarations */
-
-thread_control *
-thread_control_init(thread_control *mask, int num_threads);
-
-wbuf *
-wbuf_init(wbuf *buf, int data_size, int data_alignment, int min_io_size, int id);
-
-void
-buf_read_start(void);
-
-void
-buf_read_end(thread_control *tmask, pthread_mutex_t *mainwait);
-
-void
-buf_read_error(thread_control *tmask, pthread_mutex_t *wait, thread_id id);
-
-void
-buf_write_start(void);
-
-void
-buf_write_end(thread_control *tmask, pthread_mutex_t *mainwait);

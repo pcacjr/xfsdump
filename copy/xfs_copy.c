@@ -40,89 +40,47 @@
 #include <signal.h>
 #include <stdarg.h>
 
-#include "locks.h"
+#include "xfs_copy.h"
 #include "config.h"
 
 #define	rounddown(x, y)	(((x)/(y))*(y))
 
-char LOGFILE_NAME[] = "/var/tmp/xfs_copy.log.XXXXXX";
+int		logfd;
+char 		*logfile_name;
+FILE		*logerr;
+char		LOGFILE_NAME[] = "/var/tmp/xfs_copy.log.XXXXXX";
 
-int	duplicate_uuids;
-int	buffered_output;
-pid_t	parent_pid;
-int	kids;
+char		*source_name;
+int		source_fd;
 
-int	logfd;
-char 	*logfile_name;
-FILE	*logerr;
+unsigned int	source_blocksize;	/* source filesystem blocksize */
+unsigned int	source_sectorsize;	/* source disk sectorsize */
 
-int	source_is_file;		/* is source a file? */
-int	target_is_file;		/* is target a file? */
+xfs_agblock_t	first_agbno;
 
-char	*source_name;
-int	source_fd;
-
-__uint64_t	source_blocks;		/* rough count of # to be copied */
-__uint64_t	bytes_copied = 0;	/* exact count of bytes copied */
-
-int	source_blocksize;	/* source filesystem blocksize */
-int	source_sectorsize;	/* source disk sectorsize */
-
-struct stat64	statbuf;
-
-int	num_targets;
-char	**target_names;
-int	*target_fds;
+unsigned int	num_targets;
+char		**target_names;
+int		*target_fds;
 xfs_off_t	*target_positions;
 pthread_t	*target_pids;
-int	*target_states;
-int	*target_errors;
-int	*target_err_types;
-
-typedef struct thread_args {
-	int		id;
-	pthread_mutex_t	wait;
-	int		fd;
-} t_args;
-
-#define	ANYCHILD	-1
-#define	NUM_BUFS	1
+int		*target_states;
+int		*target_errors;
+int		*target_err_types;
 
 wbuf		w_buf;
 wbuf		btree_buf;
 
-thread_control	glob_masks;
+pid_t		parent_pid;
+unsigned int	kids;
 
-t_args	*targ;
+thread_control	glob_masks;
+thread_args	*targ;
 
 pthread_mutex_t	mainwait;
 
+#define ACTIVE		1
+#define INACTIVE	2
 
-/*
- * An on-disk allocation group header is composed of 4 structures,
- * each of which is 1 disk sector long where the sector size is at
- * least 512 bytes long (BBSIZE).
- *
- * There's one ag_header per ag and the superblock in the first ag
- * is the contains the real data for the entire filesystem (although
- * most of the relevant data won't change anyway even on a growfs).
- *
- * The filesystem superblock specifies the number of AG's and
- * the AG size.  That splits the filesystem up into N pieces,
- * each of which is an AG and has an ag_header at the beginning.
- */
-typedef struct ag_header  {
-	xfs_sb_t	*xfs_sb;	/* superblock for filesystem or AG */
-	xfs_agf_t	*xfs_agf;	/* free space info */
-	xfs_agi_t	*xfs_agi;	/* free inode info */
-	xfs_agfl_t	*xfs_agfl;	/* AG freelist */
-	char		*residue;
-	int		residue_length;
-} ag_header_t;
-
-/* first fs block that contains real (non-ag-header) data */
-
-xfs_agblock_t	first_agbno = 0;
 
 /* general purpose message reporting routine */
 
@@ -173,9 +131,14 @@ do_message(int flags, int code, const char *fmt, ...)
 #define do_log(args...)		do_message(ERR|LOG, 0, ## args)
 #define do_warn(args...)	do_message(LOG, 0, ## args)
 #define do_error(e,s)		do_message(ERR|LOG|PRE, e, s)
-#define do_perror(s)		do_message(ERR|LOG|PRE|LAST, errno, s)
 #define do_fatal(e,s)		do_message(ERR|LOG|PRE|LAST, e, s)
 #define do_vfatal(e,s,args...)	do_message(ERR|LOG|PRE|LAST, e, s, ## args)
+#define die_perror(void)	\
+	do { \
+		do_message(ERR|LOG|PRE|LAST, errno, \
+			_("Aborting XFS copy - reason")); \
+		exit(1); \
+	} while (0);
 
 void
 check_errors(void)
@@ -214,20 +177,14 @@ check_errors(void)
  * are taken care of when the buffer's read in
  */
 
-/* ARGSUSED */
 void *
 begin_reader(void *arg)
 {
-	t_args	*args = arg;
-	int	res;
-	int	error = 0;
+	thread_args	*args = arg;
+	int		res, error = 0;
 
 	for (;;) {
 		pthread_mutex_lock(&args->wait);
-	/* 	fprintf(stderr,"pid(%d)\awake tw_buf.position %Ld data 0x%p\n",
- 			getpid(), w_buf.position,&w_buf.data); */
-
-		buf_read_start();
 
 		/* write */
 		if (target_positions[args->id] != w_buf.position)  {
@@ -250,7 +207,10 @@ begin_reader(void *arg)
 			goto handle_error;
 		}
 
-		buf_read_end(&glob_masks, &mainwait);
+	        pthread_mutex_lock(&glob_masks.mutex);
+		if (--glob_masks.num_working == 0)
+			pthread_mutex_unlock(&mainwait);
+		pthread_mutex_unlock(&glob_masks.mutex);
 	}
 	/* NOTREACHED */
 
@@ -260,7 +220,11 @@ handle_error:
 	target_errors[args->id] = errno;
 	target_positions[args->id] = w_buf.position;
 
-	buf_read_error(&glob_masks, &mainwait, args->id);
+	pthread_mutex_lock(&glob_masks.mutex);
+	target_states[args->id] = INACTIVE;
+	if (--glob_masks.num_working == 0)
+		pthread_mutex_unlock(&mainwait);
+	pthread_mutex_unlock(&glob_masks.mutex);
 	pthread_exit(NULL);
 }
 
@@ -342,10 +306,8 @@ handler()
 	/* unknown child -- something very wrong */
 
 	do_warn(_("%s: Unknown child died (should never happen!)\n"), progname);
-	do_perror(_("Aborting XFS copy - reason"));
-	exit(1);
+	die_perror();
 	pthread_exit(NULL);
-
 	sigset(SIGCLD, handler);
 }
 
@@ -383,6 +345,18 @@ bump_bar(int tenths)
 
 static xfs_off_t source_position = -1;
 
+wbuf *
+wbuf_init(wbuf *buf, int data_size, int data_align, int min_io_size, int id)
+{
+	buf->id = id;
+	if ((buf->data = memalign(data_align, data_size)) == NULL)
+		return NULL;
+	ASSERT(min_io_size % BBSIZE == 0);
+	buf->min_io_size = min_io_size;
+	buf->size = MAX(data_size, 2*min_io_size);
+	return buf;
+}
+
 void
 read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 {
@@ -405,8 +379,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 		if (lres < 0LL)  {
 			do_warn(_("%s:  lseek64 failure at offset %lld\n"),
 				progname, source_position);
-			do_perror("Aborting XFS copy - reason");
-			exit(1);
+			die_perror();
 		}
 		source_position = buf->position;
 	}
@@ -428,8 +401,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
 	if ((res = read(fd, buf->data, buf->length)) < 0)  {
 		do_warn(_("%s:  read failure at offset %lld\n"),
 				progname, source_position);
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if (res < buf->length &&
@@ -522,12 +494,16 @@ main(int argc, char **argv)
 	size_t		length;
 	int		c, size, sizeb, first_residue, tmp_residue;
 	__uint64_t	numblocks = 0;
+	__uint64_t	source_blocks;
 	int		wblocks = 0;
 	int		num_threads = 0;
 	struct dioattr	d;
 	int		wbuf_size;
 	int		wbuf_align;
 	int		wbuf_miniosize;
+	int		source_is_file = 0;
+	int		buffered_output = 0;
+	int		duplicate_uuids = 0;
 	uuid_t		fsid;
 	uint		btree_levels, current_level;
 	ag_header_t	ag_hdr;
@@ -544,9 +520,9 @@ main(int argc, char **argv)
 	extern char	*optarg;
 	extern int	optind;
 	libxfs_init_t	xargs;
-	t_args		*tcarg;
+	thread_args	*tcarg;
 	struct ustat	ustat_buf;
-	int		ret;
+	struct stat64	statbuf;
 
 	progname = basename(argv[0]);
 
@@ -609,38 +585,32 @@ main(int argc, char **argv)
 
 	if ((target_names = malloc(sizeof(char *)*num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target name array\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if ((target_positions = malloc(sizeof(xfs_off_t)*num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target position array\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if ((target_pids = malloc(sizeof(pthread_t) * num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target pid array\n"));
-		do_perror("Aborting XFS copy - reason");
-		exit(1);
+		die_perror();
 	}
 
 	if ((target_states = malloc(sizeof(int) * num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target state array\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if ((target_errors = malloc(sizeof(int) * num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target errno array\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if ((target_err_types = malloc(sizeof(int) * num_targets)) == NULL)  {
 		do_log(_("Couldn't allocate target error type array\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	for (i = 0; i < num_targets; i++)  {
@@ -652,8 +622,7 @@ main(int argc, char **argv)
 
 	if ((target_fds = malloc(sizeof(int)*num_targets)) == NULL)  {
 		do_log(_("%s: couldn't malloc target fd array\n"), progname);
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	for (i = 0; optind < argc; i++, optind++)  {
@@ -665,8 +634,7 @@ main(int argc, char **argv)
 
 	if (atexit(killall))  {
 		do_log(_("%s: couldn't register atexit function.\n"), progname);
-		do_perror(_("Aborting XFS copy -- reason"));
-		exit(1);
+		die_perror();
 	}
 
 	/* open up source -- is it a file? */
@@ -676,15 +644,13 @@ main(int argc, char **argv)
 	if ((source_fd = open(source_name, open_flags)) < 0)  {
 		do_log(_("%s:  couldn't open source \"%s\"\n"),
 			progname, source_name);
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if (fstat64(source_fd, &statbuf) < 0)  {
 		do_log(_("%s:  couldn't stat source \"%s\"\n"),
 			progname, source_name);
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	if (S_ISREG(statbuf.st_mode))
@@ -694,14 +660,12 @@ main(int argc, char **argv)
 		if (fcntl(source_fd, F_SETFL, open_flags | O_DIRECT) < 0)  {
 			do_log(_("%s: Cannot set direct I/O flag on \"%s\".\n"),
 				progname, source_name);
-			do_perror(_("Aborting XFS copy - reason"));
-			exit(1);
+			die_perror();
 		}
 		if (xfsctl(source_name, source_fd, XFS_IOC_DIOINFO, &d) < 0)  {
 			do_log(_("%s: xfsctl on file \"%s\" failed.\n"),
 				progname, source_name);
-			do_perror(_("Aborting XFS copy - reason"));
-			exit(1);
+			die_perror();
 		}
 
 		wbuf_align = d.d_mem;
@@ -850,8 +814,7 @@ main(int argc, char **argv)
 		if (target_fds[i] < 0)  {
 			do_log(_("%s:  couldn't open target \"%s\"\n"),
 				progname, target_names[i]);
-			do_perror(_("Aborting XFS copy - reason"));
-			exit(1);
+			die_perror();
 		}
 
 		if (write_last_block)  {
@@ -861,14 +824,13 @@ main(int argc, char **argv)
 						source_blocksize))  {
 				do_log(_("%s:  cannot grow data section.\n"),
 					progname);
-				do_perror(_("Aborting XFS copy - reason"));
+				die_perror();
 			}
 			if (xfsctl(target_names[i], target_fds[i],
 						XFS_IOC_DIOINFO, &d) < 0)  {
 				do_log(_("%s:  xfsctl on \"%s\" failed.\n"),
 					progname, target_names[i]);
-				do_perror(_("Aborting XFS copy - reason"));
-				exit(1);
+				die_perror();
 			}
 		} else  {
 			char *buf[XFS_MAX_SECTORSIZE] = { 0 };
@@ -882,7 +844,7 @@ main(int argc, char **argv)
 					progname);
 				do_log(_("\tIs target \"%s\" too small?\n"),
 					target_names[i]);
-				do_perror(_("Aborting XFS copy - reason"));
+				die_perror();
 			}
 		}
 
@@ -893,17 +855,16 @@ main(int argc, char **argv)
 
 	/* initialize locks and bufs */
 
-	if (thread_control_init(&glob_masks, num_targets+1) == NULL)  {
+	if (pthread_mutex_init(&glob_masks.mutex, NULL) != 0)  {
 		do_log(_("Couldn't initialize global thread mask\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
+	glob_masks.num_working = 0;
 
 	if (wbuf_init(&w_buf, wbuf_size, wbuf_align,
 					wbuf_miniosize, 0) == NULL)  {
 		do_log(_("Error initializing wbuf 0\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
 	wblocks = wbuf_size / BBSIZE;
@@ -912,13 +873,12 @@ main(int argc, char **argv)
 					wbuf_miniosize), wbuf_align,
 					wbuf_miniosize, 1) == NULL)  {
 		do_log(_("Error initializing btree buf 1\n"));
-		do_perror(_("Aborting XFS copy - reason"));
-		exit(1);
+		die_perror();
 	}
 
-	if ((ret = pthread_mutex_init(&mainwait,NULL) != 0)){
+	if (pthread_mutex_init(&mainwait,NULL) != 0)  {
 		do_log(_("Error creating first semaphore.\n"));
-		do_perror(_("Aborting XFS copy - reason"));
+		die_perror();
 		exit(1);
 	}
 	/* need to start out blocking */
@@ -931,16 +891,16 @@ main(int argc, char **argv)
 
 	/* make children */
 
-	if ((targ = malloc(num_targets * sizeof(t_args))) == NULL)  {
+	if ((targ = malloc(num_targets * sizeof(thread_args))) == NULL)  {
 		do_log(_("Couldn't malloc space for thread args\n"));
-		do_perror(_("Aborting XFS copy - reason"));
+		die_perror();
 		exit(1);
 	}
 
 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
-		if ((ret = pthread_mutex_init(&tcarg->wait, NULL) != 0))  {
+		if (pthread_mutex_init(&tcarg->wait, NULL) != 0)  {
 			do_log(_("Error creating thread mutex %d\n"), i);
-			do_perror(_("Aborting XFS copy - reason"));
+			die_perror();
 			exit(1);
 		}
 		/* need to start out blocking */
@@ -954,12 +914,10 @@ main(int argc, char **argv)
 		target_states[i] = ACTIVE;
 		num_threads++;
 
-		ret = pthread_create(&target_pids[i], NULL,
-					begin_reader, (void *)tcarg);
-		if (ret)  {
+		if (pthread_create(&target_pids[i], NULL,
+					begin_reader, (void *)tcarg))  {
 			do_log(_("Error creating thread for target %d\n"), i);
-			do_perror(_("Aborting XFS copy - reason"));
-			exit(1);
+			die_perror();
 		}
 	}
 
