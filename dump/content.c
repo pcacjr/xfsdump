@@ -2882,7 +2882,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 	for ( bulkstatcallcnt = 0 ; ; bulkstatcallcnt++ ) {
 		xfs_bstat_t *p;
 		xfs_bstat_t *endp;
-		size_t buflenout;
+		__s32 buflenout;
 		intgen_t rval;
 
 #ifdef SYNCDIR
@@ -2923,7 +2923,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		bulkreq.lastip = &lastino;
 		bulkreq.icount = bstatbuflen;
 		bulkreq.ubuffer = bstatbufp;
-		bulkreq.ocount = (__s32 *)&buflenout;
+		bulkreq.ocount = &buflenout;
 
 		rval = ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq);
 
@@ -2936,7 +2936,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 			return RV_ERROR;
 		}
 		mlog( MLOG_NITTY,
-		      "dump_dirs SGI_FS_BULKSTAT returns %u entries\n",
+		      "dump_dirs SGI_FS_BULKSTAT returns %d entries\n",
 		      buflenout );
 
 		/* check if done

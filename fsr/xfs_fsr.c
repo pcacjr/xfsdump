@@ -174,14 +174,14 @@ xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
 
 int 
 xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount, 
-                    xfs_bstat_t *ubuffer, size_t *ocount)
+                    xfs_bstat_t *ubuffer, __s32 *ocount)
 {
     xfs_fsop_bulkreq_t  bulkreq;
     
     bulkreq.lastip = lastip;
     bulkreq.icount = icount;
     bulkreq.ubuffer = ubuffer;
-    bulkreq.ocount =  (__s32 *)ocount;
+    bulkreq.ocount = ocount;
     return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
 }
 
@@ -653,7 +653,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 	int	fsfd, fd;
 	int	count = 0;
 	int	ret;
-	size_t buflenout;
+	__s32	buflenout;
 	xfs_bstat_t buf[GRABSZ];
 	char	fname[64];
 	char	*tname;

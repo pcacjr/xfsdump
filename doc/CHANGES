@@ -1,3 +1,10 @@
+xfsdump-2.2.23 (21 July 2004)
+	- Fix up xfs_fsr and xfsdump to prevent possible crashes on 64 bit
+	  machines such as Alphas, when using a 64 bit count passed to bulkstat
+	  when only 32 bits of it have been set by bulkstat.
+	  Suggestion came from Jan-Jaap van der Heijden.
+	  See http://oss.sgi.com/bugzilla/show_bug.cgi?id=346 for details.
+
 xfsdump-2.2.22 (19 Jul 2004)
 	- Add support for new DMF attribute format.
 	- Fix bug in HSM code where a DMF attribute
