@@ -1244,9 +1244,10 @@ stobj_copy_invsess(int fd,
 		nmf = strms[i].st_nmediafiles;
 		off = strms[i].st_firstmfile;
 
-		ises->s_streams[i].st_mediafiles = calloc( nmf, 
+		if (nmf)
+			ises->s_streams[i].st_mediafiles = calloc( nmf,
 						    sizeof( inv_mediafile_t ) );
-		ASSERT( ises->s_streams[i].st_mediafiles );
+		ASSERT( !nmf || ises->s_streams[i].st_mediafiles );
 
 		for ( j = 0; j < nmf; 
 		      j++, 
