@@ -30,27 +30,158 @@
  * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
  */
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/errno.h>
+#include <sys/ioctl.h>
+
+#include <handle.h>
+#include <libxfs.h>
+#include <attributes.h>
 #include "attr.h"
 
-/*ARGSUSED*/
+/* These functions implement the IRIX style extended attribute interfaces, */
+/* both of these functions are based on attr_list/attr_multi defined in */
+/* libattr/attr.c and will need to be updated when we have a more */
+/* permanent replacement for attrctl. */
+
 int
-attr_multi_by_handle (void      *hanp,
-                      size_t    hlen,
-                      void      *buf,
-                      int       rtrvcnt,
-                      int       flags)
+attr_multi_by_handle( jdm_filehandle_t *hanp,	/* handle pointer (fshandle_t) */
+		      size_t    hlen,		/* handle length */
+		      void      *buf,		/* attr_multiops */
+		      int       count,		/* # of attr_multiops */
+		      int       flags)
 {
-    return 0;
+	int error;
+	attr_multiop_t *multiops;
+	attr_op_t *ops;
+	int fsfd;
+	xfs_fsop_handlereq_t hreq;
+	xfs_fsop_attr_handlereq_t attr_hreq;
+	int i;
+		
+	if (! (ops = malloc(count * sizeof (attr_op_t)))) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	if ((flags & ATTR_DONTFOLLOW) != flags) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* convert input array to attrctl form - see attr_multi */
+	multiops = (attr_multiop_t *) buf;
+	for (i = 0; i < count; i++) {
+		ops[i].opcode = multiops[i].am_opcode;
+		ops[i].name = multiops[i].am_attrname;
+		ops[i].value = multiops[i].am_attrvalue;
+		ops[i].length = multiops[i].am_length;
+		ops[i].flags = multiops[i].am_flags;
+	}
+
+	if ((fsfd = handle_to_fsfd(hanp)) < 0) {
+		errno = EBADF;
+		return -1;
+	}
+
+	hreq.fd       = 0;
+	hreq.path     = NULL;
+	hreq.oflags   = 0;
+	hreq.ihandle  = hanp;
+	hreq.ihandlen = hlen;
+	hreq.ohandle  = NULL;
+	hreq.ohandlen = NULL;
+
+	attr_hreq.hreq = &hreq;
+	attr_hreq.ops = ops;
+	attr_hreq.count = count;
+
+	error = ioctl(fsfd, XFS_IOC_ATTRCTL_BY_HANDLE, &attr_hreq);
+
+	if (error > 0) {
+		/* copy return vals */
+		for (i = 0; i < count; i++) {
+			multiops[i].am_error = ops[i].error;
+			if (ops[i].opcode == ATTR_OP_GET)
+				multiops[i].am_length = ops[i].length;
+		}
+	}
+
+	free(ops);
+	return error;
 }
 
-/*ARGSUSED*/
 int
-attr_list_by_handle (void       *hanp,
-                     size_t     hlen,
-                     char       *buf,
-                     size_t     bufsiz,
+attr_list_by_handle( jdm_filehandle_t *hanp,	/* handle pointer (fshandle_t) */
+                     size_t     hlen,		/* handle length */
+                     char       *buf,		/* attr output buffer */
+                     size_t     bufsiz,		/* buffer size */
                      int        flags,
-                     struct attrlist_cursor *cursor)
+                     struct attrlist_cursor *cursor) /* opaque cursor type */
 {
-    return 0;
+	attr_op_t op;
+	int fsfd;
+	xfs_fsop_handlereq_t hreq;
+	xfs_fsop_attr_handlereq_t attr_hreq;
+
+	memset(&op, 0, sizeof(attr_op_t));
+	op.opcode = ATTR_OP_IRIX_LIST;
+	op.value = (char *) buf;
+	op.length = bufsiz;
+	op.flags = flags;
+	op.aux = cursor;
+
+	if ((fsfd = handle_to_fsfd(hanp)) < 0) {
+		errno = EBADF;
+		return -1;
+	}
+
+	hreq.fd       = 0;
+	hreq.path     = NULL;
+	hreq.oflags   = 0;
+	hreq.ihandle  = hanp;
+	hreq.ihandlen = hlen;
+	hreq.ohandle  = NULL;
+	hreq.ohandlen = NULL;
+
+	attr_hreq.hreq = &hreq;
+	attr_hreq.ops = &op;
+	attr_hreq.count = 1;
+
+	return ioctl(fsfd, XFS_IOC_ATTRCTL_BY_HANDLE, &attr_hreq);
+}
+
+intgen_t
+jdm_attr_multi(	jdm_fshandle_t *fshp,	/* filesystem handle */
+		xfs_bstat_t *statp,	/* bulkstate info */
+		char *bufp,		/* attr_multiops */
+		int count,		/* # of attr_multiops */
+		int flags)
+{
+	jdm_filehandle_t *filehandle;
+	size_t hlen;
+	intgen_t rval;
+
+	jdm_new_filehandle(&filehandle, &hlen, (jdm_fshandle_t *) fshp, statp);
+	rval = attr_multi_by_handle(filehandle, hlen, (void *) bufp, count, flags);
+	jdm_delete_filehandle(filehandle, hlen);
+	return rval;
+}
+
+intgen_t
+jdm_attr_list( jdm_fshandle_t *fshp,
+	       xfs_bstat_t *statp,
+	       char *bufp,		/* attr list */
+	       size_t bufsz,		/* buffer size */
+	       int flags,
+	       struct attrlist_cursor *cursor) /* opaque attr_list cursor */
+{
+	jdm_filehandle_t *filehandle;
+	size_t hlen;
+	intgen_t rval;
+
+	jdm_new_filehandle(&filehandle, &hlen, (jdm_fshandle_t *) fshp, statp);
+	rval = attr_list_by_handle(filehandle, hlen, bufp, bufsz, flags, cursor);
+	jdm_delete_filehandle(filehandle, hlen);
+	return rval;
 }

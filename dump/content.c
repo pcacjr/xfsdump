@@ -35,9 +35,6 @@
 
 #include <sys/stat.h>
 #include <sys/prctl.h>
-#ifdef EXTATTR
-#include <attributes.h>
-#endif /* EXTATTR */
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -45,6 +42,16 @@
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
+#include <malloc.h>
+
+#ifdef EXTATTR
+#include <attributes.h>
+#include "attr.h"
+#endif /* EXTATTR */
+
+#ifdef DMEXTATTR
+#include "hsmapi.h"
+#endif /* DMEXTATTR */
 
 #include "exit.h"
 #include "types.h"
@@ -67,11 +74,6 @@
 #include "inomap.h"
 #include "var.h"
 #include "inventory.h"
-
-#ifdef EXTATTR
-#include "hsmapi.h"
-#endif /* EXTATTR */
-
 #include "getdents.h"
 #include "arch_xlate.h"
 
@@ -157,12 +159,14 @@ struct context {
 			/* pre-allocated buffer for dumping the names and
 			 * values for a list of extended file attributes
 			 */
+#endif EXTATTR
+#ifdef DMEXTATTR
 	hsm_f_ctxt_t *cc_hsm_f_ctxtp;
 			/* pre-allocated HSM context used for holding HSM
 			   state information about a file across subroutine
 			   calls.
 			*/
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 	char *cc_readlinkbufp;
 	size_t cc_readlinkbufsz;
 			/* pre-allocated buffer for readlink()
@@ -381,9 +385,9 @@ static rv_t dump_extattrhdr( drive_t *drivep,
 
 bool_t content_media_change_needed;
 char *media_change_alert_program = NULL;
-#ifdef EXTATTR
+#ifdef DMEXTATTR
 hsm_fs_ctxt_t *hsm_fs_ctxtp = NULL;
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 
 /* definition of locally defined static variables *****************************/
 
@@ -478,10 +482,15 @@ static bool_t sc_mcflag[ STREAM_SIMMAX ];
 static bool_t sc_dumpextattrpr = BOOL_TRUE;
 	/* dump extended attributes
 	 */
+static bool_t sc_brokenioctl = BOOL_FALSE;
+	/* attr_*_by_handle appears to be missing
+         */
+#endif EXTATTR
+#ifdef DMEXTATTR
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
 	 */
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 #ifdef SYNCDIR
 static size_t sc_thrdsdirdumpsynccnt = 0;
 static size_t sc_thrdswaitingdirdumpsync1 = 0;
@@ -642,10 +651,12 @@ content_init( intgen_t argc,
 		case GETOPT_NOEXTATTR:
 			sc_dumpextattrpr = BOOL_FALSE;
 			break;
+#endif /* EXTATTR */
+#ifdef DMEXTATTR
 		case GETOPT_DUMPASOFFLINE:
 			sc_dumpasoffline = BOOL_TRUE;
 			break;
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 #ifdef BASED
 		case GETOPT_BASED:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
@@ -1370,7 +1381,7 @@ baseuuidbypass:
 		return BOOL_FALSE;
 	}
 
-#ifdef EXTATTR
+#ifdef DMEXTATTR
 	/* If GETOPT_DUMPASOFFLINE was specified, allocate a filesystem context
 	 * for use by the HSM routines.
 	 */
@@ -1378,7 +1389,7 @@ baseuuidbypass:
 	if (sc_dumpasoffline) {
 		hsm_fs_ctxtp = HsmInitFsysContext(mntpnt, HSM_API_VERSION_1);
 	}
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 
 	/* set now so statline can be displayed
 	 */
@@ -1546,13 +1557,15 @@ baseuuidbypass:
 			   ( char * )memalign( sizeof( extattrhdr_t ),
 					       contextp->cc_extattrdumpbufsz );
 		ASSERT( contextp->cc_extattrdumpbufp );
+#endif /* EXTATTR */
+#ifdef DMEXTATTR
 		if (hsm_fs_ctxtp) {
 			contextp->cc_hsm_f_ctxtp = HsmAllocateFileContext(
 				hsm_fs_ctxtp);
 		} else {
 			contextp->cc_hsm_f_ctxtp = NULL;
 		}
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 
 		contextp->cc_readlinkbufsz = MAXPATHLEN + SYMLINK_ALIGN;
 		contextp->cc_readlinkbufp =
@@ -3180,29 +3193,43 @@ dump_extattrs( drive_t *drivep,
 			attrlist_t *listp;
 			bool_t abort;
 			int rval;
-			rval = jdm_attr_list(fshandlep, statp,
-				contextp->cc_extattrlistbufp,
-				( int )contextp->cc_extattrlistbufsz,
-				flag, &cursor );
-			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
-				      "could not get list of %s attributes for "
-				      "%s ino %llu: %s (%d)\n",
-				      ( flag & ATTR_ROOT )
-				      ?
-				      "root"
-				      :
-				      "non-root",
-				      ( statp->bs_mode & S_IFMT ) == S_IFDIR
-				      ?
-				      "dir"
-				      :
-				      "nondir",
-				      statp->bs_ino,
-				      strerror( errno ),
-				      errno );
-				break;
+
+			if (! sc_brokenioctl) {
+				rval = jdm_attr_list(fshandlep, statp,
+						     contextp->cc_extattrlistbufp,
+						     ( int )contextp->cc_extattrlistbufsz,
+						     flag, &cursor );
+
+				if ( rval ) {
+					mlog( MLOG_NORMAL | MLOG_WARNING,
+					      "could not get list of %s "
+					      "attributes for "
+					      "%s ino %llu: %s (%d)\n",
+					      ( flag & ATTR_ROOT )
+					      ? "root" : "non-root",
+					      (( statp->bs_mode & S_IFMT )
+					       == S_IFDIR) ? "dir" : "nondir",
+					      statp->bs_ino,
+					      strerror( errno ),
+					      errno );
+					
+					/* assume kernel is missing the ioctl
+					 * don't log any more errors
+					 */
+					if (rval == EINVAL) {
+						mlog( MLOG_NORMAL | MLOG_WARNING,
+						      "ioctl returned EINVAL: "
+						      "disabling extended "
+						      "attribute operations (only "
+						      "one warning will be "
+						      "printed)\n");
+						sc_brokenioctl = BOOL_TRUE;
+					}
+				}
 			}
+
+			if (sc_brokenioctl || rval)
+				break;
 
 			listp = ( attrlist_t * )contextp->cc_extattrlistbufp;
 			more = listp->al_more;
@@ -3278,6 +3305,7 @@ dump_extattr_list( drive_t *drivep,
 
 			entp = ATTR_ENTRY( listp, nameix );
 			opp = &contextp->cc_extattrrtrvarrayp[ rtrvix ];
+#ifdef DMEXTATTR
 
 			/* Offer the HSM a chance to avoid dumping certain
 			 * attributes.
@@ -3305,6 +3333,7 @@ dump_extattr_list( drive_t *drivep,
 					continue;
 				}
 			}
+#endif /* DMEXTATTR */
 
 			dumpbufp = dump_extattr_buildrecord( statp,
 							     dumpbufp,
@@ -3336,22 +3365,41 @@ dump_extattr_list( drive_t *drivep,
 
 		rtrvcnt = rtrvix;
 		if (rtrvcnt > 0) {
-			rval = jdm_attr_multi( fshandlep, statp,
-					    (void *)contextp->cc_extattrrtrvarrayp,
-					    ( int )rtrvcnt,
-					    0 );
-			if ( rval ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING,
-				      "could not retrieve %s attributes for "
-				      "%s ino %llu: %s (%d)\n",
-				      isrootpr ? "root" : "non-root",
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
-				      statp->bs_ino,
-				      strerror( errno ),
-				      errno );
+			if (! sc_brokenioctl) {
+				rval = jdm_attr_multi( fshandlep, statp,
+						       (void *)contextp->cc_extattrrtrvarrayp,
+						       ( int )rtrvcnt,
+						       0 );
+
+				if (rval) {
+					mlog( MLOG_NORMAL | MLOG_WARNING,
+					      "could not retrieve %s "
+					      "attributes for "
+					      "%s ino %llu: %s (%d)\n",
+					      isrootpr ? "root" : "non-root",
+					      ( statp->bs_mode & S_IFMT )
+					      == S_IFDIR ? "dir" : "nondir",
+					      statp->bs_ino,
+					      strerror( errno ),
+					      errno );
+
+					if (rval == EINVAL) {
+						mlog( MLOG_NORMAL | MLOG_WARNING,
+						      "ioctl returned EINVAL: "
+						      "disabling extended attribute "
+						      "operations (only one warning "
+						      "will be printed)\n");
+						sc_brokenioctl = BOOL_TRUE;
+					}
+				}
+
+			}
+
+			if (sc_brokenioctl || rval) {
 				*abortprp = BOOL_TRUE;
 				return RV_OK;
 			}
+
 			for ( rtrvix = 0 ; rtrvix < rtrvcnt ; rtrvix++ ) {
 				attr_multiop_t *opp;
 				opp = &contextp->cc_extattrrtrvarrayp[ rtrvix ];
@@ -3410,6 +3458,7 @@ dump_extattr_list( drive_t *drivep,
 		endp = dumpbufp;
 	}
 
+#ifdef DMEXTATTR
 	/* All existing attributes are in the dump buffer.  See if the HSM
 	 * needs to add any addtional attributes.
 	 */
@@ -3489,6 +3538,8 @@ dump_extattr_list( drive_t *drivep,
 			endp = dumpbufp;
 		}
 	}
+#endif /* DMEXTATTR */
+
 
 	/* If any attributes remain unwritten in the dump buffer, write them
 	 * now.
@@ -3543,6 +3594,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 	u_int32_t namesz = namelen + 1;
 	char *valuep = namep + namesz;
 	u_int32_t recsz = EXTATTRHDR_SZ + namesz + valuesz;
+	extattrhdr_t tmpah;
 
 	recsz = ( recsz + ( EXTATTRHDR_ALIGN - 1 ))
 		&
@@ -3590,23 +3642,24 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		     namesz, namesrcp,
 		     valuesz );
 	( void )strcpy( namep, namesrcp );
-	ahdrp->ah_sz = recsz;
+	tmpah.ah_sz = recsz;
 	ASSERT( EXTATTRHDR_SZ + namesz < UINT16MAX );
-	ahdrp->ah_valoff = ( u_int16_t )( EXTATTRHDR_SZ + namesz );
-	ahdrp->ah_flags = ( u_int16_t )( isrootpr ? EXTATTRHDR_FLAGS_ROOT : 0);
-	ahdrp->ah_valsz = valuesz;
-	ahdrp->ah_checksum = 0;
+	tmpah.ah_valoff = ( u_int16_t )( EXTATTRHDR_SZ + namesz );
+	tmpah.ah_flags = ( u_int16_t )( isrootpr ? EXTATTRHDR_FLAGS_ROOT : 0);
+	tmpah.ah_valsz = valuesz;
+	tmpah.ah_checksum = 0;
 #ifdef EXTATTRHDR_CHECKSUM
 	{
 	register u_int32_t *sump = ( u_int32_t * )ahdrp;
 	register u_int32_t *endp = ( u_int32_t * )( ahdrp + 1 );
 	register u_int32_t sum;
-	ahdrp->ah_flags |= EXTATTRHDR_FLAGS_CHECKSUM;
+	tmpah.ah_flags |= EXTATTRHDR_FLAGS_CHECKSUM;
 	for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
-	ahdrp->ah_checksum = ~sum + 1;
+	tmpah.ah_checksum = ~sum + 1;
 	}
 #endif /* EXTATTRHDR_CHECKSUM */
 
+	xlate_extattrhdr(ahdrp, &tmpah, -1);
 	*valuepp = valuep;
 	return dumpbufp + recsz;
 }
@@ -3776,7 +3829,7 @@ dump_file( void *arg1,
 		      "map says unchanged dir" );
 	}
 
-#ifdef EXTATTR
+#ifdef DMEXTATTR
 	/* if GETOPT_DUMPASOFFLINE was specified, initialize the HSM's file
 	 * context for use in other routines.  If the context can't be
 	 * initialized, don't dump the file.
@@ -3794,7 +3847,7 @@ dump_file( void *arg1,
 			return RV_OK;
 		}
 	}
-#endif /* EXTATTR */
+#endif /* DMEXTATTR */
 
 	/* pass on to specific dump function
 	 */
@@ -4416,7 +4469,7 @@ dump_extent_group( drive_t *drivep,
 				*cmpltflgp = BOOL_TRUE;
 				return RV_OK;
 			}
-#ifdef EXTATTR
+#ifdef DMEXTATTR
 
 			/* The F_GETBMAPX call succeeded.  Give the HSM a chance
 			 * to massage the extents.  (It can change the number
@@ -4437,7 +4490,7 @@ dump_extent_group( drive_t *drivep,
 				}
 				entrycnt = gcp->eg_bmap[ 0 ].bmv_entries;
 			}
-#endif	/* EXTATTR */
+#endif	/* DMEXTATTR */
 			if ( entrycnt <= 0 ) {
 				mlog( MLOG_NITTY,
 				      "all extent groups dumped\n" );
@@ -4943,12 +4996,12 @@ dump_filehdr( drive_t *drivep,
 	( void )memset( ( void * )fhdrp, 0, sizeof( *fhdrp ));
 	if ( statp ) {
 		copy_xfs_bstat(&fhdrp->fh_stat, statp);
-#ifdef EXTATTR
+#ifdef DMEXTATTR
 		if (hsm_fs_ctxtp) {
 			HsmModifyInode(contextp->cc_hsm_f_ctxtp,
 				(xfs_bstat_t *)&fhdrp->fh_stat);
 		}
-#endif	/* EXTATTR */
+#endif	/* DMEXTATTR */
 	}
 	fhdrp->fh_offset = offset;
 	fhdrp->fh_flags = flags;

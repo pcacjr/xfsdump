@@ -41,17 +41,19 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #ifdef EXTATTR
+#include <sys/ioctl.h>
 #include <attributes.h>
 #endif /* EXTATTR */
-#ifdef HIDDEN
+#ifdef DMEXTATTR /* also see F_FSSETDM */
 #include <xfs_dmapi.h>
-#endif
+#endif /* DMEXTATTR */
 #include <handle.h>
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
 #include <utime.h>
+#include <malloc.h>
 
 #include "types.h"
 #include "util.h"
@@ -7237,10 +7239,11 @@ restore_reg( drive_t *drivep,
 					fsxattr.fsx_extsize =
 					    ( u_int32_t )
 					    bstatp->bs_extsize;
-					rval = fcntl( fd,
-						      F_FSSETXATTR,
+
+					rval = ioctl( fd,
+						      XFS_IOC_FSSETXATTR,
 						     (void *)&fsxattr);
-					if ( rval ) {
+					if ( rval < 0 ) {
 						mlog(MLOG_NORMAL | MLOG_WARNING,
 						      "attempt to set "
 						      "extended "
@@ -8516,8 +8519,12 @@ restore_dir_extattr_cb_cb( extattrhdr_t *ahdrp, void *ctxp )
 static void
 setextattr( char *path, extattrhdr_t *ahdrp )
 {
-	static	char	dmiattr[] = DMATTR_PREFIXSTRING;
+#ifdef DMEXTATTR
+	static	char dmiattr[] = DMATTR_PREFIXSTRING;
+#endif /* DMEXTATTR */
+
 	bool_t isrootpr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT;
+	bool_t isdm = BOOL_FALSE;
 	intgen_t rval;
 
 	/* Check if just displaying a dump before setting attributes */
@@ -8531,12 +8538,16 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 		     ( char * )( &ahdrp[ 1 ] ),
 		     ahdrp->ah_valsz );*/
 
-	/*	If restoreextattrpr not set, then we are here because -D
-	 * was specified.  So return unless it looks like a root DMAPI
-	 * attribute.
-	 */
-	if ((!persp->a.restoreextattrpr) && !(isrootpr &&
-		!strncmp(( char * )( &ahdrp[ 1 ] ), dmiattr, sizeof(dmiattr)-1)))
+#ifdef DMEXTATTR
+	isdm = isrootpr &&
+		(strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) == 0);
+#endif /* DMEXTATTR */
+
+
+	/* If restoreextattrpr not set, then we are here because -D was */
+	/* specified. So return unless it looks like a root DMAPI attribute. */
+
+	if ((!persp->a.restoreextattrpr) && !isdm)
 		return;
 
 	rval = attr_set( path,

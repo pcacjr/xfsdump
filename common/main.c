@@ -988,6 +988,9 @@ usage( void )
 #ifdef EXTATTR
 	ULO( "(don't dump extended file attributes)",	GETOPT_NOEXTATTR );
 #endif /* EXTATTR */
+#ifdef DMEXTATTR
+	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
+#endif /* DMEXTATTR */
 #ifdef BASED
 	ULO( "<base dump session id>",			GETOPT_BASED );
 #endif /* BASED */
@@ -1050,7 +1053,6 @@ usage( void )
 #ifdef REVEAL
 	ULO( "(check tape record checksums)",		GETOPT_RECCHKSUM );
 #endif /* REVEAL */
-	ULO( "(restore DMAPI event settings)",		GETOPT_SETDM );
 	ULO( "(don't overwrite if changed)",		GETOPT_CHANGED );
 	ULO( "(don't prompt)",				GETOPT_FORCE );
 	ULO( "(display dump inventory)",		GETOPT_INVPRINT );

@@ -33,24 +33,39 @@
 #define ATTR_H
 
 #include <sys/types.h>
+#include <jdm.h>
 
-struct attrlist_cursor {
-        u_int32_t       opaque[4];      /* an opaque cookie */
-};
+struct xfs_bstat;
+struct attrlist_cursor;
 
-int
-attr_multi_by_handle (void      *hanp,
-                      size_t    hlen,
-                      void      *buf,
-                      int       rtrvcnt,
-                      int       flags);
+extern int
+attr_multi_by_handle( jdm_filehandle_t *__hanp,	/* handle pointer (fshandle_t) */
+		      size_t __hlen,		/* handle length */
+		      void *__buf,		/* attr_multiops */
+		      int __count,		/* # of attr_multips */
+		      int __flags);
 
-int
-attr_list_by_handle (void       *hanp,
-                     size_t     hlen,
-                     char       *buf,
-                     size_t     bufsiz,
-                     int        flags,
-                     struct attrlist_cursor *cursor);
+extern int
+attr_list_by_handle( jdm_filehandle_t *__hanp,	/* handle pointer (fshandle_t) */
+		     size_t __hlen,		/* handle length */
+		     char *__buf,		/* attr output buf */
+		     size_t __bufsiz,		/* buffer size */
+		     int __flags,
+		     struct attrlist_cursor *__cursor); /* opaque cursor type */
+
+extern intgen_t
+jdm_attr_multi( jdm_fshandle_t *__fsh,		/* filesystem handle */
+		struct xfs_bstat *__statp,	/* bulkstat info */
+		char *__bufp,			/* attr_multops */
+		int __count,			/* # of attr_multops */
+		int __flags);
+
+extern intgen_t
+jdm_attr_list( jdm_fshandle_t *__fsh,		/* filesystem handle */
+	       struct xfs_bstat *__statp,	/* bulkstat info */
+	       char *__bufp,			/* attr output buf */
+	       size_t __bufsz,			/* buffer size */
+	       int __flags,
+	       struct attrlist_cursor *__cursor);
 
 #endif /* ATTR_H */
