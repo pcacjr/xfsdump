@@ -1,4 +1,8 @@
 
+xfsdump-1.0.5 (09 April 2001)
+	- fix use of an uninitialised variable in dump
+	- fix a number of compiler warnings
+
 xfsdump-1.0.4 (03 April 2001)
 	- added xfsdump support for dumping quota information
 
