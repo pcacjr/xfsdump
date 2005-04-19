@@ -489,7 +489,6 @@ is_scsi_driver(char *pathname)
 {
 	char rp[PATH_MAX];
 	struct stat64 statbuf;
-	xfs_bstat_t * bstatp;
 	int dev_major;
 
 	if (realpath(pathname, rp) == NULL) {
@@ -525,23 +524,17 @@ is_scsi_driver(char *pathname)
 	 * drivers to determine 1) if we have a tape device, and 2) which
 	 * tape driver the device is using.
 	 */
-	bstatp = ( xfs_bstat_t * )calloc( 1, sizeof( xfs_bstat_t ));
-	ASSERT( bstatp );
-	stat64_to_xfsbstat( bstatp, &statbuf );
-	dev_major = major((dev_t)IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
+	dev_major = major(statbuf.st_rdev);
 
 	if (dev_major == get_driver_character_major("st")) {
-		free( bstatp );
 		return BOOL_TRUE;
 	}
 	else if (dev_major == get_driver_character_major("ts") ||
 	         dev_major == get_driver_character_major("tmf")) { 
 		TS_ISDRIVER = 1;
-		free( bstatp );
 		return BOOL_TRUE;
 	}
 	else {
-		free( bstatp );
 		return BOOL_FALSE;
 	}
 }
