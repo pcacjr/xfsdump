@@ -186,7 +186,7 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 		 */
 		{
 		bool_t successpr;
-		intgen_t ioctlcmd;
+		unsigned int ioctlcmd;
 		intgen_t loglevel;
 		size_t trycnt;
 

@@ -187,7 +187,7 @@ fs_info( char *typb,		/* out */
 			      strerror( errno ));
 		}
 		{
-			u_char_t string_uuid[37];
+			char string_uuid[37];
 			uuid_unparse( *idb, string_uuid );
 			mlog( MLOG_DEBUG,
 			      "fs %s uuid [%s]\n",

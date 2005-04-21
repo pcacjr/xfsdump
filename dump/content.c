@@ -3299,6 +3299,7 @@ dump_extattrs( drive_t *drivep,
 	int flag;
 	attrlist_cursor_t cursor;
 	rv_t rv;
+	bool_t abort;
 
 	/* dump a file header specially marked as heading extended attributes
 	 */
@@ -3338,7 +3339,6 @@ dump_extattrs( drive_t *drivep,
 		more = BOOL_FALSE;
 		do {
 			attrlist_t *listp;
-			bool_t abort;
 			int rval = 0;
 
 			if (! sc_brokenioctl) {
@@ -3391,7 +3391,7 @@ dump_extattrs( drive_t *drivep,
 			if ( rv != RV_OK ) {
 				return rv;
 			}
-		} while ( more && ! abort );
+		} while ( more && !abort );
 	}
 
 	/* finally, dump a dummy extattr hdr so restore will know
