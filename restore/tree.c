@@ -470,6 +470,9 @@ tree_init( char *hkdir,
 	 * the root and for the orphanage. place both nodes
 	 * in the hash list. make the orphanage a child of
 	 * root, and indicate he is real.
+	 *
+	 * Note that we assume that the root inode always
+	 * has a generation count of zero - which is true.
 	 */
 	persp->p_rootino = rootino;
 	persp->p_rooth = Node_alloc( rootino,

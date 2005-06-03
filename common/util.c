@@ -125,28 +125,6 @@ char
 	return rval;
 }
 
-void
-stat64_to_xfsbstat( xfs_bstat_t *dstp, struct stat64 *srcp )
-{
-	memset( ( void * )dstp, 0, sizeof( *dstp ));
-
-	dstp->bs_ino = srcp->st_ino;  /* TODO XXX PORT */
-	dstp->bs_mode = srcp->st_mode;
-	dstp->bs_nlink = srcp->st_nlink;
-	dstp->bs_uid = srcp->st_uid;
-	dstp->bs_gid = srcp->st_gid;
-	dstp->bs_rdev = IRIX_MKDEV(major(srcp->st_rdev), minor(srcp->st_rdev));
-	dstp->bs_blksize = ( int32_t )srcp->st_blksize;
-	dstp->bs_size = srcp->st_size;
-	dstp->bs_atime.tv_sec = srcp->st_atime;
-	dstp->bs_atime.tv_nsec = 0;
-	dstp->bs_mtime.tv_sec = srcp->st_mtime;
-	dstp->bs_mtime.tv_nsec = 0;
-	dstp->bs_ctime.tv_sec = srcp->st_ctime;
-	dstp->bs_ctime.tv_nsec = 0;
-	dstp->bs_blocks = srcp->st_blocks;
-}
-
 intgen_t
 bigstat_iter( jdm_fshandle_t *fshandlep,
 	      intgen_t fsfd,
@@ -273,33 +251,19 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 
 /* ARGSUSED */
 intgen_t
-bigstat_one( jdm_fshandle_t *fshandlep,
-	     intgen_t fsfd,
+bigstat_one( intgen_t fsfd,
 	     xfs_ino_t ino,
 	     xfs_bstat_t *statp )
 {
         xfs_fsop_bulkreq_t bulkreq;
-        
-#ifdef SGI_FS_BULKSTAT_SINGLE
-	ASSERT( ino > 0 );
-	return syssgi( SGI_FS_BULKSTAT_SINGLE, fsfd, &ino, statp );
-#else
-	xfs_ino_t lastino;
 	intgen_t count = 0;
-	intgen_t rval;
 
 	ASSERT( ino > 0 );
-	lastino = ino - 1;
-        bulkreq.lastip = (__u64 *)&lastino;
+        bulkreq.lastip = (__u64 *)&ino;
         bulkreq.icount = 1;
         bulkreq.ubuffer = statp;
         bulkreq.ocount = &count;
-        rval = ioctl(fsfd, XFS_IOC_FSBULKSTAT, &bulkreq);
-	if ( count == 0 || lastino != ino ) {
-		return EINVAL;
-	}
-	return rval;
-#endif
+	return xfsctl(NULL, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
 }
 
 /* calls the callback for every entry in the directory specified
@@ -424,8 +388,7 @@ diriter( jdm_fshandle_t *fshandlep,
 
 			/* use bigstat
 			 */
-			scrval = bigstat_one( fshandlep,
-					      fsfd,
+			scrval = bigstat_one( fsfd,
 					      p->d_ino,
 					      &statbuf );
 			if ( scrval ) {

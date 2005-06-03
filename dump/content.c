@@ -1429,11 +1429,11 @@ baseuuidbypass:
 	}
 
 	/* figure out the ino for the root directory of the fs
-	 * translate the struct stat64 into a xfs_bstat_t,
-	 * since that is what is expected by inomap_build()
+	 * and get its xfs_bstat_t for inomap_build()
 	 */
 	{
 		struct stat64 rootstat;
+
 		rval = fstat64( sc_fsfd, &rootstat );
 		if ( rval ) {
 			mlog( MLOG_NORMAL, _(
@@ -1444,7 +1444,12 @@ baseuuidbypass:
 		sc_rootxfsstatp =
 			( xfs_bstat_t * )calloc( 1, sizeof( xfs_bstat_t ));
 		ASSERT( sc_rootxfsstatp );
-		stat64_to_xfsbstat( sc_rootxfsstatp, &rootstat );
+
+		if ( bigstat_one( sc_fsfd, rootstat.st_ino, sc_rootxfsstatp) < 0 ) {
+			mlog( MLOG_ERROR,
+			      _("failed to get bulkstat information for root inode\n"));
+			return BOOL_FALSE;
+		}
 	}
 	
 	/* alloc a file system handle, to be used with the jdm_open()
@@ -2874,7 +2879,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 {
 	xfs_ino_t lastino;
 	size_t bulkstatcallcnt;
-        xfs_fsop_bulkreq_t bulkreq, sbulkreq;
+        xfs_fsop_bulkreq_t bulkreq;
 
 	/* begin iteration at ino zero
 	 */
@@ -2964,11 +2969,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 				      "ino %llu needs second bulkstat\n",
 				      p->bs_ino );
 
-                                sbulkreq.lastip = &p->bs_ino;
-                                sbulkreq.icount = 1;
-                                sbulkreq.ubuffer = p;
-                                sbulkreq.ocount = NULL;
-                                if( ioctl( sc_fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
+				if ( bigstat_one( sc_fsfd, p->bs_ino, p) < 0 ) {
 					mlog( MLOG_WARNING,  _(
 					      "failed to get bulkstat information for inode %llu\n"),
 					      p->bs_ino );
@@ -3233,8 +3234,7 @@ dump_dir( ix_t strmix,
 				xfs_bstat_t statbuf;
 				intgen_t scrval;
 				
-				scrval = bigstat_one( fshandlep,
-						      fsfd,
+				scrval = bigstat_one( fsfd,
 						      p->d_ino,
 						      &statbuf );
 				if ( scrval ) {

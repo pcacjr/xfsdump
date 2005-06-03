@@ -1,3 +1,6 @@
+xfsdump-2.2.28 (03 June 2005)
+	- removal of unnecessary stat64_to_xfsbstat function
+
 xfsdump-2.2.27 (08 Mar 2005)
 	- Fix compilation with gcc4, from Andreas Jochens.
 

@@ -89,11 +89,6 @@ extern intgen_t read_buf( char *bufp,
  */
 extern char *strncpyterm( char *s1, char *s2, size_t n );
 
-/* converts a struct stat64 into a xfs_bstat_t. does not fill in fields
- * where info cannot be extracted from struct stat64.
- */
-extern void stat64_to_xfsbstat( xfs_bstat_t *xfsstatp, struct stat64 *statp );
-
 /* bigstat - efficient file status gatherer. presents an iterative
  * callback interface, invoking the caller's callback for each in-use
  * inode. the caller can specify the first ino, and can limit the callbacks
@@ -120,8 +115,7 @@ extern intgen_t bigstat_iter( jdm_fshandle_t *fshandlep,
 			      xfs_bstat_t *buf,
 			      size_t buflen );
 
-extern intgen_t bigstat_one( jdm_fshandle_t *fshandlep,
-			     intgen_t fsid,
+extern intgen_t bigstat_one( intgen_t fsid,
 			     xfs_ino_t ino,
 			     xfs_bstat_t *statp );
 
