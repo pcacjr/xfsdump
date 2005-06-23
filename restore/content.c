@@ -8375,6 +8375,7 @@ restore_extent( filehdr_t *fhdrp,
 				      remaining -= ( size_t )rval,
 				      tmp_off += ( off64_t )rval ) {
 					int rttrunc = 0;
+					int trycnt = 0;
 					ASSERT( remaining
 						<=
 						( size_t )INTGENMAX );
@@ -8398,23 +8399,30 @@ restore_extent( filehdr_t *fhdrp,
 						remaining += da.d_miniosz - 
 						   (remaining % da.d_miniosz);
 					}
-					rval = write( fd, bufp, remaining );
+					/*
+					 * Do the write. Due to delayed allocation
+					 * it's possible to receive false ENOSPC
+					 * errors when the filesystem is nearly
+					 * full. XFS kernel code tries to avoid
+					 * this, but cannot always do so. Catch
+					 * ENOSPC and mimic the kernel behavior
+					 * by trying to flush the current file
+					 * first, then trying a system wide sync
+					 * if ENOSPC still occurs.
+					 */
+					for (trycnt = 0; trycnt < 3; trycnt++) {
+						rval = write( fd, bufp, remaining );
+						if (rval >= 0 || errno != ENOSPC)
+							break;
+
+						( trycnt == 0 ) ?
+							fdatasync(fd) : sync();
+					}
 					if ( rval < 0 ) {
 						nwritten = rval;
 						break;
 					}
 					ASSERT( ( size_t )rval <= remaining );
-					if ( ( size_t )rval < remaining ) {
-						mlog( MLOG_NORMAL, _(
-						      "WARNING: attempt to "
-						      "write %u bytes to %s at "
-						      "offset %lld failed: only"
-						      "%d bytes written\n"),
-						      remaining,
-						      path,
-						      tmp_off,
-						      rval );
-					}
 					if (rttrunc) {
 						/* truncate and re-set rval */
 						if (rval == remaining)
