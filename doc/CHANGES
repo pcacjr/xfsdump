@@ -1,7 +1,10 @@
+xfsdump-2.2.30 (27 July 2005)
+	- Fix some problems in the xfsrq(8) script, thanks to Kim Hansen.
+
 xfsdump-2.2.29 (23 June 2005)
 	- Change xfsrestore to retry a write that fails with ENOSPC
-	after issuing a fdatasync call. If it still fails, issue
-	a sync call and retry once more.
+	  after issuing a fdatasync call. If it still fails, issue
+	  a sync call and retry once more.
 
 xfsdump-2.2.28 (03 June 2005)
 	- removal of unnecessary stat64_to_xfsbstat function
