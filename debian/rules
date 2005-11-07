@@ -6,7 +6,8 @@ dirtmp = debian/tmp
 pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
-options = DEBUG=-DNDEBUG; DISTRIBUTION=debian; export DEBUG DISTRIBUTION;
+options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+	  INSTALL_USER=root INSTALL_GROUP=root ;
 checkdir = test -f debian/rules
 
 build: built
