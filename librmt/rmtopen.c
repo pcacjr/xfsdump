@@ -6,36 +6,20 @@
  * The code in this source file represents an aggregation of work from
  * Georgia Tech, Fred Fish, Jeff Lee, Arnold Robbins and other Silicon
  * Graphics engineers over the period 1985-2000.
- * 
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of version 2 of the GNU General Public License as
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation.
- * 
- * This program is distributed in the hope that it would be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * 
- * Further, this software is distributed without any warranty that it is
- * free of the rightful claim of any third person regarding infringement
- * or the like.  Any license provided herein, whether implied or
- * otherwise, applies only to this software file.  Patent licenses, if
- * any, provided herein do not apply to combinations of this program with
- * other software, or any other product whatsoever.
- * 
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write the Free Software Foundation, Inc., 59
- * Temple Place - Suite 330, Boston MA 02111-1307, USA.
- * 
- * Contact information: Silicon Graphics, Inc., 1600 Amphitheatre Pkwy,
- * Mountain View, CA  94043, or:
- * 
- * http://www.sgi.com 
- * 
- * For further information regarding this notice, see: 
- * 
- * http://oss.sgi.com/projects/GenInfo/SGIGPLNoticeExplan/
+ *
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ident	"$Revision: 1.6 $"
 
 #include <unistd.h>
 #include <errno.h>
@@ -64,14 +48,14 @@ struct uname_table
 };
 
 struct uname_table uname_table[] =
-{ {UNAME_LINUX, "Linux"}, {UNAME_IRIX, "IRIX"}, {0,0} }; 
+{ {UNAME_LINUX, "Linux"}, {UNAME_IRIX, "IRIX"}, {0,0} };
 
 
 /*
  *	Open a local or remote file.  Looks just like open(2) to
  *	caller.
  */
- 
+
 int rmtopen (path, oflag, mode)
 char *path;
 int oflag;
@@ -88,7 +72,7 @@ int mode;
 }
 
 /*
- *	_rmt_open --- open a magtape device (or file) on system specified, 
+ *	_rmt_open --- open a magtape device (or file) on system specified,
  *                    as given user
  *
  *	file name has the form system[.user]:????
@@ -117,13 +101,12 @@ static int _rmt_open (char *path, int oflag, int mode)
 
 	if ((rsh_path = getenv("RSH")) == NULL) {
 	    rsh_path = RSH_PATH;
-	} 
+	}
 
 	if ((rmt_path = getenv("RMT")) == NULL) {
-	    rmt_path = RMT_PATH;	
-	} 
+	    rmt_path = RMT_PATH;
+	}
 
-        
 
 /*
  *	first, find an open pair of file descriptors
@@ -176,15 +159,15 @@ static int _rmt_open (char *path, int oflag, int mode)
 #define MAX_UNAMECMD MAXHOSTLEN+40
 #define MAX_UNAME 20
 	    FILE *rmt_f;
-	    char cmd[MAX_UNAMECMD]; 
+	    char cmd[MAX_UNAMECMD];
 	    char uname[MAX_UNAME];
             struct uname_table *p;
-		
+
 	    if (user != login) {
-		snprintf(cmd, sizeof(cmd), "%s -l %s %s uname", rsh_path, login, system); 
+		snprintf(cmd, sizeof(cmd), "%s -l %s %s uname", rsh_path, login, system);
 	    }
 	    else {
-		snprintf(cmd, sizeof(cmd), "%s %s uname", rsh_path, system); 
+		snprintf(cmd, sizeof(cmd), "%s %s uname", rsh_path, system);
 	    }
 
 	    rmt_f = popen(cmd, "r");
@@ -212,7 +195,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 		    uname[len-1] = '\0'; /* chomp the '\n' */
 	    }
 
-	    for(p = &uname_table[0]; p->name != 0; p++) { 
+	    for(p = &uname_table[0]; p->name != 0; p++) {
 		if (strncmp(p->name, uname, strlen(p->name)) == 0)
 		    break;
 	    }
@@ -220,11 +203,11 @@ static int _rmt_open (char *path, int oflag, int mode)
 		RMTHOST(i) = UNAME_UNKNOWN;
 		_rmt_msg(RMTWARN, _(
 		"rmtopen: remote host type, \"%s\", is unknown to librmt\n"),
-			uname); 
+			uname);
 	    }
 	    else {
 		RMTHOST(i) = p->id;
-		_rmt_msg(RMTDBG, "rmtopen: RMTHOST(%d) = %s\n", i, p->name); 
+		_rmt_msg(RMTDBG, "rmtopen: RMTHOST(%d) = %s\n", i, p->name);
 	    }
 	}
 
@@ -250,11 +233,11 @@ do_rmt:
 		(void) setuid (getuid ());
 		(void) setgid (getgid ());
 		if (_rmt_msgson() == RMTDBG) {
-		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s %s.%d", 
+		    snprintf(rmt_cmd, sizeof(rmt_cmd), "%s %s.%d",
 				rmt_path, RMT_DEBUG_FILE, getpid());
-		} 
+		}
 		else {
-		    strncpy(rmt_cmd, rmt_path, sizeof(rmt_cmd)); 	
+		    strncpy(rmt_cmd, rmt_path, sizeof(rmt_cmd));
 		}
 		if (user != login)
 		{
@@ -271,7 +254,7 @@ do_rmt:
  *	bad problems if we get here
  */
 		fprintf(stderr,
-		    "librmt: problem finding either RSH(%s) or RMT(%s): %s\n", 
+		    "librmt: problem finding either RSH(%s) or RMT(%s): %s\n",
 		    rsh_path, rmt_path, strerror(errno));
 		exit(1);
 	}
