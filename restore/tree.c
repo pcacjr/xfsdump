@@ -2455,20 +2455,32 @@ setdirattr( dah_t dah, char *path )
 {
 	mode_t mode;
 	struct utimbuf utimbuf;
-	/* REFERENCED */
 	struct fsxattr fsxattr;
 	intgen_t rval;
 	size_t	hlen;
 	void	*hanp;
-	intgen_t fd;
+	intgen_t fd = -1;
 
 	if ( dah == DAH_NULL )
 		return;
 
-	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
-	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
+	if ( tranp->t_dstdirisxfspr ) {
+		if (path_to_handle(path, &hanp, &hlen)) {
+			mlog( MLOG_NORMAL | MLOG_WARNING,
+				_("path_to_handle of %s failed:%s\n"),
+				path, strerror( errno ));
+		} else {
+			fd = open_by_handle(hanp, hlen, O_RDONLY);
+			if (fd < 0) {
+				mlog( MLOG_NORMAL | MLOG_WARNING,
+					_("open_by_handle of %s failed:%s\n"),
+					path, strerror( errno ));
+			}
+			free_handle(hanp, hlen);
+		}
+	}
 
-	if ( persp->p_restoredmpr ) {
+	if ( tranp->t_dstdirisxfspr && persp->p_restoredmpr ) {
 		fsdmidata_t fssetdm;
 
 		fssetdm.fsd_dmevmask = dirattr_get_dmevmask( dah );
@@ -2477,21 +2489,6 @@ setdirattr( dah_t dah, char *path )
 
 		/* restore DMAPI event settings etc.
 		 */
-		if (path_to_handle(path, &hanp, &hlen)) {
-			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-				"path_to_handle of %s failed:%s\n"),
-				path, strerror( errno ));
-			return;
-		}
-		
-		fd = open_by_handle(hanp, hlen, O_RDONLY);
-		free_handle(hanp, hlen);
-		if (fd < 0) {
-			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-				"open_by_handle of %s failed:%s\n"),
-				path, strerror( errno ));
-			return;
-		}
 		rval = ioctl( fd,
 			      XFS_IOC_FSSETDM,
 			      ( void * )&fssetdm );
@@ -2506,7 +2503,6 @@ setdirattr( dah_t dah, char *path )
 			      path,
 			      strerror( errno ));
 		}
-		( void )close( fd );
 	}
 
 	utimbuf.actime = dirattr_get_atime( dah );
@@ -2541,26 +2537,16 @@ setdirattr( dah_t dah, char *path )
 		      strerror( errno ));
 	}
 
-	/* set the extended attributes
+	/* set the extended inode flags
 	 */
 	if ( !tranp->t_dstdirisxfspr )
 		return;
 
-	if (path_to_handle(path, &hanp, &hlen)) {
-		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-		      "path_to_handle of %s failed:%s\n"),
-		      path, strerror( errno ));
-		return;
-	}
+	memset((void *)&fsxattr, 0, sizeof( fsxattr ));
+	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
+	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
+	fsxattr.fsx_projid = dirattr_get_projid( dah );
 
-	fd = open_by_handle(hanp, hlen, O_RDONLY);
-	free_handle(hanp, hlen);
-	if (fd < 0) {
-		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-		      "open_by_handle of %s failed:%s\n"),
-		      path, strerror( errno ));
-		return;
-	}
 	rval = ioctl( fd,
 		      XFS_IOC_FSSETXATTR,
 		      (void *)&fsxattr);

@@ -101,6 +101,7 @@ struct dirattr {
 	time32_t d_ctime;
 	u_int32_t d_xflags;
 	u_int32_t d_extsize;
+	u_int32_t d_projid;
 	u_int32_t d_dmevmask;
 	u_int32_t d_dmstate;
 	off64_t d_extattroff;
@@ -415,6 +416,7 @@ dirattr_add( filehdr_t *fhdrp )
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
+	dirattr.d_projid = fhdrp->fh_stat.bs_projid;
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
 	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
 #ifdef DIRATTRCHK
@@ -790,6 +792,7 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
+	dirattr.d_projid = fhdrp->fh_stat.bs_projid;
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
 	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;
@@ -868,6 +871,13 @@ dirattr_get_extsize( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_extsize;
+}
+
+u_int32_t
+dirattr_get_projid( dah_t dah )
+{
+	dirattr_get( dah );
+	return dtp->dt_cached_dirattr.d_projid;
 }
 
 u_int32_t

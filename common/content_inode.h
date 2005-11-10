@@ -172,10 +172,13 @@ struct bstat {				/*		     bytes accum */
 	int32_t		bs_extsize;	/* extent size		 4    50 */
 	int32_t		bs_extents;	/* number of extents	 4    54 */
 	u_int32_t	bs_gen;		/* generation count	 4    58 */
-	uuid_t		bs_uuid;	/* unique id of file    10    68 */
+	u_int16_t	bs_projid;	/* project id		 2    5a */
+	char		bs_pad[14];	/* for expansion	 e    68 */
 	u_int32_t	bs_dmevmask;	/* DMI event mask        4    6c */
 	u_int16_t	bs_dmstate;	/* DMI state info        2    6e */
 	char		bs_pad1[ 18 ];	/* for expansion        12    80 */
+					/* NOTE: old dumps didn't always
+					 * zero first 2 bytes of bs_pad1 */
 };
 
 typedef struct bstat bstat_t;

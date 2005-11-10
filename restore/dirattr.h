@@ -64,6 +64,7 @@ time32_t dirattr_get_mtime( dah_t dah );
 time32_t dirattr_get_ctime( dah_t dah );
 u_int32_t dirattr_get_xflags( dah_t dah );
 u_int32_t dirattr_get_extsize( dah_t dah );
+u_int32_t dirattr_get_projid( dah_t dah );
 u_int32_t dirattr_get_dmevmask( dah_t dah );
 u_int32_t dirattr_get_dmstate( dah_t dah );
 

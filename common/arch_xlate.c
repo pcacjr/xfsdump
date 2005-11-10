@@ -376,6 +376,7 @@ xlate_bstat(bstat_t *bs1, bstat_t *bs2, int dir)
 	IXLATE(bs1, bs2, bs_extsize);
 	IXLATE(bs1, bs2, bs_extents);
 	IXLATE(bs1, bs2, bs_gen);
+	IXLATE(bs1, bs2, bs_projid);
 	IXLATE(bs1, bs2, bs_dmevmask);
 	IXLATE(bs1, bs2, bs_dmstate);
 
@@ -384,7 +385,7 @@ xlate_bstat(bstat_t *bs1, bstat_t *bs2, int dir)
 		ptr2 = bs1;
 	}
 
-	BXLATE(bs_uuid);
+	BXLATE(bs_pad);
 	BXLATE(bs_pad1);
 
 	mlog(MLOG_NITTY, "xlate_bstat: pre-xlate\n"

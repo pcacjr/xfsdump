@@ -7455,7 +7455,7 @@ restore_reg( drive_t *drivep,
 			      strerror( errno ));
 		}
 
-		/* set the extended attributes
+		/* set the extended inode flags
 		 */
 		if ( persp->a.dstdirisxfspr ) {
 			struct fsxattr fsxattr;
@@ -7469,6 +7469,8 @@ restore_reg( drive_t *drivep,
 			fsxattr.fsx_extsize =
 			    ( u_int32_t )
 			    bstatp->bs_extsize;
+			fsxattr.fsx_projid =
+			    bstatp->bs_projid;
 
 			rval = ioctl( fd,
 				      XFS_IOC_FSSETXATTR,
@@ -7478,11 +7480,13 @@ restore_reg( drive_t *drivep,
 				      _("attempt to set "
 				      "extended attributes "
 				      "(xflags 0x%x, "
-				      "extsize = 0x%x)"
+				      "extsize = 0x%x, "
+				      "projid = 0x%x) "
 				      "of %s failed: "
 				      "%s\n"),
 				      bstatp->bs_xflags,
 				      bstatp->bs_extsize,
+				      bstatp->bs_projid,
 				      path,
 				      strerror(errno));
 			}
