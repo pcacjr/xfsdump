@@ -34,9 +34,7 @@
 #include "media.h"
 #include "content.h"
 #include "content_inode.h"
-#ifdef DMEXTATTR
 #include "hsmapi.h"
-#endif /* DMEXTATTR */
 
 #define MACROBITS
 #include "inomap.h"
@@ -58,9 +56,7 @@
 
 extern bool_t preemptchk( int );
 extern size_t pgsz;
-#ifdef DMEXTATTR
 extern hsm_fs_ctxt_t *hsm_fs_ctxtp;
-#endif /* DMEXTATTR */
 extern u_int64_t maxdumpfilesize;
 extern bool_t allowexcludefiles_pr;
 
@@ -721,7 +717,6 @@ cb_add( void *arg1,
 				return 0;
 			}
 
-#ifdef EXTATTR
 			if (allowexcludefiles_pr && statp->bs_xflags & XFS_XFLAG_NODUMP) {
 				mlog( MLOG_DEBUG | MLOG_EXCLFILES,
 				      "pruned ino %llu, owner %u, estimated size %llu: skip flag set\n",
@@ -760,7 +755,6 @@ cb_add( void *arg1,
 					return 0;
 				}
                         }
-#endif /* EXTATTR */
 
 			map_add( ino, MAP_NDR_CHANGE );
 #ifdef DEBUG_INOMAP
@@ -2154,7 +2148,6 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 	off64_t offset_next;
 	off64_t qty_accum;
 
-#ifdef DMEXTATTR
 	/* If GETOPT_DUMPASOFFLINE was specified and the HSM provided an
 	 * estimate, then use it.
 	 */
@@ -2163,7 +2156,6 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 		if (HsmEstimateFileOffset(hsm_fs_ctxtp, statp, qty, &offset))
 			return offset;
 	}
-#endif /* DMEXTATTR */
 
 	offset = 0;
 	offset_next = 0;
@@ -2230,14 +2222,12 @@ estimate_dump_space( xfs_bstat_t *statp )
 		/* very rough: must improve this.  If GETOPT_DUMPASOFFLINE was
 		 * specified and the HSM provided an estimate, then use it.
 		 */
-#ifdef DMEXTATTR
 		if (hsm_fs_ctxtp) {
 			off64_t	bytes;
 
 			if (HsmEstimateFileSpace(hsm_fs_ctxtp, statp, &bytes))
 				return bytes;
 		}
-#endif	/* DMEXTATTR */
 		return statp->bs_blocks * ( off64_t )statp->bs_blksize;
 	case S_IFIFO:
 	case S_IFCHR:

@@ -26,10 +26,8 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#ifdef EXTATTR
 #include <sys/ioctl.h>
 #include <attr/attributes.h>
-#endif /* EXTATTR */
 #include <xfs/handle.h>
 #include <time.h>
 #include <fcntl.h>
@@ -325,7 +323,6 @@ struct stdesc {
 
 typedef struct stdesc stdesc_t;
 
-#ifdef EXTATTR
 /* byte span descriptor - registers a span of a file restored.
  */
 struct bytespan {
@@ -349,8 +346,6 @@ struct partial_rest {
 };
 
 typedef struct partial_rest partial_rest_t;
-#endif /* EXTATTR */
-
 		
 /* persistent state file header - two parts: accumulation state
  * which spans several sessions, and session state. each has a valid
@@ -420,7 +415,6 @@ struct pers {
 		bool_t restoredmpr;
 			/* restore DMAPI event settings
 			 */
-#ifdef EXTATTR
 		bool_t restoreextattrpr;
 			/* restore extended attributes
 			 */
@@ -437,7 +431,6 @@ struct pers {
 			 * last drive will never leave a file for another to
 			 * complete.
 			 */
-#endif /* EXTATTR */
 	} a;
 
 	/* session state.
@@ -774,7 +767,6 @@ static void clr_mcflag( ix_t thrdix );
 static void pi_show( char *introstring );
 static void pi_show_nomloglock( void );
 
-#ifdef EXTATTR
 static bool_t extattr_init( size_t drivecnt );
 static char * get_extattrbuf( ix_t which );
 static rv_t restore_extattr( drive_t *drivep,
@@ -796,12 +788,9 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
                         off64_t offset, off64_t sz);
 static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
 static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
-#endif /* EXTATTR */
-#ifdef DMEXTATTR
 #define DMATTR_PREFIXSTRING "SGI_DMI_"
 static int reopen_invis(char * path, int oflags);
 static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
-#endif
 static int quotafilecheck(char *type, char *dstdir, char *quotafile);
 
 /* definition of locally defined global variables ****************************/
@@ -839,9 +828,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	bool_t interpr;	/* cmd line interactive mode requested */
 	bool_t ownerpr;	/* cmd line chown/chmod requested */
 	bool_t restoredmpr; /* cmd line restore dm api attrs specification */
-#ifdef EXTATTR
 	bool_t restoreextattrpr; /* cmd line restore extended attr spec */
-#endif /* EXTATTR */
 #ifdef SESSCPLT
 	bool_t sesscpltpr; /* force completion of prev interrupted session */
 #endif /* SESSCPLT */
@@ -869,9 +856,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	ASSERT( sizeof( pers_desc_t ) <= PERS_DESCSZ );
 	ASSERT( PERS_DESCSZ <= pgsz );
 	ASSERT( ! ( pgsz % PERS_DESCSZ ));
-#ifdef EXTATTR
 	ASSERT( sizeof( extattrhdr_t ) == EXTATTRHDR_SZ );
-#endif /* EXTATTR */
 
 	ASSERT( ! ( perssz % pgsz ));
 
@@ -911,9 +896,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	changepr = BOOL_FALSE;
 	ownerpr = BOOL_FALSE;
 	restoredmpr = BOOL_FALSE;
-#ifdef EXTATTR
 	restoreextattrpr = BOOL_TRUE;
-#endif /* EXTATTR */
 #ifdef SESSCPLT
 	sesscpltpr = BOOL_FALSE;
 #endif /* SESSCPLT */
@@ -1132,11 +1115,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			}
 			media_change_alert_program = optarg;
 			break;
-#ifdef EXTATTR
 		case GETOPT_NOEXTATTR:
 			restoreextattrpr = BOOL_FALSE;
 			break;
-#endif /* EXTATTR */
 #ifdef SESSCPLT
 		case GETOPT_SESSCPLT:
 			sesscpltpr = BOOL_TRUE;
@@ -1491,7 +1472,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			      GETOPT_SETDM );
 			return BOOL_FALSE;
 		}
-#ifdef EXTATTR
 		if ( ! restoreextattrpr && 
 		       persp->a.restoreextattrpr != restoreextattrpr) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
@@ -1499,7 +1479,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			      GETOPT_NOEXTATTR );
 			return BOOL_FALSE;
 		}
-#endif /* EXTATTR */
 	}
 
 	/* force owner option if root
@@ -1649,12 +1628,10 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			persp->a.newertime = newertime;
 		}
 		persp->a.restoredmpr = restoredmpr;
-#ifdef EXTATTR
 		if ( ! persp->a.dstdirisxfspr ) {
 			restoreextattrpr = BOOL_FALSE;
 		}
 		persp->a.restoreextattrpr = restoreextattrpr;
-#endif /* EXTATTR */
 		persp->a.stcnt = stcnt;
 		persp->a.firststsensepr = firststsensepr;
 		persp->a.firststsenseprvalpr = firststsenseprvalpr;
@@ -1690,7 +1667,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		ASSERT( stcnt == 0 );
 	}
 
-#ifdef EXTATTR
 	/* initialize the local extattr abstraction. must be done even if
 	 * we don't intend to restore extended attributes
 	 */
@@ -1698,9 +1674,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	if ( ! ok ) {
 		return BOOL_FALSE;
 	}
-#endif /* EXTATTR */
 
-#if defined(DMEXTATTR) || defined(EXTATTR)
 	/* effectively initialize libhandle on this filesystem by
 	 * allocating a file system handle. this needs to be done
 	 * before any open_by_handle() calls (and possibly other
@@ -1721,7 +1695,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		/* libhandle has it cached, release this copy */
 		free_handle(fshanp, fshlen);
 	}
-#endif
 
 	/* map in pers. inv. descriptors, if any. NOTE: this ptr is to be
 	 * referenced ONLY via the macros provided; the descriptors will be
@@ -2850,9 +2823,7 @@ applydirdump( drive_t *drivep,
 {
 	bool_t fhcs;
 	bool_t dhcs;
-#ifdef EXTATTR
 	bool_t ahcs;
-#endif /* EXTATTR */
 
 	fhcs = ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_FILEHDR_CHECKSUM )
 	       ?
@@ -2864,13 +2835,11 @@ applydirdump( drive_t *drivep,
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#ifdef EXTATTR
 	ahcs = ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_EXTATTRHDR_CHECKSUM )
 	       ?
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#endif /* EXTATTR */
 
 	if ( ! persp->s.marknorefdonepr ) {
 		tree_marknoref( );
@@ -2946,7 +2915,6 @@ applydirdump( drive_t *drivep,
 				preemptchk( );
 			}
 
-#ifdef EXTATTR
 			/* may be an extended attributes file hdr
 			 */
 			if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
@@ -2963,7 +2931,6 @@ applydirdump( drive_t *drivep,
 				}
 				continue;
 			}
-#endif /* EXTATTR */
 
 			/* add the directory to the tree. save the
 			 * returned tree node id, to associate with
@@ -3042,9 +3009,8 @@ eatdirdump( drive_t *drivep,
 {
 	bool_t fhcs;
 	bool_t dhcs;
-#ifdef EXTATTR
 	bool_t ahcs;
-#endif /* EXTATTR */
+
 	char _direntbuf[ sizeof( direnthdr_t )
 			+
 			NAME_MAX + 1
@@ -3064,13 +3030,11 @@ eatdirdump( drive_t *drivep,
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#ifdef EXTATTR
 	ahcs = ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_EXTATTRHDR_CHECKSUM )
 	       ?
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#endif /* EXTATTR */
 
 	mlog( MLOG_DEBUG,
 	      "discarding ino map\n" );
@@ -3110,7 +3074,6 @@ eatdirdump( drive_t *drivep,
 			return RV_INTR;
 		}
 
-#ifdef EXTATTR
 		/* may be an extended attributes file hdr
 		 */
 		if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
@@ -3127,7 +3090,6 @@ eatdirdump( drive_t *drivep,
 			}
 			continue;
 		}
-#endif /* EXTATTR */
 
 		/* read the directory entries.
 		 * we can tell when we are done
@@ -3277,12 +3239,10 @@ treepost( char *path1, char *path2 )
 		return RV_INTR;
 	}
 
-#ifdef EXTATTR
 	ok = tree_extattr( restore_dir_extattr_cb, path1 );
 	if ( ! ok ) {
 		return RV_INTR;
 	}
-#endif /* EXTATTR */
 
 	persp->s.treepostdonepr = BOOL_TRUE;
 
@@ -3299,9 +3259,7 @@ applynondirdump( drive_t *drivep,
 {
 	bool_t fhcs;
 	bool_t ehcs;
-#ifdef EXTATTR
 	bool_t ahcs;
-#endif /* EXTATTR */
 	egrp_t first_egrp;
 	egrp_t next_egrp;
 
@@ -3317,13 +3275,11 @@ applynondirdump( drive_t *drivep,
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#ifdef EXTATTR
 	ahcs = ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_EXTATTRHDR_CHECKSUM )
 	       ?
 	       BOOL_TRUE
 	       :
 	       BOOL_FALSE;
-#endif /* EXTATTR */
 
 	/* determine the first and next egrps needed from this media file.
 	 * used to decide if stats should be updated
@@ -3344,7 +3300,6 @@ applynondirdump( drive_t *drivep,
 			break;
 		}
 
-#ifdef EXTATTR
 		if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
 			rv = restore_extattr( drivep,
 					      fhdrp,
@@ -3375,7 +3330,6 @@ applynondirdump( drive_t *drivep,
 			}
 			goto extattrbypass;
 		}
-#endif /* EXTATTR */
 
 		/* restore file
 		 */
@@ -3424,9 +3378,7 @@ applynondirdump( drive_t *drivep,
 			}
 		}
 
-#ifdef EXTATTR
 extattrbypass:
-#endif /* EXTATTR */
 
 		do {
 			/* get a mark for the next read, in case we restart here
@@ -7238,9 +7190,7 @@ restore_reg( drive_t *drivep,
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	intgen_t fd;
 	intgen_t rval;
-#ifdef EXTATTR
 	off64_t restoredsz = 0;
-#endif /* EXTATTR */
 	off64_t offset = 0;
 	rv_t rv;
 
@@ -7332,7 +7282,7 @@ restore_reg( drive_t *drivep,
 						}
 					}
 				}
-#ifdef DMEXTATTR
+
 				if ( persp->a.restoredmpr) {
 					fsdmidata_t fssetdm;
 
@@ -7368,7 +7318,6 @@ restore_reg( drive_t *drivep,
 					}
 					/* If fd < 0, we will not restore the file. */
 				}
-#endif /* DMEXTATTR */
 			}
 		}
 	}
@@ -7415,12 +7364,10 @@ restore_reg( drive_t *drivep,
 			continue;
 		}
 
-#ifdef EXTATTR
 		/* Add up extents restored to later check if the file
 		 * is done.
 		 */
 		restoredsz += ehdr.eh_sz;  /* Increments of block size (usually 512) */
-#endif /* EXTATTR */
 
 		/* Holes do not need to be restored since we now
 		 * unlink the file at the start of the restore.
@@ -7450,7 +7397,6 @@ restore_reg( drive_t *drivep,
 		}
 	}
 
-#ifdef EXTATTR
 	/* The extent group has been restored.  If the file is not
 	 * complete, we may need to co-ordinate with other restore 
 	 * streams to time the restoration of extended attributes.
@@ -7461,7 +7407,6 @@ restore_reg( drive_t *drivep,
 		partial_reg(drivep->d_index, bstatp->bs_ino, bstatp->bs_size,
 		            offset, restoredsz);
 	}
-#endif /* EXTATTR */
 
 	if ( fd != -1 ) {
 		struct utimbuf utimbuf;
@@ -7510,7 +7455,6 @@ restore_reg( drive_t *drivep,
 			      strerror( errno ));
 		}
 
-#ifdef EXTATTR
 		/* set the extended attributes
 		 */
 		if ( persp->a.dstdirisxfspr ) {
@@ -7543,7 +7487,6 @@ restore_reg( drive_t *drivep,
 				      strerror(errno));
 			}
 		}
-#endif
 
 		rval = close( fd );
 		if ( rval ) {
@@ -7851,7 +7794,7 @@ restore_symlink( drive_t *drivep,
 				      strerror( errno ));
 			}
 		}
-#ifdef DMEXTATTR
+
 		if ( persp->a.restoredmpr) {
 		fsdmidata_t fssetdm;
 		
@@ -7862,7 +7805,6 @@ restore_symlink( drive_t *drivep,
 		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
 		rval = do_fssetdm_by_handle(path, &fssetdm);
 		}
-#endif /* DMEXTATTR */
 	}
 
 	return BOOL_TRUE;
@@ -8122,7 +8064,6 @@ read_dirent( drive_t *drivep,
 	return RV_OK;
 }
 
-#ifdef EXTATTR
 /* ARGSUSED */
 static rv_t
 read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
@@ -8190,7 +8131,6 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 
 	return RV_OK;
 }
-#endif /* EXTATTR */
 
 static rv_t
 discard_padding( size_t sz, drive_t *drivep )
@@ -8456,7 +8396,6 @@ restore_extent( filehdr_t *fhdrp,
 	return RV_OK;
 }
 
-#ifdef EXTATTR
 static char *extattrbufp = 0; /* ptr to start of all the extattr buffers */
 static size_t extattrbufsz = 0; /* size of each extattr buffer */
 
@@ -8650,9 +8589,7 @@ restore_dir_extattr_cb_cb( extattrhdr_t *ahdrp, void *ctxp )
 static void
 setextattr( char *path, extattrhdr_t *ahdrp )
 {
-#ifdef DMEXTATTR
 	static	char dmiattr[] = DMATTR_PREFIXSTRING;
-#endif /* DMEXTATTR */
 
 	int flag = ahdrp->ah_flags;
 	bool_t isdm = BOOL_FALSE;
@@ -8669,11 +8606,8 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 		     ( char * )( &ahdrp[ 1 ] ),
 		     ahdrp->ah_valsz );*/
 
-#ifdef DMEXTATTR
 	isdm = (flag & (ATTR_ROOT | ATTR_SECURE)) &&
 		(strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) == 0);
-#endif /* DMEXTATTR */
-
 
 	/* If restoreextattrpr not set, then we are here because -D was */
 	/* specified. So return unless it looks like a root DMAPI attribute. */
@@ -8946,8 +8880,6 @@ gapsearch:
 		return BOOL_FALSE;
 	}
 }
-
-#endif /* EXTATTR */
 
 static char *
 ehdr_typestr( int32_t type )
@@ -9477,7 +9409,6 @@ display_needed_objects( purp_t purp,
  *	loose here - since we don't really check to see if the event bits
  *	being set in the XFS_IOC_FSSETDM call include read/write/trunc.
  */
-#ifdef DMEXTATTR
 static int
 reopen_invis(char *path, int oflags)
 {
@@ -9530,7 +9461,6 @@ do_fssetdm_by_handle(
 	}
 	return rc;
 }
-#endif /*DMEXTATTR*/
 
 static int
 quotafilecheck(char *type, char *dstdir, char *quotafile)

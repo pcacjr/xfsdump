@@ -1957,7 +1957,6 @@ tree_adjref_recurse( nh_t cldh,
 	}
 }
 
-#ifdef EXTATTR
 static bool_t tree_extattr_recurse( nh_t parh,
 				    nh_t cldh,
 				    bool_t ( * cbfunc )( char *path,
@@ -2045,7 +2044,6 @@ tree_extattr_recurse( nh_t parh,
 	
 	return ok;
 }
-#endif /* EXTATTR */
 
 struct phcb {
 	char *path1;
@@ -2470,7 +2468,6 @@ setdirattr( dah_t dah, char *path )
 	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
 	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
 
-#ifdef DMEXTATTR
 	if ( persp->p_restoredmpr ) {
 		fsdmidata_t fssetdm;
 
@@ -2511,7 +2508,6 @@ setdirattr( dah_t dah, char *path )
 		}
 		( void )close( fd );
 	}
-#endif /* DMEXTATTR */
 
 	utimbuf.actime = dirattr_get_atime( dah );
 	utimbuf.modtime = dirattr_get_mtime( dah );
@@ -2545,7 +2541,6 @@ setdirattr( dah_t dah, char *path )
 		      strerror( errno ));
 	}
 
-#ifdef EXTATTR
 	/* set the extended attributes
 	 */
 	if ( !tranp->t_dstdirisxfspr )
@@ -2583,8 +2578,6 @@ setdirattr( dah_t dah, char *path )
 		     strerror(errno));
 	}
 	( void )close( fd );
-#endif /* EXTATTR */
-
 }
 
 /* deletes orphanage if empty, else warns

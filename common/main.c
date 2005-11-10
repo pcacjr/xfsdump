@@ -972,9 +972,7 @@ usage( void )
 	fprintf( stderr, linebuf );
 
 #ifdef DUMP
-#ifdef DMEXTATTR
 	ULO(_("(dump DMF dualstate files as offline)"),	GETOPT_DUMPASOFFLINE );
-#endif /* DMEXTATTR */
 	ULO(_("<blocksize>"),				GETOPT_BLOCKSIZE );
 	ULO(_("<media change alert program> "),		GETOPT_ALERTPROG );
 	ULO(_("<dump media file size> "),		GETOPT_FILESZ );
@@ -989,9 +987,7 @@ usage( void )
 	ULO(_("<subtree> ..."),				GETOPT_SUBTREE );
 	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
 	ULO(_("<maximum file size>"),			GETOPT_MAXDUMPFILESIZE );
-#ifdef EXTATTR
 	ULO(_("(don't dump extended file attributes)"),	GETOPT_NOEXTATTR );
-#endif /* EXTATTR */
 #ifdef BASED
 	ULO(_("<base dump session id>"),		GETOPT_BASED );
 #endif /* BASED */
@@ -1050,13 +1046,9 @@ usage( void )
 	ULO(_("(contents only)"),			GETOPT_TOC );
 	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
 	ULO(_("(use small tree window)"),		GETOPT_SMALLWINDOW );
-#ifdef EXTATTR
 	ULO(_("(don't restore extended file attributes)"),GETOPT_NOEXTATTR );
-#endif /* EXTATTR */
 	ULO(_("(restore root dir owner/permissions)"),	GETOPT_ROOTPERM );
-#ifdef DMEXTATTR
 	ULO(_("(restore DMAPI event settings)"),	GETOPT_SETDM );
-#endif /* DMEXTATTR */
 #ifdef REVEAL
 	ULO(_("(check tape record checksums)"),		GETOPT_RECCHKSUM );
 #endif /* REVEAL */

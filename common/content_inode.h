@@ -128,10 +128,8 @@ typedef struct content_inode_hdr content_inode_hdr_t;
 #define CIH_DUMPATTR_EXTENTHDR_CHECKSUM		( 1 <<  9 )
 #define CIH_DUMPATTR_DIRENTHDR_CHECKSUM		( 1 << 10 )
 #define CIH_DUMPATTR_DIRENTHDR_GEN		( 1 << 11 )
-#ifdef EXTATTR
 #define CIH_DUMPATTR_EXTATTR			( 1 << 12 )
 #define CIH_DUMPATTR_EXTATTRHDR_CHECKSUM	( 1 << 13 )
-#endif /* EXTATTR */
 
 
 /* timestruct_t - time structure
@@ -216,12 +214,10 @@ typedef struct filehdr filehdr_t;
 		/* the last media file in the stream is always terminated by
 		 * a dummy file header, with this flag set.
 		 */
-#ifdef EXTATTR
 #define FILEHDR_FLAGS_EXTATTR	( 1 << 3 )
 		/* special file header followed by one file's (dir or nondir)
 		 * extended attributes.
 		 */
-#endif /* EXTATTR */
 
 
 /* extenthdr_t - a header placed at the beginning of every dumped
@@ -307,8 +303,6 @@ typedef u_int16_t gen_t;
  */
 #define SYMLINK_ALIGN	8
 
-#ifdef EXTATTR
-
 /* extattr_hdr_t - hdr for an extended attribute. the first byte of the
  * attribute name immediately follows the header. the name is terminated
  * with a NULL byte. Each extattr record will be aligned; there may
@@ -342,7 +336,5 @@ typedef struct extattrhdr extattrhdr_t;
 #define EXTATTRHDR_FLAGS_SECURE		( 1 << 3 )
 	/* a "secure" mode attribute
 	 */
-
-#endif /* EXTATTR */
 
 #endif /* CONTENT_INODE_H */

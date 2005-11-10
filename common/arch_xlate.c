@@ -472,7 +472,6 @@ xlate_direnthdr(direnthdr_t *dh1, direnthdr_t *dh2, int dir)
 	     ptr2->dh_name );	     
 }
 
-#ifdef EXTATTR
 /*
  * xlate_extattrhdr - endian convert struct extattrhdr
  */
@@ -487,7 +486,6 @@ xlate_extattrhdr(extattrhdr_t *eh1, extattrhdr_t *eh2, int dir)
 	IXLATE(eh1, eh2, ah_valsz);
 	IXLATE(eh1, eh2, ah_checksum);
 }
-#endif /* EXTATTR */
 
 /*
  * xlate_rec_hdr - endian convert struct rec_hdr

@@ -103,16 +103,12 @@ struct dirattr {
 	u_int32_t d_extsize;
 	u_int32_t d_dmevmask;
 	u_int32_t d_dmstate;
-#ifdef EXTATTR
 	off64_t d_extattroff;
-#endif /* EXTATTR */
 };
 
 typedef struct dirattr dirattr_t;
 
-#ifdef EXTATTR
 #define DIRATTR_EXTATTROFFNULL	( ( off64_t )OFF64MAX )
-#endif /* EXTATTR */
 
 /* dirattr persistent context definition
  */
@@ -132,11 +128,9 @@ struct dirattr_tran {
 	bool_t dt_at_endpr;
 	dah_t dt_cachedh;
 	dirattr_t dt_cached_dirattr;
-#ifdef EXTATTR
 	char *dt_extattrpathname;
 	int dt_extattrfd;
 	bool_t dt_extattrfdbadpr;
-#endif /* EXTATTR */
 };
 
 typedef struct dirattr_tran dirattr_tran_t;
@@ -165,9 +159,7 @@ extern size_t pgsz;
 /* forward declarations of locally defined static functions ******************/
 
 static void dirattr_get( dah_t );
-#ifdef EXTATTR
 static void dirattr_flush( void );
-#endif /* EXTATTR */
 #ifdef DIRATTRCHK
 static u_int16_t calcdixcum( dix_t dix );
 #endif /* DIRATTRCHK */
@@ -179,9 +171,7 @@ static u_int16_t calcdixcum( dix_t dix );
 /* definition of locally defined static variables *****************************/
 
 static char *dirattrfile = "dirattr";
-#ifdef EXTATTR
 static char *dirextattrfile = "dirextattr";
-#endif /* EXTATTR */
 static dirattr_tran_t *dtp = 0;
 static dirattr_pers_t *dpp = 0;
 
@@ -209,9 +199,7 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 	ASSERT( dtp );
 	dtp->dt_cachedh = DAH_NULL;
 	dtp->dt_fd = -1;
-#ifdef EXTATTR
 	dtp->dt_extattrfd = -1;
-#endif /* EXTATTR */
 
 	/* generate a string containing the pathname of the dirattr file
 	 */
@@ -331,7 +319,6 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 	 */
 	dtp->dt_at_endpr = BOOL_FALSE;
 
-#ifdef EXTATTR
 	/* calculate the dir extattr pathname, and set the fd to -1.
 	 * file will be created on demand.
 	 */
@@ -341,7 +328,6 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 	if ( resume ) {
 		( void )unlink( dtp->dt_extattrpathname );
 	}
-#endif /* EXTATTR */
 
 	return BOOL_TRUE;
 }
@@ -368,7 +354,6 @@ dirattr_cleanup( void )
 		( void )unlink( dtp->dt_pathname );
 		free( ( void * )dtp->dt_pathname );
 	}
-#ifdef EXTATTR
 	if ( dtp->dt_extattrfd >= 0 ) {
 		( void )close( dtp->dt_extattrfd );
 		dtp->dt_extattrfd = -1;
@@ -377,7 +362,7 @@ dirattr_cleanup( void )
 		( void )unlink( dtp->dt_extattrpathname );
 		free( ( void * )dtp->dt_extattrpathname );
 	}
-#endif /* EXTATTR */
+
 	free( ( void * )dtp );
 	dtp = 0;
 }
@@ -437,9 +422,7 @@ dirattr_add( filehdr_t *fhdrp )
 	sum = calcdixcum( dix );
 	dirattr.d_sum = sum;
 #endif /* DIRATTRCHK */
-#ifdef EXTATTR
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;
-#endif /* EXTATTR */
 
 	/* write the dirattr
 	 */
@@ -465,7 +448,6 @@ dirattr_add( filehdr_t *fhdrp )
 	return dah;
 }
 
-#ifdef EXTATTR
 void
 dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 {
@@ -746,7 +728,6 @@ dirattr_cb_extattr( dah_t dah,
 
 	return BOOL_TRUE;
 }
-#endif /* EXTATTR */
 
 void
 dirattr_update( dah_t dah, filehdr_t *fhdrp )
@@ -811,9 +792,7 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
 	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
-#ifdef EXTATTR
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;
-#endif /* EXTATTR */
 
 	/* write the dirattr
 	 */
@@ -979,7 +958,6 @@ dirattr_get( dah_t dah )
 	dtp->dt_cachedh = dah;
 }
 
-#ifdef EXTATTR
 static void
 dirattr_flush( void )
 {
@@ -1050,8 +1028,6 @@ dirattr_flush( void )
 
 	dtp->dt_at_endpr = BOOL_FALSE;
 }
-#endif /* EXTATTR */
-
 
 #ifdef DIRATTRCHK
 

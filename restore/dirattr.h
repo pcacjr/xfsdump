@@ -67,7 +67,6 @@ u_int32_t dirattr_get_extsize( dah_t dah );
 u_int32_t dirattr_get_dmevmask( dah_t dah );
 u_int32_t dirattr_get_dmstate( dah_t dah );
 
-#ifdef EXTATTR
 /* dirattr_addextattr - record an extended attribute. second argument is
  * ptr to extattrhdr_t, with extattr name and value appended as
  * described by hdr.
@@ -83,6 +82,5 @@ extern bool_t dirattr_cb_extattr( dah_t dah,
 						       void *ctxp ),
 				  extattrhdr_t *ahdrp,
 				  void *ctxp );
-#endif /* EXTATTR */
 
 #endif /* DIRATTR_H */

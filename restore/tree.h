@@ -106,7 +106,6 @@ extern bool_t tree_setattr( char *path );
 extern bool_t tree_delorph( void );
 extern bool_t tree_subtree_inter( void );
 
-#ifdef EXTATTR
 extern bool_t tree_extattr( bool_t ( * cbfunc )( char *path, dah_t dah ),
 			    char *path );
 	/* does a depthwise bottom-up traversal of the tree, calling
@@ -116,6 +115,5 @@ extern bool_t tree_extattr( bool_t ( * cbfunc )( char *path, dah_t dah ),
 	 * callback returns FALSE. returns FALSE if operator requests
 	 * an interrupt.
 	 */
-#endif /* EXTATTR */
 
 #endif /* TREE_H */

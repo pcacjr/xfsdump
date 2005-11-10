@@ -165,18 +165,6 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         }
                         break;
 #endif /* RESTORE */
-#ifdef DUMP
-#ifdef EXTATTR
-		case GETOPT_NOEXTATTR:
-			/* if this is the version which dumps extended
-			 * file attributes and the option to not do so
-			 * has been specified, then we can regress the
-			 * header version number.
-			 */
-			ghdrp->gh_version = GLOBAL_HDR_VERSION_0;
-			break;
-#endif /* EXTATTR */
-#endif /* DUMP */
 		}
 	}
 

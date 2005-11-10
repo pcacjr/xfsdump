@@ -97,12 +97,10 @@ void xlate_extenthdr(extenthdr_t *eh1, extenthdr_t *eh2, int dir);
  */
 void xlate_direnthdr(direnthdr_t *dh1, direnthdr_t *dh2, int dir);
 
-#ifdef EXTATTR
 /*
  * xlate_extattrhdr - endian convert struct extattrhdr
  */
 void xlate_extattrhdr(extattrhdr_t *eh1, extattrhdr_t *eh2, int dir);
-#endif /* EXTATTR */
 
 /*
  * xlate_rec_hdr - endian convert struct rec_hdr

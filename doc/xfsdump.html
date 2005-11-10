@@ -631,7 +631,7 @@ create inode-ranges for multi-stream dumps if pertinent.
           - header = &lt;offset, flags, checksum, 128-byte bulk stat structure &gt;
           - bulkstat struct derived from xfs_bstat_t 
             - stnd. stat stuff + extent size, #of extents, DMI stuff
-          - if EXTATTR and HSM context then 
+          - if HSM context then 
             - modify bstat struct to make it offline
         - loops calling getdents()
           - does a bulkstat or bulkstat-single of dir inode 
@@ -642,7 +642,7 @@ create inode-ranges for multi-stream dumps if pertinent.
               - gen is from statbuf.bs_gen
             - write out record 
         - dump null direnthdr_t record
-        - if EXTATTR and dumpextattr flag on and it 
+        - if dumpextattr flag on and it 
           has extended attributes (check bs_xflags)
           * dump_extattrs 
             * dump_filehdr() with flags of FILEHDR_FLAGS_EXTATTR
@@ -660,7 +660,7 @@ create inode-ranges for multi-stream dumps if pertinent.
 	- look-up inode# in inode map
 	- if not in inode-map OR hasn't changed then skip it
 	- elsif stat is NOT a non-dir then we have an error
-	- if EXTATTR and have an hsm context then initialize context 
+	- if have an hsm context then initialize context 
 	- call dump function depending on file type (S_IFREG, S_IFCHR, etc.)
 
 	  * <b>dump_file_reg</b> (for S_IFREG):
@@ -673,7 +673,7 @@ create inode-ranges for multi-stream dumps if pertinent.
 	      - dump extent header of type, EXTENTHDR_TYPE_DATA
 	      - write out link buffer (i.e. symlink string)
 
-	  - if EXTATTR and dumpextattr flag on and it 
+	  - if dumpextattr flag on and it 
 	    has extended attributes (check bs_xflags)
 	    * dump_extattrs (see the same call in the dir case above)
 
@@ -734,13 +734,13 @@ create inode-ranges for multi-stream dumps if pertinent.
 
 	  - if next-bmap is at or past end-bmap then get a bmap
 	    - fcntl( gcp->eg_fd, F_GETBMAPX, gcp->eg_bmap[] )
-	    - if EXTATTR and have an hsm context then
+	    - if have an hsm context then
 	      - call HsmModifyExtentMap()
 	    - next-bmap = eg_bmap[1]
 	    - end-bmap = eg_bmap[eg_bmap[0].bmv_entries+1]
 
 	  - if bmap entry is a hole (bmv_block == -1) then
-	    - if EXTATTR and dumping ext.attributes then
+	    - if dumping ext.attributes then
 	      - dump extent header with bmap's offset, 
 		extent-size and type EXTENTHDR_TYPE_HOLE
 
