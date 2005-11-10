@@ -1,3 +1,7 @@
+xfsdump-2.2.31 (10 November 2005)
+	- Sync up build system (m4 macros, etc) with other projects
+	- Update SGI copyright/licence notices
+
 xfsdump-2.2.30 (27 July 2005)
 	- Fix some problems in the xfsrq(8) script, thanks to Kim Hansen.
 
@@ -9,17 +13,17 @@ xfsdump-2.2.29 (23 June 2005)
 xfsdump-2.2.28 (03 June 2005)
 	- removal of unnecessary stat64_to_xfsbstat function
 
-xfsdump-2.2.27 (08 Mar 2005)
+xfsdump-2.2.27 (08 March 2005)
 	- Fix compilation with gcc4, from Andreas Jochens.
 
-xfsdump-2.2.26 (09 Feb 2005)
+xfsdump-2.2.26 (09 February 2005)
 	- Fix xfsrestore so that it can restore to non-XFS filesystems again.
 
-xfsdump-2.2.25 (13 Oct 2004)
+xfsdump-2.2.25 (13 October 2004)
 	- Bump the version to deal with the mixup in 2.2.23-lbs
 	  (that fix was missing from the 2.2.23/2.2.24 versions).
 
-xfsdump-2.2.23-lbs (04 Oct 2004)
+xfsdump-2.2.23-lbs (04 October 2004)
 	- Fix a problem dumping DMF filesystems when files change
 	  from dual-state to offline during the dump.
 
@@ -50,25 +54,25 @@ xfsdump-2.2.21 (15 Apr 2004)
 	- Change open_by_fshandle calls to open_by_handle since
 	  we are passing a file handle, not a fshandle.
 
-xfsdump-2.2.20 (31 Mar 2004)
+xfsdump-2.2.20 (31 March 2004)
 	- fix up "xfs_invutil -i" which was getting segmentation faults on
 	  presumably long session labels.
 	  See http://oss.sgi.com/bugzilla/show_bug.cgi?id=320.
 	  Become paranoid and convert all sprintf's to snprintf's.
 
-xfsdump-2.2.19 (23 Mar 2004)
+xfsdump-2.2.19 (23 March 2004)
 	- rearrange fsr algorithm to not copy data unless extent
 	  count has been improved.  Suggested by Chris Wedgwood
 	  <cw at f00f dot org> and Utz Lehmann <xfs at s2y4n2c dot de>
 
-xfsdump-2.2.18 (25 Feb 2004)
+xfsdump-2.2.18 (25 February 2004)
 	- add support for the security extended attributes namespace
 
-xfsdump-2.2.17 (13 Feb 2004)
+xfsdump-2.2.17 (13 February 2004)
 	- modify calls to libhandle subroutines to account for
 	  changes to the libhandle library.
 
-xfsdump-2.2.16 (05 Dec 2003)
+xfsdump-2.2.16 (05 December 2003)
 	- fix xfsrestore to restore new XFS inode flags:  immutable,
 	  append, sync, noatime and nodump.  The inode flags have also
 	  been added to the _mk_fillconfig_ea() routine in common.dump,
@@ -82,7 +86,7 @@ xfsdump-2.2.16 (05 Dec 2003)
 	  inventory media file that gets written to the end of each dump.
 	- remove 'miniroot' reference from xfsdump man page.
 
-xfsdump-2.2.15 (18 Dec 2003)
+xfsdump-2.2.15 (18 December 2003)
 	- a mod was added in 2.2.13 to fix the way xfsdump handles
 	  multiple dump sessions to a single tape.  The mod fixed
 	  problems that the TS tape driver was hitting but actually
@@ -192,22 +196,22 @@ xfsdump-2.1.0 (14 June 2002)
 	  differentiate this.
 
 xfsdump-2.0.4 (14 June 2002)
-	- fix xfsrestore/xfsdump version output to report both 
+	- fix xfsrestore/xfsdump version output to report both
 	  their version and the respective dump format version. They
-	  will report their version from cmd/xfsdump/VERSION.  
-	- changed the messages printed out for the xfsrestore 
+	  will report their version from cmd/xfsdump/VERSION.
+	- changed the messages printed out for the xfsrestore
 	  interactive mode to emphasize the restore is interactive.
-  
+
 xfsdump-2.0.3 (08 May 2002)
 	- fix xfsdump so that it does not cause segmentation fault
-	  when media specific object id (OPT_MOBJID) is specified 
+	  when media specific object id (OPT_MOBJID) is specified
 	  with -I option.
-	- fix similar code for filesystem id (OPT_FSID) option. 
+	- fix similar code for filesystem id (OPT_FSID) option.
 
 xfsdump-2.0.2 (08 May 2002)
 	- in xfsdump, check for ERANGE as well as E2BIG for testing
 	  of the existence of the SGI_XFSDUMP_SKIP_FILE extended
-	  attribute. This only affects dumping using the -e option. 
+	  attribute. This only affects dumping using the -e option.
 	  This was motivated by an XFS kernel change from returning
 	  E2BIG into returning ERANGE.
 	- fix "xfsdump -v silent" to really be silent
@@ -235,7 +239,7 @@ xfsdump-1.1.14 (16 January 2002)
 	- fix xfsrestore so that cumulative restores (with -r)
 	  will successfully delete removed directories whose
 	  files have also been removed.
-	  Previously, the files weren't removed until later, 
+	  Previously, the files weren't removed until later,
 	  which meant that early directory removal failed.
 	  SGI bug#844219.
 
@@ -254,7 +258,7 @@ xfsdump-1.1.12 (14 December 2001)
 xfsdump-1.1.11 (13 December 2001)
 	- port back IRIX changes primarily to xfsrestore for
 	  improving performance when one has over a million files
-	- some extra mlogs (messages) for dump estimates, 
+	- some extra mlogs (messages) for dump estimates,
 	  dir tree diagnostics, type of dump format being used
 	- various fixes for restore with multiple threads
 	  and extended attributes (note: multiple threads not
@@ -300,7 +304,7 @@ xfsdump-1.1.5 (28 September 2001)
 xfsdump-1.1.4 (18 September 2001)
 	- fix librmt to allow a remote path without "/dev" in its name
 	- this allows xfsdump/xfsrestore to remote file
-	- fix librmt for remote uname to use env variable RSH  
+	- fix librmt for remote uname to use env variable RSH
 	- add some diagnostics to xfsdump
 
 xfsdump-1.1.3 (27 July 2001)
@@ -328,12 +332,12 @@ xfsdump-1.1.0 (18 July 2001)
 	  be available for recovery when only root is mounted
 
 xfsdump-1.0.12 (13 July 2001)
-	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore 
+	- Fix mistake introduced in 1.0.10 whereby xfsdump/xfsrestore
           to remote tape drives will cause rmt debug messages to be
           written to the remote machine in:
-	      /server.XXX (where XXX = pid). 
+	      /server.XXX (where XXX = pid).
 	  These files will no longer be created via xfsdump/xfsrestore.
-          The fix is in librmt - it should have only written out 
+          The fix is in librmt - it should have only written out
           warning messages and not debug messages.
           If the debug environment variable is turned on for librmt then
           the debug file will go to /tmp/librmt_debug.XXX.
@@ -343,11 +347,11 @@ xfsdump-1.0.11 (12 July 2001)
 
 xfsdump-1.0.10 (05 July 2001)
 	- produce librmt warning messages from xfsdump/xfsrestore
-          without needing to set an environment variable 
+          without needing to set an environment variable
 
 xfsdump-1.0.9 (15 May 2001)
 	- correctly [xfs]restore the suid and guid mode bits
- 
+
 xfsdump-1.0.8 (12 May 2001)
 	- added build dependency for Debian on latest devel package
 
