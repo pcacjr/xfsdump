@@ -36,6 +36,7 @@
 #define CONTENT_HDR_FSTYPE_SZ	16
 #define CONTENT_STATSZ		160 /* must match dlog.h DLOG_MULTI_STATSZ */
 #define CONTENT_QUOTAFILE	"xfsdump_quotas"
+#define CONTENT_PQUOTAFILE	"xfsdump_quotas_proj"
 #define CONTENT_GQUOTAFILE	"xfsdump_quotas_group"
 
 struct content_hdr {

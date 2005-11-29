@@ -2520,6 +2520,7 @@ content_complete( void )
 			      elapsed );
 		} else {
 			quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE);
+			quotafilecheck("project", persp->a.dstdir, CONTENT_PQUOTAFILE);
 			quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE);
 
 			mlog( MLOG_VERBOSE, _(

@@ -589,21 +589,26 @@ The Monday and Wednesday dumps would take longer,
 but the worst case restore requires the
 accumulation of just three dumps, one each at level 0, level 1, and level 2.
 .SS Quotas
-If the filesystem being dumped contains quotas,
+If the filesystem being dumped contains user quotas,
 .I xfsdump
 will use 
-.IR xfsdq (8)
+.IR xfs_quota (8)
 to store the quotas in a file called
 .I xfsdump_quotas 
 in the root of the filesystem to be dumped. This file will then be
-included in the dump.  Upon restoration, 
-.I xfsrq (8)
-can be used to reactivate the quotas for the filesystem.  Note,
-however, that the
+included in the dump.  Upon restoration,
+.I xfs_quota (8)
+can be used to reactivate the quotas for the filesystem.
+Note, however, that the
 .I xfsdump_quotas
 file will probably require modification to change the filesystem or
 UIDs if the filesystem has been restored to a different partition or
-system.
+system. Group and project quotas will be handled in a similar fashion
+and saved in files called
+.I xfsdump_quotas_group
+and
+.I xfsdump_quotas_proj ,
+respectively.
 .SS Excluding individual files
 Occasionally it is desirable to be able to exclude particular files or
 directories from the dump.  The
@@ -710,11 +715,9 @@ dump inventory database
 .SH SEE ALSO
 attr(1),
 rmt(8),
-xfsdq(8),
 xfsrestore(8),
 xfsinvutil(8),
-xfsdq(8),
-xfsrq(8),
+xfs_quota(8),
 attr_get(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion, non-zero if an error

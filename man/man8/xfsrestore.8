@@ -663,14 +663,14 @@ The restore resumes with the next media file.
 .SS Quotas
 When
 .I xfsdump
-dumps a filesystem with quotas, it creates a file in the root of the
+dumps a filesystem with user quotas, it creates a file in the root of the
 dump called
 .IR xfsdump_quotas .
 .I xfsrestore
 can restore this file like any other file included in the dump.  This
-file can be processed by the
-.IR xfsrq (8)
-command to reactivate the quotas.  However, the
+file can be processed by the restore command of
+.IR xfs_quota (8)
+to reactivate the quotas.  However, the
 .I xfsdump_quotas
 file contains information which may first require modification;
 specifically the filesystem name and the user ids.  If you are
@@ -694,9 +694,16 @@ ensure the uids in the
 .I xfsdump_quotas
 file are correct
 .P
-Once the quota information has been verified,
-.I xfsrq (8)
+Once the quota information has been verified, the restore command of
+.I xfs_quota (8)
 can be used to apply the quota limits to the filesystem.
+.P
+Group and project quotas are handled in a similar fashion and will
+be restored in files called
+.IR xfsdump_quotas_group
+and
+.IR xfsdump_quotas_proj ,
+respectively.
 .SH EXAMPLES
 To restore the root filesystem from a locally mounted tape:
 .EX
@@ -722,7 +729,7 @@ dump inventory database
 rmt(8),
 xfsdump(8),
 xfsinvutil(8),
-xfsrq(8),
+xfs_quota(8),
 attr_set(2).
 .SH DIAGNOSTICS
 The exit code is 0 on normal completion,

@@ -41,7 +41,6 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/librmt/rmtioctl.c \
 		$(TOPDIR)/librmt/rmtmsg.c \
 		$(TOPDIR)/librmt/rmtopen.c \
-		$(TOPDIR)/quota/xfsdq.c \
 		$(TOPDIR)/restore/content.c \
 		$(TOPDIR)/restore/dirattr.c \
 		$(TOPDIR)/restore/inomap.c \

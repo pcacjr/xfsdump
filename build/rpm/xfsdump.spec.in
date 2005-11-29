@@ -5,7 +5,7 @@ Release: @pkg_release@
 Distribution: @pkg_distribution@
 Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
 BuildRoot: @build_root@ 
-Requires: xfsprogs >= 2.0.0, dmapi >= 2.0.0, attr >= 2.0.0
+Requires: xfsprogs >= 2.6.30, dmapi >= 2.0.0, attr >= 2.0.0
 Source: @pkg_name@-@pkg_version@.src.tar.gz
 License: GPL
 Vendor: Silicon Graphics, Inc.

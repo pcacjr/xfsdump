@@ -5,7 +5,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = builddefs.in buildmacros buildrules config.h.in dqblk_xfs.h
+LSRCFILES = builddefs.in buildmacros buildrules config.h.in
 
 default install install-dev :
 

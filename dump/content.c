@@ -32,7 +32,7 @@
 #include <malloc.h>
 
 #ifdef linux
-#include <dqblk_xfs.h>
+#include <xfs/xqm.h>
 #endif
 
 #include <attr/attributes.h>
@@ -496,6 +496,7 @@ static bool_t sc_savequotas = BOOL_TRUE;
          */
 static quota_info_t quotas[] = {
 	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
+	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT },
 	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT }
 };
 
@@ -6686,8 +6687,7 @@ check_complete_flags( void )
 	return completepr;
 }
 
-/* on linux we use xfsdq instead of repquota */
-#define REPQUOTA "xfsdq"
+#define REPQUOTA "xfs_quota"
 
 static bool_t
 save_quotas( char *mntpnt, quota_info_t *quotainfo )
@@ -6714,8 +6714,8 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
         }
  
         sprintf( buf,
-                 "%s %s %s %s",
-                 REPQUOTA,
+		 "%s -x -c 'dump %s %s' %s 2> /dev/null",
+		 REPQUOTA,
                  quotainfo->repquotaargs,
                  quotainfo->quotapath,
                  mntpnt );
