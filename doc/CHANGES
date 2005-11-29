@@ -1,3 +1,11 @@
+xfsdump-2.2.32 (29 November 2005)
+	- Dump and restore project ids and project quotas.
+	- Remove xfsdq(8) and xfsrq(8); use xfs_quota(8) to dump and
+	  restore quotas now.
+	- Fix the setting of extended inode flags during restore.
+	  Some flags must be set before writing file data, and others
+	  must be set after writing file data and extended attributes.
+
 xfsdump-2.2.31 (10 November 2005)
 	- Sync up build system (m4 macros, etc) with other projects
 	- Update SGI copyright/licence notices
