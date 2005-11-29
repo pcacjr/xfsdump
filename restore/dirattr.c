@@ -16,6 +16,21 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/*
+ * Directory attributes are written on tape during the directory dump phase,
+ * which precedes the non-dir dump phase. The directory attributes cannot be
+ * restored, however, until all of the non-dir files have been restored
+ * (directory timestamps would be wrong, directory inherit flags would
+ * interfere, etc.) These routines allow the directory attributes to be stored
+ * on disk when they are read from the dump stream so that they can be applied
+ * at a later time.
+ *
+ * Despite the name, these routines are not used solely for directory attributes
+ * anymore. Files which use the immutable flag and have extended attributes run
+ * into a problem similar to that of directories -- some of the attributes
+ * cannot be set at the time the attributes are read from the dump.
+ */
+
 #include <xfs/libxfs.h>
 #include <xfs/jdm.h>
 

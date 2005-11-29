@@ -7192,6 +7192,7 @@ restore_reg( drive_t *drivep,
 	intgen_t rval;
 	off64_t restoredsz = 0;
 	off64_t offset = 0;
+	struct fsxattr fsxattr;
 	rv_t rv;
 
 	if ( ! path ) {
@@ -7280,6 +7281,43 @@ restore_reg( drive_t *drivep,
 						      path,
 						     strerror( errno ));
 						}
+					}
+				}
+
+				/* set the extended inode flags, except
+				 * those which must be set only after all
+				 * data has been restored.
+				 */
+				if ( persp->a.dstdirisxfspr ) {
+					( void )memset((void *)&fsxattr,
+						        0,
+							sizeof( fsxattr ));
+					fsxattr.fsx_xflags =
+					    bstatp->bs_xflags & ~POST_DATA_XFLAGS;
+					ASSERT( bstatp->bs_extsize >= 0 );
+					fsxattr.fsx_extsize =
+					    ( u_int32_t )
+					    bstatp->bs_extsize;
+					fsxattr.fsx_projid =
+					    bstatp->bs_projid;
+
+					rval = ioctl( fd,
+						      XFS_IOC_FSSETXATTR,
+						      (void *)&fsxattr);
+					if ( rval < 0 ) {
+						mlog(MLOG_NORMAL | MLOG_WARNING,
+							_("attempt to set "
+							"extended attributes "
+							"(xflags 0x%x, "
+							"extsize = 0x%x, "
+							"projid = 0x%x) "
+							"of %s failed: "
+							"%s\n"),
+							fsxattr.fsx_xflags,
+							fsxattr.fsx_extsize,
+							fsxattr.fsx_projid,
+							path,
+							strerror(errno));
 					}
 				}
 
@@ -7399,16 +7437,16 @@ restore_reg( drive_t *drivep,
 
 	/* The extent group has been restored.  If the file is not
 	 * complete, we may need to co-ordinate with other restore 
-	 * streams to time the restoration of extended attributes.
-	 * Register the portion of the file completed here in the
-	 * persistent state.
+	 * streams to time the restoration of extended attributes
+	 * and certain extended inode flags. Register the portion
+	 * of the file completed here in the persistent state.
 	 */
 	if (bstatp->bs_size > restoredsz) {
 		partial_reg(drivep->d_index, bstatp->bs_ino, bstatp->bs_size,
 		            offset, restoredsz);
 	}
 
-	if ( fd != -1 ) {
+	if ( fd != -1 && partial_check( bstatp->bs_ino, bstatp->bs_size ) ) {
 		struct utimbuf utimbuf;
 
 
@@ -7455,26 +7493,37 @@ restore_reg( drive_t *drivep,
 			      strerror( errno ));
 		}
 
-		/* set the extended inode flags
+		/* set any extended inode flags that couldn't be set prior
+		 * to restoring the data. extended attributes have not been
+		 * restored yet, so if the file is to be immutable and it has
+		 * extended attributes, register the file to have its
+		 * attributes restored at the end of the restore.
 		 */
-		if ( persp->a.dstdirisxfspr ) {
-			struct fsxattr fsxattr;
+		if ( persp->a.dstdirisxfspr &&
+		     bstatp->bs_xflags & XFS_XFLAG_IMMUTABLE &&
+		     bstatp->bs_xflags & XFS_XFLAG_HASATTR ) {
 
-			( void )memset((void *)&fsxattr,
-					0,
-				     sizeof( fsxattr ));
-			fsxattr.fsx_xflags =
-			    bstatp->bs_xflags;
-			ASSERT( bstatp->bs_extsize >= 0 );
-			fsxattr.fsx_extsize =
-			    ( u_int32_t )
-			    bstatp->bs_extsize;
-			fsxattr.fsx_projid =
-			    bstatp->bs_projid;
+			dah_t dah = dirattr_add(fhdrp);
+			if ( dah == DAH_NULL ) {
+				mlog(MLOG_NORMAL | MLOG_WARNING,
+					_("failed to register attributes "
+					"for later restore: %s\n"),
+					path );
+			} else {
+				tree_update_node_dah( bstatp->bs_ino,
+						      bstatp->bs_gen,
+						      dah );
+			}
 
+		} else if ( persp->a.dstdirisxfspr &&
+			    bstatp->bs_xflags & POST_DATA_XFLAGS ) {
+
+			/* note: other fsxattr fields already
+			 * set correctly from above */
+			fsxattr.fsx_xflags = bstatp->bs_xflags;
 			rval = ioctl( fd,
 				      XFS_IOC_FSSETXATTR,
-				     (void *)&fsxattr);
+				      (void *)&fsxattr);
 			if ( rval < 0 ) {
 				mlog(MLOG_NORMAL | MLOG_WARNING,
 				      _("attempt to set "
@@ -7484,9 +7533,9 @@ restore_reg( drive_t *drivep,
 				      "projid = 0x%x) "
 				      "of %s failed: "
 				      "%s\n"),
-				      bstatp->bs_xflags,
-				      bstatp->bs_extsize,
-				      bstatp->bs_projid,
+				      fsxattr.fsx_xflags,
+				      fsxattr.fsx_extsize,
+				      fsxattr.fsx_projid,
 				      path,
 				      strerror(errno));
 			}
@@ -8659,6 +8708,9 @@ setextattr( char *path, extattrhdr_t *ahdrp )
  * Data Migration Facility (DMF) daemons.  Since extended attributes are
  * recorded with each extent group in the dump, this registry is used to
  * make sure only the final dump stream applies the extended attributes.
+ *
+ * Likewise, certain extended inode flags (e.g. XFS_XFLAG_IMMUTABLE)
+ * should only be set after all data for a file has been restored.
  */
 static void
 partial_reg( ix_t d_index, 

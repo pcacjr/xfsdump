@@ -183,6 +183,13 @@ struct bstat {				/*		     bytes accum */
 
 typedef struct bstat bstat_t;
 
+/* extended inode flags that can only be set after all data
+ * has been restored to a file.
+ */
+#define	POST_DATA_XFLAGS	( XFS_XFLAG_IMMUTABLE |		\
+				  XFS_XFLAG_APPEND |		\
+				  XFS_XFLAG_SYNC )
+
 /* filehdr_t - header placed at the beginning of every dumped file.
  *
  * each fs file placed on dump media begins with a FILEHDR_SZ-byte header.

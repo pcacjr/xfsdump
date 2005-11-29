@@ -284,6 +284,7 @@ static nh_t hash_find( xfs_ino_t ino, gen_t gen );
 static void hash_iter( bool_t ( * cbfp )( void *contextp, nh_t hashh ),
 		       void *contextp );
 static void setdirattr( dah_t dah, char *path );
+static void setfileattr( dah_t dah, char *path );
 static bool_t tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 			    dlog_pcbp_t pcb, void *pctxp,
 			    nh_t *namedhp, nh_t *parhp, nh_t *cldhp,
@@ -2383,6 +2384,18 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 	return BOOL_TRUE;
 }
 
+void
+tree_update_node_dah(xfs_ino_t ino, gen_t gen, dah_t dah)
+{
+	nh_t nh;
+	node_t *np;
+
+	nh = hash_find(ino, gen);
+	np = Node_map(nh);
+	np->n_dah = dah;
+	Node_unmap(nh, &np);
+}
+
 /* traverse tree depth-wise bottom-up for dirs no longer referenced.
  * if non-empty, move children to orphanage
  */
@@ -2426,7 +2439,9 @@ tree_setattr_recurse( nh_t parh, char *path )
 		nextcldh = cldp->n_sibh;
 		Node_unmap( cldh, &cldp );
 
-		/* if is a real selected dir, go ahead
+		/* if is a real selected dir, go ahead. otherwise
+		 * if a real selected non-dir that has a valid
+		 * attribute handle, restore remaining file attrs.
 		 */
 		if ( isdirpr && isselpr && isrealpr ) {
 			bool_t ok;
@@ -2440,6 +2455,14 @@ tree_setattr_recurse( nh_t parh, char *path )
 				ok = Node2path( cldh, path, _("set dirattr") );
 				if ( ok ) {
 					setdirattr( dah, path );
+				}
+			}
+		} else if ( !isdirpr && isselpr && isrealpr ) {
+			if ( dah != DAH_NULL ) {
+				bool_t ok;
+				ok = Node2path( cldh, path, _("set fileattr") );
+				if ( ok ) {
+					setfileattr( dah, path );
 				}
 			}
 		}
@@ -2555,15 +2578,84 @@ setdirattr( dah_t dah, char *path )
 		     _("attempt to set "
 		       "extended attributes "
 		       "(xflags 0x%x, "
-		       "extsize = 0x%x)"
+		       "extsize = 0x%x, "
+		       "projid = 0x%x)"
 		       "of %s failed: "
 		       "%s\n"),
-		     dirattr_get_xflags( dah ),
-		     dirattr_get_extsize( dah ),
+		     fsxattr.fsx_xflags,
+		     fsxattr.fsx_extsize,
+		     fsxattr.fsx_projid,
 		     path,
 		     strerror(errno));
 	}
 	( void )close( fd );
+}
+
+/*
+ * This gets called during the setdirattr phase at the end
+ * of a restore for any regular files that have a valid
+ * "directory" attribute handle. Its purpose is to set
+ * attributes that could not be set before restoring
+ * extended attributes, such as the immutable flag.
+ * Note that all other file attributes are restored in
+ * restore_reg, either before or after restoring file data.
+ */
+static void
+setfileattr( dah_t dah, char *path )
+{
+	struct fsxattr fsxattr;
+	intgen_t rval;
+	size_t	hlen;
+	void	*hanp;
+	intgen_t fd;
+
+	if ( dah == DAH_NULL )
+		return;
+
+	if ( !tranp->t_dstdirisxfspr )
+		return;
+
+	if (path_to_handle(path, &hanp, &hlen)) {
+		mlog( MLOG_NORMAL | MLOG_WARNING,
+			_("path_to_handle of %s failed:%s\n"),
+			path, strerror( errno ));
+		return;
+	}
+
+	fd = open_by_handle(hanp, hlen, O_RDONLY);
+	free_handle(hanp, hlen);
+	if (fd < 0) {
+		mlog( MLOG_NORMAL | MLOG_WARNING,
+			_("open_by_handle of %s failed:%s\n"),
+			path, strerror( errno ));
+		return;
+	}
+
+	memset((void *)&fsxattr, 0, sizeof( fsxattr ));
+	fsxattr.fsx_xflags = dirattr_get_xflags( dah );
+	fsxattr.fsx_extsize = dirattr_get_extsize( dah );
+	fsxattr.fsx_projid = dirattr_get_projid( dah );
+
+	rval = ioctl( fd,
+		      XFS_IOC_FSSETXATTR,
+		      (void *)&fsxattr);
+	if ( rval < 0 ) {
+		mlog(MLOG_NORMAL | MLOG_WARNING,
+			_("attempt to set "
+			"extended attributes "
+			"(xflags 0x%x, "
+			"extsize = 0x%x, "
+			"projid = 0x%x)"
+			"of %s failed: "
+			"%s\n"),
+			fsxattr.fsx_xflags,
+			fsxattr.fsx_extsize,
+			fsxattr.fsx_projid,
+			path,
+			strerror(errno));
+	}
+
+	close(fd);
 }
 
 /* deletes orphanage if empty, else warns

@@ -126,10 +126,12 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 	 * started in another drive (except for drive 0) and leave one file to
 	 * be completed by another drive.  This value is used to limit the 
 	 * search in the list of partially completed files shared between all 
-	 * restore streams.  Note, if drivecnt is one, then partialmax is zero
-	 * to indicate no partial files can span streams.
+	 * restore streams.  Partially completed files can occur with a single
+	 * drive since large files may be broken into several extent groups (see
+	 * use of ds_recmarksep), so track partial completions even with one
+	 * drive so that file attributes are not restored for every extent group.
 	 */
-	partialmax = (drivecnt <= 1 ? 0 : (drivecnt * 2) - 1);
+	partialmax = (drivecnt < 1 ? 0 : (drivecnt * 2) - 1);
 
 	/* initialize drive descriptors from command line arguments
 	 */

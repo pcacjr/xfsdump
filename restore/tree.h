@@ -116,4 +116,6 @@ extern bool_t tree_extattr( bool_t ( * cbfunc )( char *path, dah_t dah ),
 	 * an interrupt.
 	 */
 
+extern void tree_update_node_dah(xfs_ino_t, gen_t, dah_t);
+
 #endif /* TREE_H */
