@@ -985,6 +985,7 @@ usage( void )
 	ULO(_("<seconds between progress reports>"),	GETOPT_PROGRESS );
 	ULO(_("<use QIC tape settings>"),		GETOPT_QIC );
 	ULO(_("<subtree> ..."),				GETOPT_SUBTREE );
+	ULO(_("<file> (use file mtime for dump time"),	GETOPT_DUMPTIME );
 	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
 	ULO(_("<maximum file size>"),			GETOPT_MAXDUMPFILESIZE );
 	ULO(_("(don't dump extended file attributes)"),	GETOPT_NOEXTATTR );

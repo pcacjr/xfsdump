@@ -196,6 +196,16 @@ Subtree dumps cannot be used as the base for incremental dumps
 .B \-l
 option above).
 .TP 5
+\f3\-t\f1 \f2file\f1
+Sets the dump time to the modification time of \f2file\f1 rather than
+using the current time.
+.I xfsdump
+uses the dump time to determine what files need to be backed up during
+an incremental dump. This option should be used when dumping snapshots
+so that the dump time matches the time the snapshot was taken. Otherwise
+files modified after a snapshot is taken may be skipped in the next
+incremental dump.
+.TP 5
 \f3\-v\f1 \f2verbosity\f1
 .PD 0
 .TP 5

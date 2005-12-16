@@ -59,6 +59,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 	char *dumplabel;
 #ifdef DUMP
 	char labelbuf[ GLOBAL_HDR_STRING_SZ ];
+	struct stat64 statb;
 #endif /* DUMP */
 
 	intgen_t rval;
@@ -82,7 +83,8 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 	ghdrp->gh_version = GLOBAL_HDR_VERSION;
 
 	/* fill in the timestamp: all changes made at or after this moment
-	 * will be included in increments on this base.
+	 * will be included in increments on this base. This may be
+	 * overridden with the GETOPT_DUMPTIME option.
 	 */
 	ghdrp->gh_timestamp = (time32_t) time( 0 );
 
@@ -165,6 +167,30 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         }
                         break;
 #endif /* RESTORE */
+#ifdef DUMP
+		case GETOPT_DUMPTIME:
+			/* Use the timestamp of the specified file for the
+			 * dump time, rather than using the current time.
+			 */
+                        if ( ! optarg || optarg[ 0 ] == '-' ) {
+                                mlog( MLOG_NORMAL | MLOG_ERROR,
+                                      _("-%c argument missing\n"),
+                                      optopt );
+                                usage( );
+                                return 0;
+                        }
+			rval = stat64( optarg, &statb );
+			if ( rval ) {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+				      _("unable to stat %s: %s\n"),
+				      optarg,
+				      strerror( errno ));
+				usage( );
+				return 0;
+			}
+			ghdrp->gh_timestamp = statb.st_mtime;
+			break;
+#endif /* DUMP */
 		}
 	}
 

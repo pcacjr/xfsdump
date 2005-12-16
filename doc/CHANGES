@@ -1,3 +1,8 @@
+xfsdump-2.2.33 (16 December 2005)
+	- Add option to allow dump time to be overridden.
+	  Useful if doing incremental dumps of snapshots.
+	  Thanks to David Brown.
+
 xfsdump-2.2.32 (29 November 2005)
 	- Dump and restore project ids and project quotas.
 	- Remove xfsdq(8) and xfsrq(8); use xfs_quota(8) to dump and
