@@ -111,19 +111,12 @@ onto a single tape.
 .TP 5
 \f3\-e\f1
 Allow files to be excluded from the dump.  This will cause xfsdump to 
-skip files which are tagged with the
-.hy 0
-"SGI_XFLAG_NODUMP"
-.hy
-inode flag (previously the "SGI_XFSDUMP_SKIP_FILE"
-extended attribute).  Without the
-.B \-e
-flag, xfsdump will ignore the inode flags and continue
-to dump affected files.  The preferred flag has changed
-from "SGI_XFSDUMP_SKIP_FILE" (an extended attribute set
-within an inode) to "SGI_XFLAG_NODUMP" (an inode flag)
-for performance purposes.  The extended attribute
-"SGI_XFSDUMP_SKIP_FILE" remains supported.
+skip files which have the "no dump" file attribute set. See the
+"Excluding individual files" section below for details on setting
+this file attribute. Files with an extended attribute named
+"SGI_XFSDUMP_SKIP_FILE" will also be skipped, however this method
+is deprecated and xfsdump will stop checking for it in a future
+version.
 .TP 5
 \f3\-f\f1 \f2dest\f1 [ \f3\-f\f1 \f2dest\f1 ... ]
 Specifies a dump destination.
@@ -620,8 +613,8 @@ and
 .I xfsdump_quotas_proj ,
 respectively.
 .SS Excluding individual files
-Occasionally it is desirable to be able to exclude particular files or
-directories from the dump.  The
+It may be desirable to exclude particular files or directories from
+the dump.  The
 .B -s
 option can be used to limit the dump to a specified directory, and the
 .B -z
@@ -630,48 +623,25 @@ when
 .I xfsdump
 is run with the
 .B -e
-option individual files can be "tagged" so that
-.I xfsdump
-will not include them in a dump.  Files are tagged in one of two ways:
-
-1) By setting an inode flag called
-.hy 0
-"SGI_XFLAG_NODUMP"
-.hy
-on the file.  This can be done with the
+option, files that are tagged with the "no dump" file attribute
+will not be included in the dump.  The
 .IR chattr (1)
-command:
+command can be used to set this attribute on individual files
+or entire subtrees.
+
+To tag an individual file for exclusion from the dump:
 .EX
 $ chattr +d file
 .EE
-To turn the flag off:
+To tag all files in a subtree for exclusion from the dump:
 .EX
-$ chattr \-d file
+$ chattr -R +d directory
 .EE
-This is the preferred method and may result in a slightly
-faster dump, since
+Note that any new files or directories created in a directory which has
+the "no dump" attribute set will automatically inherit this attribute.
+Also note that
 .I xfsdump
-doesn't need to parse an attribute stored in the inode.
-
-2) By assigning the file an extended attribute with the name
-.hy 0
-"SGI_XFSDUMP_SKIP_FILE".
-.hy
-This can be done with the
-.IR attr (1)
-command:
-.EX
-$ attr \-s "SGI_XFSDUMP_SKIP_FILE" \-V "" file 
-.EE
-To remove the attribute:
-.EX
-$ attr \-r "SGI_XFSDUMP_SKIP_FILE" file
-.EE
-It should be noted that xfsdump will not check directories for this
-attribute.  It should also be noted that this use of extended
-attributes is not the same as that used by the
-.IR chattr (1)
-command.
+does not check directories for the "no dump" attribute.
 .PP
 Care should be taken to note which files have been tagged.
 Under normal operation,
@@ -681,14 +651,6 @@ will only report the number of files it will skip.  The
 option, however, will cause
 .I xfsdump
 to list the inode numbers of the individual files affected.
-.PP
-If a file was tagged and skipped for a level 0 dump, and subsequently that
-tag was removed, the file would not automatically be included in a higher
-level dump.  The file would only be included if it was modified since the
-last dump.  The
-.IR touch (1)
-command can be used on the file to update its modification time to ensure
-it will be included in later dumps.
 .SH EXAMPLES
 To perform a level 0, single stream dump of the root filesystem to a locally mounted
 tape drive, prompting for session and media labels when required:

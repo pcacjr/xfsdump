@@ -731,6 +731,7 @@ cb_add( void *arg1,
 				int rval;
 				attr_multiop_t attrop;
 				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
+				static int deprecated_msg_issued = 0;
 
 				attrop.am_attrname  = skip_attr_name;
 				attrop.am_attrvalue = NULL;
@@ -750,6 +751,12 @@ cb_add( void *arg1,
 					      statp->bs_ino,
 					      statp->bs_uid,
 					      estimated_size );
+					if ( !deprecated_msg_issued ) {
+						deprecated_msg_issued = 1;
+						mlog( MLOG_SILENT | MLOG_WARNING,
+						      "excluding files using %s attribute is deprecated\n",
+						      skip_attr_name );
+					}
 					map_add( ino, MAP_NDR_NOCHNG );
 					inomap_exclude_skipattr++;
 					return 0;
