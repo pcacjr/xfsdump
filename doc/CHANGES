@@ -1,3 +1,36 @@
+xfsdump-2.2.34 (31 January 2006)
+	- Updated the spec file to correctly set package user/group.
+	- Optimizations to increase the performance of xfsdump and
+	  xfsrestore, especially on filesystems with millions of inodes.
+	  Many small changes were made to minimize the number of system
+	  calls required per inode.
+	- Significant changes to xfsdump:
+	  o Cache the gen number of each inode during the initial inode
+	    scan so that a bulkstat single does not need to be done for
+	    each inode when dumping directories.
+	  o No longer retrieve the DMF attribute when estimating the dump
+	    size of a file. Use information from the bulkstat instead.
+	  o Retrieve DMF attribute by handle instead of doing
+	    open/attr_getf/close.
+	  o In determining where to split multi-stream dumps, take into
+	    consideration the number of files and not just the file size.
+	    This allows filesystems with large amounts of inodes but
+	    relatively little data (DMF filesystem) to be split correctly.
+	- Significant changes to xfsrestore:
+	  o Buffer writes to the namreg file to eliminate 2 very small
+	    write system calls per directory entry.
+	  o Buffer writes to dirattr file to eliminate a small write system
+	    call per directory.
+	  o Speedup the check to see if a particular window of the tree
+	    file is mapped. This allows xfsrestore to use more, smaller
+	    windows which is beneficial if we can't fit them all in memory
+	    and have to start unmapping them. This also makes the -w
+	    option obsolete so that option now has no effect.
+	  o Change the hash function to give a better distribution among
+	    the hash buckets.
+	  o Do not make an unnecessary unlink call if the file being
+	    restored does not already exist.
+
 xfsdump-2.2.33 (16 December 2005)
 	- Add option to allow dump time to be overridden.
 	  Useful if doing incremental dumps of snapshots.
