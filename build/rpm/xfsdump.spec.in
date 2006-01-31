@@ -38,6 +38,9 @@ if [ -f .census ] ; then
    fi
 else
 %setup
+INSTALL_USER=root
+INSTALL_GROUP=root
+export INSTALL_USER INSTALL_GROUP
 @make@ configure
 fi
 
