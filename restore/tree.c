@@ -48,7 +48,6 @@
 #include "namreg.h"
 #include "dirattr.h"
 #include "bag.h"
-#include "win.h"
 #include "node.h"
 #include "tree.h"
 #include "libgen.h"
@@ -68,10 +67,9 @@
 #define ORPH_NAME	"orphanage"
 
 
-/* VM budgeting - give hash array one eigth, rest goes to node array
+/* VM budgeting - give hash array one sixteenth, rest goes to node array
  */
-#define HASHSZ_PERVM	8
-
+#define HASHSZ_PERVM	16
 
 /* reserve the first page for persistent state
  */
@@ -278,6 +276,7 @@ static bool_t hash_init( size64_t vmsz,
 			 size64_t nondircnt,
 			 char *perspath );
 static bool_t hash_sync( char *perspath );
+static inline size_t hash_val(xfs_ino_t ino, size_t hashmask);
 static void hash_in( nh_t nh );
 static void hash_out( nh_t nh );
 static nh_t hash_find( xfs_ino_t ino, gen_t gen );
@@ -329,7 +328,6 @@ tree_init( char *hkdir,
 	   size64_t vmsz,
 	   bool_t fullpr,
 	   bool_t restoredmpr,
-	   bool_t largewindowpr,
 	   bool_t dstdirisxfspr )
 {
 	off64_t nodeoff;
@@ -448,7 +446,7 @@ tree_init( char *hkdir,
 			 ( ix_t )offsetofmember( node_t, n_nodehkbyte ),
 		        sizeof( size64_t ), /* node alignment */
 		        vmsz - ( size64_t )nodeoff,
-			dircnt + nondircnt, largewindowpr );
+			dircnt + nondircnt );
 	if ( ! ok ) {
 		return BOOL_FALSE;
 	}
@@ -1749,10 +1747,12 @@ tree_cb_links( xfs_ino_t ino,
 		 * since restore changes the answer.
 		 */
 		if ( ! ( flags & NF_WRITTEN )) {
+			bool_t exists;
 			if ( ! content_overwrite_ok( path,
 						     ctime,
 						     mtime,
-						     &reasonstr )) {
+						     &reasonstr,
+						     &exists )) {
 				mlog( MLOG_TRACE | MLOG_TREE,
 				      "skipping %s (ino %llu gen %u): %s\n",
 				      path,
@@ -1771,7 +1771,7 @@ tree_cb_links( xfs_ino_t ino,
 				 * that may have been set since the dump was
 				 * taken.
 				 */
-				if ( ! tranp->t_toconlypr ) {
+				if ( ! tranp->t_toconlypr && exists ) {
 					rval = unlink( path );
 					if ( rval && errno != ENOENT ) {
 						mlog( MLOG_NORMAL | 
@@ -4163,8 +4163,9 @@ hash_init( size64_t vmsz,
 	      loghashlen++ )
 		;
 	ASSERT( loghashlen > 0 );
-	loghashlen--;
 	hashlen = ( size64_t )1 << loghashlen;
+	if (hashlen > hashlenmax)
+		hashlen >>= 1;
 	ASSERT( hashlen <= hashlenmax );
 
 	/* record hash size in persistent state
@@ -4237,6 +4238,18 @@ hash_sync( char *perspath )
 	return BOOL_TRUE;
 }
 
+static inline size_t
+hash_val(xfs_ino_t ino, size_t hashmask)
+{
+	ino += ~(ino << 15);
+	ino ^=  (ino >> 10);
+	ino +=  (ino << 3);
+	ino ^=  (ino >> 6);
+	ino += ~(ino << 11);
+	ino ^=  (ino >> 16);
+	return (size_t)ino & hashmask;
+}
+
 static void
 hash_in( nh_t nh )
 {
@@ -4259,7 +4272,7 @@ hash_in( nh_t nh )
 
 	/* calculate the hash index
 	 */
-	hix = ( size_t )ino & persp->p_hashmask;
+	hix = hash_val(ino, persp->p_hashmask);
 
 	/* get a pointer to the indexed hash array entry
 	 */
@@ -4295,7 +4308,7 @@ hash_out( nh_t nh )
 
 	/* get a pointer to the hash array entry
 	 */
-	hix = ( size_t )ino & persp->p_hashmask;
+	hix = hash_val(ino, persp->p_hashmask);
 	entryp = &tranp->t_hashp[ hix ];
 
 	/* get the handle of the first node in the appropriate hash array
@@ -4337,7 +4350,7 @@ hash_find( xfs_ino_t ino, gen_t gen )
 
 	/* get handle to first node in appropriate hash array
 	 */
-	hix = ( size_t )ino & persp->p_hashmask;
+	hix = hash_val(ino, persp->p_hashmask);
 	nh = tranp->t_hashp[ hix ];
 
 	/* if list empty, return null handle
@@ -4969,4 +4982,3 @@ mkdir_r(char *path)
 	}
 	return 0;
 }
-

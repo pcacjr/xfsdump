@@ -68,6 +68,10 @@ u_int32_t dirattr_get_projid( dah_t dah );
 u_int32_t dirattr_get_dmevmask( dah_t dah );
 u_int32_t dirattr_get_dmstate( dah_t dah );
 
+/* dirattr_flush - flush dirattr I/O buffer.  Returns 0 if successful.
+ */
+extern rv_t dirattr_flush( void );
+
 /* dirattr_addextattr - record an extended attribute. second argument is
  * ptr to extattrhdr_t, with extattr name and value appended as
  * described by hdr.

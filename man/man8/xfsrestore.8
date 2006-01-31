@@ -263,13 +263,6 @@ only:
 # xfsrestore \-v trace,drive=debug \-f /dev/tape /
 .EE
 .TP 5
-.B \-w
-This option is not normally recommended.  This option will force
-xfsrestore to use small mmap regions which will reduce the
-likelihood of an mmap failure. However, this will slow down
-xfsrestore during directory processing when there are over
-1 million inodes.
-.TP 5
 .B \-A
 Do not restore extended file attributes.
 When restoring a filesystem managed within a DMF environment this option

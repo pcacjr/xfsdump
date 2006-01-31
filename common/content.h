@@ -102,7 +102,8 @@ extern intgen_t content_stream_restore( ix_t thrdix );
 extern bool_t content_overwrite_ok( char *path,
 				    int32_t ctime,
 				    int32_t mtime,
-				    char **reasonstrp );
+				    char **reasonstrp,
+				    bool_t *exists );
 	/* called by tree to ask if ok to overwrite file
 	 */
 

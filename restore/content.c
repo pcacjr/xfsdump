@@ -599,8 +599,6 @@ struct tran {
 		/* to establish critical regions while updating pers
 		 * inventory
 		 */
-	bool_t t_largewindowpr;
-		/* whether we should use a large window map for tree */
 };
 
 typedef struct tran tran_t;
@@ -883,10 +881,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	 */
 	tranp->t_starttime = time( 0 );
 
-	/* do large window support by default
-	 */
-	tranp->t_largewindowpr = BOOL_TRUE;
-
 	/* get command line options
 	 */
 	cumpr = BOOL_FALSE;
@@ -1124,7 +1118,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			break;
 #endif /* SESSCPLT */
 		case GETOPT_SMALLWINDOW:
-			tranp->t_largewindowpr = BOOL_FALSE;
+			/* obsolete */
 			break;
 		case GETOPT_ROOTPERM:
 			restore_rootdir_permissions = BOOL_TRUE;
@@ -2223,7 +2217,6 @@ content_stream_restore( ix_t thrdix )
 					tranp->t_vmsz,
 					fullpr,
 					persp->a.restoredmpr,
-					tranp->t_largewindowpr,
 					persp->a.dstdirisxfspr );
 			if ( ! ok ) {
 				Media_end( Mediap );
@@ -2988,6 +2981,15 @@ applydirdump( drive_t *drivep,
 
 			tranp->t_dirdonecnt++;
 		}
+
+		if ((rv = dirattr_flush()) != RV_OK) {
+			return rv;
+		}
+
+		if ((rv = namreg_flush()) != RV_OK) {
+			return rv;
+		}
+
 		persp->s.dirdonepr = BOOL_TRUE;
 	}
 
@@ -8960,14 +8962,20 @@ bool_t
 content_overwrite_ok( char *path,
 		      int32_t ctime,
 		      int32_t mtime,
-		      char **reasonstrp )
+		      char **reasonstrp,
+		      bool_t *exists )
 {
 	struct stat statbuf;
+
+	*exists = BOOL_TRUE;
 
 	/* if file doesn't exist, allow
 	 */
 	if ( lstat( path, &statbuf )) {
 		*reasonstrp = 0;
+		if ( errno == ENOENT ) {
+			*exists = BOOL_FALSE;
+		}
 		return BOOL_TRUE;
 	}
 

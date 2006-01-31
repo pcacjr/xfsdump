@@ -28,18 +28,28 @@
 
 #include "types.h"
 #include "mlog.h"
-#include "bag.h"
 #include "qlock.h"
 #include "mmap.h"
 
 extern size_t pgsz;
 extern size_t pgmask;
 
+/* number of entries to add to the segmap if
+ * it needs to be resized
+ */
+#define SEGMAP_INCR	16
+
+/*
+ * critical region
+ */
+#define CRITICAL_BEGIN()  if (!locksoffpr) qlock_lock( tranp->t_qlockh )
+#define CRITICAL_END()    if (!locksoffpr) qlock_unlock( tranp->t_qlockh )
+
 /* window descriptor
  */
 struct win {
-	off64_t w_off;
-		/* offset from first segment of segment mapped by this window
+	size_t w_segix;
+		/* index of segment mapped by this window
 		 */
 	void *w_p;
 		/* window virtual address
@@ -53,21 +63,13 @@ struct win {
 	struct win *w_prevp;
 		/* LRU list backward linkage
 		 */
-	bagelem_t w_bagelem;
-		/* bag element cookie
-		 */
 };
 
 typedef struct win win_t;
 
 /* forward declarations
  */
-static void win_bag_insert( win_t *winp );
-static void win_bag_remove( win_t *winp );
-static win_t *win_bag_find_off( off64_t off );
-static void critical_init( void );
-static void critical_begin( void );
-static void critical_end( void );
+static void win_segmap_resize( size_t segix );
 
 /* transient state
  */
@@ -96,8 +98,14 @@ struct tran {
 	win_t *t_lrutailp;
 		/* LRU tail (put here when no refs)
 		 */
-	bag_t *t_bagp;
-		/* context for bag abstraction
+	win_t **t_segmap;
+		/* mapping from segment index to window. an entry
+		 * points to a win_t struct if segment is currently
+		 * mapped, otherwise the entry is NULL.
+		 */
+	size_t	t_segmaplen;
+		/* number of segments currently represented in
+		 * t_segmap array.
 		 */
 	qlockh_t t_qlockh;
 		/* for establishing critical regions
@@ -140,6 +148,7 @@ void
 win_init( intgen_t fd,
 	  off64_t firstoff,
 	  size_t segsz,
+	  size64_t segtablesz,
 	  size_t winmax )
 {
 	/* validate parameters
@@ -158,27 +167,33 @@ win_init( intgen_t fd,
 	tranp->t_segsz = segsz;
 	tranp->t_winmax = winmax;
 
-	/* create a bag 
-	 */
-	tranp->t_bagp = bag_alloc( );
+	tranp->t_segmaplen = (size_t)(segtablesz / segsz) + 1;
+	tranp->t_segmap = (win_t **)
+	calloc( tranp->t_segmaplen, sizeof(win_t *) );
+	ASSERT( tranp->t_segmap );
 
 	/* initialize critical region enforcer
 	 */
-	critical_init( );
+	tranp->t_qlockh = qlock_alloc( QLOCK_ORD_WIN );
 }
 
 void
 win_map( off64_t off, void **pp )
 {
 	size_t offwithinseg;
+	size_t segix;
 	off64_t segoff;
 	win_t *winp;
 
-	critical_begin( );
+	CRITICAL_BEGIN();
 
 	/* calculate offset within segment
 	 */
 	offwithinseg = ( size_t )( off % ( off64_t )tranp->t_segsz );
+
+	/* calculate segment index
+	 */
+	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
 
 	/* calculate offset of segment
 	 */
@@ -189,11 +204,14 @@ win_map( off64_t off, void **pp )
 	     "win_map(off=%lld,addr=%x): off within = %llu, segoff = %lld\n",
 	      off, pp, offwithinseg, segoff);
 #endif
+	/* resize the array if necessary */
+	if ( segix >= tranp->t_segmaplen )
+		win_segmap_resize( segix );
 
 	/* see if segment already mapped. if ref cnt zero,
 	 * remove from LRU list.
 	 */
-	winp = win_bag_find_off( segoff );
+	winp = tranp->t_segmap[segix];
 	if ( winp ) {
 #ifdef TREE_DEBUG
 		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
@@ -227,15 +245,22 @@ win_map( off64_t off, void **pp )
 		}
 		winp->w_refcnt++;
 		*pp = ( void * )( ( char * )( winp->w_p ) + offwithinseg );
-		critical_end( );
+		CRITICAL_END();
 		return;
 	}
 
-	/* if LRU list not empty, re-use descriptor at head.
-	 * if LRU list is empty, allocate a new descriptor if
-	 * not too many already.
+	/* Allocate a new descriptor if we haven't yet hit the maximum,
+	 * otherwise reuse any descriptor on the LRU list.
 	 */
-	if ( tranp->t_lruheadp ) {
+	if ( tranp->t_wincnt < tranp->t_winmax ) {
+#ifdef TREE_DEBUG
+		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+		     "win_map(): create a new window\n");
+#endif
+		winp = ( win_t * )calloc( 1, sizeof( win_t ));
+		ASSERT( winp );
+		tranp->t_wincnt++;
+	} else if ( tranp->t_lruheadp ) {
 		/* REFERENCED */
 		intgen_t rval;
 #ifdef TREE_DEBUG
@@ -250,22 +275,14 @@ win_map( off64_t off, void **pp )
 		} else {
 			tranp->t_lrutailp = 0;
 		}
-		win_bag_remove( winp );
+		tranp->t_segmap[winp->w_segix] = NULL;
 		rval = munmap( winp->w_p, tranp->t_segsz );
 		ASSERT( ! rval );
 		memset( ( void * )winp, 0, sizeof( win_t ));
-	} else if ( tranp->t_wincnt < tranp->t_winmax ) {
-#ifdef TREE_DEBUG
-		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
-		     "win_map(): no LRU freelist - create a new window\n");
-#endif
-		winp = ( win_t * )calloc( 1, sizeof( win_t ));
-		ASSERT( winp );
-		tranp->t_wincnt++;
 	} else {
 		ASSERT( tranp->t_wincnt == tranp->t_winmax );
 		*pp = NULL;
-		critical_end( );
+		CRITICAL_END();
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "all map windows in use. Check virtual memory limits\n"));
 		return;
@@ -290,43 +307,52 @@ win_map( off64_t off, void **pp )
 			    tranp->t_fd,
 			    ( off64_t )( tranp->t_firstoff + segoff ));
 	if ( winp->w_p == (void *)-1 ) {
+		int	error = errno;
 		mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		      "win_map(): unable to map a node segment of size %d at %d: %s\n"),
 		      tranp->t_segsz, tranp->t_firstoff + segoff,
-		      strerror( errno ));
+		      strerror( error ));
+
+		tranp->t_wincnt--;
+		tranp->t_winmax--;
+		CRITICAL_END();
+		free(winp);
+
+		if (error == ENOMEM && tranp->t_lruheadp) {
+			mlog( MLOG_NORMAL | MLOG_ERROR,
+		      		_("win_map(): try to select a different win_t\n"));
+			win_map(off, pp);
+			return;
+		}
 		*pp = NULL;
 		return;
 	}
-	winp->w_off = segoff;
+	winp->w_segix  = segix;
 	ASSERT( winp->w_refcnt == 0 );
 	winp->w_refcnt++;
-	win_bag_insert( winp );
+	tranp->t_segmap[winp->w_segix] = winp;
 
 	*pp = ( void * )( ( char * )( winp->w_p ) + offwithinseg );
 
-	critical_end( );
+	CRITICAL_END();
 }
 
 void
 win_unmap( off64_t off, void **pp )
 {
-	size_t offwithinseg;
-	off64_t segoff;
+	size_t segix;
 	win_t *winp;
 
-	critical_begin( );
+	CRITICAL_BEGIN();
 
-	/* calculate offset within segment
+	/* calculate segment index
 	 */
-	offwithinseg = ( size_t )( off % ( off64_t )tranp->t_segsz );
-
-	/* convert offset within range into window's offset within range
-	 */
-	segoff = off - ( off64_t )offwithinseg;
+	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
 
 	/* verify window mapped
 	 */
-	winp = win_bag_find_off( segoff );
+	ASSERT( segix < tranp->t_segmaplen );
+	winp = tranp->t_segmap[segix];
 	ASSERT( winp );
 
 	/* validate p
@@ -361,68 +387,23 @@ win_unmap( off64_t off, void **pp )
 	 */
 	*pp = 0;
 
-	critical_end( );
+	CRITICAL_END();
 }
 
 static void
-win_bag_insert( win_t *winp )
+win_segmap_resize(size_t segix)
 {
-	bag_insert( tranp->t_bagp,
-		    &winp->w_bagelem,
-		    ( size64_t )winp->w_off,
-		    ( void * )winp );
-}
+	size_t oldlen;
+	win_t **new_part;
 
-static void
-win_bag_remove( win_t *winp )
-{
-	off64_t off;
-	win_t *p;
+	oldlen = tranp->t_segmaplen;
 
-	off = 0; /* keep lint happy */
-	p = 0; /* keep lint happy */
-	bag_remove( tranp->t_bagp,
-		    &winp->w_bagelem,
-		    ( size64_t * )&off,
-		    ( void ** )&p );
-	ASSERT( off == winp->w_off );
-	ASSERT( p == winp );
-}
+	tranp->t_segmaplen = segix + SEGMAP_INCR;
+	tranp->t_segmap = (win_t **)
+		realloc( tranp->t_segmap, tranp->t_segmaplen * sizeof(win_t *) );
+	ASSERT( tranp->t_segmap );
 
-static win_t *
-win_bag_find_off( off64_t winoff )
-{
-	bagelem_t *bagelemp;
-	win_t *p;
-
-	p = 0; /* keep lint happy */
-	bagelemp = bag_find( tranp->t_bagp,
-			     ( size64_t )winoff,
-			     ( void ** )&p );
-	if ( ! bagelemp ) {
-		return 0;
-	}
-	ASSERT( p );
-	ASSERT( bagelemp == &p->w_bagelem );
-	return p;
-}
-
-static void
-critical_init( void )
-{
-	tranp->t_qlockh = qlock_alloc( QLOCK_ORD_WIN );
-}
-
-static void
-critical_begin( void )
-{
-	if (!locksoffpr)
-	    qlock_lock( tranp->t_qlockh );
-}
-
-static void
-critical_end( void )
-{
-	if (!locksoffpr)
-	    qlock_unlock( tranp->t_qlockh );
+	/* clear the new portion of the array */
+	new_part = tranp->t_segmap + oldlen;
+	memset( new_part, 0, (tranp->t_segmaplen - oldlen) * sizeof(win_t *) );
 }

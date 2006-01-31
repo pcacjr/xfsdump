@@ -2299,6 +2299,17 @@ set_rlimits( size64_t *vmszp )
 	      rlimit64.rlim_cur,
 	      rlimit64.rlim_max );
 #ifdef RESTORE
+	if (rlimit64.rlim_cur != RLIM64_INFINITY) {
+		rlimit64.rlim_cur = rlimit64.rlim_max;
+		( void )setrlimit64( RLIMIT_AS, &rlimit64 );
+		rval = getrlimit64( RLIMIT_AS, &rlimit64 );
+		ASSERT( ! rval );
+		mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
+			"RLIMIT_VMEM now cur 0x%llx max 0x%llx\n",
+			rlimit64.rlim_cur,
+			rlimit64.rlim_max );
+	}
+
 	vmsz = ( size64_t )rlimit64.rlim_cur;
 #endif /* RESTORE */
 	

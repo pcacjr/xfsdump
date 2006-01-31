@@ -32,7 +32,6 @@ extern bool_t tree_init( char *hkdir,
 			 size64_t vmsz,
 			 bool_t fullpr,
 			 bool_t restoredmpr,
-			 bool_t largewindowpr,
 			 bool_t dstdirisxfspr );
 
 /* tree_sync - synchronizes with an existing tree abstraction

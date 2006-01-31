@@ -257,28 +257,25 @@ HsmEstimateFileSpace(
 const	xfs_bstat_t	*statp,
 	off64_t		*bytes)
 {
-	dmf_fs_ctxt_t	*dmf_fs_ctxtp = (dmf_fs_ctxt_t *)contextp;
-	dmf_f_ctxt_t	dmf_f_ctxt;
-
-	/* This is an implicit HsmAllocateFileContext call. */
-
-	dmf_f_ctxt.fsys = *dmf_fs_ctxtp;
-	dmf_f_ctxt.candidate = 0;
-
-	/* Initialize the file context to determine the file's state. */
-
-	if (HsmInitFileContext((hsm_f_ctxt_t *)&dmf_f_ctxt, statp)) {
+	/* This code is assuming that there are no MIG files, and so any
+	   file with DMAPI event bits set will be dumped as OFL.
+	   It is too expensive to actually differentiate MIG files from
+	   other types just for the sake of an estimate. The non-dir dump
+	   size estimation will be somewhat low if there are MIG files,
+	   which could affect the distribution of a multi-stream dump.
+	*/
+	if ((statp->bs_mode & S_IFMT) != S_IFREG) {
+		return 0;       /* not a regular file */
+	}
+	if ((statp->bs_xflags & XFS_XFLAG_HASATTR) == 0) {
+		return 0;       /* no DMF attribute can possibly exist */
+	}
+	if ((statp->bs_dmevmask & DMF_EV_BITS) == 0) {
 		return 0;
 	}
 
-	/* If the file is dualstate, make it appear offline. */
-
-	if (dmf_f_ctxt.candidate) {
-		*bytes = 0;	/* treat the entire file as offline */
-		return 1;
-	} else {
-		return 0;
-	}
+	*bytes = 0;
+	return 1;
 }
 
 
@@ -413,8 +410,8 @@ const	xfs_bstat_t	*statp)
 	dm_ino_t	ino;
 	dm_igen_t	igen;
 	int		state;
-	int		fd;
 	int		error;
+	attr_multiop_t	attr_op;
 
 	dmf_f_ctxtp->candidate = 0; /* assume file will NOT be of interest */
 
@@ -441,23 +438,19 @@ const	xfs_bstat_t	*statp)
 		return 0;	/* can't make a proper handle */
 	}
 
-	/* The following code should eventually be replaced with the
-	   attr_multif-by-handle call when it is available.
-	*/
+	attr_op.am_opcode    = ATTR_OP_GET;
+	attr_op.am_error     = 0;
+	attr_op.am_attrname  = DMF_ATTR_NAME;
+	attr_op.am_attrvalue = dmf_f_ctxtp->attrval;
+	attr_op.am_length    = sizeof(dmf_f_ctxtp->attrval);
+	attr_op.am_flags     = ATTR_ROOT;
 
-	fd = open_by_handle(hanp, hlen, O_RDONLY);
-	dm_handle_free(hanp, hlen);
-	if (fd < 0) {
-                return 0;
-	}
-	dmf_f_ctxtp->attrlen = sizeof(dmf_f_ctxtp->attrval);
-	error = attr_getf(fd, DMF_ATTR_NAME, dmf_f_ctxtp->attrval,
-		&dmf_f_ctxtp->attrlen, ATTR_ROOT);
-	(void)close(fd);
-	if (error) {
-		return 0;
- 	}
+	error = attr_multi_by_handle(hanp, hlen, &attr_op, 1, 0);
+	free_handle(hanp, hlen);
+	if (error || attr_op.am_error)
+		return 0; /* no DMF attribute */
 
+	dmf_f_ctxtp->attrlen = attr_op.am_length;
 	dmfattrp = (XFSattrvalue0_t *)dmf_f_ctxtp->attrval;
 
 	if (dmfattrp->fsys != FSYS_TYPE_XFS)

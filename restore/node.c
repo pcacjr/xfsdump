@@ -30,6 +30,7 @@
 #include "node.h"
 #include "mmap.h"
 
+#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
 #define min( a, b )	( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
 
 extern size_t pgsz;
@@ -144,6 +145,9 @@ struct node_hdr {
 		/* the backing store is partitoned into segment, which
 		 * can be mapped into VM windows  by the win abstraction
 		 */
+	size64_t nh_segtblsz;
+		/* the estimated size of the entire segment table.
+		 */
 	size_t nh_winmapmax;
 		/* maximum number of windows which can be mapped
 		 */
@@ -187,18 +191,16 @@ node_init( intgen_t fd,
 	   ix_t nodehkix,
 	   size_t nodealignsz,
 	   size64_t vmsz,
-	   size64_t dirs_nondirs_cnt,
-	   bool_t largewindowpr )
+	   size64_t dirs_nondirs_cnt )
 {
 	size64_t nodesz;
+	size64_t winmap_mem;
 	size64_t segsz;
+	size64_t segtablesz;
 	size64_t nodesperseg;
-	size64_t init_nodesperseg;
-	size64_t multiple;
+	size64_t minsegsz;
 	size64_t winmapmax;
-	unsigned long i;
   	intgen_t rval;
- 	bool_t reached_min; /* reached minimum limit */
 
 	/* sanity checks
 	 */
@@ -213,6 +215,41 @@ node_init( intgen_t fd,
 		/* since beginning of each node is used to
 		 * link it in the free list.
 		 */
+
+	/* adjust the user's node size to meet user's alignment constraint
+	*/
+	nodesz = ( usrnodesz + nodealignsz - 1 ) & ~( nodealignsz - 1 );
+
+#define	WINMAP_MAX	20	/* maximum number of windows to use */
+#define	WINMAP_MIN	4	/* minimum number of windows to use */
+#define	HARDLINK_FUDGE	1.2	/* approx 1.2 hard links per file */
+
+	/* Calculate the expected size of the segment table using the number
+	 * of dirs and non-dirs.  Since we don't know how many hard-links
+	 * there will be, scale the size upward using HARDLINK_FUDGE.
+	 */
+
+	segtablesz = ( (size64_t)(HARDLINK_FUDGE * (double)dirs_nondirs_cnt) * nodesz);
+
+	/* Figure out how much memory is available for use by winmaps, and
+	 * use that to pick an appropriate winmapmax, segsz, and nodesperseg,
+	 * the goal being that if at all possible we want the entire segment
+	 * table to be mapped so that we aren't constantly mapping and
+	 * unmapping winmaps.  There must be at least WINMAP_MIN winmaps
+	 * because references can be held on more than one winmap at the
+	 * same time.  More winmaps are generally better to reduce the
+	 * number of nodes that are unmapped if unmapping does occur.
+	 */
+
+	minsegsz = pgsz * nodesz;	/* must be pgsz and nodesz multiple */
+	winmap_mem = min(vmsz, segtablesz);
+	segsz = (((winmap_mem / WINMAP_MAX) + minsegsz - 1) / minsegsz) * minsegsz;
+	segsz = max(segsz, minsegsz);
+
+	nodesperseg = segsz / nodesz;
+
+	winmapmax = min(WINMAP_MAX, vmsz / segsz);
+	winmapmax = max(winmapmax, WINMAP_MIN);
 
 	/* map the abstraction header
 	 */
@@ -233,122 +270,12 @@ node_init( intgen_t fd,
 	    return BOOL_FALSE;
 	}
 
-	/* adjust the user's node size to meet user's alignment constraint
-	 */
-	nodesz = ( usrnodesz + nodealignsz - 1 ) & ~( nodealignsz - 1 );
-
-
-	if ( vmsz > ( size64_t )SIZEMAX ) {
-		vmsz = ( size64_t )SIZEMAX; /* be reasonable! */
-	}
-
-	/* Calculate the segment size using the number of
-         * dirs and nondirs if largemap option else using a
-         * hard coded number.
-	 * The segment size must be an integral multiple of pgsz.
-	 */
-	if (largewindowpr) {
-	    /* Scale the dirs_nondirs_cnt because the number of entries
-             * also include hard links, of which I don't know how
-	     * many there are.
-	     */
-	    mlog( MLOG_DEBUG, "attempt mmaping entire tree\n");
-	    nodesperseg = (size64_t) (1.2 * (double)dirs_nondirs_cnt);
-	}
-	else {
-	    nodesperseg = NODESPERSEGMIN;
-	}
-	init_nodesperseg = nodesperseg;
-
-        /* 
-	 * Find largest fitting segsz.
-         * Loop trying init_nodesperseg/i for i=2,3,4,...
-	 * until mmap() is not failing with ENOMEM
-	 * or we have gone down to NODESPERSEGMIN
-	 * in which case, then giveup with error.
-         *
-         */
-	reached_min=BOOL_FALSE;
-	for (i=2;;i++) {
-	    char *map;
-
-	    if (nodesperseg <= NODESPERSEGMIN) {
-		nodesperseg = NODESPERSEGMIN;
-		reached_min = BOOL_TRUE;
-	    }
-	    segsz = nodesz * nodesperseg;
-	    multiple = pgsz * nodesz;
-	    /* ensure a multiple of pgsz and nodesz */
-	    segsz = (segsz / multiple + 1) * multiple;
-	    nodesperseg = segsz / nodesz;
-	    ASSERT( ! ( segsz % pgsz ));
-
-	    /* calculate the maximum number of windows which may be mapped.
-	     * base on vmsz, which is this abstraction's share of VM.
-	     */
-	    winmapmax = ( size_t )vmsz / segsz;
-	    ASSERT( winmapmax > 0 );
-
-	    /* segsz needs to fit into a size_t for mmap */
-	    if (segsz > SSIZE_MAX && !reached_min) {
-		goto try_smaller; 
-	    }
-
-	    /* try mem mapping sement of segsz 
-	     */
-	    map = (char *)mmap64( 0,
-				(size_t) segsz,
-				PROT_READ | PROT_WRITE,
-				MAP_SHARED,
-				fd,
-				off + NODE_HDRSZ);
-	    if ( map == (char *)-1 ) {
-		if ( (errno == ENOMEM||errno == ENXIO) && !reached_min ) {
-try_smaller:
-		    /* 
-		     * Try a smaller region as it failed and
-		     * we haven't reached the minimum limit.
-		     * Go for fitting into i number of maps.
-		     */
-		    nodesperseg = init_nodesperseg / i;
-		    mlog( MLOG_NORMAL | MLOG_NOTE, _(
-			  "unable to map tree segment of size %lld: "
-			  "retry with smaller size\n"),
-			  segsz);
-		    continue;
-		}
-		else {
-		    mlog( MLOG_NORMAL | MLOG_ERROR, _(
-			  "unable to map tree segment of size %d: %s\n"),
-			  segsz,
-			  strerror( errno ));
-		    return BOOL_FALSE;
-		}
-	    }
-	    else {
-		/* 
-		 * unmap the segment 
-		 * don't need it yet 
-		 * just trying to find largest fitting seg size
-		 */
-		if (munmap(map, segsz) == -1) {
-		    mlog( MLOG_NORMAL | MLOG_ERROR, _(
-			  "unable to unmap tree segment of size %lld: %s\n"),
-			  segsz,
-			  strerror( errno ));
-		    return BOOL_FALSE;
-		}
-	    }
-	    break;
-	} /*for*/
-	ASSERT( ( size64_t )segsz <= OFF64MAX );
-			/* avoid sign extention questions */
-
 	/* initialize and save persistent context.
 	 */
 	node_hdrp->nh_nodesz = nodesz;
 	node_hdrp->nh_nodehkix = nodehkix;
 	node_hdrp->nh_segsz = segsz;
+	node_hdrp->nh_segtblsz = segtablesz;
 	node_hdrp->nh_winmapmax = winmapmax;
 	node_hdrp->nh_nodesperseg = nodesperseg;
 	node_hdrp->nh_nodealignsz = nodealignsz;
@@ -385,28 +312,24 @@ try_smaller:
 	win_init( fd,
 		  node_hdrp->nh_firstsegoff,
 		  segsz,
+		  segtablesz,
 		  winmapmax );
 	
 	/* announce the results
 	 */
 	mlog( MLOG_DEBUG | MLOG_TREE,
 	      "node_init:"
-	      " usrnodesz = %u (0x%x)"
-	      " nodesz = %u (0x%x)"
+	      " vmsz = %llu (0x%llx)"
 	      " segsz = %u (0x%x)"
+	      " segtblsz = %llu (0x%llx)"
 	      " nodesperseg = %u (0x%x)"
-	      " winmapmax = %u (0x%x)"
+	      " winmapmax = %llu (0x%llx)"
 	      "\n",
-	      usrnodesz,
-	      usrnodesz,
-	      nodesz,
-	      nodesz,
-	      segsz,
-	      segsz,
-	      nodesperseg,
-	      nodesperseg,
-	      winmapmax,
-	      winmapmax );
+	      vmsz, vmsz,
+	      segsz, segsz,
+	      segtablesz, segtablesz,
+	      nodesperseg, nodesperseg,
+	      winmapmax, winmapmax );
 
 	return BOOL_TRUE;
 }
@@ -444,6 +367,7 @@ node_sync( intgen_t fd, off64_t off )
 	win_init( fd,
 		  node_hdrp->nh_firstsegoff,
 		  node_hdrp->nh_segsz,
+		  node_hdrp->nh_segtblsz,
 		  node_hdrp->nh_winmapmax );
 
 	return BOOL_TRUE;

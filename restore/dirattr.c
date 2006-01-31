@@ -138,12 +138,17 @@ typedef struct dirattr_pers dirattr_pers_t;
 
 /* dirattr transient context definition
  */
+
+#define	DIRATTR_BUFSIZE	32768
+
 struct dirattr_tran {
 	char *dt_pathname;
 	int dt_fd;
 	bool_t dt_at_endpr;
 	dah_t dt_cachedh;
 	dirattr_t dt_cached_dirattr;
+	size_t dt_off;
+	char dt_buf[DIRATTR_BUFSIZE];
 	char *dt_extattrpathname;
 	int dt_extattrfd;
 	bool_t dt_extattrfdbadpr;
@@ -175,7 +180,7 @@ extern size_t pgsz;
 /* forward declarations of locally defined static functions ******************/
 
 static void dirattr_get( dah_t );
-static void dirattr_flush( void );
+static void dirattr_cacheflush( void );
 #ifdef DIRATTRCHK
 static u_int16_t calcdixcum( dix_t dix );
 #endif /* DIRATTRCHK */
@@ -387,7 +392,6 @@ dah_t
 dirattr_add( filehdr_t *fhdrp )
 {
 	dirattr_t dirattr;
-	intgen_t nwritten;
 	off64_t oldoff;
 	dix_t dix;
 #ifdef DIRATTRCHK
@@ -413,6 +417,12 @@ dirattr_add( filehdr_t *fhdrp )
 		}
 		ASSERT( dpp->dp_appendoff == newoff );
 		dtp->dt_at_endpr = BOOL_TRUE;
+	}
+
+	if (dtp->dt_off + sizeof(dirattr_t) > sizeof(dtp->dt_buf)) {
+		if (dirattr_flush() != RV_OK) {
+			return DAH_NULL;
+		}
 	}
 
 	/* calculate the index of this dirattr
@@ -441,20 +451,15 @@ dirattr_add( filehdr_t *fhdrp )
 #endif /* DIRATTRCHK */
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;
 
-	/* write the dirattr
+	/* write the entry into our buffer
 	 */
-	nwritten = write( dtp->dt_fd, ( void * )&dirattr, sizeof( dirattr ));
-	if ( ( size_t )nwritten != sizeof( dirattr )) {
-		mlog( MLOG_NORMAL | MLOG_ERROR, _(
-		      "write of dirattr failed: %s\n"),
-		      strerror( errno ));
-		return DAH_NULL;
-	}
+	memcpy(dtp->dt_buf + dtp->dt_off, (void *)&dirattr, sizeof(dirattr_t));
+	dtp->dt_off += sizeof(dirattr_t);
 
 	/* update the next write offset
 	 */
-	ASSERT( dpp->dp_appendoff <= OFF64MAX - ( off64_t )nwritten );
-	dpp->dp_appendoff += ( off64_t )nwritten;
+	ASSERT( dpp->dp_appendoff <= OFF64MAX - ( off64_t )sizeof(dirattr_t) );
+	dpp->dp_appendoff += ( off64_t )sizeof(dirattr_t);
 
 #ifdef DIRATTRCHK
 	dah = HDLMKHDL( sum, dix );
@@ -585,7 +590,7 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	 */
 	if ( oldoff == DIRATTR_EXTATTROFFNULL ) {
 		dtp->dt_cached_dirattr.d_extattroff = off;
-		dirattr_flush( );
+		dirattr_cacheflush( );
 	} else {
 		seekoff = lseek64( dtp->dt_extattrfd, oldoff, SEEK_SET );
 		if ( seekoff < 0 ) {
@@ -786,6 +791,13 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	ASSERT( dtp->dt_cached_dirattr.d_sum == sum );
 #endif /* DIRATTRCHK */
 
+	if ( dtp->dt_at_endpr && dtp->dt_off ) {
+		if (dirattr_flush() != RV_OK) {
+			assert( 0 );
+			return;
+		}
+	}
+
 	/* seek to the dirattr
 	 */
 	newoff = lseek64( dtp->dt_fd, argoff, SEEK_SET );
@@ -909,6 +921,37 @@ dirattr_get_dmstate( dah_t dah )
 	return dtp->dt_cached_dirattr.d_dmstate;
 }
 
+rv_t
+dirattr_flush()
+{
+	ssize_t nwritten;
+
+	/* sanity checks
+	*/
+	assert ( dtp );
+
+	if (dtp->dt_off) {
+		/* write the accumulated dirattr entries
+		*/
+		nwritten = write( dtp->dt_fd, ( void * )dtp->dt_buf, dtp->dt_off);
+		if ( nwritten != dtp->dt_off ) {
+			if ( nwritten < 0 ) {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+					_("write of dirattr buffer failed: %s\n"),
+					strerror( errno ));
+			} else {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+					_("write of dirattr buffer failed: "
+					"expected to write %ld, actually "
+					"wrote %ld\n"), dtp->dt_off, nwritten);
+			}
+			assert( 0 );
+			return RV_UNKNOWN;
+		}
+		dtp->dt_off = 0;
+	}
+	return RV_OK;
+}
 
 /* definition of locally defined static functions ****************************/
 
@@ -951,6 +994,13 @@ dirattr_get( dah_t dah )
 	ASSERT( argoff >= ( off64_t )DIRATTR_PERS_SZ );
 	ASSERT( argoff <= dpp->dp_appendoff - ( off64_t )sizeof( dirattr_t ));
 
+	if ( dtp->dt_at_endpr && dtp->dt_off ) {
+		if (dirattr_flush() != RV_OK) {
+			assert( 0 );
+			return;
+		}
+	}
+
 	/* seek to the dirattr
 	 */
 	newoff = lseek64( dtp->dt_fd, argoff, SEEK_SET );
@@ -984,7 +1034,7 @@ dirattr_get( dah_t dah )
 }
 
 static void
-dirattr_flush( void )
+dirattr_cacheflush( void )
 {
 	dah_t dah;
 	dix_t dix;

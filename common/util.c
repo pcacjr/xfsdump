@@ -129,6 +129,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	__s32 buflenout;
 	xfs_ino_t lastino;
 	intgen_t saved_errno;
+	intgen_t bulkstatcnt;
         
         xfs_fsop_bulkreq_t bulkreq, sbulkreq;
 
@@ -153,7 +154,8 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	}
 	mlog( MLOG_NITTY + 1,
 	      "calling bulkstat\n" );
-        
+
+	bulkstatcnt = 0;
 	bulkreq.lastip = (__u64 *)&lastino;
 	bulkreq.icount = buflenin;
 	bulkreq.ubuffer = buf;
@@ -218,7 +220,8 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 			if ( pfp ) ( pfp )( PREEMPT_PROGRESSONLY );
 		}
 
-		if ( pfp && ( pfp )( PREEMPT_FULL )) {
+		if ( pfp && (++bulkstatcnt % 10) == 0 &&
+		     ( pfp )( PREEMPT_FULL )) {
 			return EINTR;
 		}
 
@@ -250,6 +253,32 @@ bigstat_one( intgen_t fsfd,
         bulkreq.ubuffer = statp;
         bulkreq.ocount = &count;
 	return xfsctl(NULL, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
+}
+
+/* efficiently count the number of inode groups (groups of 64 inodes).
+ * This could be made into an iterator with a callback, but as of
+ * now there is no other need for SGI_FS_INUMBERS.
+ */
+#define INOGRPLEN	1024
+intgen_t
+inogrp_count( intgen_t fsfd, intgen_t *grpcnt )
+{
+	xfs_ino_t last = 0;
+	intgen_t count;
+	xfs_fsop_bulkreq_t bulkreq;
+	xfs_inogrp_t igrp[INOGRPLEN];
+
+	bulkreq.lastip = (__u64 *)&last;
+	bulkreq.icount = INOGRPLEN;
+	bulkreq.ubuffer = igrp;
+	bulkreq.ocount = &count;
+	*grpcnt = 0;
+	while (!ioctl(fsfd, XFS_IOC_FSINUMBERS, &bulkreq)) {
+		if (count == 0)
+			return 0;
+		*grpcnt += count;
+	}
+	return 1;
 }
 
 /* calls the callback for every entry in the directory specified

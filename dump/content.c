@@ -1865,11 +1865,11 @@ content_statline( char **linespp[ ] )
 
 	/* calculate the elapsed time
 	 */
-	elapsed = time( 0 ) - sc_stat_starttime;
+	now = time( 0 );
+	elapsed = now - sc_stat_starttime;
 
 	/* get local time
 	 */
-	now = time( 0 );
 	tmp = localtime( &now );
 
 	/* if inomap phase indicated, report on that
@@ -1908,20 +1908,6 @@ content_statline( char **linespp[ ] )
 		return 1;
 	}
 
-	/* if stats not initialized, just display elapsed time
-	 */
-	if ( ! sc_stat_datasz ) {
-		sprintf( statline[ 0 ],
-			 "status at %02d:%02d:%02d: "
-			 "%ld seconds elapsed\n",
-			 tmp->tm_hour,
-			 tmp->tm_min,
-			 tmp->tm_sec,
-			 elapsed );
-		ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
-		return 1;
-	}
-
 	/* get the accumulated totals for non-dir inos and data bytes dumped
 	 */
 	lock( );
@@ -1929,33 +1915,45 @@ content_statline( char **linespp[ ] )
 	datadone = sc_stat_datadone;
 	unlock( );
 
-	/* calculate percentage of data dumped
-	 */
-	if ( sc_stat_datasz ) {
-		percent = ( double )datadone
-			  /
-			  ( double )sc_stat_datasz;
-		percent *= 100.0;
+	/* non-dir dump phase */
+	if ( nondirdone || datadone ) {
+		/* calculate percentage of data dumped
+		*/
+		if ( sc_stat_datasz ) {
+			percent = ( double )datadone
+				/
+				( double )sc_stat_datasz;
+			percent *= 100.0;
+		} else {
+			percent = 100.0;
+		}
+		if ( percent > 100.0 ) {
+			percent = 100.0;
+		}
+
+		/* format the status line in a local static buffer (non-re-entrant!)
+		*/
+		sprintf( statline[ 0 ],
+				"status at %02d:%02d:%02d: %llu/%llu files dumped, "
+				"%.1lf%%%% data dumped, "
+				"%u seconds elapsed\n",
+				tmp->tm_hour,
+				tmp->tm_min,
+				tmp->tm_sec,
+				nondirdone,
+				sc_stat_nondircnt,
+				percent,
+				elapsed );
 	} else {
-		percent = 100.0;
-	}
-	if ( percent > 100.0 ) {
-		percent = 100.0;
+		sprintf( statline[ 0 ],
+				"status at %02d:%02d:%02d: "
+				"%u seconds elapsed\n",
+				tmp->tm_hour,
+				tmp->tm_min,
+				tmp->tm_sec,
+				elapsed );
 	}
 
-	/* format the status line in a local static buffer (non-re-entrant!)
-	 */
-	sprintf( statline[ 0 ],
-		 "status at %02d:%02d:%02d: %llu/%llu files dumped, "
-		 "%.1f%%%% complete, "
-		 "%ld seconds elapsed\n",
-		 tmp->tm_hour,
-		 tmp->tm_min,
-		 tmp->tm_sec,
-		 (unsigned long long)nondirdone,
-		 (unsigned long long)sc_stat_nondircnt,
-		 percent,
-		 elapsed );
 	ASSERT( strlen( statline[ 0 ] ) < STATLINESZ );
 
 	/* optionally create stat lines for each drive
@@ -1968,47 +1966,45 @@ content_statline( char **linespp[ ] )
 		     pdsp->pds_phase == PDS_NONDIR ) {
 			continue;
 		}
-		statline[ i + 1 ][ 0 ] = 0;
+		statline[ statlinecnt ][ 0 ] = 0;
 		if ( drivecnt > 1 ) {
-			sprintf( statline[ i + 1 ],
+			sprintf( statline[ statlinecnt ],
 				 "drive %u: ",
 				 (unsigned int)i );
 		}
 		switch( pdsp->pds_phase ) {
 		case PDS_INOMAP:
-			strcat( statline[ i + 1 ],
+			strcat( statline[ statlinecnt ],
 				"dumping inomap" );
 			break;
 		case PDS_DIRRENDEZVOUS:
-			strcat( statline[ i + 1 ],
+			strcat( statline[ statlinecnt ],
 				"waiting for synchronized directory dump" );
 			break;
 		case PDS_DIRDUMP:
-			sprintf( &statline[ i + 1 ]
-					  [ strlen( statline[ i + 1 ] ) ],
+			sprintf( &statline[ statlinecnt ]
+					  [ strlen( statline[ statlinecnt ] ) ],
 				 "%llu/%llu directories dumped",
 				 (unsigned long long)pdsp->pds_dirdone,
 				 (unsigned long long)sc_stat_dircnt );
 			break;
 		case PDS_INVSYNC:
-			strcat( statline[ i + 1 ],
+			strcat( statline[ statlinecnt ],
 				"waiting to dump inventory" );
 			break;
 		case PDS_INVDUMP:
-			strcat( statline[ i + 1 ],
+			strcat( statline[ statlinecnt ],
 				"dumping inventory" );
 			break;
 		case PDS_TERMDUMP:
-			strcat( statline[ i + 1 ],
+			strcat( statline[ statlinecnt ],
 				"dumping stream terminator" );
 			break;
-		default:
-			break;
 		}
-		sprintf( &statline[ i + 1 ]
-				  [ strlen( statline[ i + 1 ] ) ],
+		sprintf( &statline[ statlinecnt ]
+				  [ strlen( statline[ statlinecnt ] ) ],
 			 "\n" );
-		ASSERT( strlen( statline[ i + 1 ] ) < STATLINESZ );
+		ASSERT( strlen( statline[ statlinecnt ] ) < STATLINESZ );
 		statlinecnt++;
 	}
 	
@@ -3184,7 +3180,11 @@ dump_dir( ix_t strmix,
 				continue;
 			}
 
-			{
+			/* lookup the gen number in the ino-to-gen map.
+			 * if it's not there, we have to get it the slow way.
+			 */
+			gen = i2g( p->d_ino );
+			if (gen == GEN_NULL) {
 				xfs_bstat_t statbuf;
 				intgen_t scrval;
 				

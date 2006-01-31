@@ -35,8 +35,7 @@ extern bool_t node_init( intgen_t fd,		/* backing store */
 		         ix_t nodehkix,		/* my housekeeping byte */
 		         size_t alignsz,	/* node alignment requirement */
 		         size64_t vmsz,		/* abstractions's share of VM */
-		         size64_t dir_nondir,	/* num of dirs + nondirs */
-		         bool_t largewindowpr);	/* use large window or not */
+		         size64_t dir_nondir);	/* num of dirs + nondirs */
 
 /* node_sync - syncs up with existing node abstraction persistent state
  */

@@ -51,10 +51,15 @@ typedef struct namreg_pers namreg_pers_t;
 
 /* transient context for a namreg - allocated by namreg_init()
  */
+
+#define	NAMREG_BUFSIZE	32768
+
 struct namreg_tran {
 	char *nt_pathname;
 	int nt_fd;
 	bool_t nt_at_endpr;
+	size_t nt_off;
+	char nt_buf[NAMREG_BUFSIZE];
 };
 
 typedef struct namreg_tran namreg_tran_t;
@@ -256,7 +261,6 @@ nrh_t
 namreg_add( char *name, size_t namelen )
 {
 	off64_t oldoff;
-	intgen_t nwritten;
 	unsigned char c;
 	nrh_t nrh;
 	
@@ -281,33 +285,26 @@ namreg_add( char *name, size_t namelen )
 		ntp->nt_at_endpr = BOOL_TRUE;
 	}
 
+	if (ntp->nt_off + namelen + 1 > sizeof(ntp->nt_buf)) {
+		if (namreg_flush() != RV_OK) {
+			return NRH_NULL;
+		}
+	}
+
 	/* save the current offset
 	 */
 	oldoff = npp->np_appendoff;
 
-	/* write a one byte unsigned string length
+	/* write a one byte unsigned string length into the buffer.
 	 */
 	ASSERT( namelen < 256 );
 	c = ( unsigned char )( namelen & 0xff );
-	nwritten = write( ntp->nt_fd, ( void * )&c, 1 );
-	if ( nwritten != 1 ) {
-		mlog( MLOG_NORMAL, _(
-		      "write of namreg failed: %s\n"),
-		      strerror( errno ));
-		ASSERT( 0 );
-		return NRH_NULL;
-	}
+	ntp->nt_buf[ntp->nt_off++] = c;
 
-	/* write the name string
+	/* write the name string into the buffer.
 	 */
-	nwritten = write( ntp->nt_fd, ( void * )name, namelen );
-	if ( ( size_t )nwritten != namelen ) {
-		mlog( MLOG_NORMAL, _(
-		      "write of namreg failed: %s\n"),
-		      strerror( errno ));
-		ASSERT( 0 );
-		return NRH_NULL;
-	}
+	memcpy(ntp->nt_buf + ntp->nt_off, name, namelen);
+	ntp->nt_off += namelen;
 
 	npp->np_appendoff += ( off64_t )( 1 + namelen );
 	ASSERT( oldoff <= HDLMAX );
@@ -335,6 +332,39 @@ namreg_del( nrh_t nrh )
 	 */
 }
 
+rv_t
+namreg_flush( void )
+{
+	ssize_t nwritten;
+
+	/* sanity checks
+	*/
+	assert( ntp );
+
+	if (ntp->nt_off) {
+
+		/* write the accumulated name strings.
+		*/
+		nwritten = write( ntp->nt_fd, ( void * )ntp->nt_buf, ntp->nt_off );
+		if ( nwritten != ntp->nt_off ) {
+			if ( nwritten < 0 ) {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+					_("write of namreg buffer failed: %s\n"),
+					strerror( errno ));
+			} else {
+				mlog( MLOG_NORMAL | MLOG_ERROR,
+					_("write of namreg buffer failed: "
+					"expected to write %ld, actually "
+					"wrote %ld\n"), ntp->nt_off, nwritten);
+			}
+			assert( 0 );
+			return RV_UNKNOWN;
+		}
+		ntp->nt_off = 0;
+	}
+	return RV_OK;
+}
+
 intgen_t
 namreg_get( nrh_t nrh,
 	    char *bufp,
@@ -343,7 +373,8 @@ namreg_get( nrh_t nrh,
 	off64_t newoff;
 	intgen_t nread;
 	size_t len;
-	unsigned char c;
+	static char read_buf[256];
+	/* long enough for the longest allowed name (255), plus 1 for length */
 #ifdef NAMREGCHK
 	nrh_t chkbit;
 #endif /* NAMREGCHK */
@@ -378,6 +409,13 @@ namreg_get( nrh_t nrh,
 
 	lock( );
 
+	if ( ntp->nt_at_endpr && ntp->nt_off ) {
+		if (namreg_flush() != RV_OK) {
+			unlock( );
+			return -3;
+		}
+	}
+
 	/* seek to the name
 	 */
 	newoff = lseek64( ntp->nt_fd, newoff, SEEK_SET );
@@ -389,11 +427,12 @@ namreg_get( nrh_t nrh,
 		return -3;
 	}
 
-	/* read the name length
+	/* read the name length and the name itself in one call
+	 * NOTE: assumes read_buf is big enough for the longest
+	 * allowed name (255 chars) plus one byte for length.
 	 */
-	c = 0; /* unnecessary, but keeps lint happy */
-	nread = read( ntp->nt_fd, ( void * )&c, 1 );
-	if ( nread != 1 ) {
+	nread = read( ntp->nt_fd, ( void * )read_buf, sizeof(read_buf) );
+	if ( nread <= 0 ) {
 		unlock( );
 		mlog( MLOG_NORMAL, _(
 		      "read of namreg failed: %s (nread = %d)\n"),
@@ -404,22 +443,15 @@ namreg_get( nrh_t nrh,
 	
 	/* deal with a short caller-supplied buffer
 	 */
-	len = ( size_t )c;
+	len = ( size_t )read_buf[0];
 	if ( bufsz < len + 1 ) {
 		unlock( );
 		return -1;
 	}
 
-	/* read the name
+	/* copy the name into the caller-supplied buffer.
 	 */
-	nread = read( ntp->nt_fd, ( void * )bufp, len );
-	if ( ( size_t )nread != len ) {
-		unlock( );
-		mlog( MLOG_NORMAL, _(
-		      "read of namreg failed: %s\n"),
-		      strerror( errno ));
-		return -3;
-	}
+	strncpy(bufp, read_buf+1, len);
 
 #ifdef NAMREGCHK
 
