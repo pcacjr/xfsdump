@@ -220,6 +220,11 @@ typedef struct extent_group_context extent_group_context_t;
 				( ((flag) & ATTR_SECURE) ? _("secure") : \
 				  _("non-root") ) )
 
+/* for printing file type
+ */
+#define FILETYPE(statp)		( ( (statp)->bs_mode & S_IFMT ) == S_IFDIR \
+				  ? _("dir") : _("nondir") )
+
 /* per-drive status descriptor
  */
 struct pds {
@@ -370,7 +375,7 @@ static rv_t dump_extattrhdr( drive_t *drivep,
 
 static bool_t save_quotas( char *mntpnt,
 			   quota_info_t *quotainfo );
-static int getxfsqstat( char *fsname );
+static int getxfsqstat( char *fsdev );
 
 
 
@@ -478,9 +483,6 @@ static bool_t sc_mcflag[ STREAM_SIMMAX ];
 static bool_t sc_dumpextattrpr = BOOL_TRUE;
 	/* dump extended attributes
 	 */
-static bool_t sc_brokenioctl = BOOL_FALSE;
-	/* attr_*_by_handle appears to be missing
-         */
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
 	 */
@@ -492,8 +494,8 @@ static qbarrierh_t sc_barrierh;
 #endif /* SYNCDIR */
 
 static bool_t sc_savequotas = BOOL_TRUE;
-        /* save quota information in dump
-         */
+/* save quota information in dump
+ */
 static quota_info_t quotas[] = {
 	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
 	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT },
@@ -820,8 +822,9 @@ content_init( intgen_t argc,
 	}
 #endif /* ! PIPEINVFIX */
 
-        /* write quota information */
-        if( sc_savequotas ) {
+	/* write quota information */
+	if( sc_savequotas ) {
+
 		sc_savequotas = BOOL_FALSE;
 		for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
 			quotas[i].savequotas = BOOL_FALSE;
@@ -832,7 +835,7 @@ content_init( intgen_t argc,
 					if( subtreecnt ) {
 						subtreecnt++;
 						subtreep = (char **) realloc( subtreep,
-						subtreecnt * sizeof(char *));
+								subtreecnt * sizeof(char *));
 						assert( subtreep );
 						subtreep[ subtreecnt - 1 ] = quotas[i].quotafile;
 					}
@@ -845,7 +848,7 @@ content_init( intgen_t argc,
 				}
 			}
 		}
-        }
+	}
 
 
 	/* create my /var directory if it doesn't already exist.
@@ -965,9 +968,10 @@ content_init( intgen_t argc,
 		} else {
 			if ( sessp->s_level >= LEVEL_MAX ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
-				      "cannot select dump session %s as base "
+				      "cannot select dump session %d as base "
 				      "for incremental dump: "
 				      "level must be less than %d\n"),
+				      sessp->s_level,
 				      LEVEL_MAX );
 				return BOOL_FALSE;
 			}
@@ -1395,8 +1399,7 @@ baseuuidbypass:
 	 * and get its xfs_bstat_t for inomap_build()
 	 */
 	{
-		struct stat64 rootstat;
-
+		stat64_t rootstat;
 		rval = fstat64( sc_fsfd, &rootstat );
 		if ( rval ) {
 			mlog( MLOG_NORMAL, _(
@@ -1936,18 +1939,18 @@ content_statline( char **linespp[ ] )
 		sprintf( statline[ 0 ],
 				"status at %02d:%02d:%02d: %llu/%llu files dumped, "
 				"%.1lf%%%% data dumped, "
-				"%u seconds elapsed\n",
+				"%ld seconds elapsed\n",
 				tmp->tm_hour,
 				tmp->tm_min,
 				tmp->tm_sec,
-				nondirdone,
-				sc_stat_nondircnt,
+				(unsigned long long) nondirdone,
+				(unsigned long long) sc_stat_nondircnt,
 				percent,
 				elapsed );
 	} else {
 		sprintf( statline[ 0 ],
 				"status at %02d:%02d:%02d: "
-				"%u seconds elapsed\n",
+				"%ld seconds elapsed\n",
 				tmp->tm_hour,
 				tmp->tm_min,
 				tmp->tm_sec,
@@ -2000,6 +2003,8 @@ content_statline( char **linespp[ ] )
 			strcat( statline[ statlinecnt ],
 				"dumping stream terminator" );
 			break;
+		default:
+			break;
 		}
 		sprintf( &statline[ statlinecnt ]
 				  [ strlen( statline[ statlinecnt ] ) ],
@@ -2007,7 +2012,7 @@ content_statline( char **linespp[ ] )
 		ASSERT( strlen( statline[ statlinecnt ] ) < STATLINESZ );
 		statlinecnt++;
 	}
-	
+
 	return statlinecnt;
 }
 
@@ -2625,7 +2630,7 @@ decision_more:
 		if ( done || stop_requested ) {
 			break;
 		}
-	}
+	} /* end main dump loop */
 
 	/* check in
 	 */
@@ -2919,12 +2924,12 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 				      "ino %llu needs second bulkstat\n",
 				      p->bs_ino );
 
-				if ( bigstat_one( sc_fsfd, p->bs_ino, p) < 0 ) {
+				if ( bigstat_one( sc_fsfd, p->bs_ino, p ) < 0 ) {
 					mlog( MLOG_WARNING,  _(
 					      "failed to get bulkstat information for inode %llu\n"),
 					      p->bs_ino );
 					continue;
-                                }
+				}
 				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
 					mlog( MLOG_TRACE, 
 					      "failed to get valid bulkstat information for inode %llu\n",
@@ -2936,7 +2941,6 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 				continue;
 			}
                         
-
 			rv = dump_dir( strmix, sc_fshandlep, sc_fsfd, p );
 			if ( rv != RV_OK ) {
 				return rv;
@@ -3256,7 +3260,7 @@ dump_extattrs( drive_t *drivep,
 	 */
 	mlog( MLOG_NITTY,
 	      "dumping %s ino %llu extended attributes filehdr\n",
-	      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
+	      FILETYPE(statp),
 	      statp->bs_ino );
 
 	rv = dump_filehdr( drivep, contextp, statp, 0, FILEHDR_FLAGS_EXTATTR );
@@ -3267,7 +3271,7 @@ dump_extattrs( drive_t *drivep,
 	/* loop three times: once for the non-root, once for root, and
 	 * again for the secure attributes.
 	 */
-	for ( pass = 0; pass < 3 ; pass++ ) {
+	for ( pass = 0; pass < 3; pass++ ) {
 		bool_t more;
 
 		if ( pass == 0 )
@@ -3280,7 +3284,7 @@ dump_extattrs( drive_t *drivep,
 		mlog( MLOG_NITTY,
 		      "dumping %s extended attributes for %s ino %llu\n",
 		      EXTATTR_NAMESPACE(flag),
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
+		      FILETYPE(statp),
 		      statp->bs_ino );
 
 		/* loop dumping the extended attributes from the namespace
@@ -3292,41 +3296,21 @@ dump_extattrs( drive_t *drivep,
 			attrlist_t *listp;
 			int rval = 0;
 
-			if (! sc_brokenioctl) {
-				rval = jdm_attr_list(fshandlep, statp,
-						     contextp->cc_extattrlistbufp,
-						     ( int )contextp->cc_extattrlistbufsz,
-						     flag, &cursor );
-
-				if ( rval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING, _(
-					      "could not get list of %s "
-					      "attributes for "
-					      "%s ino %llu: %s (%d)\n"),
-					      EXTATTR_NAMESPACE(flag),
-					      (( statp->bs_mode & S_IFMT )
-					       == S_IFDIR) ? "dir" : "nondir",
-					      statp->bs_ino,
-					      strerror( errno ),
-					      errno );
-					
-					/* assume kernel is missing the ioctl
-					 * don't log any more errors
-					 */
-					if (rval == EINVAL) {
-						mlog( MLOG_NORMAL | MLOG_WARNING, _(
-						      "ioctl returned EINVAL: "
-						      "disabling extended "
-						      "attribute operations (only "
-						      "one warning will be "
-						      "printed)\n") );
-						sc_brokenioctl = BOOL_TRUE;
-					}
-				}
-			}
-
-			if (sc_brokenioctl || rval)
+			rval = jdm_attr_list(fshandlep, statp,
+				contextp->cc_extattrlistbufp,
+				( int )contextp->cc_extattrlistbufsz,
+				flag, &cursor );
+			if ( rval ) {
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				      "could not get list of %s attributes for "
+				      "%s ino %llu: %s (%d)\n"),
+				      EXTATTR_NAMESPACE(flag),
+				      FILETYPE(statp),
+				      statp->bs_ino,
+				      strerror( errno ),
+				      errno );
 				break;
+			}
 
 			listp = ( attrlist_t * )contextp->cc_extattrlistbufp;
 			more = listp->al_more;
@@ -3419,7 +3403,7 @@ dump_extattr_list( drive_t *drivep,
 					    "attribute %s for %s ino %llu\n"),
 					    EXTATTR_NAMESPACE(flag),
 					    entp->a_name,
-      		(statp->bs_mode & S_IFMT) == S_IFDIR ? _("dir") : _("nondir"),
+					    FILETYPE(statp),
 			      		    statp->bs_ino);
 					*abortprp = BOOL_TRUE;
 					return RV_OK;
@@ -3460,37 +3444,19 @@ dump_extattr_list( drive_t *drivep,
 
 		rtrvcnt = rtrvix;
 		if (rtrvcnt > 0) {
-			if (! sc_brokenioctl) {
-				rval = jdm_attr_multi( fshandlep, statp,
-						       (void *)contextp->cc_extattrrtrvarrayp,
-						       ( int )rtrvcnt,
-						       0 );
-
-				if (rval) {
-					mlog( MLOG_NORMAL | MLOG_WARNING, _(
-					      "could not retrieve %s "
-					      "attributes for "
-					      "%s ino %llu: %s (%d)\n"),
-					      EXTATTR_NAMESPACE(flag),
-					( statp->bs_mode & S_IFMT ) == S_IFDIR?
-					      _("dir") : _("nondir"),
-					      statp->bs_ino,
-					      strerror( errno ),
-					      errno );
-
-					if (rval == EINVAL) {
-						mlog( MLOG_NORMAL | MLOG_WARNING, _(
-						      "ioctl returned EINVAL: "
-						      "disabling extended attribute "
-						      "operations (only one warning "
-						      "will be printed)\n") );
-						sc_brokenioctl = BOOL_TRUE;
-					}
-				}
-
-			}
-
-			if (sc_brokenioctl || rval) {
+			rval = jdm_attr_multi( fshandlep, statp,
+					(void *)contextp->cc_extattrrtrvarrayp,
+					( int )rtrvcnt,
+					0 );
+			if ( rval ) {
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				      "could not retrieve %s attributes for "
+				      "%s ino %llu: %s (%d)\n"),
+				      EXTATTR_NAMESPACE(flag),
+				      FILETYPE(statp),
+				      statp->bs_ino,
+				      strerror( errno ),
+				      errno );
 				*abortprp = BOOL_TRUE;
 				return RV_OK;
 			}
@@ -3518,7 +3484,7 @@ dump_extattr_list( drive_t *drivep,
 					     "%s ino %llu: %s (%d)\n"),
 					     EXTATTR_NAMESPACE(flag),
 					     opp->am_attrname,
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ? "dir" : "nondir",
+					     FILETYPE(statp),
 					     statp->bs_ino,
 					     strerror( opp->am_error ),
 					     opp->am_error );
@@ -3589,8 +3555,7 @@ dump_extattr_list( drive_t *drivep,
 					"#%d for %s ino %llu\n"),
 					EXTATTR_NAMESPACE(flag),
 					hsmcursor,
-			      		(statp->bs_mode & S_IFMT) == S_IFDIR ?
-						_("dir") : _("nondir"),
+					FILETYPE(statp),
 			      		statp->bs_ino);
 				*abortprp = BOOL_TRUE;
 				return RV_OK;
@@ -3716,8 +3681,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		      "%s extended attribute name for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
 		      EXTATTR_NAMESPACE(flag),
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
-			_("dir") : _("nondir"),
+		      FILETYPE(statp),
 		      statp->bs_ino,
 		      namelen,
 		      NAME_MAX );
@@ -3730,8 +3694,7 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 		      "%s extended attribute value for %s ino %llu too long: "
 		      "%u, max is %u: skipping\n"),
 		      EXTATTR_NAMESPACE(flag),
-		      ( statp->bs_mode & S_IFMT ) == S_IFDIR ?
-			_("dir") : _("nondir"),
+		      FILETYPE(statp),
 		      statp->bs_ino,
 		      valuesz,
 		      ATTR_MAX_VALUELEN );
@@ -5046,31 +5009,32 @@ dump_extent_group( drive_t *drivep,
 	/* NOTREACHED */
 }
 
+/* Note: assumes the pad fields in dst have been zeroed. */
 static void
-copy_xfs_bstat(bstat_t *dst, xfs_bstat_t *src) 
+copy_xfs_bstat(bstat_t *dst, xfs_bstat_t *src)
 {
 	dst->bs_ino = src->bs_ino;
-        dst->bs_mode = src->bs_mode;
-        dst->bs_nlink = src->bs_nlink;
-        dst->bs_uid = src->bs_uid;
-        dst->bs_gid = src->bs_gid;
-        dst->bs_rdev = src->bs_rdev;
-        dst->bs_blksize = src->bs_blksize;
-        dst->bs_size = src->bs_size;
-        dst->bs_atime.tv_sec = src->bs_atime.tv_sec;
-        dst->bs_atime.tv_nsec = src->bs_atime.tv_nsec;
-        dst->bs_mtime.tv_sec = src->bs_mtime.tv_sec;
-        dst->bs_mtime.tv_nsec = src->bs_mtime.tv_nsec;
-        dst->bs_ctime.tv_sec = src->bs_ctime.tv_sec;
-        dst->bs_ctime.tv_nsec = src->bs_ctime.tv_nsec;
-        dst->bs_blocks = src->bs_blocks;
-        dst->bs_xflags = src->bs_xflags;
-        dst->bs_extsize = src->bs_extsize;
-        dst->bs_extents = src->bs_extents;
-        dst->bs_gen = src->bs_gen;
-        dst->bs_projid = src->bs_projid;
-        dst->bs_dmevmask = src->bs_dmevmask;
-        dst->bs_dmstate = src->bs_dmstate;
+	dst->bs_mode = src->bs_mode;
+	dst->bs_nlink = src->bs_nlink;
+	dst->bs_uid = src->bs_uid;
+	dst->bs_gid = src->bs_gid;
+	dst->bs_rdev = src->bs_rdev;
+	dst->bs_blksize = src->bs_blksize;
+	dst->bs_size = src->bs_size;
+	dst->bs_atime.tv_sec = src->bs_atime.tv_sec;
+	dst->bs_atime.tv_nsec = src->bs_atime.tv_nsec;
+	dst->bs_mtime.tv_sec = src->bs_mtime.tv_sec;
+	dst->bs_mtime.tv_nsec = src->bs_mtime.tv_nsec;
+	dst->bs_ctime.tv_sec = src->bs_ctime.tv_sec;
+	dst->bs_ctime.tv_nsec = src->bs_ctime.tv_nsec;
+	dst->bs_blocks = src->bs_blocks;
+	dst->bs_xflags = src->bs_xflags;
+	dst->bs_extsize = src->bs_extsize;
+	dst->bs_extents = src->bs_extents;
+	dst->bs_gen = src->bs_gen;
+	dst->bs_projid = src->bs_projid;
+	dst->bs_dmevmask = src->bs_dmevmask;
+	dst->bs_dmstate = src->bs_dmstate;
 }
 
 static rv_t
@@ -5266,7 +5230,7 @@ dump_dirent( drive_t *drivep,
 	dhdrp->dh_ino = ino;
 	dhdrp->dh_sz = ( u_int16_t )sz;
 	dhdrp->dh_gen = ( u_int16_t )( gen & DENTGENMASK );
-        
+
 	if ( name ) {
 		strcpy( dhdrp->dh_name, name );
 	}
@@ -5885,7 +5849,7 @@ position:
 					return RV_DRIVE;
 				}
 
-				virginmediapr = BOOL_FALSE;
+				virginmediapr = BOOL_TRUE;
 
 				goto write;
 			}
@@ -6201,8 +6165,8 @@ write:
 			     &&
 			     dlog_allowed( )) {
 				cmdlinemedialabel = Media_prompt_label( drivep,
-								      labelbuf,
-							   sizeof( labelbuf ));
+							labelbuf,
+							sizeof( labelbuf ));
 				if ( intr_allowed && cldmgr_stop_requested( )) {
 					return RV_INTR;
 				}

@@ -130,8 +130,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	xfs_ino_t lastino;
 	intgen_t saved_errno;
 	intgen_t bulkstatcnt;
-        
-        xfs_fsop_bulkreq_t bulkreq, sbulkreq;
+        xfs_fsop_bulkreq_t bulkreq;
 
 	/* stat set with return from callback func
 	 */
@@ -185,15 +184,12 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 				mlog( MLOG_NITTY + 1,
 				      "ino %llu needed second bulkstat\n",
 				      p->bs_ino );
-                                sbulkreq.lastip = &p->bs_ino;
-                                sbulkreq.icount = 1;
-                                sbulkreq.ubuffer = p;
-                                sbulkreq.ocount = NULL;
-                                if( ioctl( fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &sbulkreq ) < 0 ) {
-					mlog( MLOG_WARNING,
-					      _("failed to get bulkstat information for inode %llu\n"),
-					      p->bs_ino );
-					continue;
+
+				if( bigstat_one( fsfd, p->bs_ino, p ) < 0 ) {
+				    mlog( MLOG_WARNING,
+					  _("failed to get bulkstat information for inode %llu\n"),
+					  p->bs_ino );
+				    continue;
 				}
 				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
 					mlog( MLOG_TRACE,

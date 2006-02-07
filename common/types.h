@@ -124,6 +124,8 @@ typedef enum { RV_OK,		/* mission accomplished */
 
 /* typedefs I'd like to see ...
  */
+typedef struct stat stat_t;
+typedef struct stat64 stat64_t;
 typedef struct getbmapx getbmapx_t;
 typedef struct fsdmidata fsdmidata_t;
 

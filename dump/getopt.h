@@ -35,50 +35,50 @@
 #define	GETOPT_FILESZ		'd'	/* Media file size to use in Mb */
 #define GETOPT_EXCLUDEFILES	'e'	/* allow files to be excluded */
 #define	GETOPT_DUMPDEST		'f'	/* dump dest. file (drive.c) */
-/*				'g' */
+/*				'g'	*/
 #define	GETOPT_HELP		'h'	/* display version and usage */
-/*				'i' */
-/*				'j' */
-/*				'k' */
+/*				'i'	*/
+/*				'j'	*/
+/*				'k'	*/
 #define	GETOPT_LEVEL		'l'	/* dump level (content_inode.c) */
 #define GETOPT_MINRMT		'm'	/* use minimal rmt protocol */
-/*				'n' */
+/*				'n'	*/
 #define GETOPT_OVERWRITE	'o'	/* overwrite data on tape */
 #define GETOPT_PROGRESS		'p'	/* interval between progress reports */
 #define	GETOPT_QIC		'q'	/* option to tell dump it's a QIC tape */
-/*				'r' */
+/*				'r'	*/
 #define	GETOPT_SUBTREE		's'	/* subtree dump (content_inode.c) */
 #define GETOPT_DUMPTIME		't'	/* use mtime of file as dump time */
 /*				'u' */
 #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4 ) */
 /*				'w' */
-/*				'x' */
+/*				'x'	   used in irix for xvm snapshot */
 /*				'y' */
 #define GETOPT_MAXDUMPFILESIZE	'z'	/* prune files over specified size */
 #define	GETOPT_NOEXTATTR	'A'	/* do not dump ext. file attributes */
 #define	GETOPT_BASED		'B'	/* specify session to base increment */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */
-#define GETOPT_SETDM		'D'
+/*				'D'	*/
 #define	GETOPT_ERASE		'E'	/* pre-erase media */
 #define GETOPT_FORCE		'F'	/* don't prompt (getopt.c) */
 #define GETOPT_MINSTACKSZ	'G'	/* minimum stack size (bytes) */
 #define GETOPT_MAXSTACKSZ	'H'	/* maximum stack size (bytes) */
 #define GETOPT_INVPRINT         'I'     /* just display the inventory */
 #define	GETOPT_NOINVUPDATE	'J'	/* do not update the dump inventory */
-/*				'K' */
+/*				'K'	*/
 #define	GETOPT_DUMPLABEL	'L'	/* dump session label (global.c) */
 #define	GETOPT_MEDIALABEL	'M'	/* media object label (media.c) */
 #define	GETOPT_TIMESTAMP	'N'	/* show timestamps in log msgs */
 #define	GETOPT_OPTFILE		'O'	/* specifycmd line options file */
 #define	GETOPT_RINGPIN		'P'	/* pin down I/O buffer ring */
-/*				'Q' */
+/*				'Q'	*/
 #define	GETOPT_RESUME		'R'	/* resume intr dump (content_inode.c) */
 #define	GETOPT_SINGLEMFILE	'S'	/* don't use multiple media files */
 #define	GETOPT_NOTIMEOUTS	'T'	/* don't timeout dialogs */
 #define	GETOPT_UNLOAD		'U'	/* unload media when change needed */
 #define	GETOPT_SHOWLOGSS	'V'	/* show subsystem of log messages */
 #define	GETOPT_SHOWLOGLEVEL	'W'	/* show level of log messages */
-/*				'X' */
+/*				'X'	*/
 #define	GETOPT_RINGLEN		'Y'	/* specify I/O buffer ring length */
 #define	GETOPT_MINIROOT		'Z'	/* apply miniroot restrictions */
 

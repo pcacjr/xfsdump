@@ -62,7 +62,46 @@ typedef struct pers pers_t;
 
 #define PERSSZ	perssz
 
+/* map context and operators
+ */
 
+#define SEG_SET_BASE( segp, ino )					\
+	{								\
+		segp->base = ino;					\
+	}
+
+#define SEG_ADD_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		relino = ino - segp->base;				\
+		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
+		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
+		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
+	}
+
+#define SEG_SET_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		register u_int64_t clrmask;				\
+		relino = ino - segp->base;				\
+		clrmask = ~( ( u_int64_t )1 << relino );		\
+		segp->lobits &= clrmask;				\
+		segp->mebits &= clrmask;				\
+		segp->hibits &= clrmask;				\
+		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
+		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
+		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
+	}
+
+#define SEG_GET_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		relino = ino - segp->base;				\
+		state = 0;						\
+		state |= ( intgen_t )((( segp->lobits >> relino ) & 1 ) * 1 );\
+		state |= ( intgen_t )((( segp->mebits >> relino ) & 1 ) * 2 );\
+		state |= ( intgen_t )((( segp->hibits >> relino ) & 1 ) * 4 );\
+	}
 
 /* declarations of externally defined global symbols *************************/
 
@@ -75,7 +114,7 @@ extern size_t pgsz;
  */
 static intgen_t map_getset( xfs_ino_t, intgen_t, bool_t );
 static intgen_t map_set( xfs_ino_t ino, intgen_t );
-
+static seg_t * map_getsegment( xfs_ino_t ino );
 
 /* definition of locally defined global variables ****************************/
 
@@ -561,35 +600,76 @@ inomap_cbiter( intgen_t statemask,
 static intgen_t
 map_getset( xfs_ino_t ino, intgen_t newstate, bool_t setflag )
 {
-	hnk_t *hnkp;
+	intgen_t state;
 	seg_t *segp;
 
-	if ( ino > last_ino_added ) {
+	if ((segp = map_getsegment( ino )) == NULL) {
 		return MAP_INO_UNUSED;
 	}
-	for ( hnkp = roothnkp ; hnkp != 0 ; hnkp = hnkp->nextp ) {
-		if ( ino > hnkp->maxino ) {
-			continue;
-		}
-		for ( segp = hnkp->seg; segp < hnkp->seg + SEGPERHNK ; segp++ ){
-			if ( hnkp == tailhnkp && segp > lastsegp ) {
-				return MAP_INO_UNUSED;
-			}
-			if ( ino < segp->base ) {
-				return MAP_INO_UNUSED;
-			}
-			if ( ino < segp->base + INOPERSEG ) {
-				intgen_t state;
-				SEG_GET_BITS( segp, ino, state );
-				if ( setflag ) {
-					SEG_SET_BITS( segp, ino, newstate );
-				}
-				return state;
-			}
-		}
-		return MAP_INO_UNUSED;
+
+	SEG_GET_BITS( segp, ino, state );
+	if ( setflag ) {
+		SEG_SET_BITS( segp, ino, newstate );
 	}
-	return MAP_INO_UNUSED;
+	return state;
+}
+
+static seg_t *
+map_getsegment( xfs_ino_t ino )
+{
+	u_int64_t min;
+	u_int64_t max;
+	u_int64_t hnk;
+	u_int64_t seg;
+
+	/* Use binary search to find the hunk that contains the inode number,
+	 * if any.  This counts on the fact that all the hunks are contiguous
+	 * in memory and therefore can be treated as an array instead of a
+	 * list.
+	 */
+
+	min = 0;
+	max = hnkcnt - 1;
+
+	while (max >= min) {
+		hnk = min + ((max - min) / 2);
+
+		if (roothnkp[hnk].seg[0].base > ino) {
+			max = hnk - 1;	/* in a lower hunk */
+		} else if (roothnkp[hnk].maxino < ino) {
+			min = hnk + 1;	/* in a higher hunk */
+		} else {
+			break;	/* we have a winner! */
+		}
+	}
+
+	if (max < min) {
+		return NULL;	/* inode number fell between hunks */
+	}
+
+	/* Use binary search to find the segment within the hunk that contains
+	 * the inode number, if any.
+	 */
+
+	min = 0;
+	if (hnk == hnkcnt - 1) {
+		max = segcnt - SEGPERHNK * ( hnkcnt - 1 ) - 1;
+	} else {
+		max = SEGPERHNK - 1;
+	}
+
+	while (max >= min) {
+		seg = min + ((max - min) / 2);
+
+		if (roothnkp[hnk].seg[seg].base > ino) {
+			max = seg - 1;	/* in a lower segment */
+		} else if (roothnkp[hnk].seg[seg].base + INOPERSEG <= ino) {
+			min = seg + 1;	/* in a higher segment */
+		} else {
+			return &roothnkp[hnk].seg[seg];	/* we have a winner! */
+		}
+	}
+	return NULL;
 }
 
 static intgen_t

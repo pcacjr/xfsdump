@@ -200,7 +200,7 @@ node_init( intgen_t fd,
 	size64_t nodesperseg;
 	size64_t minsegsz;
 	size64_t winmapmax;
-  	intgen_t rval;
+	intgen_t rval;
 
 	/* sanity checks
 	 */
@@ -261,7 +261,6 @@ node_init( intgen_t fd,
 					    NODE_HDRSZ,
 					    fd,
 					    off );
-
 	if ( node_hdrp == (node_hdr_t *)-1 ) {
 	    mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		  "unable to map node hdr of size %d: %s\n"),
@@ -491,15 +490,15 @@ node_alloc( void )
 			}
 		}
 	}
-	
+
 	/* map in window containing node at top of free list,
 	 * and adjust free list.
 	 */
 	nix = node_hdrp->nh_freenix;
 #ifdef TREE_DEBUG
 	mlog(MLOG_DEBUG | MLOG_TREE,
-	     "node_alloc(): win_map(%llu) and get head from node freelist\n",
-	     NIX2OFF(nix));
+	   "node_alloc(): win_map(%llu) and get head from node freelist\n",
+           NIX2OFF(nix));
 #endif
 	win_map( NIX2OFF( nix ), ( void ** )&p );
 	if (p == NULL)

@@ -89,6 +89,8 @@ be treated as if they were offline (OFL).
 This means that the file data will not be dumped by
 xfsdump, resulting in a smaller dump file.
 If the file is later restored the file data is still accessible through DMF.
+If both '-a option' and '-z option' are specified, '-a option'
+takes precedence (see '-z option' below).
 .TP 5
 \f3\-b\f1 \f2blocksize\f1
 Specifies the blocksize, in bytes, to be used for the dump. 
@@ -240,7 +242,9 @@ To list files that will be excluded from the dump:
 .TP 5
 \f3\-z\f1 \f2size\f1
 Specifies the maximum size, in kilobytes, of files to be included in the
-dump.  Files over this size, will be excluded from the dump.  The size
+dump.  Files over this size, will be excluded from the dump, except for
+DMF dual-state files when '-a option' is specified (see '-a option' above).
+When specified, '-a option' takes precedence over '-z option'. The size
 is an estimate based on the number of disk blocks actually used by the
 file, and so does not include holes.  In other words, size refers to
 the amount of space the file would take in the resulting dump.  On an

@@ -21,7 +21,7 @@
 /* fs - utilities for examining and manipulating file systems
  */
 
-/* default maximim path and name lengths
+/* default maximum path and name lengths
  */
 #define FS_MAXNAMELEN_DEFAULT	256
 #define FS_MAXPATHLEN_DEFAULT	1024

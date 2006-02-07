@@ -349,13 +349,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 				     bstatbufp,
 				     bstatbuflen );
 
-		if ( rval ) {
-			gdrecursearray_free( );
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
-		if ( preemptchk( PREEMPT_FULL )) {
+		if ( rval || preemptchk( PREEMPT_FULL ) ) {
 			gdrecursearray_free( );
 			free( ( void * )bstatbufp );
 			free( ( void * )getdentbufp );
@@ -500,19 +494,17 @@ inomap_build( jdm_fshandle_t *fshandlep,
 				ep = &startptp[ startptix + 1 ];
 			}
 			ASSERT( ! p->sp_flags );
+			mlog( MLOG_VERBOSE | MLOG_INOMAP,
+			      _("stream %u: ino %llu offset %lld to "),
+			      startptix,
+			      p->sp_ino,
+			      p->sp_offset );
 			if ( ! ep ) {
-				mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-				   "stream %u: ino %llu offset %lld to end\n"),
-				      startptix,
-				      p->sp_ino,
-				      p->sp_offset );
+				mlog( MLOG_VERBOSE | MLOG_BARE | MLOG_INOMAP,
+				      _("end\n") );
 			} else {
-				mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-				    "stream %u: ino %llu offset %lld to "
-				    "ino %llu offset %lld\n"),
-				      startptix,
-				      p->sp_ino,
-				      p->sp_offset,
+				mlog( MLOG_VERBOSE |  MLOG_BARE | MLOG_INOMAP,
+				      _("ino %llu offset %lld\n"),
 				      ep->sp_ino,
 				      ep->sp_offset );
 			}
@@ -636,20 +628,11 @@ cb_add( void *arg1,
 	bool_t changed;
 	bool_t resumed;
 
-#ifdef DEBUG_INOMAP
-	mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: ino %llu,"
-                                "mtime = %d, ctime = %d\n", 
-                                 ino, mtime, ctime);
-#endif
-
 	( *inomap_statdonep )++;
 
 	/* skip if no links
 	 */
 	if ( statp->bs_nlink == 0 ) {
-#ifdef DEBUG_INOMAP
-		mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: skip as no links\n");
-#endif
 		return 0;
 	}
 
@@ -664,34 +647,14 @@ cb_add( void *arg1,
 	 */
 	if ( cb_resume && ! cb_inoinresumerange( ino )) {
 		if ( ltime >= cb_resumetime ) {
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-                              "cb_add/resume: changed ltime %d, resume %d\n",
-                                ltime, cb_resumetime);
-#endif
 			changed = BOOL_TRUE;
 		} else {
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-				"cb_add/resume: NOT changed ltime %d, resume %d\n", 
-				ltime, cb_resumetime);
-#endif
 			changed = BOOL_FALSE;
 		}
 	} else if ( cb_last ) {
 		if ( ltime >= cb_lasttime ) {
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-			    "cb_add/last: changed ltime %d, last %d\n", 
-			    ltime, cb_lasttime);
-#endif
 			changed = BOOL_TRUE;
 		} else {
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-			    "cb_add/last: NOT changed ltime %d, last %d\n", 
-			    ltime, cb_lasttime);
-#endif
 			changed = BOOL_FALSE;
 		}
 	} else {
@@ -708,9 +671,6 @@ cb_add( void *arg1,
 	}
 
 	if ( changed ) {
-#ifdef DEBUG_INOMAP
-		mlog( MLOG_DEBUG | MLOG_INOMAP, "cb_add: changed %llu\n", ino);
-#endif
 		if ( mode == S_IFDIR ) {
 			map_add( ino, (gen_t)statp->bs_gen, MAP_DIR_CHANGE );
 			cb_dircnt++;
@@ -740,8 +700,8 @@ cb_add( void *arg1,
 				map_add( ino, (gen_t)statp->bs_gen, MAP_NDR_NOCHNG );
 				inomap_exclude_skipattr++;
 				return 0;
-			}
-			else if (allowexcludefiles_pr && (statp->bs_xflags & XFS_XFLAG_HASATTR)) {
+			} else if (allowexcludefiles_pr &&
+					(statp->bs_xflags & XFS_XFLAG_HASATTR)) {
 				int rval;
 				attr_multiop_t attrop;
 				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
@@ -775,13 +735,9 @@ cb_add( void *arg1,
 					inomap_exclude_skipattr++;
 					return 0;
 				}
-                        }
+			}
 
 			map_add( ino, (gen_t)statp->bs_gen, MAP_NDR_CHANGE );
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-			    "cb_add: map_add ino %llu ndr_chng\n", ino);
-#endif
 			cb_nondircnt++;
 			cb_datasz += estimated_size;
 			cb_hdrsz += ( EXTENTHDR_SZ * (statp->bs_extents + 1) );
@@ -796,10 +752,6 @@ cb_add( void *arg1,
 			map_add( ino, (gen_t)statp->bs_gen, MAP_DIR_SUPPRT );
 			cb_dircnt++;
 		} else {
-#ifdef DEBUG_INOMAP
-			mlog( MLOG_DEBUG | MLOG_INOMAP, 
-			    "cb_add: map_add ino %llu ndr_nochng\n", ino);
-#endif
 			map_add( ino, (gen_t)statp->bs_gen, MAP_NDR_NOCHNG );
 		}
 	}
@@ -1320,6 +1272,9 @@ cb_startpt( void *arg1,
 	return 0;
 }
 
+/* map context and operators
+ */
+
 /* define structures for ino to gen mapping. */
 #define I2GINOPERSEG	64
 
@@ -1335,11 +1290,121 @@ i2gseg_t *i2gmap;
 intgen_t i2gmaplen;
 intgen_t i2gcurix;
 
-/*
- * The converse on MACROBITS are the macros defined in inomap.h
- */
-#ifndef OLDCODE
-#ifndef MACROBITS
+#define SEG_SET_BASE( segp, ino )					\
+	{								\
+		segp->base = ino;					\
+	}
+
+#ifdef MACROBITS
+#define SEG_ADD_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		register u_int64_t mask;				\
+		relino = ino - segp->base;				\
+		mask = ( u_int64_t )1 << relino;			\
+		switch( state ) {					\
+		case 0:							\
+			break;						\
+		case 1:							\
+			segp->lobits |= mask;				\
+			break;						\
+		case 2:							\
+			segp->mebits |= mask;				\
+			break;						\
+		case 3:							\
+			segp->lobits |= mask;				\
+			segp->mebits |= mask;				\
+			break;						\
+		case 4:							\
+			segp->hibits |= mask;				\
+			break;						\
+		case 5:							\
+			segp->lobits |= mask;				\
+			segp->hibits |= mask;				\
+			break;						\
+		case 6:							\
+			segp->mebits |= mask;				\
+			segp->hibits |= mask;				\
+			break;						\
+		case 7:							\
+			segp->lobits |= mask;				\
+			segp->mebits |= mask;				\
+			segp->hibits |= mask;				\
+			break;						\
+		}							\
+	}
+
+#define SEG_SET_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		register u_int64_t mask;				\
+		register u_int64_t clrmask;				\
+		relino = ino - segp->base;				\
+		mask = ( u_int64_t )1 << relino;			\
+		clrmask = ~mask;					\
+		switch( state ) {					\
+		case 0:							\
+			segp->lobits &= clrmask;			\
+			segp->mebits &= clrmask;			\
+			segp->hibits &= clrmask;			\
+			break;						\
+		case 1:							\
+			segp->lobits |= mask;				\
+			segp->mebits &= clrmask;			\
+			segp->hibits &= clrmask;			\
+			break;						\
+		case 2:							\
+			segp->lobits &= clrmask;			\
+			segp->mebits |= mask;				\
+			segp->hibits &= clrmask;			\
+			break;						\
+		case 3:							\
+			segp->lobits |= mask;				\
+			segp->mebits |= mask;				\
+			segp->hibits &= clrmask;			\
+			break;						\
+		case 4:							\
+			segp->lobits &= clrmask;			\
+			segp->mebits &= clrmask;			\
+			segp->hibits |= mask;				\
+			break;						\
+		case 5:							\
+			segp->lobits |= mask;				\
+			segp->mebits &= clrmask;			\
+			segp->hibits |= mask;				\
+			break;						\
+		case 6:							\
+			segp->lobits &= clrmask;			\
+			segp->mebits |= mask;				\
+			segp->hibits |= mask;				\
+			break;						\
+		case 7:							\
+			segp->lobits |= mask;				\
+			segp->mebits |= mask;				\
+			segp->hibits |= mask;				\
+			break;						\
+		}							\
+	}
+
+#define SEG_GET_BITS( segp, ino, state )				\
+	{								\
+		register xfs_ino_t relino;				\
+		register u_int64_t mask;				\
+		relino = ino - segp->base;				\
+		mask = ( u_int64_t )1 << relino;			\
+		if ( segp->lobits & mask ) {				\
+			state = 1;					\
+		} else {						\
+			state = 0;					\
+		}							\
+		if ( segp->mebits & mask ) {				\
+			state |= 2;					\
+		}							\
+		if ( segp->hibits & mask ) {				\
+			state |= 4;					\
+		}							\
+	}
+#else /* MACROBITS */
 static void
 SEG_ADD_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
 {
@@ -1455,7 +1520,7 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 	return state;
 }
 #endif /* MACROBITS */
-#endif /* OLDCODE */
+
 
 /* context for inomap construction - initialized by map_init
  */

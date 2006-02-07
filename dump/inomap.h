@@ -97,11 +97,7 @@ extern rv_t inomap_dump( drive_t *drivep );
 #define MAP_RESERVED1	6       /* this state currently not used */
 #define MAP_RESERVED2	7       /* this state currently not used */
 
-
-/* map context and operators
- */
-
-/* the inomap is implimented as a linked list of chunks. each chunk contains
+/* the inomap is implemented as a linked list of chunks. each chunk contains
  * an array of map segments. a map segment contains a start ino and a
  * bitmap of 64 3-bit state values (see MAP_... in inomap.h). the SEG_macros
  * index and manipulate the 3-bit state values.
@@ -114,160 +110,6 @@ struct seg {
 };
 
 typedef struct seg seg_t;
-
-#define SEG_SET_BASE( segp, ino )					\
-	{								\
-		segp->base = ino;					\
-	}
-
-#ifdef OLDCODE
-#define SEG_ADD_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_SET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t clrmask;				\
-		relino = ino - segp->base;				\
-		clrmask = ~( ( u_int64_t )1 << relino );		\
-		segp->lobits &= clrmask;				\
-		segp->mebits &= clrmask;				\
-		segp->hibits &= clrmask;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_GET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		state = 0;						\
-		state |= ( intgen_t )((( segp->lobits >> relino ) & 1 ) * 1 );\
-		state |= ( intgen_t )((( segp->mebits >> relino ) & 1 ) * 2 );\
-		state |= ( intgen_t )((( segp->hibits >> relino ) & 1 ) * 4 );\
-	}
-#else /* OLDCODE */
-/*
- * The converse on MACROBITS are the functions defined in inomap.c
- */
-#ifdef MACROBITS
-#define SEG_ADD_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		switch( state ) {					\
-		case 0:							\
-			break;						\
-		case 1:							\
-			segp->lobits |= mask;				\
-			break;						\
-		case 2:							\
-			segp->mebits |= mask;				\
-			break;						\
-		case 3:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			break;						\
-		case 4:							\
-			segp->hibits |= mask;				\
-			break;						\
-		case 5:							\
-			segp->lobits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 6:							\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 7:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		}							\
-	}
-
-#define SEG_SET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		register u_int64_t clrmask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		clrmask = ~mask;					\
-		switch( state ) {					\
-		case 0:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits &= clrmask;			\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 1:							\
-			segp->lobits |= mask;				\
-			segp->mebits &= clrmask;			\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 2:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits |= mask;				\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 3:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 4:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits &= clrmask;			\
-			segp->hibits |= mask;				\
-			break;						\
-		case 5:							\
-			segp->lobits |= mask;				\
-			segp->mebits &= clrmask;			\
-			segp->hibits |= mask;				\
-			break;						\
-		case 6:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 7:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		}							\
-	}
-
-#define SEG_GET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		if ( segp->lobits & mask ) {				\
-			state = 1;					\
-		} else {						\
-			state = 0;					\
-		}							\
-		if ( segp->mebits & mask ) {				\
-			state |= 2;					\
-		}							\
-		if ( segp->hibits & mask ) {				\
-			state |= 4;					\
-		}							\
-	}
-#endif /* MACROBITS */
-#endif /* OLDCODE */
 
 #define INOPERSEG	( sizeof( (( seg_t * )0 )->lobits ) * NBBY )
 
@@ -283,7 +125,6 @@ struct hnk {
 
 typedef struct hnk hnk_t;
 
-
 /* inomap_state - returns the map state of the given ino.
  * highly optimized for monotonically increasing arguments to
  * successive calls. requires a pointer to a context block, obtained from
@@ -295,8 +136,7 @@ extern void inomap_state_freecontext( void *contextp );
 void inomap_state_postaccum( void *p );
 
 /* lookup a gen number for a given ino. */
-extern gen_t i2g(xfs_ino_t ino);
-
+extern gen_t i2g(ino64_t ino);
 
 #ifdef NOTUSED
 /* inomap_iter_cb - will call the supplied function for each ino in

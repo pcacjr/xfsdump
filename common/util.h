@@ -88,7 +88,7 @@ extern char *strncpyterm( char *s1, char *s2, size_t n );
 #define BIGSTAT_ITER_ALL	( ~0 )
 
 extern intgen_t bigstat_iter( jdm_fshandle_t *fshandlep,
-			      intgen_t fsid,
+			      intgen_t fsfd,
 			      intgen_t selector,
 			      xfs_ino_t start_ino,
 			      intgen_t ( * fp )( void *arg1,
@@ -101,7 +101,7 @@ extern intgen_t bigstat_iter( jdm_fshandle_t *fshandlep,
 			      xfs_bstat_t *buf,
 			      size_t buflen );
 
-extern intgen_t bigstat_one( intgen_t fsid,
+extern intgen_t bigstat_one( intgen_t fsfd,
 			     xfs_ino_t ino,
 			     xfs_bstat_t *statp );
 

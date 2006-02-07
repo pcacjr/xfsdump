@@ -173,7 +173,7 @@ struct bstat {				/*		     bytes accum */
 	int32_t		bs_extents;	/* number of extents	 4    54 */
 	u_int32_t	bs_gen;		/* generation count	 4    58 */
 	u_int16_t	bs_projid;	/* project id		 2    5a */
-	char		bs_pad[14];	/* for expansion	 e    68 */
+	char		bs_pad[ 14 ];	/* for expansion	 e    68 */
 	u_int32_t	bs_dmevmask;	/* DMI event mask        4    6c */
 	u_int16_t	bs_dmstate;	/* DMI state info        2    6e */
 	char		bs_pad1[ 18 ];	/* for expansion        12    80 */
@@ -344,7 +344,7 @@ typedef struct extattrhdr extattrhdr_t;
 	 */
 
 #define EXTATTRHDR_FLAGS_SECURE		( 1 << 3 )
-	/* a "secure" mode attribute
+	/* a linux "secure" mode attribute
 	 */
 
 #endif /* CONTENT_INODE_H */

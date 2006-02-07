@@ -41,10 +41,6 @@
 #define MAP_NDR_NOREST	6       /* was MAP_NDR_CHANGE, but not to be restored */
 #define MAP_RESERVED2	7       /* this state currently not used */
 
-
-/* map context and operators
- */
-
 /* the inomap is implemented as a linked list of chunks. each chunk contains
  * an array of map segments. a map segment contains a start ino and a
  * bitmap of 64 3-bit state values (see MAP_... in inomap.h). the SEG_macros
@@ -59,44 +55,6 @@ struct seg {
 
 typedef struct seg seg_t;
 
-#define SEG_SET_BASE( segp, ino )					\
-	{								\
-		segp->base = ino;					\
-	}
-
-#define SEG_ADD_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_SET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t clrmask;				\
-		relino = ino - segp->base;				\
-		clrmask = ~( ( u_int64_t )1 << relino );		\
-		segp->lobits &= clrmask;				\
-		segp->mebits &= clrmask;				\
-		segp->hibits &= clrmask;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_GET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		state = 0;						\
-		state |= ( intgen_t )((( segp->lobits >> relino ) & 1 ) * 1 );\
-		state |= ( intgen_t )((( segp->mebits >> relino ) & 1 ) * 2 );\
-		state |= ( intgen_t )((( segp->hibits >> relino ) & 1 ) * 4 );\
-	}
-
 #define INOPERSEG	( sizeofmember( seg_t, lobits ) * NBBY )
 
 #define HNKSZ		( 4 * PGSZ )
@@ -110,7 +68,6 @@ struct hnk {
 };
 
 typedef struct hnk hnk_t;
-
 
 extern bool_t inomap_sync_pers( char *hkdir );
 extern rv_t inomap_restore_pers( drive_t *drivep,

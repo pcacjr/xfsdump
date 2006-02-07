@@ -380,8 +380,7 @@ tree_init( char *hkdir,
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
 				      "%s already exists: "
 				      "rm -rf prior to initating restore\n"),
-				      tranp->t_orphdir,
-				      strerror( errno ));
+				      tranp->t_orphdir );
 			} else {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
 				      "unable to create %s: %s\n"),
@@ -2139,9 +2138,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 
 		/* if unrefed, unreal, free node etc. (sel doesn't matter)
 		 */
-		if ( (! isrealpr && ! isrefpr && ! isselpr)
-		     ||
-		     (! isrealpr && ! isrefpr &&   isselpr) ) {
+		if ( ! isrealpr && ! isrefpr ) {
 			mlog( MLOG_NITTY | MLOG_TREE,
 			      "freeing node %x: not real, not referenced\n",
 			      nh );
@@ -2193,11 +2190,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 		 * real and referenced, leave alone (sel doesn't matter).
 		 * consider as a lnk src, since real and not going away.
 		 */
-		if (   (isrealpr && ! isrefpr && ! isselpr)
-		       ||
-		       (isrealpr &&   isrefpr && ! isselpr)
-		       ||
-		       (isrealpr &&   isrefpr &&   isselpr) ) {
+		if (   isrealpr && ( isrefpr || !isselpr ) ) {
 			mlog( MLOG_NITTY | MLOG_TREE,
 			      "skipping node %x: %s\n",
 			      nh,
@@ -4383,7 +4376,6 @@ hash_find( xfs_ino_t ino, gen_t gen )
 	mlog(MLOG_DEBUG | MLOG_TREE,
 	    "hash_find(): return nh = %llu\n", nh);
 #endif
-
 	return nh;
 }
 

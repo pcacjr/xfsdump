@@ -440,7 +440,7 @@ namreg_get( nrh_t nrh,
 		      nread );
 		return -3;
 	}
-	
+
 	/* deal with a short caller-supplied buffer
 	 */
 	len = ( size_t )read_buf[0];

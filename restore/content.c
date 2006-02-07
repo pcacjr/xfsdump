@@ -94,10 +94,10 @@ typedef off_t dh_t;
 	/* NULL inv. descriptor handles, to terminate linked descriptor lists.
 	 * must be zero-valued, so memset of pers.s sets freeh to DH_NULL.
 	 */
-#define DH2F( h )	( ASSERT( descp ), ASSERT( h > DH_NULL ), ( pers_file_t * )( ( char * )descp + ( h - 1 )))
-#define DH2O( h )	( ASSERT( descp ), ASSERT( h > DH_NULL ), ( pers_obj_t * )( ( char * )descp + ( h - 1 )))
-#define DH2S( h )	( ASSERT( descp ), ASSERT( h > DH_NULL ), ( pers_strm_t * )( ( char * )descp + ( h - 1 )))
-#define DH2D( h )	( ASSERT( descp ), ASSERT( h > DH_NULL ), ( pers_desc_t * )( ( char * )descp + ( h - 1 )))
+#define DH2F( h )	( ( pers_file_t * )( ( char * )descp + ( h - 1 )))
+#define DH2O( h )	( ( pers_obj_t * )( ( char * )descp + ( h - 1 )))
+#define DH2S( h )	( ( pers_strm_t * )( ( char * )descp + ( h - 1 )))
+#define DH2D( h )	( ( pers_desc_t * )( ( char * )descp + ( h - 1 )))
 	/* convert file, object, and stream inv. descriptor handle into
 	 * descriptor pointers
 	 */
@@ -786,7 +786,6 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
                         off64_t offset, off64_t sz);
 static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
 static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
-#define DMATTR_PREFIXSTRING "SGI_DMI_"
 static int reopen_invis(char * path, int oflags);
 static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
 static int quotafilecheck(char *type, char *dstdir, char *quotafile);
@@ -808,7 +807,6 @@ static char *hkdirname = "xfsrestorehousekeepingdir";
 static char *persname = "state";
 static char *perspath = 0;
 static bool_t mcflag[ STREAM_SIMMAX ]; /* media change flag */
-
 
 
 /* definition of locally defined global functions ****************************/
@@ -2412,9 +2410,8 @@ content_stream_restore( ix_t thrdix )
 #endif /* EOMFIX */
 			break;
 		case RV_INTR:
-			Media_end( Mediap );
-			return EXIT_NORMAL;
 		case RV_DRIVE:
+		case RV_INCOMPLETE:
 			Media_end( Mediap );
 			return EXIT_NORMAL;
 		case RV_CORE:
@@ -2512,9 +2509,11 @@ content_complete( void )
 			      "\n"),
 			      elapsed );
 		} else {
-			quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE);
-			quotafilecheck("project", persp->a.dstdir, CONTENT_PQUOTAFILE);
-			quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE);
+			if ( quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE)
+			     || quotafilecheck("project", persp->a.dstdir, CONTENT_PQUOTAFILE)
+			     || quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE) ) {
+				mlog( MLOG_NORMAL, _("use \'xfs_quota\' to restore quotas\n") );
+			}
 
 			mlog( MLOG_VERBOSE, _(
 			      "restore complete"
@@ -3700,7 +3699,7 @@ Media_mfile_next( Media_t *Mediap,
 	content_hdr_t *crhdrp = Mediap->M_crhdrp;
 	content_inode_hdr_t *scrhdrp = Mediap->M_scrhdrp;
 	dh_t fileh;
-	intgen_t rval = 0;
+	intgen_t rval = 0; /* no error by default */
 	rv_t rv;
 	bool_t ok;
 	uuid_t prevmfiledumpid;
@@ -4103,7 +4102,6 @@ validate:
 					Mediap->M_lmfix );
 		}
 
-
 		/* if this media file is not part of the desired dump session,
 		 * we are doing non-dir, and the preceeding media file on this
 		 * object was part of the dump, we know we have hit the end of
@@ -4123,7 +4121,6 @@ validate:
 				return RV_NOMORE;
 			}
 		}
-
 			
 		/* if this media file is not part of the desired dump session,
 		 * and preceeding media files on this object were, decide if
@@ -4146,7 +4143,6 @@ validate:
 				goto newmedia;
 			}
 		}
-
 
 		/* if this media file is not part of the desired dump session,
 		 * and the above conditions were not met, then keep looking
@@ -7478,11 +7474,43 @@ restore_reg( drive_t *drivep,
 				       ( uid_t )bstatp->bs_uid,
 				       ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-				      "unable to set owner and group "
-				      "of %s: %s\n"),
+				mode_t mode = (mode_t)bstatp->bs_mode;
+
+				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				      _("chown (uid=%u, gid=%u) %s "
+				      "failed: %s\n"),
+				      bstatp->bs_uid,
+				      bstatp->bs_gid,
 				      path,
 				      strerror( errno ));
+
+				if ( mode & S_ISUID ) {
+					mlog( MLOG_VERBOSE | MLOG_WARNING,
+					      _("stripping setuid bit on %s "
+					      "since chown failed\n"),
+					      path );
+					mode &= ~S_ISUID;
+				}
+				if ( (mode & (S_ISGID | S_IXGRP)) ==
+						(S_ISGID | S_IXGRP) ) {
+					mlog( MLOG_VERBOSE | MLOG_WARNING,
+					      _("stripping setgid bit on %s "
+					      "since chown failed\n"),
+					      path );
+					mode &= ~S_ISGID;
+				}
+				if ( mode != (mode_t)bstatp->bs_mode ) {
+					rval = fchmod( fd, mode );
+					if ( rval ) {
+						mlog( MLOG_VERBOSE |
+						      MLOG_ERROR,
+						      _("unable to strip setuid"
+						      "/setgid on %s, "
+						      "unlinking file.\n"),
+						      path );
+						unlink( path );
+					}
+				}
 			}
 		}
 
@@ -7689,10 +7717,11 @@ sockbypass:
 				      ( uid_t )bstatp->bs_uid,
 				      ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-				      "unable to set owner and group of %s %s: "
-				      "%s\n"),
-				      printstr,
+				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				      _("chown (uid=%u, gid=%u) %s "
+				      "failed: %s\n"),
+				      bstatp->bs_uid,
+				      bstatp->bs_gid,
 				      path,
 				      strerror( errno ));
 			}
@@ -7843,9 +7872,11 @@ restore_symlink( drive_t *drivep,
 				       ( uid_t )bstatp->bs_uid,
 				       ( gid_t )bstatp->bs_gid );
 			if ( rval ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-				      "unable to set owner and group "
-				      "of %s: %s\n"),
+				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				      _("chown (uid=%u, gid=%u) %s "
+				      "failed: %s\n"),
+				      bstatp->bs_uid,
+				      bstatp->bs_gid,
 				      path,
 				      strerror( errno ));
 			}
@@ -8082,15 +8113,8 @@ read_dirent( drive_t *drivep,
 	ASSERT( ( size_t )dhdrp->dh_sz <= direntbufsz );
 	ASSERT( ( size_t )dhdrp->dh_sz >= sizeof( direnthdr_t ));
 	ASSERT( ! ( ( size_t )dhdrp->dh_sz & ( DIRENTHDR_ALIGN - 1 )));
-	mlog( MLOG_NITTY,
-	      "read_dirent: dhdrp->dh_sz %u, direnthdr_t %u\n",
-	      dhdrp->dh_sz,
-	      sizeof( direnthdr_t ));
 	if ( ( size_t )dhdrp->dh_sz > sizeof( direnthdr_t )) {
 		size_t remsz = ( size_t )dhdrp->dh_sz - sizeof( direnthdr_t );
-		mlog( MLOG_NITTY,
-		      "read_dirent: remsz %u\n",
-		      remsz );
 		nread = read_buf( ( char * )( dhdrp + 1 ),
 				  remsz,
 				  ( void * )drivep,
@@ -8405,6 +8429,17 @@ restore_extent( filehdr_t *fhdrp,
 						break;
 					}
 					ASSERT( ( size_t )rval <= remaining );
+					if ( rval < remaining ) {
+						mlog( MLOG_NORMAL | MLOG_WARNING,
+						      _("attempt to "
+						      "write %u bytes to %s at "
+						      "offset %lld failed: "
+						      "only %d bytes written\n"),
+						      remaining,
+						      path,
+						      tmp_off,
+						      rval );
+					}
 					if (rttrunc) {
 						/* truncate and re-set rval */
 						if (rval == remaining)
@@ -8645,10 +8680,11 @@ restore_dir_extattr_cb_cb( extattrhdr_t *ahdrp, void *ctxp )
 static void
 setextattr( char *path, extattrhdr_t *ahdrp )
 {
-	static	char dmiattr[] = DMATTR_PREFIXSTRING;
-
-	int flag = ahdrp->ah_flags;
-	bool_t isdm = BOOL_FALSE;
+	static	char dmiattr[] = "SGI_DMI_";
+	bool_t isrootpr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT;
+	bool_t issecurepr = ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE;
+	bool_t isdmpr;
+	int attr_namespace;
 	intgen_t rval;
 
 	/* Check if just displaying a dump before setting attributes */
@@ -8656,148 +8692,59 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 		return;
 	}
 
-	/*DBGmlog( MLOG_NITTY,
-		     "setting attribute path %s name %s valsz %u\n",
-		     path,
-		     ( char * )( &ahdrp[ 1 ] ),
-		     ahdrp->ah_valsz );*/
+	isdmpr = ( isrootpr &&
+		   !strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) );
 
-	isdm = (flag & (ATTR_ROOT | ATTR_SECURE)) &&
-		(strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) == 0);
-
-	/* If restoreextattrpr not set, then we are here because -D was */
-	/* specified. So return unless it looks like a root DMAPI attribute. */
-
-	if ((!persp->a.restoreextattrpr) && !isdm)
+	/* If restoreextattrpr not set, then we are here because -D was
+	 * specified. So return unless it looks like a root DMAPI attribute.
+	 */
+	if ( !persp->a.restoreextattrpr && !isdmpr )
 		return;
+
+	if ( isrootpr ) {
+		attr_namespace = ATTR_ROOT;
+	} else if ( issecurepr ) {
+		attr_namespace = ATTR_SECURE;
+	} else {
+		attr_namespace = 0;
+	}
 
 	rval = attr_set( path,
 			 ( char * )( &ahdrp[ 1 ] ),
 			 ( ( char * )ahdrp ) + ( u_long_t )ahdrp->ah_valoff,
 			 ( intgen_t )ahdrp->ah_valsz,
-			 ( flag & EXTATTRHDR_FLAGS_ROOT )
- 			 ?
- 			 ATTR_ROOT | ATTR_DONTFOLLOW
- 			 :
-			 (( flag & EXTATTRHDR_FLAGS_SECURE )
-			 ?
-			 ATTR_SECURE | ATTR_DONTFOLLOW
-			 :
-			 ATTR_DONTFOLLOW ));
+			 attr_namespace | ATTR_DONTFOLLOW );
 	if ( rval ) {
+		char *namespace;
+		if ( isrootpr ) {
+			namespace = _("root");
+		} else if ( issecurepr ) {
+			namespace = _("secure");
+		} else {
+			namespace = _("non-root");
+		}
+
 		mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 		      "unable to set %s extended attribute for %s: "
 		      "%s (%d)\n"),
-		      ( flag & EXTATTRHDR_FLAGS_ROOT )
- 		      ?
- 		      _("root")
- 		      :
-		      (( flag & EXTATTRHDR_FLAGS_SECURE )
-		      ?
-		      _("secure")
-		      :
-		      _("non-root")),
+		      namespace,
 		      path,
 		      strerror( errno ),
 		      errno );
 	}
 }
 
-/* partial_reg - Registers files that are only partially restored by
- * a dump stream into the persistent state.
- *
- * This is done because DMAPI extended attributes must not be set until
- * the entire file has been restored in order to co-ordinate with the 
- * Data Migration Facility (DMF) daemons.  Since extended attributes are
- * recorded with each extent group in the dump, this registry is used to
- * make sure only the final dump stream applies the extended attributes.
- *
- * Likewise, certain extended inode flags (e.g. XFS_XFLAG_IMMUTABLE)
- * should only be set after all data for a file has been restored.
+#ifdef DEBUGPARTIALS
+/*
+ * Debug code to view the partials in the partial register
  */
-static void
-partial_reg( ix_t d_index, 
-	     xfs_ino_t ino, 
-	     off64_t fsize, 
-	     off64_t offset, 
-	     off64_t sz)
+void
+dump_partials(void)
 {
-	off64_t	endoffset;
 	partial_rest_t *isptr = NULL;
 	bytespan_t *bsptr = NULL;
 	int i;
 
-	endoffset = offset + sz;
-
-	if ( partialmax == 0 )
-		return;
-
-	pi_lock();
-
-	/* Search for a matching inode.  Gaps can exist so we must search
-	 * all entries. 
-	 */
-	for (i=0; i < partialmax; i++ ) {
-		if (persp->a.parrest[i].is_ino == ino) {
-			isptr = &persp->a.parrest[i];
-			break;
-		}
-	}
-
-	/* If not found, find a free one, fill it in and return */
-	if ( ! isptr ) {
-		/* find a free one */
-		for (i=0; i < partialmax; i++ ) {
-			if (persp->a.parrest[i].is_ino == 0) {
-				int j;
-
-				isptr = &persp->a.parrest[i];
-				isptr->is_ino = ino;
-				persp->a.parrestcnt++;
-
-				/* Clear all endoffsets (this value is
-				 * used to decide if an entry is used or
-				 * not
-				 */
-				for (j=0, bsptr=isptr->is_bs;
-				     j < drivecnt; j++, bsptr++) {
-				     bsptr->endoffset = 0;
-				}
-
-				goto found;
-			}
-		}
-
-		/* Should never get here. */
-		pi_unlock();
-		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-		     "partial_reg: Out of records. "
-		     "Extended attributes applied early.\n") );
-		return;  
-	}
-
-found:
-	/* Update this drive's entry */
-	bsptr = &isptr->is_bs[d_index];
-	if (bsptr->endoffset == 0) {
-		/* no existing entry for this drive, fill in the values */
-		bsptr->offset = offset;
-		bsptr->endoffset = endoffset;
-	} else {
-		bool_t ret;
-
-		/* entry exists for this drive, just extend the endoffset, the
-		 * records will be sequential for any given drive.
-		 */
-		bsptr->endoffset = endoffset;
-		ret = partial_check2(isptr, fsize);
-		mlog( MLOG_NITTY, "partial_reg: check returns: %d\n", ret);
-	}
-
-	pi_unlock();
-
-#ifdef DEBUGPARTIALS
-	/* DEBUG code to view partial files */
 	pi_lock();
 	printf("\npartial_reg: count=%d\n", persp->a.parrestcnt);
 	if (persp->a.parrestcnt > 0) {
@@ -8823,7 +8770,161 @@ found:
 	}
 	printf("\n");
 	pi_unlock();
-#endif /* DEBUGPARTIALS */
+}
+
+
+/* There can only be at most 2 partials for a given stream.
+ * An unfinished one from a split and the current one from
+ * a multiple group extent or another split.
+ * If there are more than 2, then there is an internal error.
+ */
+void
+check_valid_partials(void)
+{
+        int num_partials[STREAM_MAX]; /* sum of partials for a given drive */
+	partial_rest_t *isptr = NULL;
+	bytespan_t *bsptr = NULL;
+	int i;
+
+	/* zero the sums for each stream */
+        memset(num_partials, 0, sizeof(num_partials));
+
+	pi_lock();
+	if (persp->a.parrestcnt > 0) {
+		for (i=0; i < partialmax; i++ ) {
+			if (persp->a.parrest[i].is_ino > 0) {
+				int j;
+
+				isptr = &persp->a.parrest[i];
+				for (j=0, bsptr=isptr->is_bs;
+				     j < drivecnt; 
+				     j++, bsptr++)
+				{
+					if (bsptr->endoffset > 0) {
+					    num_partials[j]++;
+					    if (num_partials[j] > 2) {
+						pi_unlock();
+						mlog( MLOG_NORMAL | MLOG_WARNING, 
+		  "partial_reg: Too many partials (>2) for drive: %d\n", j);
+						dump_partials();
+						exit(EXIT_ERROR);
+					    }
+					} 
+				}
+			}
+		}
+	}
+	pi_unlock();
+}
+#endif
+
+/* partial_reg - Registers files that are only partially restored by
+ * a dump stream into the persistent state.
+ *
+ * This is done because DMAPI extended attributes must not be set until
+ * the entire file has been restored in order to co-ordinate with the 
+ * Data Migration Facility (DMF) daemons.  Since extended attributes are
+ * recorded with each extent group in the dump, this registry is used to
+ * make sure only the final dump stream applies the extended attributes.
+ *
+ * Likewise, certain extended inode flags (e.g. XFS_XFLAG_IMMUTABLE)
+ * should only be set after all data for a file has been restored.
+ */
+static void
+partial_reg( ix_t d_index, 
+	     xfs_ino_t ino, 
+	     off64_t fsize, 
+	     off64_t offset, 
+	     off64_t sz)
+{
+	off64_t	endoffset;
+	partial_rest_t *isptr = NULL;
+	bytespan_t *bsptr = NULL;
+	int i;
+
+	mlog(MLOG_NITTY, "partial_reg: d_index = %d, ino = %llu, "
+                           "fsize = %lld, offset = %lld, sz = %lld\n", 
+                           d_index, ino, fsize, offset, sz);
+
+	endoffset = offset + sz;
+
+	if ( partialmax == 0 )
+		return;
+
+	pi_lock();
+
+	/* Search for a matching inode.  Gaps can exist so we must search
+	 * all entries. 
+	 */
+	for (i=0; i < partialmax; i++ ) {
+		if (persp->a.parrest[i].is_ino == ino) {
+			isptr = &persp->a.parrest[i];
+			break;
+		}
+	}
+
+	/* If not found, find a free one, fill it in and return */
+	if ( ! isptr ) {
+		mlog(MLOG_NITTY, "partial_reg: no entry found for %llu\n", ino);
+		/* find a free one */
+		for (i=0; i < partialmax; i++ ) {
+			if (persp->a.parrest[i].is_ino == 0) {
+				int j;
+
+				isptr = &persp->a.parrest[i];
+				isptr->is_ino = ino;
+				persp->a.parrestcnt++;
+
+				/* Clear all endoffsets (this value is
+				 * used to decide if an entry is used or
+				 * not
+				 */
+				for (j=0, bsptr=isptr->is_bs;
+				     j < drivecnt; j++, bsptr++) {
+				     bsptr->endoffset = 0;
+				}
+
+				goto found;
+			}
+		}
+
+		/* Should never get here. */
+		pi_unlock();
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+		  "partial_reg: Out of records. Extend attrs applied early.\n"));
+#ifdef DEBUGPARTIALS
+		dump_partials();
+#endif
+	}
+
+found:
+	/* Update this drive's entry */
+	bsptr = &isptr->is_bs[d_index];
+	if (bsptr->endoffset == 0) {
+		/* no existing entry for this drive, fill in the values */
+		bsptr->offset = offset;
+		bsptr->endoffset = endoffset;
+		mlog(MLOG_NITTY, "partial_reg: update entry [%d]: "
+		     "<off = %lld, end = %lld>\n", d_index, offset, endoffset);
+	} else {
+		bool_t ret;
+
+		/* entry exists for this drive, just extend the endoffset, the
+		 * records will be sequential for any given drive.
+		 */
+		bsptr->endoffset = endoffset;
+		ret = partial_check2(isptr, fsize);
+		mlog(MLOG_NITTY, "partial_reg: extend entry [%d]: "
+		     "<end = %lld>\n", d_index, endoffset);
+		mlog(MLOG_NITTY, "partial_reg: partial_check returns: %d\n", ret);
+	}
+
+	pi_unlock();
+
+#ifdef DEBUGPARTIALS
+	check_valid_partials();
+	dump_partials();
+#endif
 }
 
 
@@ -8835,9 +8936,6 @@ static bool_t
 partial_check (xfs_ino_t ino, off64_t fsize)
 {
 	partial_rest_t *isptr = NULL;
-#ifdef DEBUGPARTIALS
-	bytespan_t *bsptr = NULL;
-#endif /* DEBUGPARTIALS */
 	bool_t ret;
 	int i;
 
@@ -8873,32 +8971,9 @@ partial_check (xfs_ino_t ino, off64_t fsize)
 	pi_unlock();
 
 #ifdef DEBUGPARTIALS
-	pi_lock();
-	printf("\npartial_check: count=%d\n", persp->a.parrestcnt);
-	if (persp->a.parrestcnt > 0) {
-		for (i=0; i < partialmax; i++ ) {
-			if (persp->a.parrest[i].is_ino > 0) {
-				int j;
-
-				isptr = &persp->a.parrest[i];
-				printf( "\tino=%lld ", isptr->is_ino);
-				for (j=0, bsptr=isptr->is_bs;
-				     j < drivecnt; 
-				     j++, bsptr++)
-				{
-					if (bsptr->endoffset > 0) {
-						printf("%d:%lld-%lld ",
-						     j, bsptr->offset, 
-						     bsptr->endoffset);
-					} 
-				}
-				printf( "\n");
-			}
-		}
-	}
-	printf("\n");
-	pi_unlock();
-#endif /* DEBUGPARTIALS */
+	check_valid_partials();
+	dump_partials();
+#endif
 
 	return ret;
 }
@@ -8971,6 +9046,7 @@ content_overwrite_ok( char *path,
 
 	/* if file doesn't exist, allow
 	 */
+
 	if ( lstat( path, &statbuf )) {
 		*reasonstrp = 0;
 		if ( errno == ENOENT ) {
@@ -9489,10 +9565,10 @@ reopen_invis(char *path, int oflags)
 		return -1;
 	}
 	
-	fd = open_by_fshandle(hanp, hlen, oflags);
+	fd = open_by_handle(hanp, hlen, oflags);
 	if (fd < 0) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			"open_by_fshandle of %s failed:%s\n"),
+			"open_by_handle of %s failed:%s\n"),
 			path, strerror( errno ));
 		free_handle(hanp, hlen);
 		return -1;
@@ -9539,10 +9615,10 @@ quotafilecheck(char *type, char *dstdir, char *quotafile)
 		 quotafile );
 
 	if ( stat (buf, &s ) >= 0 && S_ISREG(s.st_mode)) {
-		mlog(MLOG_NORMAL, _(
-		     "%s quota information written to '%s'\n"),
-		     type,
-		     buf );
+		mlog( MLOG_NORMAL, _(
+		      "%s quota information written to '%s'\n"),
+		      type,
+		      buf );
 		return 1;
 	}
 
