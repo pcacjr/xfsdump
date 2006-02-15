@@ -1,5 +1,5 @@
 xfsdump-2.2.36 (15 February 2006)
-	- Debian packaging updates.
+	- Debian packaging updates (debmake out, debhelper in).
 	- Minor man page fixups with respect to hyphenation.
 
 xfsdump-2.2.35 (07 February 2006)
