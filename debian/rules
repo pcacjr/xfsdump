@@ -2,13 +2,14 @@
 
 package=xfsdump
 
-dirtmp = debian/tmp
-pkgtmp = DIST_ROOT=`pwd`/$(dirtmp); export DIST_ROOT;
+dirme  = debian/$(package)
+pkgme  = DIST_ROOT=`pwd`/$(dirme); export DIST_ROOT;
 stdenv = @GZIP=-q; export GZIP;
 
 options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
 	  INSTALL_USER=root INSTALL_GROUP=root ;
 checkdir = test -f debian/rules
+checkver = rm -f debian/compat && echo 5 > debian/compat
 
 build: built
 built: config
@@ -28,27 +29,31 @@ clean:
 	$(checkdir)
 	-rm -f built .census
 	$(MAKE) distclean
-	-rm -rf $(dirtmp) debian/*substvars debian/files*
+	-rm -rf $(dirme)
+	-rm -f debian/*substvars debian/files* debian/*.debhelper debian/compat
 
 binary-indep:
 
-# Note1: dev pkg with .so symlinks to base pkg confuses debstd;
-# so the .so 'Dangling symlink' message is benign.
-# Note2: absolute symlinks (required by policy) confuse debstd;
-# so we'll filter out symlink messages entirely now.
-# 
 binary-arch: checkroot built
 	@echo "== dpkg-buildpackage: binary-arch" 1>&2
 	$(checkdir)
-	-rm -rf $(dirtmp)
-	$(pkgtmp) $(MAKE) -C . install
-	$(pkgtmp) $(MAKE) -C build src-manifest
-	@echo "== dpkg-buildpackage: debstd" 1>&2
-	$(stdenv) debstd -m | grep -v 'Dangling symlink'
-	dpkg-gencontrol -isp -p$(package) -P$(dirtmp)
-	chown -R root.root $(dirtmp)
-	chmod -R go=rX $(dirtmp)
-	dpkg --build $(dirtmp) .. 
+	$(checkver)
+	-rm -rf $(dirme)
+	$(pkgme) $(MAKE) -C . install
+	$(pkgme) $(MAKE) -C build src-manifest
+
+	dh_installdocs
+	dh_installchangelogs
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+
+	dh_md5sums
+	dh_builddeb
 
 binary: binary-indep binary-arch
 
