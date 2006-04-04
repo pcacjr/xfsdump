@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+# Copyright (c) 2003-2006 Silicon Graphics, Inc.  All Rights Reserved.
 #
 
 TOPDIR = ..
@@ -13,7 +13,8 @@ LSRCFILES = \
 	package_ncurses.m4 \
 	package_utilies.m4 \
 	package_uuiddev.m4 \
-	package_xfslibs.m4
+	package_xfslibs.m4 \
+	multilib.m4
 
 default: 
 

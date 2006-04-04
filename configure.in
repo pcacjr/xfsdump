@@ -12,8 +12,14 @@ AC_ARG_ENABLE(gettext,
 	enable_gettext=yes)
 AC_SUBST(enable_gettext)
 
+AC_ARG_ENABLE(lib64,
+[ --enable-lib64=[yes/no] Enable lib64 support [default=no]],,
+	enable_lib64=no)
+AC_SUBST(enable_lib64)
+
 AC_PACKAGE_GLOBALS(xfsdump)
 AC_PACKAGE_UTILITIES(xfsdump)
+AC_MULTILIB($enable_lib64)
 
 AC_PACKAGE_NEED_UUID_H
 AC_PACKAGE_NEED_UUIDCOMPARE
