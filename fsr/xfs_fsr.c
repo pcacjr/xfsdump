@@ -669,11 +669,12 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 
 	tmp_init(mntdir);
 
-	while (! xfs_bulkstat(fsfd, &lastino, GRABSZ, &buf[0], &buflenout)) {
+	while ((ret = xfs_bulkstat(fsfd,
+				&lastino, GRABSZ, &buf[0], &buflenout) == 0)) {
 		xfs_bstat_t *p;
 		xfs_bstat_t *endp;
 
-		if (buflenout == 0 )
+		if (buflenout == 0)
 			goto out0;
 
 		/* Each loop through, defrag targetrange percent of the files */
@@ -681,7 +682,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 
 		qsort((char *)buf, buflenout, sizeof(struct xfs_bstat), cmp);
 
-		for ( p = buf, endp = (buf + buflenout); p < endp ; p++ ) {
+		for (p = buf, endp = (buf + buflenout); p < endp ; p++) {
 			/* Do some obvious checks now */
 			if (((p->bs_mode & S_IFMT) != S_IFREG) ||
 			     (p->bs_extents < 2))
@@ -722,6 +723,8 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 			exit(1);
 		}
 	}
+	if (ret < 0)
+		fsrprintf(_("%s: xfs_bulkstat: %s\n"), progname, strerror(errno));
 out0:
 	tmp_close(mntdir);
 	close(fsfd);
