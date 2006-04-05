@@ -1062,6 +1062,8 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 		if ((ffd = open(ffname, openopts, 0666)) < 0) {
 			fsrprintf(_("could not open fragfile: %s : %s\n"),
 				   ffname, strerror(errno));
+			close(tfd);
+			free(fbuf);
 			return -1;
 		}
 		unlink(ffname);
@@ -1114,6 +1116,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	if (cur_nextents <= new_nextents) {
 		if (vflag)
 			fsrprintf(_("No improvement will be made (skipping): %s\n"), fname);
+		free(fbuf);
 		close(tfd);
 		return 1; /* no change/no error */
 	}
@@ -1187,6 +1190,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 					}
 				}
 				free(fbuf);
+				close(tfd);
 				return -1;
 			}
 			if (nfrags) {
