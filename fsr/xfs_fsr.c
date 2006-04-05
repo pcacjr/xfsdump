@@ -104,7 +104,7 @@ static int  fsrfile(char *fname, xfs_ino_t ino);
 static int  fsrfile_common( char *fname, char *tname, char *mnt,
                             int fd, xfs_bstat_t *statp);
 static int  packfile(char *fname, char *tname, int fd,
-                     xfs_bstat_t *statp, int flag);
+                     xfs_bstat_t *statp, struct fsxattr *fsxp);
 static void fsrdir(char *dirname);
 static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
 static void initallfs(char *mtab);
@@ -842,7 +842,6 @@ fsrfile_common(
 	int		error;
 	struct statvfs64 vfss;
 	struct fsxattr	fsx;
-	int		do_rt = 0;
 	unsigned long	bsize;
 
 	if (vflag)
@@ -901,12 +900,16 @@ fsrfile_common(
 		return 1;
 	}
 
-	/* Check realtime info */
 	if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-		fsrprintf(_("failed to get attrs: %s\n"), fname);
+		fsrprintf(_("failed to get inode attrs: %s\n"), fname);
 		return(-1);
 	}
-	if (fsx.fsx_xflags == XFS_XFLAG_REALTIME) {
+	if (fsx.fsx_xflags & (XFS_XFLAG_IMMUTABLE|XFS_XFLAG_APPEND)) {
+		if (vflag)
+			fsrprintf(_("%s: immutable/append, ignoring\n"), fname);
+		return(0);
+	}
+	if (fsx.fsx_xflags & XFS_XFLAG_REALTIME) {
 		if (xfs_getrt(fd, &vfss) < 0) {
 			fsrprintf(_("cannot get realtime geometry for: %s\n"),
 				fname);
@@ -917,7 +920,6 @@ fsrfile_common(
 				"ignoring file\n"), fname);
 			return(-1);
 		}
-		do_rt = 1;
 	}
 
 	if ((RealUid != ROOT) && (RealUid != statp->bs_uid)) {
@@ -934,7 +936,7 @@ fsrfile_common(
 	 * file we're defragging, in packfile().
 	 */
 
-	if ((error = packfile(fname, tname, fd, statp, do_rt)))
+	if ((error = packfile(fname, tname, fd, statp, &fsx)))
 		return error;
 	return -1; /* no error */
 }
@@ -948,7 +950,8 @@ fsrfile_common(
  * extent swap routinte.
  */
 static int
-packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
+packfile(char *fname, char *tname, int fd,
+	 xfs_bstat_t *statp, struct fsxattr *fsxp)
 {
 	int 		tfd;
 	int		srval;
@@ -961,7 +964,6 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	off64_t 	cnt, pos;
 	void 		*fbuf;
 	int 		ct, wc, wc_b4;
-	struct fsxattr  tfsx;
 	char		ffname[SMBUFSZ];
 	int		ffd = -1;
 
@@ -973,7 +975,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	 */
 	nextents = read_fd_bmap(fd, statp, &cur_nextents);
 
-	if ( cur_nextents == 1 || cur_nextents <= nextents ) {
+	if (cur_nextents == 1 || cur_nextents <= nextents) {
 		if (vflag)
 			fsrprintf(_("%s already fully defragmented.\n"), fname);
 		return 1; /* indicates no change/no error */
@@ -986,14 +988,14 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 
 	if ((tfd = open(tname, openopts, 0666)) < 0) {
 		if (vflag)
-			fsrprintf(_("could not open tmp as uid %d: %s: %s\n"),
-				   statp->bs_uid,tname, strerror(errno));
+			fsrprintf(_("could not open tmp file: %s: %s\n"),
+				   tname, strerror(errno));
 		return -1;
 	}
 	unlink(tname);
 
 	/* Setup extended attributes */
-	if( statp->bs_xflags & XFS_XFLAG_HASATTR ) {
+	if (statp->bs_xflags & XFS_XFLAG_HASATTR) {
 		if (attr_setf(tfd, "X", "X", 1, ATTR_CREATE) != 0) {
 			fsrprintf(_("could not set ATTR on tmp: %s:\n"), tname);
 			close(tfd);
@@ -1003,35 +1005,26 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			fsrprintf(_("%s set temp attr\n"), tname);
 	}
 
-	if ((ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
-		fsrprintf(_("could not get I/O info on tmp: %s\n"), tname);
-		close(tfd);
-		return -1;
-	}
-	if (do_rt) {
-		int rt_textsize = fsgeom.rtextsize * fsgeom.blocksize;
-
-		tfsx.fsx_xflags = XFS_XFLAG_REALTIME;
-
-		if ((tfsx.fsx_extsize = rt_textsize) <= 0 ) {
-			fsrprintf(_("realtime geometry not available for "
-				"tmp: %s\n"), fname);
-			close(tfd);
-			return -1;
-		}
-
-		if (ioctl( tfd,  XFS_IOC_FSSETXATTR, &tfsx) < 0) {
-			fsrprintf(_("could not set realtime flag on tmp: %s\n"),
+	/* Setup extended inode flags, project identifier, etc */
+	if (fsxp->fsx_xflags || fsxp->fsx_projid) {
+		if (ioctl(tfd, XFS_IOC_FSSETXATTR, fsxp) < 0) {
+			fsrprintf(_("could not set inode attrs on tmp: %s\n"),
 				tname);
 			close(tfd);
 			return -1;
 		}
 	}
 
-	dio_min   = dio.d_miniosz;
-	if (statp->bs_size <= dio_min)
+	if ((ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
+		fsrprintf(_("could not get DirectIO info on tmp: %s\n"), tname);
+		close(tfd);
+		return -1;
+	}
+
+	dio_min = dio.d_miniosz;
+	if (statp->bs_size <= dio_min) {
 		blksz_dio = dio_min;
-	else {
+	} else {
 		blksz_dio = min(dio.d_maxiosz, BUFFER_MAX - pagesize);
 		if (argv_blksz_dio != 0)
 			blksz_dio = min(argv_blksz_dio, blksz_dio);
@@ -1045,8 +1038,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			dio.d_maxiosz, pagesize);
 	}
 
-	/* Malloc a buffer */
-	if (! (fbuf = (char *)memalign(dio.d_mem, blksz_dio))) {
+	if (!(fbuf = (char *)memalign(dio.d_mem, blksz_dio))) {
 		fsrprintf(_("could not allocate buf: %s\n"), tname);
 		close(tfd);
 		return -1;
