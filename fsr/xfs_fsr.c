@@ -21,7 +21,7 @@
  *
  * fsr [-d] [-v] [-n] [-s] [-g] [-t mins] [-f leftf] [-m mtab]
  * fsr [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...
- * 
+ *
  * If invoked in the first form fsr does the following: starting with the
  * dev/inum specified in /etc/fsrlast this reorgs each reg file in each file
  * system found in /etc/mtab.  After 2 hours of this we record the current
@@ -101,9 +101,9 @@ static int	pagesize;
 
 void usage(int ret);
 static int  fsrfile(char *fname, xfs_ino_t ino);
-static int  fsrfile_common( char *fname, char *tname, char *mnt, 
+static int  fsrfile_common( char *fname, char *tname, char *mnt,
                             int fd, xfs_bstat_t *statp);
-static int  packfile(char *fname, char *tname, int fd, 
+static int  packfile(char *fname, char *tname, int fd,
                      xfs_bstat_t *statp, int flag);
 static void fsrdir(char *dirname);
 static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
@@ -141,17 +141,17 @@ int		nfrags = 0;	/* Debug option: Coerse into specific number
 				 * of extents */
 int		openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
 
-int 
+int
 xfs_fsgeometry(int fd, xfs_fsop_geom_v1_t *geom)
 {
     return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, geom);
 }
 
-int 
+int
 xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
 {
     xfs_fsop_bulkreq_t  bulkreq;
-    
+
     bulkreq.lastip = lastip;
     bulkreq.icount = 1;
     bulkreq.ubuffer = ubuffer;
@@ -159,12 +159,12 @@ xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
     return ioctl(fd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
 }
 
-int 
-xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount, 
+int
+xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount,
                     xfs_bstat_t *ubuffer, __s32 *ocount)
 {
     xfs_fsop_bulkreq_t  bulkreq;
-    
+
     bulkreq.lastip = lastip;
     bulkreq.icount = icount;
     bulkreq.ubuffer = ubuffer;
@@ -172,13 +172,13 @@ xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount,
     return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
 }
 
-int 
+int
 xfs_swapext(int fd, xfs_swapext_t *sx)
 {
     return ioctl(fd, XFS_IOC_SWAPEXT, sx);
 }
 
-int 
+int
 xfs_fscounts(int fd, xfs_fsop_counts_t *counts)
 {
     return ioctl(fd, XFS_IOC_FSCOUNTS, counts);
@@ -271,7 +271,7 @@ main(int argc, char **argv)
 
 	/* Save the caller's real uid */
 	RealUid = getuid();
-	
+
 	pagesize = getpagesize();
 
 	if (optind < argc) {
@@ -289,7 +289,7 @@ main(int argc, char **argv)
 				sb = sb2;
 			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
 				if ((mtabp = setmntent(mtab, "r")) == NULL) {
-					fprintf(stderr, 
+					fprintf(stderr,
 						_("%s: cannot read %s\n"),
 						progname, mtab);
 					exit(1);
@@ -300,18 +300,18 @@ main(int argc, char **argv)
 				else
 					mntpref.mnt_fsname = argname;
 
-				if ((getmntany(mtabp, &mntent, &mntpref) == 0) 
+				if ((getmntany(mtabp, &mntent, &mntpref) == 0)
 				     &&
 				   (strcmp(mntent.mnt_type, MNTTYPE_XFS) == 0))
 				{
 					mntp = &mntent;
 					if (S_ISBLK(sb.st_mode)) {
 						cp = mntp->mnt_dir;
-						if (cp == NULL || 
+						if (cp == NULL ||
 						    stat(cp, &sb2) < 0) {
 							fprintf(stderr, _(
 						"%s: could not stat: %s: %s\n"),
-							progname, argname, 
+							progname, argname,
 							strerror(errno));
 							continue;
 						}
@@ -355,7 +355,7 @@ main(int argc, char **argv)
 }
 
 void
-usage(int ret) 
+usage(int ret)
 {
 	fprintf(stderr, _("Usage: %s [xfsfile] ...\n"), progname);
 	exit(ret);
@@ -380,12 +380,12 @@ initallfs(char *mtab)
 	}
 
 	/* malloc a number of descriptors, increased later if needed */
-	if ((fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t))) == NULL) {
+	if (!(fsbase = (fsdesc_t *)malloc(fsbufsize * sizeof(fsdesc_t)))) {
 		fsrprintf(_("out of memory: %s\n"), strerror(errno));
 		exit(1);
 	}
 	fsend = (fsbase + fsbufsize - 1);
-	
+
 	/* find all rw xfs file systems */
 	mi = 0;
 	fs = fsbase;
@@ -411,7 +411,7 @@ initallfs(char *mtab)
 
 		if (mi == fsbufsize) {
 			fsbufsize += NMOUNT;
-			if ((fsbase = (fsdesc_t *)realloc((char *)fsbase, 
+			if ((fsbase = (fsdesc_t *)realloc((char *)fsbase,
 			              fsbufsize * sizeof(fsdesc_t))) == NULL) {
 				fsrprintf(_("out of memory: %s\n"),
 					strerror(errno));
@@ -451,7 +451,7 @@ initallfs(char *mtab)
 	}
 }
 
-static void 
+static void
 fsrallfs(int howlong, char *leftofffile)
 {
 	int fd;
@@ -464,7 +464,7 @@ fsrallfs(int howlong, char *leftofffile)
 	xfs_ino_t startino = 0;
 	fsdesc_t *fsp;
 	struct stat64 sb, sb2;
-	
+
 	fsrprintf("xfs_fsr -m %s -t %d -f %s ...\n", mtab, howlong, leftofffile);
 
 	endtime = starttime + howlong;
@@ -490,12 +490,12 @@ fsrallfs(int howlong, char *leftofffile)
 			{
 				fsrprintf(_("Can't use %s: mode=0%o own=%d"
 					" nlink=%d\n"),
-					leftofffile, sb.st_mode, 
+					leftofffile, sb.st_mode,
 					sb.st_uid, sb.st_nlink);
 				close(fd);
 				fd = NULLFD;
 			}
-		} 
+		}
 		else {
 			close(fd);
 			fd = NULLFD;
@@ -504,7 +504,7 @@ fsrallfs(int howlong, char *leftofffile)
 	else {
 		fd = NULLFD;
 	}
-			
+
 	if (fd != NULLFD) {
 		if (read(fd, buf, SMBUFSZ) == -1) {
 			fs = fsbase;
@@ -527,9 +527,7 @@ fsrallfs(int howlong, char *leftofffile)
 				startpass = atoi(++ptr);
 				ptr = strchr(ptr, ' ');
 				if (ptr) {
-					startino = strtoull(++ptr, 
-					                   (char **)NULL, 
-					                   10);
+					startino = strtoull(++ptr, NULL, 10);
 				}
 			}
 			if (startpass < 0)
@@ -615,7 +613,7 @@ fsrall_cleanup(int timeout)
 		          leftofffile, strerror(errno));
 	else {
 		if (timeout) {
-			ret = sprintf(buf, "%s %d %llu\n", fs->dev, 
+			ret = sprintf(buf, "%s %d %llu\n", fs->dev,
 			        fs->npass, (unsigned long long)leftoffino);
 			if (write(fd, buf, ret) < strlen(buf))
 				fsrprintf(_("write(%s) failed: %s\n"),
@@ -686,10 +684,10 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 		for ( p = buf, endp = (buf + buflenout); p < endp ; p++ ) {
 			/* Do some obvious checks now */
 			if (((p->bs_mode & S_IFMT) != S_IFREG) ||
-			     (p->bs_extents < 2)) 
+			     (p->bs_extents < 2))
 				continue;
 
-			if((fd = jdm_open(fshandlep, p, O_RDWR)) < 0) {
+			if ((fd = jdm_open(fshandlep, p, O_RDWR)) < 0) {
 				/* This probably means the file was
 				 * removed while in progress of handling
 				 * it.  Just quietly ignore this file.
@@ -701,13 +699,13 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
 			}
 
 			/* Don't know the pathname, so make up something */
-			sprintf(fname, "ino=%llu", (unsigned long long)p->bs_ino);
+			sprintf(fname, "ino=%lld", (long long)p->bs_ino);
 
 			/* Get a tmp file name */
 			tname = tmp_next(mntdir);
 
 			ret = fsrfile_common(fname, tname, mntdir, fd, p);
-			
+
 			leftoffino = p->bs_ino;
 
 			close(fd);
@@ -729,7 +727,7 @@ out0:
 	close(fsfd);
 	return 0;
 }
-		
+
 /*
  * To compare bstat structs for qsort.
  */
@@ -753,8 +751,8 @@ fsrdir(char *dirname)
 }
 
 /*
- * Sets up the defragmentation of a file based on the 
- * filepath.  It collects the bstat information, does 
+ * Sets up the defragmentation of a file based on the
+ * filepath.  It collects the bstat information, does
  * an open on the file and passes this all to fsrfile_common.
  */
 static int
@@ -783,14 +781,14 @@ fsrfile(char *fname, xfs_ino_t ino)
 			fname, strerror(errno));
 		return -1;
 	}
-	
+
 	if ((xfs_bulkstat_single(fsfd, &ino, &statbuf)) < 0) {
 		fsrprintf(_("unable to get bstat on %s: %s\n"),
 			fname, strerror(errno));
 		close(fsfd);
 		return -1;
 	}
-		
+
 	fd = jdm_open( fshandlep, &statbuf, O_RDWR);
 	if (fd < 0) {
 		fsrprintf(_("unable to open handle %s: %s\n"),
@@ -822,21 +820,21 @@ fsrfile(char *fname, xfs_ino_t ino)
 /*
  * This is the common defrag code for either a full fs
  * defragmentation or a single file.  Check as much as
- * possible with the file, fork a process to setuid to the 
+ * possible with the file, fork a process to setuid to the
  * target file owner's uid and defragment the file.
- * This is done so the new extents created in a tmp file are 
- * reflected in the owners' quota without having to do any 
- * special code in the kernel.  When the existing extents 
- * are removed, the quotas will be correct.  It's ugly but 
- * it saves us from doing some quota  re-construction in 
+ * This is done so the new extents created in a tmp file are
+ * reflected in the owners' quota without having to do any
+ * special code in the kernel.  When the existing extents
+ * are removed, the quotas will be correct.  It's ugly but
+ * it saves us from doing some quota  re-construction in
  * the extent swap.  The price is that the defragmentation
  * will fail if the owner of the target file is already at
  * their quota limit.
  */
 static int
 fsrfile_common(
-	char		*fname, 
-	char		*tname, 
+	char		*fname,
+	char		*tname,
 	char		*fsname,
 	int		fd,
 	xfs_bstat_t	*statp)
@@ -846,7 +844,7 @@ fsrfile_common(
 	struct fsxattr	fsx;
 	int		do_rt = 0;
 	unsigned long	bsize;
-		
+
 	if (vflag)
 		fsrprintf("%s\n", fname);
 
@@ -861,9 +859,9 @@ fsrfile_common(
 		return(0);
 	}
 
-	/* Check if a mandatory lock is set on the file to try and 
+	/* Check if a mandatory lock is set on the file to try and
 	 * avoid blocking indefinitely on the reads later. Note that
-	 * someone could still set a mandatory lock after this check 
+	 * someone could still set a mandatory lock after this check
 	 * but before all reads have completed to block fsr reads.
 	 * This change just closes the window a bit.
 	 */
@@ -927,7 +925,7 @@ fsrfile_common(
 		return -1;
 	}
 
-	/* 
+	/*
 	 * Previously the code forked here, & the child changed it's uid to
 	 * that of the file's owner and then called packfile(), to keep
 	 * quota counts correct.  (defragged files could use fewer blocks).
@@ -944,7 +942,7 @@ fsrfile_common(
 
 /*
  * Do the defragmentation of a single file.
- * We already are pretty sure we can and want to 
+ * We already are pretty sure we can and want to
  * defragment the file.  Create the tmp file, copy
  * the data (maintaining holes) and call the kernel
  * extent swap routinte.
@@ -969,7 +967,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 
 	/*
 	 * Work out the extent map - nextents will be set to the
-	 * minimum number of extents needed for the file (taking 
+	 * minimum number of extents needed for the file (taking
 	 * into account holes), cur_nextents is the current number
 	 * of extents.
 	 */
@@ -983,7 +981,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 
 	if (dflag)
 		fsrprintf(_("%s extents=%d can_save=%d tmp=%s\n"),
-		          fname, cur_nextents, (cur_nextents - nextents), 
+		          fname, cur_nextents, (cur_nextents - nextents),
 		          tname);
 
 	if ((tfd = open(tname, openopts, 0666)) < 0) {
@@ -1139,7 +1137,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 			} else if (cnt % dio_min == 0) {
 				ct = min(cnt, blksz_dio);
 			} else {
-				ct = min(cnt + dio_min - (cnt % dio_min), 
+				ct = min(cnt + dio_min - (cnt % dio_min),
 					blksz_dio);
 			}
 			ct = read(fd, fbuf, ct);
@@ -1230,7 +1228,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	srval = xfs_swapext(fd, &sx);
 	if (srval < 0) {
 		if (errno == ENOTSUP) {
-			if (vflag || dflag) 
+			if (vflag || dflag)
 			   fsrprintf(_("%s: file type not supported\n"), fname);
 		} else if (errno == EFAULT) {
 			/* The file has changed since we started the copy */
@@ -1252,7 +1250,7 @@ packfile(char *fname, char *tname, int fd, xfs_bstat_t *statp, int do_rt)
 	/* Report progress */
 	if (vflag)
 		fsrprintf(_("extents before:%d after:%d %s %s\n"),
-			  cur_nextents, new_nextents, 
+			  cur_nextents, new_nextents,
 			  (new_nextents <= nextents ? "DONE" : "    " ),
 		          fname);
 	close(tfd);
@@ -1403,7 +1401,7 @@ int	read_fd_bmap(int fd, xfs_bstat_t *sin, int *cur_nextents)
 /*
  * Read the block map and return the number of extents.
  */
-int 
+int
 getnextents(int fd)
 {
 	int		nextents;
@@ -1442,7 +1440,7 @@ xfs_getgeom(int fd, xfs_fsop_geom_v1_t * fsgeom)
 }
 
 /*
- * Get xfs realtime space information 
+ * Get xfs realtime space information
  */
 int
 xfs_getrt(int fd, struct statvfs64 *sfbp)
@@ -1559,9 +1557,9 @@ tmp_next(char *mnt)
 {
 	static char	buf[SMBUFSZ];
 
-	sprintf(buf, "%s/.fsr/ag%d/tmp%d", 
-	        ( (strcmp(mnt, "/") == 0) ? "" : mnt), 
-	        tmp_agi, 
+	sprintf(buf, "%s/.fsr/ag%d/tmp%d",
+	        ( (strcmp(mnt, "/") == 0) ? "" : mnt),
+	        tmp_agi,
 	        getpid());
 
 	if (++tmp_agi == fsgeom.agcount)
