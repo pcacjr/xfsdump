@@ -1,3 +1,11 @@
+[cvs]
+	- Fix xfs_fsr memory and file descriptor leaks.
+	- Fix xfs_fsr handling some of the extended inode flags
+	  and fields (like project IDs, extsize, realtime, etc).
+	- Fix Debian packaging for libc-dev build dependency.
+	- Fix up auto lib64 install detection for x86_64 platforms.
+	- Use -O2 optimisation by default now like everywhere else.
+
 xfsdump-2.2.36 (15 February 2006)
 	- Debian packaging updates (debmake out, debhelper in).
 	- Minor man page fixups with respect to hyphenation.
