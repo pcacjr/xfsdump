@@ -17,6 +17,7 @@ COMMINCL = \
 	fs.h \
         getdents.h \
 	global.h \
+	hsmapi.h \
 	lock.h \
 	media.h \
 	mlog.h \
@@ -56,6 +57,7 @@ COMMON = \
 	fs.c \
 	getdents.c \
 	global.c \
+	hsmapi.c \
 	lock.c \
 	main.c \
 	mlog.c \
@@ -69,13 +71,11 @@ COMMON = \
 
 LOCALS = \
 	content.c \
-	hsmapi.c \
 	inomap.c \
 	var.c
 
 LOCALINCL = \
 	getopt.h \
-	hsmapi.h \
 	inomap.h \
 	var.h
 

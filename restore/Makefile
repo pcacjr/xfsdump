@@ -16,6 +16,7 @@ COMMINCL = \
 	fs.h \
         getdents.h \
 	global.h \
+	hsmapi.h \
 	lock.h \
 	media.h \
 	mlog.h \
@@ -54,6 +55,7 @@ COMMON = \
 	fs.c \
         getdents.c \
 	global.c \
+	hsmapi.c \
 	lock.c \
 	main.c \
 	mlog.c \
@@ -93,7 +95,7 @@ CFILES = $(COMMON) $(INVCOMMON) $(LOCALS)
 HFILES = $(LOCALINCL)
 LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
-LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT)
+LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBDM) $(LIBRMT)
 LTDEPENDENCIES = $(LIBRMT)
 
 LCFLAGS = -DRESTORE -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX \
