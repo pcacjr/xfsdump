@@ -385,7 +385,6 @@ bool_t content_media_change_needed;
 char *media_change_alert_program = NULL;
 hsm_fs_ctxt_t *hsm_fs_ctxtp = NULL;
 #ifdef SIZEEST
-u_int64_t min_recmfilesz = 0;
 u_int64_t hdr_mfilesz = 0;
 #endif /* SIZEEST */
 u_int64_t maxdumpfilesize = 0;
@@ -1569,8 +1568,6 @@ baseuuidbypass:
 	      "file hdrs: %llu bytes, datasz: %llu bytes\n",
 	      GLOBAL_HDR_SZ, inomapsz, direntsz,
 	      filesz, datasz );
-
-	min_recmfilesz = 4 * hdr_mfilesz;
 #endif /* SIZEEST */
 
 	/* extract the progress stat denominators from the write hdr

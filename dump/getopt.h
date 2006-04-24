@@ -73,7 +73,7 @@
 #define	GETOPT_RINGPIN		'P'	/* pin down I/O buffer ring */
 /*				'Q'	*/
 #define	GETOPT_RESUME		'R'	/* resume intr dump (content_inode.c) */
-#define	GETOPT_SINGLEMFILE	'S'	/* don't use multiple media files */
+#define	GETOPT_SINGLEMFILE	'S'	/* obsolete - now the default */
 #define	GETOPT_NOTIMEOUTS	'T'	/* don't timeout dialogs */
 #define	GETOPT_UNLOAD		'U'	/* unload media when change needed */
 #define	GETOPT_SHOWLOGSS	'V'	/* show subsystem of log messages */

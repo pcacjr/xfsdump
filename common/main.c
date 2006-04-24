@@ -1013,9 +1013,6 @@ usage( void )
 	ULO(_("(pin down I/O buffers)"),		GETOPT_RINGPIN );
 #endif /* REVEAL */
 	ULO(_("(resume)"),				GETOPT_RESUME );
-#ifdef REVEAL
-	ULO(_("(generate single media file)"),		GETOPT_SINGLEMFILE );
-#endif /* REVEAL */
 	ULO(_("(don't timeout dialogs)"),		GETOPT_NOTIMEOUTS );
 #ifdef REVEAL
 	ULO(_("(unload media when change needed)"),	GETOPT_UNLOAD );

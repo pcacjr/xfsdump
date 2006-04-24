@@ -56,12 +56,15 @@ Each dump stream can span several media objects,
 and a single media object can contain several dump streams.
 The typical media object is a tape cartridge.
 The media object records the dump stream as one or more media files.
-A media file is a self-contained partial dump.
-The portion of a dump stream contained on a media object can
-be split into several media files.
-This minimizes the impact of media
-dropouts on the entire dump stream,
-and speeds subtree restores.
+A media file is a self-contained partial dump, intended to minimize
+the impact of media dropouts on the entire dump stream at the expense
+of increasing the time required to complete the dump. By default only
+one media file is written unless a media file size is specified using
+the
+.B \-d
+option. Other techniques, such as making a second copy of the dump
+image, provide more protection against media failures than multiple
+media files will.
 .P
 However, the current implementation in Linux only supports one destination
 and running single threaded. Therefore, the above comments
@@ -104,12 +107,10 @@ required. The alert program is typically a script to send a mail or
 flash a window to draw the operator's attention.
 .TP 5
 \f3\-d\f1 \f2filesize\f1
-Specifies the size, in megabytes, of dump media files.  xfsdump will
-dump data to tape in one or more media files.  It will attempt to
-estimate the ideal media file size based on the tape device being
-used, and the amount of data to be written.  The media file size may
-need to be adjusted if, for example, xfsdump cannot fit a media file
-onto a single tape.
+Specifies the size, in megabytes, of dump media files.  If not specified,
+xfsdump will dump data to tape using a single media file per media object.
+The specified media file size may need to be adjusted if, for example,
+xfsdump cannot fit a media file onto a single tape.
 .TP 5
 \f3\-e\f1
 Allow files to be excluded from the dump.  This will cause xfsdump to 

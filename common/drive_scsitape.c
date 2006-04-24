@@ -253,9 +253,6 @@ struct drive_context {
 	bool_t dc_overwritepr;
 			/* overwrite tape without checking whats on it
 			 */
-	bool_t dc_singlemfilepr;
-			/* use only one media file
-			 */
 	off64_t dc_filesz;
                         /* file size given as argument
                          */
@@ -296,7 +293,6 @@ typedef long mtstat_t;
 extern void usage( void );
 #ifdef DUMP
 #ifdef SIZEEST
-extern u_int64_t min_recmfilesz;
 extern u_int64_t hdr_mfilesz;
 #endif /* SIZEEST */
 #endif /* DUMP */
@@ -429,7 +425,7 @@ drive_strategy_t drive_strategy_scsitape = {
 	ds_match,			/* ds_match */
 	ds_instantiate,			/* ds_instantiate */
 	0x1000000ll,			/* ds_recmarksep  16 MB */
-	0x10000000ll,			/* ds_recmfilesz 256 MB */
+	OFF64MAX,			/* ds_recmfilesz */
 };
 
 
@@ -600,7 +596,6 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	contextp->dc_ringlen = RINGLEN_DEFAULT;
 	contextp->dc_ringpinnedpr = BOOL_FALSE;
 	contextp->dc_recchksumpr = BOOL_FALSE;
-	contextp->dc_singlemfilepr = BOOL_FALSE;
 	contextp->dc_filesz = 0;
 	contextp->dc_isQICpr = BOOL_FALSE;
 #ifdef DUMP
@@ -656,25 +651,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		case GETOPT_OVERWRITE:
 			contextp->dc_overwritepr = BOOL_TRUE;
 			break;
-		case GETOPT_SINGLEMFILE:
-			if (contextp->dc_filesz > 0) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      _("-%c and -%c options cannot be used together\n"),
-				      optopt,
-				      GETOPT_FILESZ );
-			}
-			contextp->dc_singlemfilepr = BOOL_TRUE;
-			mlog( MLOG_DEBUG | MLOG_DRIVE,
-				"Single media file command line option \n" );
-			break;
 		case GETOPT_FILESZ:
-			if (contextp->dc_singlemfilepr == BOOL_TRUE) {
-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
-				      _("-%c and -%c options cannot be used together\n"),
-				      optopt,
-				      GETOPT_SINGLEMFILE );
-				return BOOL_FALSE;
-			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 				      _("-%c argument missing\n"),
@@ -3323,19 +3300,7 @@ set_recommended_sizes( drive_t *drivep )
 	off64_t	fsize = drive_strategy_scsitape.ds_recmfilesz;
 	off64_t	marksep = drive_strategy_scsitape.ds_recmarksep;
 
-        if (contextp->dc_isQICpr) {
-	    fsize = 0x3200000ll;		/* 50 MB */
-        }
-
-        /* override with argument given */
-	if ( contextp->dc_singlemfilepr ) {	/* use only one media file */
-		fsize = OFF64MAX;		/* hence set fsize to max */
-		mlog( MLOG_DEBUG | MLOG_DRIVE,
-			"Single media file specified. "
-			"Set media file size to 0x%llx bytes\n",
-			OFF64MAX );
-	}
-	else if (contextp->dc_filesz > 0) {
+	if (contextp->dc_filesz > 0) {
 		fsize = contextp->dc_filesz;
 #ifdef DUMP
 #ifdef SIZEEST
@@ -3350,30 +3315,6 @@ set_recommended_sizes( drive_t *drivep )
 #endif /* SIZEEST */
 #endif /* DUMP */
         }
-#ifdef DUMP
-#ifdef SIZEEST
-	else {
-		/* override with minimum recommended file size */
-		if ( min_recmfilesz > fsize ) {
-			mlog( MLOG_NOTE, _(
-			      "recommended media file size adjusted "
-			      "from %llu Mb to %llu Mb for %s\n"),
-			      min_recmfilesz / ( 1024 * 1024 ),
-			      fsize / ( 1024 * 1024 ),
-			      drivep->d_pathname );
-			fsize = min_recmfilesz;
-                }
-        }
-
-	mlog( MLOG_NITTY,
-	      "hdr_mfilesz %lluMb, min_recmfilesize %lluMb, "
-	      "fsize %lluMb, marksep %lluMb\n",
-	      hdr_mfilesz / ( 1024 * 1024 ),
-	      min_recmfilesz / ( 1024 * 1024 ),
-	      fsize / ( 1024 * 1024 ),
-	      marksep / ( 1024 * 1024 ));
-#endif /* SIZEEST */
-#endif /* DUMP */
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "recommended tape media file size set to 0x%llx bytes\n",

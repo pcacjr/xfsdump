@@ -5,6 +5,9 @@
 	- Fix Debian packaging for libc-dev build dependency.
 	- Fix up auto lib64 install detection for x86_64 platforms.
 	- Use -O2 optimisation by default now like everywhere else.
+	- Default to using a single media file for each strategy.
+	  Multiple media files can be enabled on tape strategies
+	  by using the -d option.
 
 xfsdump-2.2.36 (15 February 2006)
 	- Debian packaging updates (debmake out, debhelper in).
