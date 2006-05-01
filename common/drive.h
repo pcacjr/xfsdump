@@ -224,6 +224,9 @@ struct drive {
 	void *d_contextp;
 				/* manager-specific data
 				 */
+	void *d_strmcontextp;
+				/* stream-specific data
+				 */
 	global_hdr_t *d_greadhdrp;
 				/* global portion of media file header of
 				 * media file drive currently positioned.
