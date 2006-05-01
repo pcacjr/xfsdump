@@ -8,6 +8,12 @@
 	- Default to using a single media file for each strategy.
 	  Multiple media files can be enabled on tape strategies
 	  by using the -d option.
+	- Fix a bug in restoring multiple links to files with the
+	  immutable bit set.
+	- Fix a regression that caused xfsrestore to fail when
+	  restoring files that were changing during the dump.
+	- Remove some overhead in restoring files that were dumped
+	  in multiple extent groups (> 16 MiB).
 
 xfsdump-2.2.36 (15 February 2006)
 	- Debian packaging updates (debmake out, debhelper in).

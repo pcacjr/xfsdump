@@ -346,6 +346,14 @@ struct partial_rest {
 };
 
 typedef struct partial_rest partial_rest_t;
+
+struct stream_context {
+	bstat_t    sc_bstat;
+	char       sc_path[2 * MAXPATHLEN];
+	intgen_t   sc_fd;
+};
+
+typedef struct stream_context stream_context_t;
 		
 /* persistent state file header - two parts: accumulation state
  * which spans several sessions, and session state. each has a valid
@@ -718,8 +726,14 @@ static rv_t restore_file( drive_t *drivep,
 static bool_t restore_reg( drive_t *drivep,
 			   filehdr_t *fhdrp,
 			   rv_t *rvp,
-			   char *path,
-			   bool_t ehcs );
+			   char *path );
+static bool_t restore_extent_group( drive_t *drivep,
+				    filehdr_t *fhdrp,
+				    char *path,
+				    intgen_t fd,
+				    bool_t ehcs,
+				    rv_t *rvp);
+static bool_t restore_complete_reg( stream_context_t* );
 static bool_t restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path );
 static bool_t restore_symlink( drive_t *drivep,
 			       filehdr_t *fhdrp,
@@ -769,16 +783,11 @@ static bool_t extattr_init( size_t drivecnt );
 static char * get_extattrbuf( ix_t which );
 static rv_t restore_extattr( drive_t *drivep,
 			     filehdr_t *fhdrp,
-			     char *path1,
-			     char *path2,
+			     char *path,
 			     bool_t ahcs,
 			     bool_t isdirpr,
 			     bool_t onlydoreadpr,
 			     dah_t dah );
-static bool_t restore_extattr_cb( void *ctxp,
-				  bool_t islinkpr,
-				  char *path1,
-				  char *path2 );
 static bool_t restore_dir_extattr_cb( char *path, dah_t dah );
 static bool_t restore_dir_extattr_cb_cb( extattrhdr_t *ahdrp, void *ctxp );
 static void setextattr( char *path, extattrhdr_t *ahdrp );
@@ -1813,6 +1822,7 @@ content_stream_restore( ix_t thrdix )
 	media_hdr_t *mrhdrp;
 	content_hdr_t *crhdrp;
 	content_inode_hdr_t *scrhdrp;
+	stream_context_t *strctxp;
 	filehdr_t fhdr; /* save hdr terminating dir restore */
 	uuid_t lastdumprejectedid;
 	rv_t rv;
@@ -1847,6 +1857,20 @@ content_stream_restore( ix_t thrdix )
 	/* initialize the Media abstraction
 	 */
 	Mediap = Media_create( thrdix );
+
+	/*
+	 * initialize the stream context
+	 */
+	strctxp = (stream_context_t *)calloc(1, sizeof(stream_context_t));
+	if (!strctxp) {
+		mlog( MLOG_NORMAL | MLOG_ERROR,
+		      _("malloc of stream context failed (%d bytes): %s\n"),
+		      sizeof(stream_context_t),
+		      strerror( errno ));
+		return EXIT_ERROR;
+	}
+	strctxp->sc_fd = -1;
+	Mediap->M_drivep->d_strmcontextp = (void *)strctxp;
 
 	/* if we don't know the dump session id to restore,
 	 * first see if command line options can be validated
@@ -2421,6 +2445,12 @@ content_stream_restore( ix_t thrdix )
 		}
 	}
 
+	/* out of media files, so finish the last file that
+	 * was being worked on.
+	 */
+	if ((strctxp->sc_bstat.bs_mode & S_IFMT) == S_IFREG)
+		restore_complete_reg(strctxp);
+
 	/* finally, choose one thread to do final processing
 	 * and cleanup. the winner waits, the losers all exit.
 	 * once the losers exit, the winner can perform cleanup.
@@ -2914,7 +2944,6 @@ applydirdump( drive_t *drivep,
 				rv = restore_extattr( drivep,
 						      fhdrp,
 						      0,
-						      0,
 						      ahcs,
 						      BOOL_TRUE, /* isdirpr */
 						      BOOL_FALSE, /* onlydoreadpr */
@@ -3081,7 +3110,6 @@ eatdirdump( drive_t *drivep,
 		if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
 			rv = restore_extattr( drivep,
 					      fhdrp,
-					      0,
 					      0,
 					      ahcs,
 					      BOOL_TRUE, /* isdirpr */
@@ -3264,6 +3292,7 @@ applynondirdump( drive_t *drivep,
 	bool_t ahcs;
 	egrp_t first_egrp;
 	egrp_t next_egrp;
+	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
 
 	/* determine if file header and/or extent heade checksums present
 	 */
@@ -3302,41 +3331,39 @@ applynondirdump( drive_t *drivep,
 			break;
 		}
 
-		if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
+		/* if working on a different file than we were previously,
+		 * complete the old one and begin the new one.
+		 */
+		if ( bstatp->bs_ino != strctxp->sc_bstat.bs_ino ) {
+
+			if ((strctxp->sc_bstat.bs_mode & S_IFMT) == S_IFREG)
+				restore_complete_reg(strctxp);
+
+			/* start new ino */
+			memcpy(&strctxp->sc_bstat, bstatp, sizeof(bstat_t));
+			strctxp->sc_path[0] = '\0';
+			strctxp->sc_fd = -1;
+
+			rv = restore_file( drivep, fhdrp, ehcs, path1, path2 );
+
+		} else if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
 			rv = restore_extattr( drivep,
 					      fhdrp,
-					      path1,
-					      path2,
+					      strctxp->sc_path,
 					      ahcs,
 					      BOOL_FALSE, /* isdirpr */
 					      BOOL_FALSE, /* onlydoreadpr */
 					      DAH_NULL );
-			switch( rv ) {
-			case RV_OK:
-				break;
-			case RV_EOD:
-				return RV_OK;
-			case RV_CORRUPT:
-				rval = ( * dop->do_next_mark )( drivep );
-				if ( rval ) {
-					mlog( MLOG_NORMAL | MLOG_WARNING, _(
-					      "unable to resync media file: "
-					      "some portion of dump will NOT "
-					      "be restored\n") );
-					return RV_OK;  /* treat as EOD */
-				}
-				resyncpr = BOOL_TRUE;
-				break;
-			default:
-				return rv;
-			}
-			goto extattrbypass;
+		} else {
+			/* Must be another extent group for the current file */
+			restore_extent_group( drivep,
+					      fhdrp,
+					      strctxp->sc_path,
+					      strctxp->sc_fd,
+					      ehcs,
+					      &rv );
 		}
 
-		/* restore file
-		 */
-		resyncpr = BOOL_FALSE;
-		rv = restore_file( drivep, fhdrp, ehcs, path1, path2 );
 		switch( rv ) {
 		case RV_OK:
 			break;
@@ -3361,6 +3388,8 @@ applynondirdump( drive_t *drivep,
 		 */
 		if ( ( ( bstatp->bs_mode & S_IFMT ) == S_IFREG )
 		     &&
+		     ! ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR )
+		     &&
 		     fhdrp->fh_offset == 0 ) {
 			egrp_t cur_egrp;
 			cur_egrp.eg_ino = fhdrp->fh_stat.bs_ino;
@@ -3379,8 +3408,6 @@ applynondirdump( drive_t *drivep,
 				}
 			}
 		}
-
-extattrbypass:
 
 		do {
 			/* get a mark for the next read, in case we restart here
@@ -7094,6 +7121,8 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	rv_t *rvp = &contextp->cb_rv;
 	bool_t ehcs = contextp->cb_ehcs;
+	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
+
 	int rval;
 	bool_t ok;
 
@@ -7103,11 +7132,26 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 	}
 
 	if ( ! linkpr ) {
+		if (path1) {
+			/* cache the path for use in restoring attributes
+			 * and extended attributes
+			 */
+			strcpy(strctxp->sc_path, path1);
+		}
+
 		/* call type-specific function to create the file
 		 */
 		switch( bstatp->bs_mode & S_IFMT ) {
 		case S_IFREG:
-			ok = restore_reg( drivep, fhdrp, rvp, path1, ehcs );
+			ok = restore_reg( drivep, fhdrp, rvp, path1 );
+			if (!ok)
+				return ok;
+			ok = restore_extent_group( drivep,
+						   fhdrp,
+						   path1,
+						   strctxp->sc_fd,
+						   ehcs,
+						   rvp );
 			return ok;
 		case S_IFBLK:
 		case S_IFCHR:
@@ -7173,198 +7217,176 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 	}
 }
 
-/* called to peel a regular file's extent groups from the media.
- * if no path given, or if just toc, don't actually write, just
- * read. also get into that situation if cannot prepare destination.
- * fd == -1 signifies no write. *statp is set to indicate drive errors.
- * returns FALSE if should abort this iteration.
+/* called to begin a regular file. if no path given, or if just toc,
+ * don't actually write, just read. also get into that situation if
+ * cannot prepare destination. fd == -1 signifies no write. *statp
+ * is set to indicate drive errors. returns FALSE if should abort
+ * this iteration.
  */
 static bool_t
 restore_reg( drive_t *drivep,
 	     filehdr_t *fhdrp,
 	     rv_t *rvp,
-	     char *path,
-	     bool_t ehcs )
+	     char *path )
 {
 	bstat_t *bstatp = &fhdrp->fh_stat;
-	intgen_t fd;
+	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
+	intgen_t *fdp = &strctxp->sc_fd;
 	intgen_t rval;
-	off64_t restoredsz = 0;
-	off64_t offset = 0;
 	struct fsxattr fsxattr;
-	rv_t rv;
+	struct stat64 stat;
+	intgen_t oflags;
 
-	if ( ! path ) {
-		fd = -1;
-	} else {
-		struct stat64 stat;
+	if ( !path )
+		return BOOL_TRUE;
 
-		offset = fhdrp->fh_offset;
-		if ( offset ) {
-			if ( ! tranp->t_toconlypr ) {
-				mlog( MLOG_TRACE,
-				      "restoring regular file ino %llu %s"
-				      " (offset %lld)\n",
-				      bstatp->bs_ino,
-				      path,
-				      offset );
-			} else {
-				mlog( MLOG_NORMAL | MLOG_BARE, _(
-				      "%s (offset %lld)\n"),
-				      path,
-				      offset );
-			}
+	if ( fhdrp->fh_offset ) {
+		if ( ! tranp->t_toconlypr ) {
+			mlog( MLOG_TRACE,
+			      "restoring regular file ino %llu %s"
+			      " (offset %lld)\n",
+			      bstatp->bs_ino,
+			      path,
+			      fhdrp->fh_offset );
 		} else {
-			if ( ! tranp->t_toconlypr ) {
-				mlog( MLOG_TRACE,
-				      "restoring regular file ino %llu %s\n",
-				      bstatp->bs_ino,
-				      path );
-			} else {
-				mlog( MLOG_NORMAL | MLOG_BARE,
-				      "%s\n",
-				      path );
-			}
+			mlog( MLOG_NORMAL | MLOG_BARE,
+			      _("%s (offset %lld)\n"),
+			      path,
+			      fhdrp->fh_offset );
 		}
-
-		if ( tranp->t_toconlypr ) {
-			fd = -1;
+	} else {
+		if ( ! tranp->t_toconlypr ) {
+			mlog( MLOG_TRACE,
+			      "restoring regular file ino %llu %s\n",
+			      bstatp->bs_ino,
+			      path );
 		} else {
-			intgen_t oflags;
-			bool_t isrealtime;
+			mlog( MLOG_NORMAL | MLOG_BARE,
+			      "%s\n",
+			      path );
+		}
+	}
 
-			isrealtime = ( bool_t )( bstatp->bs_xflags
-						 &
-						 XFS_XFLAG_REALTIME );
-			oflags = O_CREAT | O_RDWR;
-			if ( persp->a.dstdirisxfspr && isrealtime ) {
-				oflags |= O_DIRECT;
-			}
+	if ( tranp->t_toconlypr )
+		return BOOL_TRUE;
+
+	oflags = O_CREAT | O_RDWR;
+	if (persp->a.dstdirisxfspr && bstatp->bs_xflags & XFS_XFLAG_REALTIME)
+		oflags |= O_DIRECT;
 			
-			fd = open( path, oflags, S_IRUSR | S_IWUSR );
-			if ( fd < 0 ) {
-				mlog( MLOG_NORMAL | MLOG_WARNING, _(
-				      "open of %s failed: "
-				      "%s: discarding ino %llu\n"),
+	*fdp = open( path, oflags, S_IRUSR | S_IWUSR );
+	if ( *fdp < 0 ) {
+		mlog( MLOG_NORMAL | MLOG_WARNING,
+		      _("open of %s failed: %s: discarding ino %llu\n"),
+		      path,
+		      strerror( errno ),
+		      bstatp->bs_ino );
+		return BOOL_TRUE;
+	}
+
+	rval = fstat64( *fdp, &stat );
+	if ( rval != 0 ) {
+		mlog( MLOG_VERBOSE | MLOG_WARNING,
+		      _("attempt to stat %s failed: %s\n"),
+		      path,
+		      strerror( errno ));
+	} else {
+		if ( stat.st_size != bstatp->bs_size ) {
+			mlog( MLOG_TRACE,
+			      "truncating %s from %lld to %lld\n",
+			      path,
+			      stat.st_size,
+			      bstatp->bs_size );
+
+			rval = ftruncate64( *fdp, bstatp->bs_size );
+			if ( rval != 0 ) {
+				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				      _("attempt to truncate %s failed: %s\n"),
 				      path,
-				      strerror( errno ),
-				      fhdrp->fh_stat.bs_ino );
-				fd = -1;
-			} else {
-				rval = fstat64( fd, &stat );
-				if ( rval != 0 ) {
-					mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-					      "attempt to stat %s "
-					      "failed: %s\n"),
-					      path,
-					      strerror( errno ));
-				} else {
-					if ( stat.st_size
-					     !=
-					     bstatp->bs_size ) {
-						mlog( MLOG_TRACE,
-						      "truncating %s"
-						      " from %lld "
-						      "to %lld\n",
-						      path,
-						      stat.st_size,
-						      bstatp->bs_size );
-						rval =
-						   ftruncate64( fd,
-						       bstatp->bs_size);
-						if ( rval != 0 ) {
-						mlog( MLOG_VERBOSE|MLOG_WARNING,
-						      _("attempt"
-						      " to truncate %s"
-						      " failed: %s\n"),
-						      path,
-						     strerror( errno ));
-						}
-					}
-				}
-
-				/* set the extended inode flags, except
-				 * those which must be set only after all
-				 * data has been restored.
-				 */
-				if ( persp->a.dstdirisxfspr ) {
-					( void )memset((void *)&fsxattr,
-						        0,
-							sizeof( fsxattr ));
-					fsxattr.fsx_xflags =
-					    bstatp->bs_xflags & ~POST_DATA_XFLAGS;
-					ASSERT( bstatp->bs_extsize >= 0 );
-					fsxattr.fsx_extsize =
-					    ( u_int32_t )
-					    bstatp->bs_extsize;
-					fsxattr.fsx_projid =
-					    bstatp->bs_projid;
-
-					rval = ioctl( fd,
-						      XFS_IOC_FSSETXATTR,
-						      (void *)&fsxattr);
-					if ( rval < 0 ) {
-						mlog(MLOG_NORMAL | MLOG_WARNING,
-							_("attempt to set "
-							"extended attributes "
-							"(xflags 0x%x, "
-							"extsize = 0x%x, "
-							"projid = 0x%x) "
-							"of %s failed: "
-							"%s\n"),
-							fsxattr.fsx_xflags,
-							fsxattr.fsx_extsize,
-							fsxattr.fsx_projid,
-							path,
-							strerror(errno));
-					}
-				}
-
-				if ( persp->a.restoredmpr) {
-					fsdmidata_t fssetdm;
-
-					/*	Set the DMAPI Fields.	*/
-
-					fssetdm.fsd_dmevmask =
-						bstatp->bs_dmevmask;
-					fssetdm.fsd_padding = 0;
-					fssetdm.fsd_dmstate =
-						bstatp->bs_dmstate;
-					rval = ioctl( fd,
-						      XFS_IOC_FSSETDM,
-						      ( void * )
-						      &fssetdm );
-					if ( rval ) {
-						mlog(MLOG_NORMAL | MLOG_WARNING,
-						     _("attempt to set DMI "
-						     "attributes of %s failed: "
-						     "%s\n"),
-						     path,
-						     strerror( errno ));
-					}
-
-					/* Reopen the file to cause invisible I/O. */
-
-					(void)close(fd);
-					fd = reopen_invis(path, oflags);
-					if (fd < 0) {
-						mlog(MLOG_NORMAL | MLOG_WARNING,
-							_("attempt to reopen_invis %s failed."
-							" The file will not be restored.\n"),
-							path);
-					}
-					/* If fd < 0, we will not restore the file. */
-				}
+				      strerror( errno ));
 			}
 		}
 	}
 
+	if ( persp->a.dstdirisxfspr ) {
+
+		/* set the extended inode flags, except those which must
+		 * be set only after all data has been restored.
+		 */
+		ASSERT( bstatp->bs_extsize >= 0 );
+		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
+		fsxattr.fsx_xflags = bstatp->bs_xflags & ~POST_DATA_XFLAGS;
+		fsxattr.fsx_extsize = (u_int32_t) bstatp->bs_extsize;
+		fsxattr.fsx_projid = bstatp->bs_projid;
+
+		rval = ioctl( *fdp, XFS_IOC_FSSETXATTR, (void *)&fsxattr);
+		if ( rval < 0 ) {
+			mlog( MLOG_NORMAL | MLOG_WARNING,
+			      _("attempt to set extended attributes "
+				"(xflags 0x%x, extsize = 0x%x, projid = 0x%x) "
+				"of %s failed: %s\n"),
+			      fsxattr.fsx_xflags,
+			      fsxattr.fsx_extsize,
+			      fsxattr.fsx_projid,
+			      path,
+			      strerror(errno));
+		}
+	}
+
+	if ( persp->a.dstdirisxfspr && persp->a.restoredmpr ) {
+		fsdmidata_t fssetdm;
+
+		/* Set the DMAPI Fields. */
+		fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
+		fssetdm.fsd_padding = 0;
+		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
+
+		rval = ioctl( *fdp, XFS_IOC_FSSETDM, ( void * )&fssetdm );
+		if ( rval ) {
+			mlog( MLOG_NORMAL | MLOG_WARNING,
+			      _("attempt to set DMI attributes of %s "
+			      "failed: %s\n"),
+			      path,
+			      strerror( errno ));
+		}
+
+		/* Reopen the file to cause invisible I/O. */
+		close(*fdp);
+		*fdp = reopen_invis(path, oflags);
+		if (*fdp < 0) {
+			mlog( MLOG_NORMAL | MLOG_WARNING,
+			      _("attempt to reopen_invis %s failed. "
+			      "The file will not be restored.\n"),
+			      path);
+		}
+
+	}
+
+	return BOOL_TRUE;
+}
+
+/* called to peel a regular file's extent groups from the media.
+ * if no path given, or if just toc, don't actually write, just
+ * read. fd == -1 signifies no write. *rvp is set to indicate
+ * drive errors. returns FALSE if should abort this iteration.
+ */
+static bool_t
+restore_extent_group( drive_t *drivep,
+		      filehdr_t *fhdrp,
+		      char *path,
+		      intgen_t fd,
+		      bool_t ehcs,
+		      rv_t *rvp )
+{
+	bstat_t *bstatp = &fhdrp->fh_stat;
+	off64_t restoredsz = 0;
+	extenthdr_t ehdr;
+	off64_t bytesread;
+	rv_t rv;
+
 	/* copy data extents from media to the file
 	 */
 	for ( ; ; ) {
-		extenthdr_t ehdr;
-		off64_t bytesread;
-
 		/* read the extent header
 		 */
 		rv = read_extenthdr( drivep, &ehdr, ehcs );
@@ -7378,7 +7400,6 @@ restore_reg( drive_t *drivep,
 		      ehdr.eh_offset,
 		      ehdr.eh_sz,
 		      ehdr.eh_flags );
-
 
 		/* if we see the specially marked last extent hdr,
 		 * we are done.
@@ -7441,146 +7462,129 @@ restore_reg( drive_t *drivep,
 	 * of the file completed here in the persistent state.
 	 */
 	if (bstatp->bs_size > restoredsz) {
-		partial_reg(drivep->d_index, bstatp->bs_ino, bstatp->bs_size,
-		            offset, restoredsz);
+		partial_reg(drivep->d_index,
+			    bstatp->bs_ino,
+			    bstatp->bs_size,
+			    fhdrp->fh_offset,
+			    restoredsz);
 	}
 
-	if ( fd != -1 && partial_check( bstatp->bs_ino, bstatp->bs_size ) ) {
-		struct utimbuf utimbuf;
+	return BOOL_TRUE;
+}
+
+/* apply the attributes that can only go on now that all data
+ * and extended attributes have been applied. fd == -1 signifies
+ * no write, due to unknown path or toc only.
+ */
+static bool_t
+restore_complete_reg(stream_context_t *strcxtp)
+{
+	bstat_t *bstatp = &strcxtp->sc_bstat;
+	char *path = strcxtp->sc_path;
+	intgen_t fd = strcxtp->sc_fd;
+	struct utimbuf utimbuf;
+	intgen_t rval;
 
 
-		/* restore the attributes
-		 */
+	if (fd < 0)
+		return BOOL_TRUE;
 
-		/* set the access and modification times
-		 */
-		utimbuf.actime =
-			    ( time32_t )bstatp->bs_atime.tv_sec;
-		utimbuf.modtime =
-			    ( time32_t )bstatp->bs_mtime.tv_sec;
-		rval = utime( path, &utimbuf );
+	if (!partial_check(bstatp->bs_ino, bstatp->bs_size)) {
+		close(fd);
+		return BOOL_TRUE;
+	}
+
+	/* set the access and modification times
+	 */
+	utimbuf.actime = ( time32_t )bstatp->bs_atime.tv_sec;
+	utimbuf.modtime = ( time32_t )bstatp->bs_mtime.tv_sec;
+	rval = utime( path, &utimbuf );
+	if ( rval ) {
+		mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+		      "unable to set access and modification "
+		      "times of %s: %s\n"),
+		      path,
+		      strerror( errno ));
+	}
+
+	/* set the owner and group (if enabled)
+	 */
+	if ( persp->a.ownerpr ) {
+		rval = fchown( fd,
+			       ( uid_t )bstatp->bs_uid,
+			       ( gid_t )bstatp->bs_gid );
 		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-			      "unable to set access and modification"
-			      " times of %s: %s\n"),
+			mode_t mode = (mode_t)bstatp->bs_mode;
+
+			mlog( MLOG_VERBOSE | MLOG_WARNING,
+			      _("chown (uid=%u, gid=%u) %s failed: %s\n"),
+			      bstatp->bs_uid,
+			      bstatp->bs_gid,
 			      path,
 			      strerror( errno ));
-		}
 
-		/* set the owner and group (if enabled)
-		 */
-		if ( persp->a.ownerpr ) {
-			rval = fchown( fd,
-				       ( uid_t )bstatp->bs_uid,
-				       ( gid_t )bstatp->bs_gid );
-			if ( rval ) {
-				mode_t mode = (mode_t)bstatp->bs_mode;
-
+			if ( mode & S_ISUID ) {
 				mlog( MLOG_VERBOSE | MLOG_WARNING,
-				      _("chown (uid=%u, gid=%u) %s "
-				      "failed: %s\n"),
-				      bstatp->bs_uid,
-				      bstatp->bs_gid,
-				      path,
-				      strerror( errno ));
-
-				if ( mode & S_ISUID ) {
-					mlog( MLOG_VERBOSE | MLOG_WARNING,
-					      _("stripping setuid bit on %s "
-					      "since chown failed\n"),
+				      _("stripping setuid bit on %s "
+				      "since chown failed\n"),
+				      path );
+				mode &= ~S_ISUID;
+			}
+			if ( (mode & (S_ISGID|S_IXGRP)) == (S_ISGID|S_IXGRP) ) {
+				mlog( MLOG_VERBOSE | MLOG_WARNING,
+				      _("stripping setgid bit on %s "
+				      "since chown failed\n"),
+				      path );
+				mode &= ~S_ISGID;
+			}
+			if ( mode != (mode_t)bstatp->bs_mode ) {
+				rval = fchmod( fd, mode );
+				if ( rval ) {
+					mlog( MLOG_VERBOSE | MLOG_ERROR,
+					      _("unable to strip setuid/setgid "
+					      "on %s, unlinking file.\n"),
 					      path );
-					mode &= ~S_ISUID;
-				}
-				if ( (mode & (S_ISGID | S_IXGRP)) ==
-						(S_ISGID | S_IXGRP) ) {
-					mlog( MLOG_VERBOSE | MLOG_WARNING,
-					      _("stripping setgid bit on %s "
-					      "since chown failed\n"),
-					      path );
-					mode &= ~S_ISGID;
-				}
-				if ( mode != (mode_t)bstatp->bs_mode ) {
-					rval = fchmod( fd, mode );
-					if ( rval ) {
-						mlog( MLOG_VERBOSE |
-						      MLOG_ERROR,
-						      _("unable to strip setuid"
-						      "/setgid on %s, "
-						      "unlinking file.\n"),
-						      path );
-						unlink( path );
-					}
+					unlink( path );
 				}
 			}
-		}
-
-		/* set the permissions/mode
-		 */
-		rval = fchmod( fd, ( mode_t )bstatp->bs_mode );
-		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-			      "unable to set mode of %s: %s\n"),
-			      path,
-			      strerror( errno ));
-		}
-
-		/* set any extended inode flags that couldn't be set prior
-		 * to restoring the data. extended attributes have not been
-		 * restored yet, so if the file is to be immutable and it has
-		 * extended attributes, register the file to have its
-		 * attributes restored at the end of the restore.
-		 */
-		if ( persp->a.dstdirisxfspr &&
-		     bstatp->bs_xflags & XFS_XFLAG_IMMUTABLE &&
-		     bstatp->bs_xflags & XFS_XFLAG_HASATTR ) {
-
-			dah_t dah = dirattr_add(fhdrp);
-			if ( dah == DAH_NULL ) {
-				mlog(MLOG_NORMAL | MLOG_WARNING,
-					_("failed to register attributes "
-					"for later restore: %s\n"),
-					path );
-			} else {
-				tree_update_node_dah( bstatp->bs_ino,
-						      bstatp->bs_gen,
-						      dah );
-			}
-
-		} else if ( persp->a.dstdirisxfspr &&
-			    bstatp->bs_xflags & POST_DATA_XFLAGS ) {
-
-			/* note: other fsxattr fields already
-			 * set correctly from above */
-			fsxattr.fsx_xflags = bstatp->bs_xflags;
-			rval = ioctl( fd,
-				      XFS_IOC_FSSETXATTR,
-				      (void *)&fsxattr);
-			if ( rval < 0 ) {
-				mlog(MLOG_NORMAL | MLOG_WARNING,
-				      _("attempt to set "
-				      "extended attributes "
-				      "(xflags 0x%x, "
-				      "extsize = 0x%x, "
-				      "projid = 0x%x) "
-				      "of %s failed: "
-				      "%s\n"),
-				      fsxattr.fsx_xflags,
-				      fsxattr.fsx_extsize,
-				      fsxattr.fsx_projid,
-				      path,
-				      strerror(errno));
-			}
-		}
-
-		rval = close( fd );
-		if ( rval ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-			      "unable to close %s: %s\n"),
-			      path,
-			      strerror( errno ));
 		}
 	}
 
+	/* set the permissions/mode
+	 */
+	rval = fchmod( fd, ( mode_t )bstatp->bs_mode );
+	if ( rval ) {
+		mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+		      "unable to set mode of %s: %s\n"),
+		      path,
+		      strerror( errno ));
+	}
+
+	/* set any extended inode flags that couldn't be set
+	 * prior to restoring the data.
+	 */
+	if ( persp->a.dstdirisxfspr && bstatp->bs_xflags & POST_DATA_XFLAGS ) {
+		struct fsxattr fsxattr;
+		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
+		fsxattr.fsx_xflags = bstatp->bs_xflags;
+		fsxattr.fsx_extsize = (u_int32_t)bstatp->bs_extsize;
+		fsxattr.fsx_projid = bstatp->bs_projid;
+
+		rval = ioctl( fd, XFS_IOC_FSSETXATTR, (void *)&fsxattr );
+		if ( rval < 0 ) {
+			mlog(MLOG_NORMAL | MLOG_WARNING,
+			     _("attempt to set extended attributes "
+			     "(xflags 0x%x, extsize = 0x%x, projid = 0x%x) "
+			     "of %s failed: %s\n"),
+			     fsxattr.fsx_xflags,
+			     fsxattr.fsx_extsize,
+			     fsxattr.fsx_projid,
+			     path,
+			     strerror(errno));
+		}
+	}
+
+	close(fd);
 	return BOOL_TRUE;
 }
 
@@ -8529,8 +8533,7 @@ typedef struct extattr_cb_ctx extattr_cb_ctx_t;
 static rv_t
 restore_extattr( drive_t *drivep,
 		 filehdr_t *fhdrp,
-		 char *path1,
-		 char *path2,
+		 char *path,
 		 bool_t ahcs,
 		 bool_t isdirpr,
 		 bool_t onlydoreadpr,
@@ -8591,7 +8594,7 @@ restore_extattr( drive_t *drivep,
 		}
 		ASSERT( nread == ( intgen_t )( recsz - EXTATTRHDR_SZ ));
 
-		if ( ! persp->a.restoreextattrpr &&  ! persp->a.restoredmpr ) {
+		if ( ! persp->a.restoreextattrpr && ! persp->a.restoredmpr ) {
 			continue;
 		}
 
@@ -8604,46 +8607,15 @@ restore_extattr( drive_t *drivep,
 		 * extended attributes.
 		 */
 		if ( isdirpr ) {
-			ASSERT( ! path1 );
-			ASSERT( ! path2 );
+			ASSERT( ! path );
 			if ( dah != DAH_NULL ) {
 				dirattr_addextattr( dah, ahdrp );
 			}
-		} else if ( isfilerestored ) {
-			extattr_cb_ctx_t context;
-			ASSERT( path1 );
-			ASSERT( path2 );
-			context.ecb_ahdrp = ahdrp;
-			(void)tree_cb_links( bstatp->bs_ino,
-				       bstatp->bs_gen,
-				       bstatp->bs_ctime.tv_sec,
-				       bstatp->bs_mtime.tv_sec,
-				       restore_extattr_cb,
-				       &context,
-				       path1,
-				       path2 );
+		} else if ( isfilerestored && path[0] != '\0' ) {
+			setextattr( path, ahdrp );
 		}
 	}
 	/* NOTREACHED */
-}
-
-/* ARGSUSED */
-static bool_t
-restore_extattr_cb( void *ctxp, bool_t islinkpr, char *path1, char *path2 )
-{
-	extattr_cb_ctx_t *contextp = ( extattr_cb_ctx_t * )ctxp;
-
-	if ( islinkpr ) {
-		return BOOL_TRUE;
-	}
-
-	if ( ! path1 ) {
-		return BOOL_TRUE;
-	}
-
-	setextattr( path1, contextp->ecb_ahdrp );
-
-	return BOOL_TRUE;
 }
 
 static bool_t

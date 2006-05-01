@@ -24,11 +24,6 @@
  * interfere, etc.) These routines allow the directory attributes to be stored
  * on disk when they are read from the dump stream so that they can be applied
  * at a later time.
- *
- * Despite the name, these routines are not used solely for directory attributes
- * anymore. Files which use the immutable flag and have extended attributes run
- * into a problem similar to that of directories -- some of the attributes
- * cannot be set at the time the attributes are read from the dump.
  */
 
 #include <xfs/libxfs.h>
