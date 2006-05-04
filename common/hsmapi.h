@@ -19,6 +19,13 @@
 #ifndef HSMAPI_H
 #define HSMAPI_H
 
+#include <xfs/libxfs.h>
+#include <xfs/jdm.h>
+#include "types.h"
+#include "global.h"
+#include "content.h"
+#include "content_inode.h"
+
 #define	HSM_API_VERSION_1	1	/* only version supported so far */
 
 typedef	void	hsm_fs_ctxt_t;		/* opaque HSM filesystem context */
@@ -37,6 +44,8 @@ typedef	void	hsm_f_ctxt_t;		/* opaque HSM file context */
 *	calling HsmDeleteFsysContext().  The caller must provide the mount
 *	point of the filesystem to be dumped and the HSM API version that
 *	xfsdump was compiled with.
+*
+*	Note: The restore routines do not require an HSM filesystem context.
 *
 * Returns
 *	!= NULL, then a pointer to the filesystem context that was allocated.
@@ -122,6 +131,8 @@ const	xfs_bstat_t	*statp,
 *	context should eventually be freed by calling HsmDeleteFileContext().
 *	The caller must provide the HSM filesystem context for the filesystem
 *	being dumped.
+*
+*	Note: The restore routines do not require an HSM file context.
 *
 * Returns
 *	!= NULL, then a pointer to the file context that was allocated.
@@ -278,6 +289,78 @@ HsmAddNewAttribute(
 	char		**namepp,	/* pointer to new attribute name */
 	char		**valuepp,	/* pointer to its value */
 	u_int32_t	*valueszp);	/* pointer to the value size */
+
+
+/******************************************************************************
+* Name
+*	HsmBeginRestoreFile
+*
+* Description
+*	HsmBeginRestoreFile is called after a file is created but before any
+*	data has been restored to it. The hsm_flagp param can be used to
+*	keep track of limited state between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmBeginRestoreFile(
+	bstat_t		*statp,
+	int		fd,
+	int		*hsm_flagp);
+
+
+/******************************************************************************
+* Name
+*	HsmRestoreAttribute
+*
+* Description
+**	HsmRestoreAttribute is called when restoring an extended attribute.
+*	The hsm_flagp param can be used to keep track of limited state
+*	between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmRestoreAttribute(
+	int		flag,		/* ext attr flags */
+	char		*namep,		/* pointer to new attribute name */
+	int		*hsm_flagp);
+
+
+/******************************************************************************
+* Name
+*	HsmEndRestoreFile
+*
+* Description
+*	HsmEndRestoreFile is called when all data and extended attributes
+*	have been restored. The hsm_flagsp param can be used to keep track
+*	of limited state between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmEndRestoreFile(
+	char		*path,
+	int		fd,
+	int		*hsm_flagp);
 
 
 #endif	/* HSMAPI_H */

@@ -22,6 +22,7 @@
 #include <xfs/dmapi.h>
 
 #include "hsmapi.h"
+#include "mlog.h"
 
 /* This version of the HSM API supports the DMF attribute used in the initial
  * DMF release, as well as the attribute used in the pseudo multiple managed
@@ -82,6 +83,7 @@ typedef	struct {
 #define	DMF_ST_DUALSTATE	2	/* file has backups plus online data */
 #define	DMF_ST_OFFLINE		3	/* file has backups, no online data */
 #define	DMF_ST_UNMIGRATING	4	/* file data is being staged in */
+#define	DMF_ST_NOMIGR		5	/* file should not be migrated */
 #define	DMF_ST_PARTIAL		6	/* file has backups plus parts online */
 
 /* Interesting bit combinations within the bs_dmevmask field of xfs_bstat_t:
@@ -166,6 +168,8 @@ msb_load(
 *	calling HsmDeleteFsysContext().  The caller must provide the mount
 *	point of the filesystem to be dumped and the HSM API version that
 *	xfsdump was compiled with.
+*
+*	Note: The restore routines do not require an HSM filesystem context.
 *
 * Returns
 *	!= NULL, then a pointer to the filesystem context that was allocated.
@@ -338,6 +342,8 @@ const	xfs_bstat_t	*statp,
 *	context should eventually be freed by calling HsmDeleteFileContext().
 *	The caller must provide the HSM filesystem context for the filesystem
 *	being dumped.
+*
+*	Note: The restore routines do not require an HSM file context.
 *
 * Returns
 *	!= NULL, then a pointer to the file context that was allocated.
@@ -710,4 +716,124 @@ HsmAddNewAttribute(
 	*namepp = DMF_ATTR_NAME;
 	*valueszp = dmf_f_ctxtp->attrlen;
 	return 1;
+}
+
+
+/******************************************************************************
+* Name
+*	HsmBeginRestoreFile
+*
+* Description
+*	HsmBeginRestoreFile is called after a file is created but before any
+*	data has been restored to it. The hsm_flagp param can be used to
+*	keep track of limited state between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmBeginRestoreFile(
+	bstat_t		*bstatp,
+	int		fd,
+	int		*hsm_flagp)
+{
+	int rv;
+	XFSattrvalue0_t dmattr;
+
+	/* If it appears to be a DMF-managed file, set the NOMIGR attribute
+	 * on it to prevent DMF from touching the file while we are restoring
+	 * it. If it turns out to not be a DMF-managed file, we'll need to
+	 * remove the attribute when the file is completed.
+	 */
+	*hsm_flagp = 0;
+	if ( bstatp->bs_dmevmask && bstatp->bs_xflags & XFS_XFLAG_HASATTR ) {
+		memset(&dmattr, 0, sizeof(XFSattrvalue0_t));
+		dmattr.fsys = FSYS_TYPE_XFS;
+		msb_store(dmattr.state, DMF_ST_NOMIGR, sizeof(dmattr.state));
+
+		rv = attr_setf(fd,
+			       DMF_ATTR_NAME,
+			       (char *)&dmattr,
+			       sizeof(dmattr),
+			       ATTR_ROOT);
+		if (rv == 0)
+			*hsm_flagp = 1;
+	}
+}
+
+
+/******************************************************************************
+* Name
+*	HsmRestoreAttribute
+*
+* Description
+**	HsmRestoreAttribute is called when restoring an extended attribute.
+*	The hsm_flagp param can be used to keep track of limited state
+*	between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmRestoreAttribute(
+	int		flag,		/* ext attr flags */
+	char		*namep,		/* pointer to new attribute name */
+	int		*hsm_flagp)
+{
+	/* If the DMF attribute is being restored, then we will not
+	 * have to remove the NOMIGR attribute when this file is
+	 * being completed.
+	 */
+	if (flag & ATTR_ROOT && !strcmp(namep, DMF_ATTR_NAME))
+		*hsm_flagp = 0;
+}
+
+
+/******************************************************************************
+* Name
+*	HsmEndRestoreFile
+*
+* Description
+*	HsmEndRestoreFile is called when all data and extended attributes
+*	have been restored. The hsm_flagsp param can be used to keep track
+*	of limited state between calls to the HSM restore routines.
+*
+*	Note that this does not require a filesystem or file context like the
+*	HSM calls for xfsdump. This is currently a crude interface to satisfy
+*	a specific need. It can be generalized at a later time, if necessary.
+*
+* Returns
+* 	None.
+******************************************************************************/
+
+extern void
+HsmEndRestoreFile(
+	char		*path,
+	int		fd,
+	int		*hsm_flagp)
+{
+	/* We put a NOMIGR on the file because we thought it was a
+	 * DMF-managed file. If it was not, then we need to take
+	 * that attribute off now.
+	 */
+	if (*hsm_flagp) {
+		int rv;
+		rv = attr_removef( fd, DMF_ATTR_NAME , ATTR_ROOT );
+		if (rv) {
+			mlog(MLOG_NORMAL | MLOG_WARNING,
+			     _("error removing temp DMF attr on %s: %s\n"),
+			     path,
+			     strerror(errno));
+		}
+	}
 }

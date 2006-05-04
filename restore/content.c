@@ -63,6 +63,7 @@
 #include "mmap.h"
 #include "arch_xlate.h"
 #include "win.h"
+#include "hsmapi.h"
 
 /* content.c - manages restore content
  */
@@ -351,10 +352,11 @@ struct stream_context {
 	bstat_t    sc_bstat;
 	char       sc_path[2 * MAXPATHLEN];
 	intgen_t   sc_fd;
+	intgen_t   sc_hsmflags;
 };
 
 typedef struct stream_context stream_context_t;
-		
+
 /* persistent state file header - two parts: accumulation state
  * which spans several sessions, and session state. each has a valid
  * bit, and no fields are valid until the valid bit is set.
@@ -795,7 +797,6 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
                         off64_t offset, off64_t sz);
 static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
 static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
-static int reopen_invis(char * path, int oflags);
 static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
 static int quotafilecheck(char *type, char *dstdir, char *quotafile);
 
@@ -7334,32 +7335,9 @@ restore_reg( drive_t *drivep,
 	}
 
 	if ( persp->a.dstdirisxfspr && persp->a.restoredmpr ) {
-		fsdmidata_t fssetdm;
-
-		/* Set the DMAPI Fields. */
-		fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
-		fssetdm.fsd_padding = 0;
-		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
-
-		rval = ioctl( *fdp, XFS_IOC_FSSETDM, ( void * )&fssetdm );
-		if ( rval ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      _("attempt to set DMI attributes of %s "
-			      "failed: %s\n"),
-			      path,
-			      strerror( errno ));
-		}
-
-		/* Reopen the file to cause invisible I/O. */
-		close(*fdp);
-		*fdp = reopen_invis(path, oflags);
-		if (*fdp < 0) {
-			mlog( MLOG_NORMAL | MLOG_WARNING,
-			      _("attempt to reopen_invis %s failed. "
-			      "The file will not be restored.\n"),
-			      path);
-		}
-
+		HsmBeginRestoreFile( bstatp,
+				     *fdp,
+				     &strctxp->sc_hsmflags );
 	}
 
 	return BOOL_TRUE;
@@ -7558,6 +7536,26 @@ restore_complete_reg(stream_context_t *strcxtp)
 		      "unable to set mode of %s: %s\n"),
 		      path,
 		      strerror( errno ));
+	}
+
+	if ( persp->a.dstdirisxfspr && persp->a.restoredmpr ) {
+		fsdmidata_t fssetdm;
+
+		/* Set the DMAPI Fields. */
+		fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
+		fssetdm.fsd_padding = 0;
+		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
+
+		rval = ioctl( fd, XFS_IOC_FSSETDM, ( void * )&fssetdm );
+		if ( rval ) {
+			mlog( MLOG_NORMAL | MLOG_WARNING,
+			      _("attempt to set DMI attributes of %s "
+			      "failed: %s\n"),
+			      path,
+			      strerror( errno ));
+		}
+
+		HsmEndRestoreFile( path, fd, &strcxtp->sc_hsmflags );
 	}
 
 	/* set any extended inode flags that couldn't be set
@@ -8541,6 +8539,7 @@ restore_extattr( drive_t *drivep,
 {
 	drive_ops_t *dop = drivep->d_opsp;
 	extattrhdr_t *ahdrp = ( extattrhdr_t * )get_extattrbuf( drivep->d_index );
+	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	bool_t isfilerestored = BOOL_FALSE;
 
@@ -8598,7 +8597,7 @@ restore_extattr( drive_t *drivep,
 			continue;
 		}
 
-		if ( onlydoreadpr )
+		if ( onlydoreadpr || tranp->t_toconlypr )
 			continue;
 
 		/* NOTE: In the cases below, if we get errors then we issue warnings 
@@ -8613,6 +8612,19 @@ restore_extattr( drive_t *drivep,
 			}
 		} else if ( isfilerestored && path[0] != '\0' ) {
 			setextattr( path, ahdrp );
+
+			if ( persp->a.dstdirisxfspr && persp->a.restoredmpr ) {
+				int flag = 0;
+				char *attrname = (char *)&ahdrp[1];
+				if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_ROOT)
+					flag = ATTR_ROOT;
+				else if (ahdrp->ah_flags & EXTATTRHDR_FLAGS_SECURE)
+					flag = ATTR_SECURE;
+
+				HsmRestoreAttribute( flag,
+						     attrname,
+						     &strctxp->sc_hsmflags );
+			}
 		}
 	}
 	/* NOTREACHED */
@@ -8658,11 +8670,6 @@ setextattr( char *path, extattrhdr_t *ahdrp )
 	bool_t isdmpr;
 	int attr_namespace;
 	intgen_t rval;
-
-	/* Check if just displaying a dump before setting attributes */
-	if ( tranp->t_toconlypr ) {
-		return;
-	}
 
 	isdmpr = ( isrootpr &&
 		   !strncmp((char *)(&ahdrp[1]), dmiattr, sizeof(dmiattr)-1) );
@@ -9505,48 +9512,6 @@ display_needed_objects( purp_t purp,
 		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
 		      _("no additional media objects needed\n") );
 	}
-}
-
-/*	This routine re-opens the file specified by path.  We use the
- *	"standard" path_to_handle/open_by_handle routines rather than
- *	the jdm_open syntax - mainly because we would like to get rid
- *	of the jdm_open stuff and replace it by the standard routines
- *	specified in sys/handle.h (someday).
- *
- *	The point of the re-open here is to get the FINVIS flag set for
- *	the file so that invisible I/O occurs when xfsrestore is writing
- *	a file with DMAPI events set.  We do not call reopen_invis for
- *	files without DMAPI event flags, so that a DMAPI application that 
- *	tries to mess with a non-DMAPI file that is being restored will
- *	see write events generated by xfsrestore.  The logic is a little
- *	loose here - since we don't really check to see if the event bits
- *	being set in the XFS_IOC_FSSETDM call include read/write/trunc.
- */
-static int
-reopen_invis(char *path, int oflags)
-{
-	void	*hanp;
-	size_t	hlen=0;
-	int	fd;
-	
-	oflags &= ~(O_EXCL|O_CREAT);
-	if (path_to_handle(path, &hanp, &hlen)) {
-		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			"path_to_handle of %s failed:%s\n"),
-			path, strerror( errno ));
-		return -1;
-	}
-	
-	fd = open_by_handle(hanp, hlen, oflags);
-	if (fd < 0) {
-		mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			"open_by_handle of %s failed:%s\n"),
-			path, strerror( errno ));
-		free_handle(hanp, hlen);
-		return -1;
-	}
-	free_handle(hanp, hlen);
-	return fd;
 }
 
 static int
