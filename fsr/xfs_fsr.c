@@ -58,6 +58,12 @@
 #include <attr/attributes.h>
 #include <xfs/xfs_dfrag.h>
 
+
+#ifndef XFS_XFLAG_NODEFRAG
+#define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
+#endif
+
+
 char *progname;
 
 int vflag;
@@ -910,6 +916,12 @@ fsrfile_common(
 	if (fsx.fsx_xflags & (XFS_XFLAG_IMMUTABLE|XFS_XFLAG_APPEND)) {
 		if (vflag)
 			fsrprintf(_("%s: immutable/append, ignoring\n"), fname);
+		return(0);
+	}
+	if (fsx.fsx_xflags & XFS_XFLAG_NODEFRAG) {
+		if (vflag)
+			fsrprintf(_("%s: marked as don't defrag, ignoring\n"), 
+			    fname);
 		return(0);
 	}
 	if (fsx.fsx_xflags & XFS_XFLAG_REALTIME) {

@@ -129,6 +129,12 @@ does not operate on files that are currently mapped in memory.
 A 'file busy' error can be seen for these files if the verbose
 flag (\f3-v\f1) is set.
 .PP
+Files marked as no\-defrag will be skipped. The
+.IR xfs_io (8)
+chattr command with the f attribute can be used to set or clear 
+this flag. Files and directories created in a directory with the 
+no\-defrag flag will inherit the attribute.
+.PP
 An entry in
 .I /etc/mtab
 or the file specified using the
@@ -155,8 +161,10 @@ and
 as in general these will not suffer from fragmentation.
 There are also issues with defragmenting files
 .IR lilo (8)
-uses to boot your system.
-Should these files be moved by
+uses to boot your system. It is recommended that these files
+should be flagged as no\-defrag with the
+.IR xfs_io (8)
+chattr command. Should these files be moved by
 .I xfs_fsr
 then you must rerun
 .I lilo
