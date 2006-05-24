@@ -16,13 +16,13 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <sys/mman.h>
 #include <errno.h>
 #include <memory.h>
-#include <limits.h> 
+#include <limits.h>
 
 #include "types.h"
 #include "mlog.h"

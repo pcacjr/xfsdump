@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <sys/stat.h>
@@ -29,6 +29,7 @@
 #include "dlog.h"
 #include "global.h"
 #include "getopt.h"
+#include "swap.h"
 
 
 /* declarations of externally defined global symbols *************************/

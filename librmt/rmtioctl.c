@@ -24,6 +24,7 @@
 #include <errno.h>
 
 #include "rmtlib.h"
+#include "swap.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>

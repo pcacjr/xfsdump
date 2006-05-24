@@ -15,7 +15,7 @@
  * along with this program; if not, write the Free Software Foundation,
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <sys/stat.h>
@@ -41,12 +41,12 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
 		dirname = "";
 	}
 
-	/* 
-	 * We could calculate the length of pid string 
+	/*
+	 * We could calculate the length of pid string
 	 * = trunc(log10(pid))+1,
 	 * but we are restricted to 32 bits for pid anyway.
 	 * 32 bits => trunc(log10(2^32))+1 = 10
-	 * And if it ever became 64 bits, 
+	 * And if it ever became 64 bits,
 	 * 64 bits => trunc(log10(2^64))+1 = 20
          */
   	if ( pid ) {
@@ -57,13 +57,13 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
 	namelen = dirlen + 1 + strlen( basename ) + pidlen + 1;
 	namebuf = ( char * )calloc( 1, namelen );
   	ASSERT( namebuf );
-  
+
   	if ( pid ) {
 		( void )snprintf( namebuf, namelen, "%s/%s.%d", dirname, basename, pid );
   	} else {
 		( void )snprintf( namebuf, namelen, "%s/%s", dirname, basename );
   	}
-  
+
   	return namebuf;
 }
 

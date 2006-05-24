@@ -19,7 +19,7 @@
 #ifndef HSMAPI_H
 #define HSMAPI_H
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 #include "types.h"
 #include "global.h"

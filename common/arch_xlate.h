@@ -19,7 +19,7 @@
 #ifndef ARCH_XLATE_H
 #define ARCH_XLATE_H
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include "types.h"
@@ -31,7 +31,7 @@
 #include "inomap.h"
 #include "rec_hdr.h"
 #include "inv_priv.h"
-
+#include "swap.h"
 
 /*
  * xlate_global_hdr - endian convert struct global_hdr

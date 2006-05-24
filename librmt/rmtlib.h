@@ -28,7 +28,7 @@
  */
 
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 
 /*
  *	Note that local vs remote file descriptors are distinquished

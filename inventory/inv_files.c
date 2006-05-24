@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <time.h>
@@ -45,7 +45,7 @@ static char old_inv_base[] = MGR_BASE_OLD;
 
 static char inv_fstabp[MGR_PATH_MAX];
 static char inv_dirpathp[MGR_PATH_MAX];
-static char inv_lockfilep[MGR_PATH_MAX];	
+static char inv_lockfilep[MGR_PATH_MAX];
 
 char *
 inv_dirpath( void )

@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <time.h>
@@ -44,7 +44,7 @@ init_idb( void *pred, inv_predicate_t bywhat, inv_oflag_t forwhat,
 	char fname[ INV_STRLEN ];
 	char uuname[ INV_STRLEN ];
 	int fd;
-	
+
 	*tok = INV_TOKEN_NULL;
 	/* make sure INV_DIRPATH exists, and is writable */
 	if ( make_invdirectory( forwhat ) < 0 )

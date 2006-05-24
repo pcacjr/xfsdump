@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <fcntl.h>
@@ -45,7 +45,7 @@ inv_open( inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred )
 	int fd, stobjfd, num, retval;
 	inv_idbtoken_t tok = INV_TOKEN_NULL;
 	invt_sescounter_t *sescnt = 0;
-	
+
 	int index = 0;
 	
 	ASSERT ( pred );

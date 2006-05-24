@@ -16,19 +16,19 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include "inv_priv.h"
 #include "inv_oref.h"
 
 
-/* 
+/*
  * Resolve a stobj, invidx or fstab
  */
 intgen_t
 oref_resolve_(
-	invt_oref_t 	*obj, 
+	invt_oref_t 	*obj,
 	invt_objtype_t	type)
 {
 	intgen_t rval;
@@ -36,7 +36,7 @@ oref_resolve_(
 	type &= INVT_OTYPE_MASK;
 	ASSERT(type);
 	ASSERT(! OREF_ISRESOLVED(obj, INVT_OTYPE_MASK));
-	
+
 	switch (type) {
 	      case INVT_OTYPE_INVIDX:
 		rval = oref_resolve_invidx(obj);

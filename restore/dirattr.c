@@ -26,7 +26,7 @@
  * at a later time.
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <sys/mman.h>

@@ -16,7 +16,7 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
 #include <sys/file.h>
@@ -39,7 +39,7 @@
 static char *mnt_str[] = { "/usr/lib", "/usr", "/u/sw/courses", "/pro/leda",
 			   "/root", "/a/xfs/xlv/e", "/dana/hates/me", "/the/krays" };
 
-static char *dev_str[] = { "/dev/usr/lib", "/dev/usr", "/dev/u/sw/courses", 
+static char *dev_str[] = { "/dev/usr/lib", "/dev/usr", "/dev/u/sw/courses",
 			   "/dev/pro/leda",
 			   "/dev/root", "/dev/a/xfs/xlv/e", "/dev/dana/hates/me",
 			   "/dev/the/krays" };
@@ -65,8 +65,8 @@ CREAT_mfiles( inv_stmtoken_t tok, uuid_t *moid, ino_t f, ino_t n )
 	free (str);
 	strbuf[8] = '\0';
 	sprintf(label,"%s_%s (%d-%d)\0","MEDIA_FILE", strbuf, (int)f, (int)n );
-	
-	inv_put_mediafile( tok, moid, label, 12, f, 0, n, 0, 0xffff, 
+
+	inv_put_mediafile( tok, moid, label, 12, f, 0, n, 0, 0xffff,
 			  BOOL_TRUE, BOOL_FALSE );
 
 }

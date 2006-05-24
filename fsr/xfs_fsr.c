@@ -41,7 +41,7 @@
  *	-p passes	Number of passes before terminating global re-org.
  */
 
-#include <xfs/libxfs.h>
+#include <xfs/xfs.h>
 #include <xfs/jdm.h>
 #include "config.h"
 
