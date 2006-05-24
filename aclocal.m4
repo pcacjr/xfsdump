@@ -1,183 +1,14 @@
-# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
+dnl aclocal.m4 generated automatically by aclocal 1.4-p6
 
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-# 2005  Free Software Foundation, Inc.
-# This file is free software; the Free Software Foundation
-# gives unlimited permission to copy and/or distribute it,
-# with or without modifications, as long as this notice is preserved.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE.
-
-# 
-# Find format of installed man pages.
-# Always gzipped on Debian, but not Redhat pre-7.0.
-# We don't deal with bzip2'd man pages, which Mandrake uses,
-# someone will send us a patch sometime hopefully. :-)
-# 
-AC_DEFUN([AC_MANUAL_FORMAT],
-  [ have_zipped_manpages=false
-    for d in ${prefix}/share/man ${prefix}/man ; do
-        if test -f $d/man1/man.1.gz
-        then
-            have_zipped_manpages=true
-            break
-        fi
-    done
-    AC_SUBST(have_zipped_manpages)
-  ])
-
-# The AC_MULTILIB macro was extracted and modified from 
-# gettext-0.15's AC_LIB_PREPARE_MULTILIB macro in the lib-prefix.m4 file
-# so that the correct paths can be used for 64-bit libraries.
-#
-dnl Copyright (C) 2001-2005 Free Software Foundation, Inc.
+dnl Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
-dnl From Bruno Haible.
 
-dnl AC_MULTILIB creates a variable libdirsuffix, containing
-dnl the suffix of the libdir, either "" or "64".
-dnl Only do this if the given enable parameter is "yes".
-AC_DEFUN([AC_MULTILIB],
-[
-  dnl There is no formal standard regarding lib and lib64. The current
-  dnl practice is that on a system supporting 32-bit and 64-bit instruction
-  dnl sets or ABIs, 64-bit libraries go under $prefix/lib64 and 32-bit
-  dnl libraries go under $prefix/lib. We determine the compiler's default
-  dnl mode by looking at the compiler's library search path. If at least
-  dnl of its elements ends in /lib64 or points to a directory whose absolute
-  dnl pathname ends in /lib64, we assume a 64-bit ABI. Otherwise we use the
-  dnl default, namely "lib".
-  enable_lib64="$1"
-  libdirsuffix=""
-  searchpath=`(LC_ALL=C $CC -print-search-dirs) 2>/dev/null | sed -n -e 's,^libraries: ,,p' | sed -e 's,^=,,'`
-  if test "$enable_lib64" = "yes" -a -n "$searchpath"; then
-    save_IFS="${IFS= 	}"; IFS=":"
-    for searchdir in $searchpath; do
-      if test -d "$searchdir"; then
-        case "$searchdir" in
-          */lib64/ | */lib64 ) libdirsuffix=64 ;;
-          *) searchdir=`cd "$searchdir" && pwd`
-             case "$searchdir" in
-               */lib64 ) libdirsuffix=64 ;;
-             esac ;;
-        esac
-      fi
-    done
-    IFS="$save_IFS"
-  fi
-  AC_SUBST(libdirsuffix)
-])
-
-AC_DEFUN([AC_PACKAGE_NEED_ATTR_XATTR_H],
-  [ AC_CHECK_HEADERS([attr/xattr.h])
-    if test "$ac_cv_header_attr_xattr_h" != "yes"; then
-        echo
-        echo 'FATAL ERROR: attr/xattr.h does not exist.'
-        echo 'Install the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-dev" from the attr source.'
-        exit 1
-    fi
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_ATTR_ERROR_H],
-  [ AC_CHECK_HEADERS([attr/error_context.h])
-    if test "$ac_cv_header_attr_error_context_h" != "yes"; then
-        echo
-        echo 'FATAL ERROR: attr/error_context.h does not exist.'
-        echo 'Install the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-dev" from the attr source.'
-        exit 1
-    fi
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_H],
-  [ have_attributes_h=false
-    AC_CHECK_HEADERS([attr/attributes.h sys/attributes.h], [have_attributes_h=true], )
-    if test "$have_attributes_h" = "false"; then
-        echo
-        echo 'FATAL ERROR: attributes.h does not exist.'
-        echo 'Install the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-dev" from the attr source.'
-        exit 1
-    fi
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_GETXATTR_LIBATTR],
-  [ AC_CHECK_LIB(attr, getxattr,, [
-        echo
-        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
-        echo 'Install the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-lib" from the attr source.'
-        exit 1
-    ])
-    libattr="-lattr"
-    test -f `pwd`/../attr/libattr/libattr.la && \
-        libattr="`pwd`/../attr/libattr/libattr.la"
-    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
-	libattr="${libexecdir}${libdirsuffix}/libattr.la"
-    AC_SUBST(libattr)
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_ATTRGET_LIBATTR],
-  [ AC_CHECK_LIB(attr, attr_get,, [
-        echo
-        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
-        echo 'Install the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-lib" from the attr source.'
-        exit 1
-    ])
-    libattr="-lattr"
-    test -f `pwd`/../attr/libattr/libattr.la && \
-        libattr="`pwd`/../attr/libattr/libattr.la"
-    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
-	libattr="${libexecdir}${libdirsuffix}/libattr.la"
-    AC_SUBST(libattr)
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_MACROS],
-  [ AC_MSG_CHECKING([macros in attr/attributes.h])
-    AC_TRY_LINK([
-#include <sys/types.h>
-#include <attr/attributes.h>],
-    [ int x = ATTR_SECURE; ], [ echo ok ], [
-        echo
-	echo 'FATAL ERROR: could not find a current attributes header.'
-        echo 'Upgrade the extended attributes (attr) development package.'
-        echo 'Alternatively, run "make install-dev" from the attr source.'
-	exit 1 ])
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_XFS_DMAPI_H],
-  [ AC_CHECK_HEADERS([xfs/dmapi.h])
-    if test "$ac_cv_header_xfs_dmapi_h" != yes; then
-        echo
-        echo 'FATAL ERROR: could not find a valid DMAPI library header.'
-        echo 'Install the data migration API (dmapi) development package.'
-        echo 'Alternatively, run "make install-dev" from the dmapi source.'
-        exit 1
-    fi
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_MAKEHANDLE_LIBDM],
-  [ AC_CHECK_LIB(dm, dm_make_handle,, [
-        echo
-        echo 'FATAL ERROR: could not find a valid DMAPI base library.'
-        echo 'Install the data migration API (dmapi) library package.'
-        echo 'Alternatively, run "make install" from the dmapi source.'
-        exit 1
-    ])
-    libdm="-ldm"
-    test -f `pwd`/../dmapi/libdm/libdm.la && \
-        libdm="`pwd`/../dmapi/libdm/libdm.la"
-    test -f ${libexecdir}${libdirsuffix}/libdm.la && \
-	libdm="${libexecdir}${libdirsuffix}/libdm.la"
-    AC_SUBST(libdm)
-  ])
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+dnl PARTICULAR PURPOSE.
 
 # 
 # Generic macro, sets up all of the global packaging variables.
@@ -223,37 +54,6 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
     pkg_platform=`uname -s | tr 'A-Z' 'a-z' | sed -e 's/irix64/irix/'`
     test -z "$PLATFORM" || pkg_platform="$PLATFORM"
     AC_SUBST(pkg_platform)
-  ])
-
-AC_DEFUN([AC_PACKAGE_NEED_NCURSES_H],
-  [ AC_CHECK_HEADERS([ncurses.h])
-    if test "$ac_cv_header_ncurses_h" != yes; then
-        echo
-        echo 'FATAL ERROR: could not find a valid ncurses header.'
-        echo 'Install the ncurses development package.'
-        exit 1
-    fi
-  ])
-
-AC_DEFUN([AC_PACKAGE_WANT_WORKING_LIBNCURSES],
-  [ AC_CHECK_LIB(ncurses, initscr,, [
-        echo
-        echo 'FATAL ERROR: could not find a valid ncurses library.'
-        echo 'Install the ncurses library package.'
-        exit 1
-    ])
-    AC_MSG_CHECKING([for bad glibc/ncurses header interaction])
-    libcurses="-lncurses"
-    LIBS="$LIBS $libcurses"
-    CFLAGS="$CFLAGS -D_GNU_SOURCE"
-    AC_TRY_LINK([
-#include <ncurses.h>
-#include <signal.h>],
-        [wgetch(stdscr);],
-        [enable_curses=yes; AC_MSG_RESULT([ok])],
-        [enable_curses=no; libcurses=""; AC_MSG_RESULT([disabling curses])])
-    AC_SUBST(enable_curses)
-    AC_SUBST(libcurses)
   ])
 
 #
@@ -384,6 +184,50 @@ AC_DEFUN([AC_PACKAGE_UTILITIES],
     AC_SUBST(rpmbuild)
   ])
 
+# The AC_MULTILIB macro was extracted and modified from 
+# gettext-0.15's AC_LIB_PREPARE_MULTILIB macro in the lib-prefix.m4 file
+# so that the correct paths can be used for 64-bit libraries.
+#
+dnl Copyright (C) 2001-2005 Free Software Foundation, Inc.
+dnl This file is free software; the Free Software Foundation
+dnl gives unlimited permission to copy and/or distribute it,
+dnl with or without modifications, as long as this notice is preserved.
+dnl From Bruno Haible.
+
+dnl AC_MULTILIB creates a variable libdirsuffix, containing
+dnl the suffix of the libdir, either "" or "64".
+dnl Only do this if the given enable parameter is "yes".
+AC_DEFUN([AC_MULTILIB],
+[
+  dnl There is no formal standard regarding lib and lib64. The current
+  dnl practice is that on a system supporting 32-bit and 64-bit instruction
+  dnl sets or ABIs, 64-bit libraries go under $prefix/lib64 and 32-bit
+  dnl libraries go under $prefix/lib. We determine the compiler's default
+  dnl mode by looking at the compiler's library search path. If at least
+  dnl of its elements ends in /lib64 or points to a directory whose absolute
+  dnl pathname ends in /lib64, we assume a 64-bit ABI. Otherwise we use the
+  dnl default, namely "lib".
+  enable_lib64="$1"
+  libdirsuffix=""
+  searchpath=`(LC_ALL=C $CC -print-search-dirs) 2>/dev/null | sed -n -e 's,^libraries: ,,p' | sed -e 's,^=,,'`
+  if test "$enable_lib64" = "yes" -a -n "$searchpath"; then
+    save_IFS="${IFS= 	}"; IFS=":"
+    for searchdir in $searchpath; do
+      if test -d "$searchdir"; then
+        case "$searchdir" in
+          */lib64/ | */lib64 ) libdirsuffix=64 ;;
+          *) searchdir=`cd "$searchdir" && pwd`
+             case "$searchdir" in
+               */lib64 ) libdirsuffix=64 ;;
+             esac ;;
+        esac
+      fi
+    done
+    IFS="$save_IFS"
+  fi
+  AC_SUBST(libdirsuffix)
+])
+
 AC_DEFUN([AC_PACKAGE_NEED_UUID_H],
   [ AC_CHECK_HEADERS([uuid.h sys/uuid.h uuid/uuid.h])
     if test $ac_cv_header_uuid_h = no -a \
@@ -411,11 +255,42 @@ AC_DEFUN([AC_PACKAGE_NEED_UUIDCOMPARE],
     AC_SUBST(libuuid)
   ])
 
-AC_DEFUN([AC_PACKAGE_NEED_XFS_LIBXFS_H],
-  [ AC_CHECK_HEADERS([xfs/libxfs.h])
-    if test "$ac_cv_header_xfs_libxfs_h" != "yes"; then
+AC_DEFUN([AC_PACKAGE_NEED_NCURSES_H],
+  [ AC_CHECK_HEADERS([ncurses.h])
+    if test "$ac_cv_header_ncurses_h" != yes; then
         echo
-        echo 'FATAL ERROR: cannot find a valid <xfs/libxfs.h> header file.'
+        echo 'FATAL ERROR: could not find a valid ncurses header.'
+        echo 'Install the ncurses development package.'
+        exit 1
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_WANT_WORKING_LIBNCURSES],
+  [ AC_CHECK_LIB(ncurses, initscr,, [
+        echo
+        echo 'FATAL ERROR: could not find a valid ncurses library.'
+        echo 'Install the ncurses library package.'
+        exit 1
+    ])
+    AC_MSG_CHECKING([for bad glibc/ncurses header interaction])
+    libcurses="-lncurses"
+    LIBS="$LIBS $libcurses"
+    CFLAGS="$CFLAGS -D_GNU_SOURCE"
+    AC_TRY_LINK([
+#include <ncurses.h>
+#include <signal.h>],
+        [wgetch(stdscr);],
+        [enable_curses=yes; AC_MSG_RESULT([ok])],
+        [enable_curses=no; libcurses=""; AC_MSG_RESULT([disabling curses])])
+    AC_SUBST(enable_curses)
+    AC_SUBST(libcurses)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_XFS_XFS_H],
+  [ AC_CHECK_HEADERS([xfs/xfs.h])
+    if test "$ac_cv_header_xfs_xfs_h" != "yes"; then
+        echo
+        echo 'FATAL ERROR: cannot find a valid <xfs/xfs.h> header file.'
         echo 'Install or upgrade the XFS development package.'
         echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
         exit 1
@@ -515,5 +390,134 @@ AC_DEFUN([AC_PACKAGE_NEED_XFSCTL_MACRO],
         echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
         exit 1
       ])
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_XFS_DMAPI_H],
+  [ AC_CHECK_HEADERS([xfs/dmapi.h])
+    if test "$ac_cv_header_xfs_dmapi_h" != yes; then
+        echo
+        echo 'FATAL ERROR: could not find a valid DMAPI library header.'
+        echo 'Install the data migration API (dmapi) development package.'
+        echo 'Alternatively, run "make install-dev" from the dmapi source.'
+        exit 1
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_MAKEHANDLE_LIBDM],
+  [ AC_CHECK_LIB(dm, dm_make_handle,, [
+        echo
+        echo 'FATAL ERROR: could not find a valid DMAPI base library.'
+        echo 'Install the data migration API (dmapi) library package.'
+        echo 'Alternatively, run "make install" from the dmapi source.'
+        exit 1
+    ])
+    libdm="-ldm"
+    test -f `pwd`/../dmapi/libdm/libdm.la && \
+        libdm="`pwd`/../dmapi/libdm/libdm.la"
+    test -f ${libexecdir}${libdirsuffix}/libdm.la && \
+	libdm="${libexecdir}${libdirsuffix}/libdm.la"
+    AC_SUBST(libdm)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTR_XATTR_H],
+  [ AC_CHECK_HEADERS([attr/xattr.h])
+    if test "$ac_cv_header_attr_xattr_h" != "yes"; then
+        echo
+        echo 'FATAL ERROR: attr/xattr.h does not exist.'
+        echo 'Install the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-dev" from the attr source.'
+        exit 1
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTR_ERROR_H],
+  [ AC_CHECK_HEADERS([attr/error_context.h])
+    if test "$ac_cv_header_attr_error_context_h" != "yes"; then
+        echo
+        echo 'FATAL ERROR: attr/error_context.h does not exist.'
+        echo 'Install the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-dev" from the attr source.'
+        exit 1
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_H],
+  [ have_attributes_h=false
+    AC_CHECK_HEADERS([attr/attributes.h sys/attributes.h], [have_attributes_h=true], )
+    if test "$have_attributes_h" = "false"; then
+        echo
+        echo 'FATAL ERROR: attributes.h does not exist.'
+        echo 'Install the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-dev" from the attr source.'
+        exit 1
+    fi
+  ])
+
+AC_DEFUN([AC_PACKAGE_WANT_ATTRLIST_LIBATTR],
+  [ AC_CHECK_LIB(attr, attr_list, [have_attr_list=true], [have_attr_list=false])
+    AC_SUBST(have_attr_list)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_GETXATTR_LIBATTR],
+  [ AC_CHECK_LIB(attr, getxattr,, [
+        echo
+        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
+        echo 'Install the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-lib" from the attr source.'
+        exit 1
+    ])
+    libattr="-lattr"
+    test -f `pwd`/../attr/libattr/libattr.la && \
+        libattr="`pwd`/../attr/libattr/libattr.la"
+    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
+	libattr="${libexecdir}${libdirsuffix}/libattr.la"
+    AC_SUBST(libattr)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTRGET_LIBATTR],
+  [ AC_CHECK_LIB(attr, attr_get,, [
+        echo
+        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
+        echo 'Install the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-lib" from the attr source.'
+        exit 1
+    ])
+    libattr="-lattr"
+    test -f `pwd`/../attr/libattr/libattr.la && \
+        libattr="`pwd`/../attr/libattr/libattr.la"
+    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
+	libattr="${libexecdir}${libdirsuffix}/libattr.la"
+    AC_SUBST(libattr)
+  ])
+
+AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_MACROS],
+  [ AC_MSG_CHECKING([macros in attr/attributes.h])
+    AC_TRY_LINK([
+#include <sys/types.h>
+#include <attr/attributes.h>],
+    [ int x = ATTR_SECURE; ], [ echo ok ], [
+        echo
+	echo 'FATAL ERROR: could not find a current attributes header.'
+        echo 'Upgrade the extended attributes (attr) development package.'
+        echo 'Alternatively, run "make install-dev" from the attr source.'
+	exit 1 ])
+  ])
+
+# 
+# Find format of installed man pages.
+# Always gzipped on Debian, but not Redhat pre-7.0.
+# We don't deal with bzip2'd man pages, which Mandrake uses,
+# someone will send us a patch sometime hopefully. :-)
+# 
+AC_DEFUN([AC_MANUAL_FORMAT],
+  [ have_zipped_manpages=false
+    for d in ${prefix}/share/man ${prefix}/man ; do
+        if test -f $d/man1/man.1.gz
+        then
+            have_zipped_manpages=true
+            break
+        fi
+    done
+    AC_SUBST(have_zipped_manpages)
   ])
 

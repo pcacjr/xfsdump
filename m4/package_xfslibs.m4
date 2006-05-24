@@ -1,8 +1,8 @@
-AC_DEFUN([AC_PACKAGE_NEED_XFS_LIBXFS_H],
-  [ AC_CHECK_HEADERS([xfs/libxfs.h])
-    if test "$ac_cv_header_xfs_libxfs_h" != "yes"; then
+AC_DEFUN([AC_PACKAGE_NEED_XFS_XFS_H],
+  [ AC_CHECK_HEADERS([xfs/xfs.h])
+    if test "$ac_cv_header_xfs_xfs_h" != "yes"; then
         echo
-        echo 'FATAL ERROR: cannot find a valid <xfs/libxfs.h> header file.'
+        echo 'FATAL ERROR: cannot find a valid <xfs/xfs.h> header file.'
         echo 'Install or upgrade the XFS development package.'
         echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
         exit 1
