@@ -128,7 +128,7 @@ static void tmp_init(char *mnt);
 static char * tmp_next(char *mnt);
 static void tmp_close(char *mnt);
 int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
-static int getmntany (FILE *, struct mntent *, struct mntent *);
+static int getmntany (FILE *, struct mntent *, struct mntent *, struct stat *);
 
 xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
 
@@ -306,10 +306,9 @@ main(int argc, char **argv)
 				else
 					mntpref.mnt_fsname = argname;
 
-				if ((getmntany(mtabp, &mntent, &mntpref) == 0)
+				if (!(getmntany(mtabp, &mntent, &mntpref, &sb))
 				     &&
-				   (strcmp(mntent.mnt_type, MNTTYPE_XFS) == 0))
-				{
+				    !(strcmp(mntent.mnt_type, MNTTYPE_XFS))) {
 					mntp = &mntent;
 					if (S_ISBLK(sb.st_mode)) {
 						cp = mntp->mnt_dir;
@@ -1492,17 +1491,27 @@ fsrprintf(const char *fmt, ...)
  * emulate getmntany
  */
 static int
-getmntany (FILE *filep, struct mntent *mp, struct mntent *mpref)
+getmntany (FILE *filep, struct mntent *mp, struct mntent *mpref, struct stat *s)
 {
         int match = 0;
-        struct mntent *t = NULL;
+	struct stat ms;
+        struct mntent *t;
 
-        while (!match && (t = getmntent(filep)) != 0) {
-                if (mpref->mnt_fsname != NULL &&
-                  strcmp(mpref->mnt_fsname, t->mnt_fsname) != 0)  continue;
-                if (mpref->mnt_dir != NULL &&
-                    strcmp(mpref->mnt_dir, t->mnt_dir) != 0)  continue;
+        while ((t = getmntent(filep))) {
+		if (mpref->mnt_fsname) {
+			if (stat(t->mnt_fsname, &ms) < 0)
+				continue;
+			if (s->st_dev != ms.st_rdev)
+				continue;
+		}
+                if (mpref->mnt_dir) {
+			if (stat(t->mnt_dir, &ms) < 0)
+				continue;
+			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
+				continue;
+		}
                 match++;
+		break;
         }
         if (match) *mp = *t;
         return !match;
