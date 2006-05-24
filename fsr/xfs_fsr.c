@@ -128,7 +128,7 @@ static void tmp_init(char *mnt);
 static char * tmp_next(char *mnt);
 static void tmp_close(char *mnt);
 int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
-static int getmntany (FILE *, struct mntent *, struct mntent *, struct stat *);
+static int getmntany(FILE *, struct mntent *, struct mntent *, struct stat64 *);
 
 xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
 
@@ -200,13 +200,13 @@ aborter(int unused)
 int
 main(int argc, char **argv)
 {
-	struct stat sb, sb2;
+	struct stat64 sb, sb2;
 	char *argname;
 	char *cp;
 	int c;
 	struct mntent mntpref;
 	register struct mntent *mntp;
-	struct mntent mntent;
+	struct mntent ment;
 	register FILE *mtabp;
 
 	setlinebuf(stdout);
@@ -284,13 +284,13 @@ main(int argc, char **argv)
 		for (; optind < argc; optind++) {
 			argname = argv[optind];
 			mntp = NULL;
-			if (lstat(argname, &sb) < 0) {
+			if (lstat64(argname, &sb) < 0) {
 				fprintf(stderr,
 					_("%s: could not stat: %s: %s\n"),
 					progname, argname, strerror(errno));
 				continue;
 			}
-			if (S_ISLNK(sb.st_mode) && stat(argname, &sb2) == 0 &&
+			if (S_ISLNK(sb.st_mode) && stat64(argname, &sb2) == 0 &&
 			    (S_ISBLK(sb2.st_mode) || S_ISCHR(sb2.st_mode)))
 				sb = sb2;
 			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
@@ -306,14 +306,13 @@ main(int argc, char **argv)
 				else
 					mntpref.mnt_fsname = argname;
 
-				if (!(getmntany(mtabp, &mntent, &mntpref, &sb))
-				     &&
-				    !(strcmp(mntent.mnt_type, MNTTYPE_XFS))) {
-					mntp = &mntent;
+				if (getmntany(mtabp, &ment, &mntpref, &sb) &&
+				    strcmp(ment.mnt_type, MNTTYPE_XFS) == 0) {
+					mntp = &ment;
 					if (S_ISBLK(sb.st_mode)) {
 						cp = mntp->mnt_dir;
 						if (cp == NULL ||
-						    stat(cp, &sb2) < 0) {
+						    stat64(cp, &sb2) < 0) {
 							fprintf(stderr, _(
 						"%s: could not stat: %s: %s\n"),
 							progname, argname,
@@ -333,10 +332,7 @@ main(int argc, char **argv)
 				        progname, argname);
 				exit(1);
 			} else if (S_ISDIR(sb.st_mode) || S_ISREG(sb.st_mode)) {
-				struct statfs fs;
-
-				statfs(argname, &fs);
-				if (fs.f_type != XFS_SB_MAGIC) {
+				if (!platform_test_xfs_path(argname)) {
 					fprintf(stderr, _(
 				        "%s: cannot defragment: %s: Not XFS\n"),
 				        progname, argname);
@@ -376,7 +372,7 @@ initallfs(char *mtab)
 	struct mntent *mp;
 	int mi;
 	char *cp;
-	struct stat sb;
+	struct stat64 sb;
 
 	fp = setmntent(mtab, "r");
 	if (fp == NULL) {
@@ -398,7 +394,7 @@ initallfs(char *mtab)
 		int rw = 0;
 
 		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
-		    stat(mp->mnt_fsname, &sb) == -1 ||
+		    stat64(mp->mnt_fsname, &sb) == -1 ||
 		    !S_ISBLK(sb.st_mode))
 			continue;
 
@@ -1491,30 +1487,28 @@ fsrprintf(const char *fmt, ...)
  * emulate getmntany
  */
 static int
-getmntany (FILE *filep, struct mntent *mp, struct mntent *mpref, struct stat *s)
+getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
 {
-        int match = 0;
-	struct stat ms;
-        struct mntent *t;
+	struct mntent *t;
+	struct stat64 ms;
 
-        while ((t = getmntent(filep))) {
-		if (mpref->mnt_fsname) {
-			if (stat(t->mnt_fsname, &ms) < 0)
+	while ((t = getmntent(fp))) {
+		if (mpref->mnt_fsname) {	/* device */
+			if (stat64(t->mnt_fsname, &ms) < 0)
 				continue;
-			if (s->st_dev != ms.st_rdev)
+			if (s->st_rdev != ms.st_rdev)
 				continue;
 		}
-                if (mpref->mnt_dir) {
-			if (stat(t->mnt_dir, &ms) < 0)
+		if (mpref->mnt_dir) {		/* mount point */
+			if (stat64(t->mnt_dir, &ms) < 0)
 				continue;
 			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
 				continue;
 		}
-                match++;
+		*mp = *t;
 		break;
-        }
-        if (match) *mp = *t;
-        return !match;
+	}
+	return (t != NULL);
 }
 
 
