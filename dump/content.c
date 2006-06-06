@@ -122,7 +122,7 @@ struct context {
 	extenthdr_t *cc_extenthdrp;
 			/* pre-allocated buffer: heads each dumped file extent
 			 */
-	void *cc_inomap_state_contextp;
+	void *cc_inomap_contextp;
 			/* pre-allocated context to speed inomap iteration
 			 */
 	char *cc_getdentsbufp;
@@ -1640,7 +1640,7 @@ baseuuidbypass:
 			   ( char * ) calloc( 1, contextp->cc_readlinkbufsz );
 		ASSERT( contextp->cc_readlinkbufp );
 
-		contextp->cc_inomap_state_contextp = inomap_state_getcontext( );
+		contextp->cc_inomap_contextp = inomap_alloc_context( );
 	}
 
 	/* look for command line media labels. these will be assigned
@@ -2877,7 +2877,7 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 		      bulkstatcallcnt,
 		      bstatbuflen );
 
-		bulkreq.lastip = &lastino;
+		bulkreq.lastip = (__u64 *)&lastino;
 		bulkreq.icount = bstatbuflen;
 		bulkreq.ubuffer = bstatbufp;
 		bulkreq.ocount = &buflenout;
@@ -3007,7 +3007,7 @@ dump_dir( ix_t strmix,
 {
 	context_t *contextp = &sc_contextp[ strmix ];
 	drive_t *drivep = drivepp[ strmix ];
-	void *inomap_state_contextp = contextp->cc_inomap_state_contextp;
+	void *inomap_contextp = contextp->cc_inomap_contextp;
 	intgen_t state;
 	intgen_t fd;
 	struct dirent *gdp = ( struct dirent *)contextp->cc_getdentsbufp;
@@ -3031,7 +3031,7 @@ dump_dir( ix_t strmix,
 
 	/* see what the inomap says about this ino
 	 */
-	state = inomap_state( inomap_state_contextp, statp->bs_ino );
+	state = inomap_get_state( inomap_contextp, statp->bs_ino );
 
 	/* skip if not in inomap
 	 */
@@ -3184,7 +3184,7 @@ dump_dir( ix_t strmix,
 			/* lookup the gen number in the ino-to-gen map.
 			 * if it's not there, we have to get it the slow way.
 			 */
-			gen = i2g( p->d_ino );
+			gen = inomap_get_gen( NULL, p->d_ino );
 			if (gen == GEN_NULL) {
 				xfs_bstat_t statbuf;
 				intgen_t scrval;
@@ -3870,8 +3870,7 @@ dump_file( void *arg1,
 
 	/* see what the inomap says about this ino
 	 */
-	state = inomap_state( contextp->cc_inomap_state_contextp,
-			      statp->bs_ino );
+	state = inomap_get_state( contextp->cc_inomap_contextp, statp->bs_ino );
 
 	/* skip if not in inomap
 	 */

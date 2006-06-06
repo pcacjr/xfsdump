@@ -119,24 +119,20 @@ typedef struct seg seg_t;
 struct hnk {
 	seg_t seg[ SEGPERHNK ];
 	xfs_ino_t maxino;
-	struct hnk *nextp;
+	struct hnk *nextp;		/* no longer used, kept for binary compat */
 	char pad[sizeof( seg_t ) - sizeof( xfs_ino_t ) - sizeof( struct hnk * )];
 };
 
 typedef struct hnk hnk_t;
 
-/* inomap_state - returns the map state of the given ino.
- * highly optimized for monotonically increasing arguments to
- * successive calls. requires a pointer to a context block, obtained from
- * inomap_state_getcontext(), and released by inomap_state_freecontext().
+/* functions to get state and gen information from the inomap.
+ * requires a pointer to a context block, obtained from
+ * inomap_alloc_context(), and released by inomap_free_context().
  */
-extern void *inomap_state_getcontext( void );
-extern intgen_t inomap_state( void *contextp, xfs_ino_t ino );
-extern void inomap_state_freecontext( void *contextp );
-void inomap_state_postaccum( void *p );
-
-/* lookup a gen number for a given ino. */
-extern gen_t i2g(ino64_t ino);
+extern void *inomap_alloc_context( void );
+extern void inomap_free_context( void *contextp );
+extern intgen_t inomap_get_state( void *contextp, xfs_ino_t ino );
+extern gen_t inomap_get_gen( void *contextp, xfs_ino_t ino );
 
 #ifdef NOTUSED
 /* inomap_iter_cb - will call the supplied function for each ino in
