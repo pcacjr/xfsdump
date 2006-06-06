@@ -77,6 +77,7 @@ static void cb_context( bool_t last,
 			size_t,
 			intgen_t );
 static void cb_postmortem( void );
+static intgen_t cb_count_inogrp( void *, intgen_t, xfs_inogrp_t *);
 static intgen_t cb_add( void *, jdm_fshandle_t *, intgen_t, xfs_bstat_t * );
 static bool_t cb_inoinresumerange( xfs_ino_t );
 static bool_t cb_inoresumed( xfs_ino_t );
@@ -190,7 +191,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	size_t bstatbuflen;
 	char *getdentbufp;
 	bool_t pruneneeded;
-	intgen_t igrpcnt;
+	intgen_t igrpcnt = 0;
 	intgen_t stat;
 	void *inomap_state_contextp;
 	intgen_t rval;
@@ -257,7 +258,10 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	      "ino map phase 2: "
 	      "constructing initial dump list\n") );
 
-	rval = inogrp_count( fsfd, &igrpcnt );
+	/* count the number of inode groups, which will serve as a
+	 * starting point for the size of the inomap.
+	 */
+	rval = inogrp_iter( fsfd, cb_count_inogrp, (void *)&igrpcnt, &stat );
 	if ( rval ) {
 		free( ( void * )bstatbufp );
 		free( ( void * )getdentbufp );
@@ -605,6 +609,14 @@ cb_postmortem( void )
 	mlog( MLOG_DEBUG | MLOG_NOTE | MLOG_INOMAP, _(
 	      "maximum subtree pruning recursion depth: %u\n"),
 	      cb_maxrecursionlevel );
+}
+
+static intgen_t
+cb_count_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
+{
+	intgen_t *count = (intgen_t *)arg1;
+	(*count)++;
+	return 0;
 }
 
 /* cb_add - called for all inodes in the file system. checks

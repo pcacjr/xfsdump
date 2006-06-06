@@ -251,30 +251,61 @@ bigstat_one( intgen_t fsfd,
 	return xfsctl(NULL, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
 }
 
-/* efficiently count the number of inode groups (groups of 64 inodes).
- * This could be made into an iterator with a callback, but as of
- * now there is no other need for SGI_FS_INUMBERS.
+/* call the given callback for each inode group in the filesystem.
  */
-#define INOGRPLEN	1024
+#define INOGRPLEN	256
 intgen_t
-inogrp_count( intgen_t fsfd, intgen_t *grpcnt )
+inogrp_iter( intgen_t fsfd,
+	     intgen_t ( * fp )( void *arg1,
+				intgen_t fsfd,
+				xfs_inogrp_t *inogrp ),
+	     void * arg1,
+	     intgen_t *statp )
 {
-	xfs_ino_t last = 0;
-	intgen_t count;
-	xfs_fsop_bulkreq_t bulkreq;
-	xfs_inogrp_t igrp[INOGRPLEN];
+	xfs_ino_t lastino;
+	intgen_t inogrpcnt;
+	xfs_inogrp_t *igrp;
+        xfs_fsop_bulkreq_t bulkreq;
 
-	bulkreq.lastip = (__u64 *)&last;
+	/* stat set with return from callback func */
+	*statp = 0;
+
+	igrp = malloc(INOGRPLEN * sizeof(xfs_inogrp_t));
+	if (!igrp) {
+		mlog(MLOG_NORMAL | MLOG_ERROR,
+		     _("malloc of stream context failed (%d bytes): %s\n"),
+		     INOGRPLEN * sizeof(xfs_inogrp_t),
+		     strerror(errno));
+		return -1;
+	}
+
+	lastino = 0;
+	inogrpcnt = 0;
+	bulkreq.lastip = (__u64 *)&lastino;
 	bulkreq.icount = INOGRPLEN;
 	bulkreq.ubuffer = igrp;
-	bulkreq.ocount = &count;
-	*grpcnt = 0;
+	bulkreq.ocount = &inogrpcnt;
 	while (!ioctl(fsfd, XFS_IOC_FSINUMBERS, &bulkreq)) {
-		if (count == 0)
+		xfs_inogrp_t *p, *endp;
+
+		if ( inogrpcnt == 0 ) {
+			free(igrp);
 			return 0;
-		*grpcnt += count;
+		}
+		for ( p = igrp, endp = igrp + inogrpcnt ; p < endp ; p++ ) {
+			intgen_t rval;
+
+			rval = ( * fp )( arg1, fsfd, p );
+			if ( rval ) {
+				*statp = rval;
+				free(igrp);
+				return 0;
+			}
+		}
 	}
-	return 1;
+
+	free(igrp);
+	return errno;
 }
 
 /* calls the callback for every entry in the directory specified

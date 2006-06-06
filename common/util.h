@@ -105,10 +105,12 @@ extern intgen_t bigstat_one( intgen_t fsfd,
 			     xfs_ino_t ino,
 			     xfs_bstat_t *statp );
 
-/* efficiently count the number of 64-inode groups. */
-extern intgen_t inogrp_count( intgen_t fsfd,
-			      intgen_t *grpcnt );
-
+extern intgen_t inogrp_iter( intgen_t fsfd,
+			     intgen_t ( * fp )( void *arg1,
+				     		intgen_t fsfd,
+						xfs_inogrp_t *inogrp ),
+			     void * arg1,
+			     intgen_t *statp );
 
 /* calls the callback for every entry in the directory specified
  * by the stat buffer. supplies the callback with a file system
