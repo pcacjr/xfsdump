@@ -69,42 +69,17 @@ static intgen_t cb_context( bool_t last,
 			    time32_t,
 			    size_t,
 			    drange_t *,
-			    size_t,
 			    startpt_t *,
 			    size_t,
-			    char *,
-			    size_t,
-			    intgen_t );
-static void cb_postmortem( void );
+			    intgen_t,
+			    bool_t *);
 static void cb_context_free( void );
 static intgen_t cb_count_inogrp( void *, intgen_t, xfs_inogrp_t *);
 static intgen_t cb_add_inogrp( void *, intgen_t, xfs_inogrp_t * );
 static intgen_t cb_add( void *, jdm_fshandle_t *, intgen_t, xfs_bstat_t * );
 static bool_t cb_inoinresumerange( xfs_ino_t );
 static bool_t cb_inoresumed( xfs_ino_t );
-static intgen_t cb_prune( void *, jdm_fshandle_t *, intgen_t,  xfs_bstat_t * );
-static intgen_t cb_count_in_subtreelist( void *,
-					 jdm_fshandle_t *,
-					 intgen_t,
-					 xfs_bstat_t *,
-					 char * );
-static void gdrecursearray_init( void );
-static void gdrecursearray_free( void );
-static intgen_t cb_cond_del( void *,
-			     jdm_fshandle_t *,
-			     intgen_t,
-			     xfs_bstat_t *,
-			     char * );
-static intgen_t cb_del( void *,
-			jdm_fshandle_t *,
-			intgen_t,
-			xfs_bstat_t *,
-			char * );
 static void cb_accuminit_sz( void );
-static intgen_t cb_accumulate( void *,
-			       jdm_fshandle_t *,
-			       intgen_t,
-			       xfs_bstat_t * );
 static void cb_spinit( void );
 static intgen_t cb_startpt( void *,
 			    jdm_fshandle_t *,
@@ -127,26 +102,21 @@ static void inomap_set_gen(void *, xfs_ino_t, gen_t );
 
 /* subtree abstraction
  */
-static void subtreelist_add( xfs_ino_t );
+static intgen_t subtree_descend_cb( void *,
+				    jdm_fshandle_t *,
+				    intgen_t fsfd,
+				    xfs_bstat_t *,
+				    char * );
 static intgen_t subtreelist_parse_cb( void *,
 				      jdm_fshandle_t *,
 				      intgen_t fsfd,
 				      xfs_bstat_t *,
 				      char * );
-static bool_t subtreelist_parse( jdm_fshandle_t *,
-				 intgen_t,
-				 xfs_bstat_t *,
-				 char *[],
-				 ix_t );
-static void subtreelist_free( void );
-static bool_t subtreelist_contains( xfs_ino_t );
-
-/* multiply linked (mln) abstraction
- */
-static void mln_init( void );
-static nlink_t mln_register( xfs_ino_t, nlink_t );
-static void mln_free( void );
-
+static intgen_t subtreelist_parse( jdm_fshandle_t *,
+				   intgen_t,
+				   xfs_bstat_t *,
+				   char *[],
+				   ix_t );
 
 /* definition of locally defined global variables ****************************/
 
@@ -187,8 +157,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 {
 	xfs_bstat_t *bstatbufp;
 	size_t bstatbuflen;
-	char *getdentbufp;
-	bool_t pruneneeded;
+	bool_t pruneneeded = BOOL_FALSE;
 	intgen_t igrpcnt = 0;
 	intgen_t stat;
 	intgen_t rval;
@@ -208,46 +177,12 @@ inomap_build( jdm_fshandle_t *fshandlep,
 					       sizeof( xfs_bstat_t ));
 	ASSERT( bstatbufp );
 
-	/* allocate a getdent buf
-	 */
-	getdentbufp = ( char * )memalign( pgsz, GETDENTBUFSZ );
-	ASSERT( getdentbufp );
-
-	/* parse the subtree list, if any subtrees specified.
-	 * this will be used during the tree pruning phase.
-	 */
-	if ( subtreecnt ) {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 1: "
-		      "parsing subtree selections\n") );
-		if ( ! subtreelist_parse( fshandlep,
-					  fsfd,
-					  rootstatp,
-					  subtreebuf,
-					  subtreecnt )) {
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
-	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 1: "
-		      "skipping (no subtrees specified)\n") );
-	}
-	
-	if ( preemptchk( PREEMPT_FULL )) {
-		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
-		return BOOL_FALSE;
-	}
-
 	/* count the number of inode groups, which will serve as a
 	 * starting point for the size of the inomap.
 	 */
 	rval = inogrp_iter( fsfd, cb_count_inogrp, (void *)&igrpcnt, &stat );
 	if ( rval || stat ) {
 		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
 		return BOOL_FALSE;
 	}
 
@@ -259,15 +194,12 @@ inomap_build( jdm_fshandle_t *fshandlep,
 			   resumetime,
 			   resumerangecnt,
 			   resumerangep,
-			   subtreecnt,
 			   startptp,
 			   startptcnt,
-			   getdentbufp,
-			   GETDENTBUFSZ,
-			   igrpcnt );
+			   igrpcnt,
+			   &pruneneeded );
  	if ( rval ) {
  		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
  		return BOOL_FALSE;
  	}
 
@@ -282,7 +214,6 @@ inomap_build( jdm_fshandle_t *fshandlep,
  	if ( rval || stat ) {
 		cb_context_free();
  		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
  		return BOOL_FALSE;
  	}
 
@@ -292,41 +223,43 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	 * dumped even though they have not changed. a later pass will move
 	 * some of these to "not dumped", such that only those necessary
 	 * to represent the minimal tree containing only changes will remain.
-	 * the bigstat iterator is used here, along with a inomap constructor
-	 * callback. set a flag if any ino not put in a dump state. This will
-	 * be used to decide if any pruning can be done.
+	 * for subtree dumps, recurse over the specified subtrees calling
+	 * the inomap constructor (cb_add). otherwise, if dumping the entire
+	 * filesystem, use the bigstat iterator to add inos to the inomap.
+	 * set a flag if any ino not put in a dump state. This will be used
+	 * to decide if any pruning can be done.
 	 */
 	mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-	      "ino map phase 2: "
+	      "ino map phase 1: "
 	      "constructing initial dump list\n") );
 
 	*inomap_statdonep = 0;
-	*inomap_statphasep = 2;
-	pruneneeded = BOOL_FALSE;
+	*inomap_statphasep = 1;
 	stat = 0;
 	cb_accuminit_sz( );
-	rval = bigstat_iter( fshandlep,
-			     fsfd,
-			     BIGSTAT_ITER_ALL,
-			     ( xfs_ino_t )0,
-			     cb_add,
-			     ( void * )&pruneneeded,
-			     &stat,
-			     preemptchk,
-			     bstatbufp,
-			     bstatbuflen );
-	*inomap_statphasep = 0;
-	if ( rval ) {
-		cb_context_free();
-		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
-		return BOOL_FALSE;
-	}
 
-	if ( preemptchk( PREEMPT_FULL )) {
+	if ( subtreecnt ) {
+		rval = subtreelist_parse( fshandlep,
+					  fsfd,
+					  rootstatp,
+					  subtreebuf,
+					  subtreecnt );
+	} else {
+		rval = bigstat_iter( fshandlep,
+				     fsfd,
+				     BIGSTAT_ITER_ALL,
+				     ( xfs_ino_t )0,
+				     cb_add,
+				     NULL,
+				     &stat,
+				     preemptchk,
+				     bstatbufp,
+				     bstatbuflen );
+	}
+	*inomap_statphasep = 0;
+	if ( rval || preemptchk( PREEMPT_FULL )) {
 		cb_context_free();
 		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
 		return BOOL_FALSE;
 	}
 
@@ -341,121 +274,36 @@ inomap_build( jdm_fshandle_t *fshandlep,
 		      inomap_exclude_skipattr );
 	}
 
-	/* prune subtrees not called for in the subtree list, and
-	 * directories unchanged since the last dump and containing
-	 * no children needing dumping. Each time the latter pruning
-	 * occurs at least once, repeat.
+	/* prune directories unchanged since the last dump and containing
+	 * no children needing dumping.
 	 */
-	if ( pruneneeded || subtreecnt > 0 ) {
+	if ( pruneneeded ) {
 		bool_t	rootdump = BOOL_FALSE;
 
-		/* setup the list of multiply-linked pruned nodes
-		 */
-		mln_init( );
-		gdrecursearray_init( );
-
 		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 3: "
+		      "ino map phase 2: "
 		      "pruning unneeded subtrees\n") );
 		*inomap_statdonep = 0;
 		*inomap_statpassp = 0;
-		*inomap_statphasep = 3;
-		stat = 0;
-		rval = bigstat_iter( fshandlep,
-				     fsfd,
-				     BIGSTAT_ITER_DIR,
-				     ( xfs_ino_t )0,
-				     cb_prune,
-				     NULL,
-				     &stat,
-				     preemptchk,
-				     bstatbufp,
-				     bstatbuflen );
+		*inomap_statphasep = 2;
 
-		if ( rval || preemptchk( PREEMPT_FULL ) ) {
-			gdrecursearray_free( );
-			cb_context_free();
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
-
-		*inomap_statpassp = 1;
 		(void) supprt_prune( &rootdump,
 				     fshandlep,
 				     fsfd,
 				     rootstatp,
 				     NULL );
 		*inomap_statphasep = 0;
-		*inomap_statpassp = 0;
 
 		if ( preemptchk( PREEMPT_FULL )) {
-			gdrecursearray_free( );
 			cb_context_free();
 			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
 			return BOOL_FALSE;
 		}
 
-		gdrecursearray_free( );
-		mln_free( );
-
-		cb_postmortem( );
-
 	} else {
 		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 3: "
+		      "ino map phase 2: "
 		      "skipping (no pruning necessary)\n") );
-	}
-
-	/* free the subtree list memory
-	 */
-	if ( subtreecnt ) {
-		subtreelist_free( );
-	}
-
-	/* calculate the total dump space needed for non-directories.
-	 * not needed if no pruning was done, since already done during
-	 * phase 2.
-	 */
-	if ( pruneneeded || subtreecnt > 0 ) {
-		cb_accuminit_sz( );
-
-		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 4: "
-		      "estimating dump size\n") );
-		*inomap_statdonep = 0;
-		*inomap_statphasep = 4;
-		stat = 0;
-		rval = bigstat_iter( fshandlep,
-				     fsfd,
-				     BIGSTAT_ITER_NONDIR,
-				     ( xfs_ino_t )0,
-				     cb_accumulate,
-				     0,
-				     &stat,
-				     preemptchk,
-				     bstatbufp,
-				     bstatbuflen );
-		*inomap_statphasep = 0;
-		if ( rval ) {
-			cb_context_free();
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
-
-		if ( preemptchk( PREEMPT_FULL )) {
-			cb_context_free();
-			free( ( void * )bstatbufp );
-			free( ( void * )getdentbufp );
-			return BOOL_FALSE;
-		}
-
-	} else {
-		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 4: "
-		      "skipping (size estimated in phase 2)\n") );
 	}
 
 	/* initialize the callback context for startpoint calculation
@@ -466,16 +314,16 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	 */
 	if ( startptcnt > 1 ) {
 		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 5: "
+		      "ino map phase 3: "
 		      "identifying stream starting points\n") );
 	} else {
 		mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
-		      "ino map phase 5: "
+		      "ino map phase 3: "
 		      "skipping (only one dump stream)\n") );
 	}
 	stat = 0;
 	*inomap_statdonep = 0;
-	*inomap_statphasep = 5;
+	*inomap_statphasep = 3;
 	rval = bigstat_iter( fshandlep,
 			     fsfd,
 			     BIGSTAT_ITER_NONDIR,
@@ -491,7 +339,6 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	if ( rval ) {
 		cb_context_free();
 		free( ( void * )bstatbufp );
-		free( ( void * )getdentbufp );
 		return BOOL_FALSE;
 	}
 
@@ -527,7 +374,6 @@ inomap_build( jdm_fshandle_t *fshandlep,
 
 	cb_context_free();
 	free( ( void * )bstatbufp );
-	free( ( void * )getdentbufp );
 	mlog( MLOG_VERBOSE | MLOG_INOMAP, _(
 	      "ino map construction complete\n") );
 	return BOOL_TRUE;
@@ -562,7 +408,6 @@ static bool_t cb_resume;	/* set by cb_context() */
 static time32_t cb_resumetime;	/* set by cb_context() */
 static size_t cb_resumerangecnt;/* set by cb_context() */
 static drange_t *cb_resumerangep;/* set by cb_context() */
-static ix_t cb_subtreecnt;	/* set by cb_context() */
 static void *cb_inomap_contextp;/* set by cb_context() */
 static startpt_t *cb_startptp;	/* set by cb_context() */
 static size_t cb_startptcnt;	/* set by cb_context() */
@@ -574,9 +419,7 @@ static off64_t cb_incr;		/* set by cb_spinit(), used by cb_startpt() */
 static off64_t cb_target;	/* set by cb_spinit(), used by cb_startpt() */
 static off64_t cb_dircnt;	/* number of dirs CHANGED or PRUNE */
 static off64_t cb_nondircnt;	/* number of non-dirs CHANGED */
-static char *cb_getdentbufp;
-static size_t cb_getdentbufsz;
-static size_t cb_maxrecursionlevel;
+static bool_t *cb_pruneneededp; /* set by cb_context() */
 
 /* cb_context - initializes the call back context for the add and prune
  * phases of inomap_build().
@@ -588,12 +431,10 @@ cb_context( bool_t last,
 	    time32_t resumetime,
 	    size_t resumerangecnt,
 	    drange_t *resumerangep,
-	    ix_t subtreecnt,
 	    startpt_t *startptp,
 	    size_t startptcnt,
-	    char *getdentbufp,
-	    size_t getdentbufsz,
-	    intgen_t igrpcnt )
+	    intgen_t igrpcnt,
+	    bool_t *pruneneededp )
 {
 	cb_last = last;
 	cb_lasttime = lasttime;
@@ -601,15 +442,12 @@ cb_context( bool_t last,
 	cb_resumetime = resumetime;
 	cb_resumerangecnt = resumerangecnt;
 	cb_resumerangep = resumerangep;
-	cb_subtreecnt = subtreecnt;
 	cb_startptp = startptp;
 	cb_startptcnt = startptcnt;
 	cb_accum = 0;
 	cb_dircnt = 0;
 	cb_nondircnt = 0;
-	cb_getdentbufp = getdentbufp;
-	cb_getdentbufsz = getdentbufsz;
-	cb_maxrecursionlevel = 0;
+	cb_pruneneededp = pruneneededp;
 
 	if (inomap_init( igrpcnt ))
 		return -1;
@@ -619,14 +457,6 @@ cb_context( bool_t last,
 		return -1;
 
 	return 0;
-}
-
-static void
-cb_postmortem( void )
-{
-	mlog( MLOG_DEBUG | MLOG_NOTE | MLOG_INOMAP, _(
-	      "maximum subtree pruning recursion depth: %u\n"),
-	      cb_maxrecursionlevel );
 }
 
 static void
@@ -798,8 +628,7 @@ cb_add( void *arg1,
 		ASSERT( changed );
 	} else {
 		if ( mode == S_IFDIR ) {
-			register bool_t *pruneneededp = ( bool_t * )arg1;
-			*pruneneededp = BOOL_TRUE;
+			*cb_pruneneededp = BOOL_TRUE;
 			inomap_add( cb_inomap_contextp,
 				    ino,
 				    (gen_t)statp->bs_gen,
@@ -859,51 +688,6 @@ cb_inoresumed( xfs_ino_t ino )
 
 	return BOOL_FALSE;
 }
-
-/* cb_prune -  does subtree and incremental pruning.
- * calls cb_cond_del() to do dirty work on subtrees.
- */
-/* ARGSUSED */
-static intgen_t
-cb_prune( void *arg1,
-	  jdm_fshandle_t *fshandlep,
-	  intgen_t fsfd,
-	  xfs_bstat_t *statp )
-{
-	xfs_ino_t ino = statp->bs_ino;
-
-	ASSERT( ( statp->bs_mode & S_IFMT ) == S_IFDIR );
-
-	if ( cb_subtreecnt > 0 ) {
-		if ( subtreelist_contains( ino )) {
-			intgen_t n = 0;
-			intgen_t cbrval = 0;
-			( void )diriter( fshandlep,
-					 fsfd,
-					 statp,
-					 cb_count_in_subtreelist,
-					 ( void * )&n,
-					 &cbrval,
-					 cb_getdentbufp,
-					 cb_getdentbufsz );
-			if ( n > 0 ) {
-				( void )diriter( fshandlep,
-						 fsfd,
-						 statp,
-						 cb_cond_del,
-						 0,
-						 &cbrval,
-						 cb_getdentbufp,
-						 cb_getdentbufsz );
-			}
-		}
-	}
-
-	( *inomap_statdonep )++;
-
-	return 0;
-}
-
 
 /* supprt_prune -  does supprt directory entry pruning.
  * recurses downward looking for modified inodes, & clears supprt
@@ -990,181 +774,12 @@ supprt_prune( void *arg1,	/* ancestors marked as changed? */
 	return cbrval;
 }
 
-/* cb_count_in_subtreelist - used by cb_prune() to look for possible
- * subtree pruning.
- */
-/* ARGSUSED */
-static intgen_t
-cb_count_in_subtreelist( void *arg1,
-			 jdm_fshandle_t *fshandlep,
-			 intgen_t fsfd,
-			 xfs_bstat_t *statp,
-			 char *namep )
-{
-	if ( subtreelist_contains( statp->bs_ino )) {
-		intgen_t *np = ( intgen_t * )arg1;
-		( *np )++;
-	}
-
-	return 0;
-}
-
-/* cb_cond_del - usd by cb_prune to check and do subtree pruning
- */
-/* ARGSUSED */
-static intgen_t
-cb_cond_del( void *arg1,
-	     jdm_fshandle_t *fshandlep,
-	     intgen_t fsfd,
-	     xfs_bstat_t *statp,
-	     char *namep )
-{
-	xfs_ino_t ino = statp->bs_ino;
-
-	if ( ! subtreelist_contains( ino )) {
-		cb_del( 0, fshandlep, fsfd, statp, namep );
-	}
-
-	return 0;
-}
-
-#define GDRECURSEDEPTHMAX	32
-
-static char *gdrecursearray[ GDRECURSEDEPTHMAX ];
-
-static void
-gdrecursearray_init( void )
-{
-	ix_t level;
-
-	for ( level = 0 ; level < GDRECURSEDEPTHMAX ; level++ ) {
-		gdrecursearray[ level ] = 0;
-	}
-}
-
-static void
-gdrecursearray_free( void )
-{
-	ix_t level;
-
-	for ( level = 0 ; level < GDRECURSEDEPTHMAX ; level++ ) {
-		if ( gdrecursearray[ level ] ) {
-			free( ( void * )gdrecursearray[ level ] );
-			gdrecursearray[ level ] = 0;
-		}
-	}
-}
-
-/* cb_del - used by cb_cond_del() to actually delete a subtree.
- * recursive.
- */
-/* ARGSUSED */
-static intgen_t
-cb_del( void *arg1,
-	jdm_fshandle_t *fshandlep,
-	intgen_t fsfd,
-	xfs_bstat_t *statp,
-	char *namep )
-{
-	xfs_ino_t ino = statp->bs_ino;
-	intgen_t oldstate;
-	register size_t recursion_level = ( size_t )arg1;
-
-	if ( recursion_level >= GDRECURSEDEPTHMAX ) {
-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_INOMAP, _(
-		      "subtree pruning recursion depth exceeds max (%d): "
-		      "some unselected subtrees may be included in dump\n"),
-		      GDRECURSEDEPTHMAX );
-		return 0;
-	}
-
-	if ( cb_maxrecursionlevel < recursion_level ) {
-		cb_maxrecursionlevel = recursion_level;
-	}
-
-	oldstate = MAP_INO_UNUSED;
-
-	if ( ( statp->bs_mode & S_IFMT ) == S_IFDIR ) {
-		intgen_t cbrval = 0;
-		oldstate = inomap_set_state( cb_inomap_contextp,
-					     ino,
-					     MAP_DIR_NOCHNG );
-		if ( ! gdrecursearray[ recursion_level ] ) {
-			char *getdentbufp;
-			getdentbufp = ( char * )memalign( pgsz, GETDENTBUFSZ );
-			ASSERT( getdentbufp );
-			gdrecursearray[ recursion_level ] = getdentbufp;
-		}
-		( void )diriter( fshandlep,
-				 fsfd,
-				 statp,
-				 cb_del,
-				 ( void * )( recursion_level + 1 ),
-				 &cbrval,
-				 gdrecursearray[ recursion_level ],
-				 GETDENTBUFSZ );
-		mlog( MLOG_DEBUG | MLOG_INOMAP,
-		      "pruning dir ino %llu\n",
-		      ino );
-	} else if ( statp->bs_nlink <= 1 ) {
-		mlog( MLOG_DEBUG | MLOG_INOMAP,
-		      "pruning non-dir ino %llu\n",
-		      ino );
-		oldstate = inomap_set_state( cb_inomap_contextp,
-					     ino,
-					     MAP_NDR_NOCHNG );
-	} else if ( mln_register( ino, statp->bs_nlink ) == 0 ) {
-		mlog( MLOG_DEBUG | MLOG_INOMAP,
-		      "pruning non-dir ino %llu\n",
-		      ino );
-		oldstate = inomap_set_state( cb_inomap_contextp,
-					     ino,
-					     MAP_NDR_NOCHNG );
-	}
-
-	if ( oldstate == MAP_DIR_CHANGE || oldstate == MAP_DIR_SUPPRT ){
-		cb_dircnt--;
-	} else if ( oldstate == MAP_NDR_CHANGE ) {
-		cb_nondircnt--;
-	}
-
-	return 0;
-}
 
 static void
 cb_accuminit_sz( void )
 {
 	cb_datasz = 0;
 	cb_hdrsz = 0;
-}
-
-/* used by inomap_build() to add up the dump space needed for
- * all non-directory files.
- */
-/* ARGSUSED */
-static intgen_t
-cb_accumulate( void *arg1,
-	       jdm_fshandle_t *fshandlep,
-	       intgen_t fsfd,
-	       xfs_bstat_t *statp )
-{
-	register intgen_t state;
-
-	( *inomap_statdonep )++;
-
-	/* skip if no links
-	 */
-	if ( statp->bs_nlink == 0 ) {
-		return 0;
-	}
-
-	state = inomap_get_state( cb_inomap_contextp, statp->bs_ino );
-	if ( state == MAP_NDR_CHANGE ) {
-		cb_datasz += estimate_dump_space( statp );
-		cb_hdrsz += ( EXTENTHDR_SZ * (statp->bs_extents + 1) );
-	}
-
-	return 0;
 }
 
 /* cb_spinit - initializes context for the startpoint calculation phase of
@@ -1863,122 +1478,7 @@ inomap_iter_cb( void *contextp,
 }
 #endif /* NOTUSED */
 
-/* mln - the list of ino's pruned but linked to more than one directory.
- * each time one of those is pruned, increment the cnt for that ino in
- * this list. when the seen cnt equals the link count, the ino can
- * be pruned.
- */
-struct mln {
-	xfs_ino_t ino;
-	nlink_t cnt;
-};
-
-typedef struct mln mln_t;
-
-#define MLNGRPSZ	PGSZ
-#define MLNGRPLEN	( ( PGSZ / sizeof( mln_t )) - 1 )
-
-struct mlngrp {
-	mln_t grp[ MLNGRPLEN ];
-	struct mlngrp *nextp;
-	char pad1[ MLNGRPSZ
-		   -
-		   MLNGRPLEN * sizeof( mln_t )
-		   -
-		   sizeof( struct mlngrp * ) ];
-};
-
-typedef struct mlngrp mlngrp_t;
-
-static mlngrp_t *mlngrprootp;
-static mlngrp_t *mlngrpnextp;
-static mln_t *mlnnextp;
-
-static void
-mln_init( void )
-{
-	ASSERT( sizeof( mlngrp_t ) == MLNGRPSZ );
-
-	mlngrprootp = ( mlngrp_t * )calloc( 1, sizeof( mlngrp_t ));
-	ASSERT( mlngrprootp );
-	mlngrpnextp = mlngrprootp;
-	mlnnextp = &mlngrpnextp->grp[ 0 ];
-}
-
-/* finds and increments the mln count for the ino.
- * returns nlink minus number of nlink_register calls made so
- * far for this ino, including the current call: hence returns
- * zero if all links seen.
- */
-static nlink_t
-mln_register( xfs_ino_t ino, nlink_t nlink )
-{
-	mlngrp_t *grpp;
-	mln_t *mlnp;
-
-	/* first see if ino already registered
-	 */
-	for ( grpp = mlngrprootp ; grpp != 0 ; grpp = grpp->nextp ) {
-		for ( mlnp = grpp->grp; mlnp < grpp->grp + MLNGRPLEN; mlnp++ ){
-			if ( mlnp == mlnnextp ) {
-				mlnnextp->ino = ino;
-				mlnnextp->cnt = 0;
-				mlnnextp++;
-				if ( mlnnextp >= mlngrpnextp->grp + MLNGRPLEN){
-					mlngrpnextp->nextp = ( mlngrp_t * )
-						 calloc( 1, sizeof( mlngrp_t));
-					ASSERT( mlngrpnextp->nextp );
-					mlngrpnextp = mlngrpnextp->nextp;
-					mlnnextp = &mlngrpnextp->grp[ 0 ];
-				}
-			}
-			if ( mlnp->ino == ino ) {
-				mlnp->cnt++;
-				ASSERT( nlink >= mlnp->cnt );
-				return ( nlink - mlnp->cnt );
-			}
-		}
-	}
-	/* should never get here: loops terminated by mlnnextp
-	 */
-	ASSERT( 0 );
-	return 0;
-}
-
-static void
-mln_free( void )
-{
-	mlngrp_t *p;
-
-	p = mlngrprootp;
-	while ( p ) {
-		mlngrp_t *oldp = p;
-		p = p->nextp;
-		free( ( void * )oldp );
-	}
-}
-
-/* the subtreelist is simply the ino's of the elements of each of the
- * subtree pathnames in subtreebuf. the list needs to be arranged
- * in a way advantageous for searching.
- */
-#define INOGRPSZ	PGSZ
-#define INOGRPLEN	(( PGSZ / sizeof( xfs_ino_t )) - 1 )
-
-struct inogrp {
-	xfs_ino_t grp[ INOGRPLEN ];
-	struct inogrp *nextp;
-	char pad[ sizeof( xfs_ino_t ) - sizeof( struct inogrp * ) ];
-};
-
-typedef struct inogrp inogrp_t;
-
-static inogrp_t *inogrprootp;
-static inogrp_t *nextgrpp;
-static xfs_ino_t *nextinop;
-static char *currentpath;
-
-static bool_t
+static intgen_t
 subtreelist_parse( jdm_fshandle_t *fshandlep,
 		   intgen_t fsfd,
 		   xfs_bstat_t *rootstatp,
@@ -1987,25 +1487,15 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 {
 	ix_t subtreeix;
 
-	ASSERT( sizeof( inogrp_t ) == INOGRPSZ );
-
-	/* initialize the list; it will be added to by the
-	 * callback;
+	/* add the root ino to the dump
 	 */
-	inogrprootp = ( inogrp_t * )calloc( 1, sizeof( inogrp_t ));
-	ASSERT( inogrprootp );
-	nextgrpp = inogrprootp;
-	nextinop = &nextgrpp->grp[ 0 ];
-
-	/* add the root ino to the subtree list
-	 */
-	subtreelist_add( rootstatp->bs_ino );
+	cb_add( NULL, fshandlep, fsfd, rootstatp );
 
 	/* do a recursive descent for each subtree specified
 	 */
 	for ( subtreeix = 0 ; subtreeix < subtreecnt ; subtreeix++ ) {
 		intgen_t cbrval = 0;
-		currentpath = subtreebuf[ subtreeix ];
+		char *currentpath = subtreebuf[ subtreeix ];
 		ASSERT( *currentpath != '/' );
 		( void )diriter( fshandlep,
 				 fsfd,
@@ -2013,87 +1503,19 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 				 subtreelist_parse_cb,
 				 ( void * )currentpath,
 				 &cbrval,
-				 cb_getdentbufp,
-				 cb_getdentbufsz );
+				 NULL,
+				 0 );
 		if ( cbrval != 1 ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_INOMAP,
 			      "%s: %s\n",
 			      cbrval == 0 ? _("subtree not present")
 					  : _("invalid subtree specified"),
 			      currentpath );
-			return BOOL_FALSE;
+			return -1;
 		}
 	}
 
-	return BOOL_TRUE;
-}
-
-static void
-subtreelist_add( xfs_ino_t ino )
-{
-	*nextinop++ = ino;
-	if ( nextinop >= nextgrpp->grp + INOGRPLEN ) {
-		ASSERT( nextinop == nextgrpp->grp + INOGRPLEN );
-		nextgrpp->nextp = ( inogrp_t * )calloc( 1, sizeof( inogrp_t ));
-		ASSERT( nextgrpp->nextp );
-		nextgrpp = nextgrpp->nextp;
-		nextinop = &nextgrpp->grp[ 0 ];
-	}
-}
-
-/* for debugger work only
-static void
-subtreelist_print( void )
-{
-	inogrp_t *grpp = inogrprootp;
-	xfs_ino_t *inop = &grpp->grp[ 0 ];
-
-	while ( inop != nextinop ) {
-		printf( "%llu\n", *inop );
-		inop++;
-		if ( inop >= grpp->grp + INOGRPLEN ) {
-			ASSERT( inop == grpp->grp + INOGRPLEN );
-			grpp = grpp->nextp;
-			ASSERT( grpp );
-			inop = &grpp->grp[ 0 ];
-		}
-	}
-}
- */
-
-static bool_t
-subtreelist_contains( xfs_ino_t ino )
-{
-	inogrp_t *grpp;
-	xfs_ino_t *inop;
-
-	for ( grpp = inogrprootp ; grpp != 0 ; grpp = grpp->nextp ) {
-		for ( inop = grpp->grp; inop < grpp->grp + INOGRPLEN; inop++ ) {
-			if ( inop == nextinop ) {
-				return BOOL_FALSE;
-			}
-			if ( *inop == ino ) {
-				return BOOL_TRUE;
-			}
-		}
-	}
-	/* should never get here; loops terminated by nextinop
-	 */
-	ASSERT( 0 );
-	return BOOL_FALSE;
-}
-
-static void
-subtreelist_free( void )
-{
-	inogrp_t *p;
-
-	p = inogrprootp;
-	while ( p ) {
-		inogrp_t *oldp = p;
-		p = p->nextp;
-		free( ( void * )oldp );
-	}
+	return 0;
 }
 
 static intgen_t
@@ -2128,38 +1550,80 @@ subtreelist_parse_cb( void *arg1,
 
 	/* it matches, so add ino to list and continue down the path
 	 */
-	subtreelist_add( statp->bs_ino );
+	cb_add( NULL, fshandlep, fsfd, statp );
 
-	/* if we've reached the end of the path, abort the iteration
-	 * in a successful way.
-	 */
-	if ( ! nextslash ) {
+	if ( nextslash ) {
+
+		/* if we're not at the end of the path, yet the current
+		 * path element is not a directory, complain and abort the
+		 * iteration in a way which terminates the application
+		 */
+		if ( ( statp->bs_mode & S_IFMT ) != S_IFDIR ) {
+			*nextslash = '/';
+			return 2;
+		}
+
+		/* repair the subpath
+		*/
+		*nextslash = '/';
+
+		/* peel the first element of the subpath and recurse
+		*/
+		( void )diriter( fshandlep,
+				 fsfd,
+				 statp,
+				 subtreelist_parse_cb,
+				 ( void * )( nextslash + 1 ),
+				 &cbrval,
+				 NULL,
+				 0 );
+		return cbrval;
+
+	} else {
+		/* we've reached the specified subpath, so if we're
+		 * at a directory, recurse down and add all children
+		 * to the inomap.
+		 */
+
+		if ( ( statp->bs_mode & S_IFMT ) != S_IFDIR ) {
+			return 1;
+		}
+
+		( void )diriter( fshandlep,
+				 fsfd,
+				 statp,
+				 subtree_descend_cb,
+				 NULL,
+				 &cbrval,
+				 0,
+				 0 );
 		return 1;
 	}
+}
 
-	/* if we're not at the end of the path, yet the current
-	 * path element is not a directory, complain and abort the
-	 * iteration in a way which terminates the application
-	 */
-	if ( ( statp->bs_mode & S_IFMT ) != S_IFDIR ) {
-		*nextslash = '/';
-		return 2;
+static intgen_t
+subtree_descend_cb( void *arg1,
+		    jdm_fshandle_t *fshandlep,
+		    intgen_t fsfd,
+		    xfs_bstat_t *statp,
+		    char *name  )
+{
+	intgen_t cbrval = 0;
+
+	cb_add( NULL, fshandlep, fsfd, statp );
+
+	if ( ( statp->bs_mode & S_IFMT ) == S_IFDIR ) {
+
+		( void )diriter( fshandlep,
+				 fsfd,
+				 statp,
+				 subtree_descend_cb,
+				 NULL,
+				 &cbrval,
+				 NULL,
+				 0 );
 	}
 
-	/* repair the subpath
-	 */
-	*nextslash = '/';
-
-	/* peel the first element of the subpath and recurse
-	 */
-	( void )diriter( fshandlep,
-			 fsfd,
-			 statp,
-			 subtreelist_parse_cb,
-			 ( void * )( nextslash + 1 ),
-			 &cbrval,
-			 0,
-			 0 );
 	return cbrval;
 }
 

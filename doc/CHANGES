@@ -1,3 +1,6 @@
+xfsdump-2.2.38 (06 June 2006)
+	- Performance improvements for dumping subtrees.
+
 xfsdump-2.2.37 (24 May 2006)
 	- Fix xfs_fsr memory and file descriptor leaks.
 	- Fix xfs_fsr handling some of the extended inode flags
