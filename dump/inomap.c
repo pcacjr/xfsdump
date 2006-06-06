@@ -36,7 +36,6 @@
 #include "content_inode.h"
 #include "hsmapi.h"
 
-#define MACROBITS
 #include "inomap.h"
 #include "arch_xlate.h"
 #include "exit.h"
@@ -1307,156 +1306,7 @@ intgen_t i2gcurix;
 		segp->base = ino;					\
 	}
 
-#ifdef MACROBITS
-#define SEG_ADD_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		switch( state ) {					\
-		case 0:							\
-			break;						\
-		case 1:							\
-			segp->lobits |= mask;				\
-			break;						\
-		case 2:							\
-			segp->mebits |= mask;				\
-			break;						\
-		case 3:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			break;						\
-		case 4:							\
-			segp->hibits |= mask;				\
-			break;						\
-		case 5:							\
-			segp->lobits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 6:							\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 7:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		}							\
-	}
-
-#define SEG_SET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		register u_int64_t clrmask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		clrmask = ~mask;					\
-		switch( state ) {					\
-		case 0:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits &= clrmask;			\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 1:							\
-			segp->lobits |= mask;				\
-			segp->mebits &= clrmask;			\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 2:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits |= mask;				\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 3:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits &= clrmask;			\
-			break;						\
-		case 4:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits &= clrmask;			\
-			segp->hibits |= mask;				\
-			break;						\
-		case 5:							\
-			segp->lobits |= mask;				\
-			segp->mebits &= clrmask;			\
-			segp->hibits |= mask;				\
-			break;						\
-		case 6:							\
-			segp->lobits &= clrmask;			\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		case 7:							\
-			segp->lobits |= mask;				\
-			segp->mebits |= mask;				\
-			segp->hibits |= mask;				\
-			break;						\
-		}							\
-	}
-
-#define SEG_GET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t mask;				\
-		relino = ino - segp->base;				\
-		mask = ( u_int64_t )1 << relino;			\
-		if ( segp->lobits & mask ) {				\
-			state = 1;					\
-		} else {						\
-			state = 0;					\
-		}							\
-		if ( segp->mebits & mask ) {				\
-			state |= 2;					\
-		}							\
-		if ( segp->hibits & mask ) {				\
-			state |= 4;					\
-		}							\
-	}
-#else /* MACROBITS */
-static void
-SEG_ADD_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
-{
-	register xfs_ino_t relino;
-	register u_int64_t mask;
-	relino = ino - segp->base;
-	mask = ( u_int64_t )1 << relino;
-	switch( state ) {
-	case 0:
-		break;
-	case 1:
-		segp->lobits |= mask;
-		break;
-	case 2:
-		segp->mebits |= mask;
-		break;
-	case 3:
-		segp->lobits |= mask;
-		segp->mebits |= mask;
-		break;
-	case 4:
-		segp->hibits |= mask;
-		break;
-	case 5:
-		segp->lobits |= mask;
-		segp->hibits |= mask;
-		break;
-	case 6:
-		segp->mebits |= mask;
-		segp->hibits |= mask;
-		break;
-	case 7:
-		segp->lobits |= mask;
-		segp->mebits |= mask;
-		segp->hibits |= mask;
-		break;
-	}
-}
-
-static void
+static inline void
 SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
 {
 	register xfs_ino_t relino;
@@ -1509,7 +1359,7 @@ SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
 	}
 }
 
-static intgen_t
+static inline intgen_t
 SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 {
 	intgen_t state;
@@ -1531,8 +1381,6 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 
 	return state;
 }
-#endif /* MACROBITS */
-
 
 /* context for inomap construction - initialized by map_init
  */
@@ -1608,7 +1456,7 @@ map_add( xfs_ino_t ino, gen_t gen, intgen_t state )
 		hnkcnt++;
 		lastsegp = &tailhnkp->seg[ 0 ];
 		SEG_SET_BASE( lastsegp, ino );
-		SEG_ADD_BITS( lastsegp, ino, state );
+		SEG_SET_BITS( lastsegp, ino, state );
 		tailhnkp->maxino = ino;
 		last_ino_added = ino;
 		segcnt++;
@@ -1630,7 +1478,7 @@ map_add( xfs_ino_t ino, gen_t gen, intgen_t state )
 		segcnt++;
 	}
 
-	SEG_ADD_BITS( lastsegp, ino, state );
+	SEG_SET_BITS( lastsegp, ino, state );
 	tailhnkp->maxino = ino;
 	last_ino_added = ino;
 }
@@ -1750,11 +1598,7 @@ map_print( char *file )
 			for ( ino = segp->base;
 			      ino < segp->base + INOPERSEG;
 			      ino++ ) {
-#ifdef MACROBITS
-				SEG_GET_BITS( segp, ino, state );
-#else
 				state = SEG_GET_BITS( segp, ino );
-#endif
 				fprintf(fp, "%llu", ino);
 				switch(state) {
 				case MAP_INO_UNUSED:
@@ -1810,11 +1654,7 @@ map_getset( xfs_ino_t ino, intgen_t newstate, bool_t setflag )
 			}
 			if ( ino < segp->base + INOPERSEG ) {
 				intgen_t state;
-#ifdef MACROBITS
-				SEG_GET_BITS( segp, ino, state );
-#else /* MACROBITS */
 				state = SEG_GET_BITS( segp, ino );
-#endif /* MACROBITS */
 				if ( setflag ) {
 					SEG_SET_BITS( segp, ino, newstate );
 				}
@@ -1873,7 +1713,6 @@ intgen_t
 inomap_state( void *p, xfs_ino_t ino )
 {
 	register inomap_state_context_t *cp = ( inomap_state_context_t * )p;
-	register intgen_t state;
 
 	/* if we go backwards, re-initialize the context
 	 */
@@ -1910,12 +1749,7 @@ inomap_state( void *p, xfs_ino_t ino )
 		return MAP_INO_UNUSED;
 	}
 
-#ifdef MACROBITS
-	SEG_GET_BITS( cp->currsegp, ino, state );
-#else /* MACROBITS */
-	state = SEG_GET_BITS( cp->currsegp, ino );
-#endif /* MACROBITS */
-	return state;
+	return SEG_GET_BITS( cp->currsegp, ino );
 }
 
 void
@@ -2023,11 +1857,7 @@ inomap_iter_cb( void *contextp,
 			endino = segp->base + INOPERSEG;
 			for ( ; ino < endino ; ino++ ) {
 				intgen_t st;
-#ifdef MACROBITS
-				SEG_GET_BITS( segp, ino, st );
-#else /* MACROBITS */
 				st = SEG_GET_BITS( segp, ino );
-#endif /* MACROBITS */
 				if ( statemask & ( 1 << st )) {
 					bool_t ok;
 					ok = ( * funcp )( contextp, ino, st );

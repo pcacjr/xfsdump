@@ -62,47 +62,6 @@ typedef struct pers pers_t;
 
 #define PERSSZ	perssz
 
-/* map context and operators
- */
-
-#define SEG_SET_BASE( segp, ino )					\
-	{								\
-		segp->base = ino;					\
-	}
-
-#define SEG_ADD_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_SET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		register u_int64_t clrmask;				\
-		relino = ino - segp->base;				\
-		clrmask = ~( ( u_int64_t )1 << relino );		\
-		segp->lobits &= clrmask;				\
-		segp->mebits &= clrmask;				\
-		segp->hibits &= clrmask;				\
-		segp->lobits |= ( u_int64_t )( ( state >> 0 ) & 1 ) << relino; \
-		segp->mebits |= ( u_int64_t )( ( state >> 1 ) & 1 ) << relino; \
-		segp->hibits |= ( u_int64_t )( ( state >> 2 ) & 1 ) << relino; \
-	}
-
-#define SEG_GET_BITS( segp, ino, state )				\
-	{								\
-		register xfs_ino_t relino;				\
-		relino = ino - segp->base;				\
-		state = 0;						\
-		state |= ( intgen_t )((( segp->lobits >> relino ) & 1 ) * 1 );\
-		state |= ( intgen_t )((( segp->mebits >> relino ) & 1 ) * 2 );\
-		state |= ( intgen_t )((( segp->hibits >> relino ) & 1 ) * 4 );\
-	}
-
 /* declarations of externally defined global symbols *************************/
 
 extern size_t pgsz;
@@ -134,6 +93,84 @@ static hnk_t *tailhnkp;
 static seg_t *lastsegp;
 static xfs_ino_t last_ino_added;
 
+/* map context and operators
+ */
+
+static inline void
+SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
+{
+	register xfs_ino_t relino;
+	register u_int64_t mask;
+	register u_int64_t clrmask;
+	relino = ino - segp->base;
+	mask = ( u_int64_t )1 << relino;
+	clrmask = ~mask;
+	switch( state ) {
+	case 0:
+		segp->lobits &= clrmask;
+		segp->mebits &= clrmask;
+		segp->hibits &= clrmask;
+		break;
+	case 1:
+		segp->lobits |= mask;
+		segp->mebits &= clrmask;
+		segp->hibits &= clrmask;
+		break;
+	case 2:
+		segp->lobits &= clrmask;
+		segp->mebits |= mask;
+		segp->hibits &= clrmask;
+		break;
+	case 3:
+		segp->lobits |= mask;
+		segp->mebits |= mask;
+		segp->hibits &= clrmask;
+		break;
+	case 4:
+		segp->lobits &= clrmask;
+		segp->mebits &= clrmask;
+		segp->hibits |= mask;
+		break;
+	case 5:
+		segp->lobits |= mask;
+		segp->mebits &= clrmask;
+		segp->hibits |= mask;
+		break;
+	case 6:
+		segp->lobits &= clrmask;
+		segp->mebits |= mask;
+		segp->hibits |= mask;
+		break;
+	case 7:
+		segp->lobits |= mask;
+		segp->mebits |= mask;
+		segp->hibits |= mask;
+		break;
+	}
+}
+
+static inline intgen_t
+SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
+{
+	intgen_t state;
+	register xfs_ino_t relino;
+	register u_int64_t mask;
+	relino = ino - segp->base;
+	mask = ( u_int64_t )1 << relino;
+	if ( segp->lobits & mask ) {
+		state = 1;
+	} else {
+		state = 0;
+	}
+	if ( segp->mebits & mask ) {
+		state |= 2;
+	}
+	if ( segp->hibits & mask ) {
+		state |= 4;
+	}
+
+	return state;
+}
 
 /* definition of locally defined global functions ****************************/
 
@@ -439,7 +476,7 @@ inomap_sanitize( void )
 				if ( ino > last_ino_added ) {
 					return;
 				}
-				SEG_GET_BITS( segp, ino, state );
+				state = SEG_GET_BITS( segp, ino );
 				if ( state == MAP_NDR_CHANGE ) {
 					state = MAP_NDR_NOREST;
 					SEG_SET_BITS( segp, ino, state );
@@ -522,7 +559,7 @@ begin:
 			if ( ino > lastino ) {
 				return BOOL_FALSE;
 			}
-			SEG_GET_BITS( segp, ino, state );
+			state = SEG_GET_BITS( segp, ino );
 			if ( state == MAP_NDR_CHANGE ) {
 				return BOOL_TRUE;
 			}
@@ -579,7 +616,7 @@ inomap_cbiter( intgen_t statemask,
 				if ( ino > last_ino_added ) {
 					return;
 				}
-				SEG_GET_BITS( segp, ino, state );
+				state = SEG_GET_BITS( segp, ino );
 				if ( statemask & ( 1 << state )) {
 					bool_t ok;
 					ok = ( cbfunc )( ctxp, ino );
@@ -607,7 +644,7 @@ map_getset( xfs_ino_t ino, intgen_t newstate, bool_t setflag )
 		return MAP_INO_UNUSED;
 	}
 
-	SEG_GET_BITS( segp, ino, state );
+	state = SEG_GET_BITS( segp, ino );
 	if ( setflag ) {
 		SEG_SET_BITS( segp, ino, newstate );
 	}
