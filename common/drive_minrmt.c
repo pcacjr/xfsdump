@@ -2735,9 +2735,11 @@ validate_media_file_hdr( drive_t *drivep )
 static bool_t
 get_tpcaps( drive_t *drivep )
 {
+#ifdef DEBUG
 	drive_context_t	*contextp = ( drive_context_t * )drivep->d_contextp;
 
 	ASSERT( contextp->dc_fd >= 0 );
+#endif
 
 	/* can't ask about blksz, can't set blksz, can't ask about
 	 * drive types/caps. assume a drive which can overwrite.
