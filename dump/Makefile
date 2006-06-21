@@ -102,7 +102,9 @@ install: default
 install-dev:
 
 $(COMMINCL) $(COMMON):
-	@$(RM) $@; $(LN_S) ../common/$@ $@
+	$(RM) $@; $(LN_S) ../common/$@ $@
 
 $(INVINCL) $(INVCOMMON):
-	@$(RM) $@; $(LN_S) ../inventory/$@ $@
+	$(RM) $@; $(LN_S) ../inventory/$@ $@
+
+$(LOCALS): $(LINKS)
