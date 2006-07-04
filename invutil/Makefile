@@ -40,6 +40,7 @@ LOCALS = invutil.c
 
 LTCOMMAND = xfsinvutil
 CFILES = $(COMMON) $(INVCOMMON) $(LOCALS)
+HFILES = $(COMMINCL) $(INVINCL)
 LINKS  = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 LDIRT = $(LINKS)
 LLDLIBS = $(LIBUUID) $(LIBCURSES)
@@ -56,7 +57,7 @@ else
 LSRCFILES += $(CURSESCOMMON) $(CURSESINCL)
 endif
 
-default: $(LINKS) $(LTCOMMAND)
+default: $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -70,5 +71,3 @@ $(COMMINCL) $(COMMON):
 
 $(INVINCL) $(INVCOMMON):
 	$(RM) $@; $(LN_S) ../inventory/$@ $@
-
-$(LOCALS): $(LINKS)

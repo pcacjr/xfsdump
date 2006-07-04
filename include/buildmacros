@@ -143,9 +143,9 @@ DIST_MAKERULE = \
 SOURCE_MAKERULE = \
 	@test -z "$$DIR" && DIR="."; \
 	for f in $(SRCFILES) ""; do \
-	    if test ! -z "$$f"; then $(ECHO) $$DIR/$$f; fi;\
+	    if test ! -z "$$f" -a ! -l "$$f" ; then $(ECHO) $$DIR/$$f; fi;\
 	done; \
-	for d in `echo $(SUBDIRS)` ; do \
+	for d in `echo $(SUBDIRS)` ""; do \
 	    if test -d "$$d" -a ! -z "$$d"; then \
 		$(MAKEF) DIR=$$DIR/$$d -C $$d $@ || exit $$?; \
 	    fi; \
