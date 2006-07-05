@@ -5,9 +5,10 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-# Currently LINGUAS is undefined, so buildmacros provides no targets.
-LINGUAS = 
-LSRCFILES = $(LINGUAS:%=%.po) $(PKG_NAME).pot
+POTHEAD = $(PKG_NAME).pot
+LINGUAS =
+LSRCFILES = $(LINGUAS:%=%.po) $(POTHEAD)
+LDIRT = $(POTHEAD)
 
 # TODO - invutil/
 XGETTEXTFILES =	\
@@ -27,7 +28,6 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/common/openutil.c \
 		$(TOPDIR)/common/qlock.c \
 		$(TOPDIR)/common/util.c \
-		$(TOPDIR)/copy/xfs_copy.c \
 		$(TOPDIR)/dump/content.c \
 		$(TOPDIR)/dump/inomap.c \
 		$(TOPDIR)/dump/var.c \
@@ -49,7 +49,7 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/restore/tree.c \
 		$(TOPDIR)/restore/win.c
 
-default: $(LINGUAS:%=%.mo)
+default: $(POTHEAD) $(LINGUAS:%=%.mo)
 
 include $(BUILDRULES)
 
