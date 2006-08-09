@@ -18,8 +18,7 @@
 
 #include <xfs/xfs.h>
 #include <attr/attributes.h>
-#include <xfs/handle.h>
-#include <xfs/dmapi.h>
+#include <xfs/jdm.h>
 
 #include "hsmapi.h"
 #include "mlog.h"
@@ -86,7 +85,16 @@ typedef	struct {
 #define	DMF_ST_NOMIGR		5	/* file should not be migrated */
 #define	DMF_ST_PARTIAL		6	/* file has backups plus parts online */
 
-/* Interesting bit combinations within the bs_dmevmask field of xfs_bstat_t:
+/* DM_EVENT_* are defined in <xfs/dmapi.h>. Trying to avoid a dmapi dependency
+ * in xfsdump since dmapi is not commonly used, yet this code needs to know some
+ * of the event bits.
+ */
+#define	DM_EVENT_READ		16
+#define	DM_EVENT_WRITE		17
+#define	DM_EVENT_TRUNCATE	18
+#define	DM_EVENT_DESTROY	20
+
+ /* Interesting bit combinations within the bs_dmevmask field of xfs_bstat_t:
  * OFL, UNM, and PAR files have exactly these bits set.
  * DUL and MIG files have all but the DM_EVENT_READ bit set */
 #define DMF_EV_BITS	( (1<<DM_EVENT_DESTROY) | \
@@ -103,7 +111,7 @@ typedef	struct {
 
 typedef	struct	{
 	int		dumpversion;
-	dm_fsid_t	fsid;
+	jdm_fshandle_t  *fshanp;
 } dmf_fs_ctxt_t;
 
 typedef	struct	{
@@ -183,28 +191,9 @@ const	char		*mountpoint,
 	int		dumpversion)
 {
 	dmf_fs_ctxt_t	*dmf_fs_ctxtp;
-	void		*fshanp;
-	size_t		fshlen = 0;
-	dm_fsid_t	fsid;
-	int		error;
 
 	if (dumpversion != HSM_API_VERSION_1) {
 		return NULL;		/* we can't handle this version */
-	}
-
-	/* Get the filesystem's DMAPI fsid for later use in building file
-	   handles in HsmInitFileContext.  We use path_to_handle() because
-	   dm_path_to_handle() doesn't work if the filesystem isn't mounted
-	   with -o dmi.
-	*/
-
-	if (path_to_fshandle((char *)mountpoint, &fshanp, &fshlen)) {
-		return NULL;
-	}
-	error = dm_handle_to_fsid(fshanp, fshlen, &fsid);
-	free_handle(fshanp, fshlen);
-	if (error) {
-		return NULL;
 	}
 
 	/* Malloc space for a filesystem context, and initialize any fields
@@ -215,7 +204,15 @@ const	char		*mountpoint,
 		return NULL;
 	}
 	dmf_fs_ctxtp->dumpversion = dumpversion;
-	dmf_fs_ctxtp->fsid = fsid;
+
+	/* Get the filesystem's handle for later use in building file
+	   handles in HsmInitFileContext.
+	*/
+	dmf_fs_ctxtp->fshanp = jdm_getfshandle((char *)mountpoint);
+	if (dmf_fs_ctxtp->fshanp == NULL) {
+		free(dmf_fs_ctxtp);
+		return NULL;
+	}
 
 	return (hsm_fs_ctxt_t *)dmf_fs_ctxtp;
 }
@@ -411,10 +408,6 @@ const	xfs_bstat_t	*statp)
 {
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)contextp;
 	XFSattrvalue0_t	*dmfattrp;
-	void		*hanp;
-	size_t		hlen = 0;
-	dm_ino_t	ino;
-	dm_igen_t	igen;
 	int		state;
 	int		error;
 	attr_multiop_t	attr_op;
@@ -437,13 +430,6 @@ const	xfs_bstat_t	*statp)
 	   for the DMF attribute.  (It could be in a disk block separate from
 	   the inode.)
 	*/
-
-	ino = (dm_ino_t)statp->bs_ino;
-	igen = (dm_igen_t)statp->bs_gen;
-	if (dm_make_handle(&dmf_f_ctxtp->fsys.fsid, &ino, &igen, &hanp, &hlen) != 0) {
-		return 0;	/* can't make a proper handle */
-	}
-
 	attr_op.am_opcode    = ATTR_OP_GET;
 	attr_op.am_error     = 0;
 	attr_op.am_attrname  = DMF_ATTR_NAME;
@@ -451,8 +437,11 @@ const	xfs_bstat_t	*statp)
 	attr_op.am_length    = sizeof(dmf_f_ctxtp->attrval);
 	attr_op.am_flags     = ATTR_ROOT;
 
-	error = attr_multi_by_handle(hanp, hlen, &attr_op, 1, 0);
-	free_handle(hanp, hlen);
+	error = jdm_attr_multi(dmf_f_ctxtp->fsys.fshanp,
+			       (xfs_bstat_t *)statp,
+			       (char *)&attr_op,
+			       1,
+			       0);
 	if (error || attr_op.am_error)
 		return 0; /* no DMF attribute */
 

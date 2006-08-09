@@ -1,7 +1,10 @@
-xfsprogs-2.2.41 (14 July 2006)
+xfsdump-2.2.42 (08 August 2006)
+	- Rework code to remove the DMAPI build and run-time dependency.
+
+xfsdump-2.2.41 (14 July 2006)
 	- Fix issues with makedepend on libtool libraries.
 
-xfsprogs-2.2.40 (05 July 2006)
+xfsdump-2.2.40 (05 July 2006)
 	- Update translation Makefile to work better with the Ubuntu
 	  translation system.  Thanks to feedback from Martin Pitt.
 	- Fix annoying "ignores datarootdir" warning from configure.

@@ -13,7 +13,6 @@ MALLOCLIB = @malloc_lib@
 LOADERFLAGS = @LDFLAGS@
 
 LIBRMT = $(TOPDIR)/librmt/librmt.la
-LIBDM = @libdm@
 LIBXFS = @libxfs@
 LIBATTR = @libattr@
 LIBUUID = @libuuid@

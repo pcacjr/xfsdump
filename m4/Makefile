@@ -8,7 +8,6 @@ include $(TOPDIR)/include/builddefs
 LSRCFILES = \
 	manual_format.m4 \
 	package_attrdev.m4 \
-	package_dmapidev.m4 \
 	package_globals.m4 \
 	package_ncurses.m4 \
 	package_utilies.m4 \
