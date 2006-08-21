@@ -3,6 +3,7 @@ xfsdump-2.2.42 (08 August 2006)
 
 xfsdump-2.2.41 (14 July 2006)
 	- Fix issues with makedepend on libtool libraries.
+	- Fix issues with symbolic link handling in Makefiles.
 
 xfsdump-2.2.40 (05 July 2006)
 	- Update translation Makefile to work better with the Ubuntu
