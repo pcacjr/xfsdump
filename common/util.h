@@ -87,15 +87,22 @@ extern char *strncpyterm( char *s1, char *s2, size_t n );
 #define BIGSTAT_ITER_NONDIR	( 1 << 1 )
 #define BIGSTAT_ITER_ALL	( ~0 )
 
+typedef intgen_t (*bstat_cbfp_t)(void *arg1,
+				 jdm_fshandle_t *fshandlep,
+				 intgen_t fsfd,
+				 xfs_bstat_t *statp );
+
+typedef xfs_ino_t (*bstat_seekfp_t)(void *arg1,
+				    xfs_ino_t lastino);
+
 extern intgen_t bigstat_iter( jdm_fshandle_t *fshandlep,
 			      intgen_t fsfd,
 			      intgen_t selector,
 			      xfs_ino_t start_ino,
-			      intgen_t ( * fp )( void *arg1,
-						 jdm_fshandle_t *fshandlep,
-						 intgen_t fsfd,
-						 xfs_bstat_t *statp ),
-			      void * arg1,
+			      bstat_cbfp_t fp,
+			      void * cb_arg1,
+			      bstat_seekfp_t seekfp,
+			      void * seek_arg1,
 			      intgen_t *statp,
 			      bool_t ( pfp )( int ), /* preemption chk func */
 			      xfs_bstat_t *buf,

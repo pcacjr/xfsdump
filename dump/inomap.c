@@ -251,6 +251,8 @@ inomap_build( jdm_fshandle_t *fshandlep,
 				     ( xfs_ino_t )0,
 				     cb_add,
 				     NULL,
+				     NULL,
+				     NULL,
 				     &stat,
 				     preemptchk,
 				     bstatbufp,
@@ -329,7 +331,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 			     BIGSTAT_ITER_NONDIR,
 			     ( xfs_ino_t )0,
 			     cb_startpt,
-			     0,
+			     NULL,
+			     inomap_next_nondir,
+			     inomap_alloc_context(),
 			     &stat,
 			     preemptchk,
 			     bstatbufp,
@@ -969,6 +973,7 @@ typedef struct i2gseg i2gseg_t;
 typedef struct seg_addr {
 	intgen_t hnkoff;
 	intgen_t segoff;
+	intgen_t inooff;
 } seg_addr_t;
 
 static struct inomap {
@@ -1118,6 +1123,15 @@ inomap_addr2segix( seg_addr_t *addrp )
 	return ( addrp->hnkoff * SEGPERHNK ) + addrp->segoff;
 }
 
+static inline intgen_t
+inomap_lastseg( intgen_t hnkoff )
+{
+	if ( hnkoff == inomap.lastseg.hnkoff )
+		return inomap.lastseg.segoff;
+	else
+		return SEGPERHNK - 1;
+}
+
 /* called for every inode group in the filesystem in increasing inode
  * order. adds a new segment to the inomap and ino-to-gen map.
  */
@@ -1191,6 +1205,12 @@ inomap_alloc_context( void )
 }
 
 void
+inomap_reset_context( void *p )
+{
+	memset( p, 0, sizeof(seg_addr_t) );
+}
+
+void
 inomap_free_context( void *p )
 {
 	free( p );
@@ -1239,7 +1259,7 @@ inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
 	intgen_t upper;
 
 	if ( !inomap_validaddr( addrp ) ) {
-		memset( addrp, 0, sizeof(seg_addr_t) );
+		inomap_reset_context( addrp );
 	}
 
 	if ( !inomap_find_hnk( addrp, ino ) )
@@ -1247,8 +1267,7 @@ inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
 
 	/* find the correct segment */
 	lower = 0;
-	upper = ( addrp->hnkoff == inomap.lastseg.hnkoff ) ?
-			inomap.lastseg.segoff : SEGPERHNK - 1;
+	upper = inomap_lastseg(addrp->hnkoff);
 
 	while ( upper >= lower ) {
 		segp = inomap_addr2seg( addrp );
@@ -1265,6 +1284,65 @@ inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
 	}
 
 	return BOOL_FALSE;
+}
+
+static xfs_ino_t
+inomap_iter( void *contextp, intgen_t statemask )
+{
+	xfs_ino_t ino, endino;
+	seg_t *segp;
+	seg_addr_t *addrp = (seg_addr_t *)contextp;
+
+	for ( ;
+	      addrp->hnkoff <= inomap.lastseg.hnkoff;
+	      addrp->hnkoff++, addrp->segoff = 0, addrp->inooff = 0 ) {
+
+		for ( ;
+		      addrp->segoff <= inomap_lastseg(addrp->hnkoff);
+		      addrp->segoff++, addrp->inooff = 0 ) {
+
+			segp = inomap_addr2seg( addrp );
+
+			ino = segp->base + addrp->inooff;
+			endino = segp->base + INOPERSEG;
+			for ( ; ino < endino ; ino++, addrp->inooff++ ) {
+				intgen_t st;
+				st = SEG_GET_BITS( segp, ino );
+				if ( statemask & ( 1 << st )) {
+					addrp->inooff++; /* for next call */
+					return ino;
+				}
+			}
+		}
+	}
+
+	return INO64MAX;
+}
+
+xfs_ino_t
+inomap_next_nondir(void *contextp, xfs_ino_t lastino)
+{
+	intgen_t state = 1 << MAP_NDR_CHANGE;
+	xfs_ino_t nextino;
+
+	do {
+		nextino = inomap_iter(contextp, state);
+	} while (nextino <= lastino);
+
+	return nextino;
+}
+
+xfs_ino_t
+inomap_next_dir(void *contextp, xfs_ino_t lastino)
+{
+	intgen_t state = (1 << MAP_DIR_CHANGE) | (1 << MAP_DIR_SUPPRT);
+	xfs_ino_t nextino;
+
+	do {
+		nextino = inomap_iter(contextp, state);
+	} while (nextino <= lastino);
+
+	return nextino;
 }
 
 static intgen_t
@@ -1432,51 +1510,6 @@ inomap_dump( drive_t *drivep )
 
 	return RV_OK;
 }
-
-#ifdef NOTUSED
-bool_t
-inomap_iter_cb( void *contextp,
-		intgen_t statemask,
-		bool_t ( *funcp )( void *contextp,
-				  xfs_ino_t ino,
-				  intgen_t state ))
-{
-	hnk_t *hnkp;
-
-	ASSERT( ! ( statemask & ( 1 << MAP_INO_UNUSED )));
-
-	for ( hnkp = roothnkp ; hnkp != 0 ; hnkp = hnkp->nextp ) {
-		seg_t *segp = hnkp->seg;
-		seg_t *endsegp = hnkp->seg + SEGPERHNK;
-		for ( ; segp < endsegp ; segp++ ) {
-			xfs_ino_t ino;
-			xfs_ino_t endino;
-
-			if ( hnkp == tailhnkp && segp > lastsegp ) {
-				return BOOL_TRUE;
-			}
-			ino = segp->base;
-			endino = segp->base + INOPERSEG;
-			for ( ; ino < endino ; ino++ ) {
-				intgen_t st;
-				st = SEG_GET_BITS( segp, ino );
-				if ( statemask & ( 1 << st )) {
-					bool_t ok;
-					ok = ( * funcp )( contextp, ino, st );
-					if ( ! ok ) {
-						return BOOL_FALSE;
-					}
-				}
-			}
-		}
-	}
-
-	/* should not get here
-	 */
-	ASSERT( 0 );
-	return BOOL_FALSE;
-}
-#endif /* NOTUSED */
 
 static intgen_t
 subtreelist_parse( jdm_fshandle_t *fshandlep,

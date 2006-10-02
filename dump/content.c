@@ -260,7 +260,8 @@ extern size_t pgsz;
  */
 static rv_t dump_dirs( ix_t strmix,
 		       xfs_bstat_t *bstatbufp,
-		       size_t bstatbuflen );
+		       size_t bstatbuflen,
+		       void *inomap_contextp );
 #ifdef SYNCDIR
 static rv_t dump_dirs_rendezvous( void );
 #endif /* SYNCDIR */
@@ -2137,6 +2138,7 @@ content_stream_dump( ix_t strmix )
 	content_hdr_t *cwhdrp = ( content_hdr_t * )mwhdrp->mh_upper;
 	content_inode_hdr_t *scwhdrp = ( content_inode_hdr_t * )
 				       cwhdrp->ch_specific;
+	void *inomap_contextp;
 	bool_t all_nondirs_committed;
 	bool_t empty_mediafile;
 	time_t elapsed;
@@ -2155,6 +2157,10 @@ content_stream_dump( ix_t strmix )
 	bstatbufp = ( xfs_bstat_t * )calloc( bstatbuflen,
 					     sizeof( xfs_bstat_t ));
 	ASSERT( bstatbufp );
+
+	/* allocate an inomap context */
+	inomap_contextp = inomap_alloc_context();
+	ASSERT( inomap_contextp );
 
 	/* determine if stream terminators will be used and are expected.
 	 * this will be revised each time a new media file is begun.
@@ -2346,7 +2352,10 @@ content_stream_dump( ix_t strmix )
 		 * for each directory in the bitmap.
 		 */
 		sc_stat_pds[ strmix ].pds_dirdone = 0;
-		rv = dump_dirs( strmix, bstatbufp, bstatbuflen );
+		rv = dump_dirs( strmix,
+				bstatbufp,
+				bstatbuflen,
+				inomap_contextp );
 		if ( rv == RV_INTR ) {
 			stop_requested = BOOL_TRUE;
 			goto decision_more;
@@ -2385,13 +2394,15 @@ content_stream_dump( ix_t strmix )
 			      "dumping non-directory files\n") );
 			sc_stat_pds[ strmix ].pds_phase = PDS_NONDIR;
 			rv = RV_OK;
+			inomap_reset_context(inomap_contextp);
 			rval = bigstat_iter( sc_fshandlep,
 					     sc_fsfd,
 					     BIGSTAT_ITER_NONDIR,
 					     scwhdrp->cih_startpt.sp_ino,
-	( intgen_t ( * )( void *, jdm_fshandle_t *, intgen_t, xfs_bstat_t * ))
-					     dump_file,
+					     ( bstat_cbfp_t )dump_file,
 					     ( void * )strmix,
+					     inomap_next_nondir,
+					     inomap_contextp,
 					     ( intgen_t * )&rv,
 					     ( miniroot || pipeline ) ?
 					       (bool_t (*)(int))preemptchk : 0,
@@ -2827,11 +2838,16 @@ update_cc_Media_useterminatorpr( drive_t *drivep, context_t *contextp )
 }
 
 static rv_t
-dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
+dump_dirs( ix_t strmix,
+	   xfs_bstat_t *bstatbufp,
+	   size_t bstatbuflen,
+	   void *inomap_contextp )
 {
 	xfs_ino_t lastino;
 	size_t bulkstatcallcnt;
         xfs_fsop_bulkreq_t bulkreq;
+
+	inomap_reset_context(inomap_contextp);
 
 	/* begin iteration at ino zero
 	 */
@@ -2943,6 +2959,16 @@ dump_dirs( ix_t strmix, xfs_bstat_t *bstatbufp, size_t bstatbuflen )
 				return rv;
 			}
 		}
+
+		lastino = inomap_next_dir(inomap_contextp, lastino);
+		if (lastino == INO64MAX) {
+			mlog( MLOG_DEBUG, "bulkstat seeked to EOS\n" );
+			return 0;
+		}
+
+		mlog( MLOG_DEBUG, "bulkstat seeked to %llu\n", lastino );
+
+		lastino = (lastino > 0) ? lastino - 1 : 0;
 	}
 	/* NOTREACHED */
 }

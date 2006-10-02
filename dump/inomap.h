@@ -130,22 +130,18 @@ typedef struct hnk hnk_t;
  * inomap_alloc_context(), and released by inomap_free_context().
  */
 extern void *inomap_alloc_context( void );
+extern void inomap_reset_context( void *contextp );
 extern void inomap_free_context( void *contextp );
 extern intgen_t inomap_get_state( void *contextp, xfs_ino_t ino );
 extern gen_t inomap_get_gen( void *contextp, xfs_ino_t ino );
 
-#ifdef NOTUSED
-/* inomap_iter_cb - will call the supplied function for each ino in
- * the map matching a state in the state mask. if the callback returns
- * FALSE, the iteration will be aborted and inomap_iter_cb() will
- * return FALSE. the state mask is constructed by OR'ing bits in bit
- * positions corresponding to the state values.
+
+/* generators returning the next dir or non-dir ino selected in this dump.
+ * returns INO64MAX when no more inos.
+ * requires a pointer to a context block, obtained from
+ * inomap_alloc_context(), and released by inomap_free_context().
  */
-extern bool_t inomap_iter_cb( void *contextp,
-			      intgen_t statemask,
-			      bool_t ( *funcp )( void *contextp,
-					         xfs_ino_t ino,
-					         intgen_t state ));
-#endif /* NOTUSED */
+extern xfs_ino_t inomap_next_nondir(void *contextp, xfs_ino_t lastino);
+extern xfs_ino_t inomap_next_dir(void *contextp, xfs_ino_t lastino);
 
 #endif /* INOMAP_H */

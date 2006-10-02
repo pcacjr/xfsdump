@@ -1,3 +1,9 @@
+xfsdump-2.2.43 (02 October 2006)
+	- Change the inode scans to seek to the next inode of
+	  interest, rather than always doing a full scan. Useful
+	  for dumps that contain only a subset of the inodes
+	  in a filesystem (incrementals, subtree dumps, etc.).
+
 xfsdump-2.2.42 (08 August 2006)
 	- Rework code to remove the DMAPI build and run-time dependency.
 

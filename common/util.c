@@ -116,11 +116,10 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 	      intgen_t fsfd,
 	      intgen_t selector,
 	      xfs_ino_t start_ino,
-	      intgen_t ( * fp )( void *arg1,
-				 jdm_fshandle_t *fshandlep,
-				 intgen_t fsfd,
-				 xfs_bstat_t *statp ),
-	      void * arg1,
+	      bstat_cbfp_t fp,
+	      void * cb_arg1,
+	      bstat_seekfp_t seekfp,
+	      void * seek_arg1,
 	      intgen_t *statp,
 	      bool_t ( pfp )( int ),
 	      xfs_bstat_t *buf,
@@ -208,7 +207,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 					continue;
 				}
 			}
-			rval = ( * fp )( arg1, fshandlep, fsfd, p );
+			rval = ( * fp )( cb_arg1, fshandlep, fsfd, p );
 			if ( rval ) {
 				*statp = rval;
 				return 0;
@@ -219,6 +218,20 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 		if ( pfp && (++bulkstatcnt % 10) == 0 &&
 		     ( pfp )( PREEMPT_FULL )) {
 			return EINTR;
+		}
+
+		if (seekfp) {
+			lastino = seekfp(seek_arg1, lastino);
+			if (lastino == INO64MAX) {
+				mlog( MLOG_DEBUG,
+				      "bulkstat seeked to EOS\n");
+				return 0;
+			}
+			
+			mlog( MLOG_DEBUG,
+			      "bulkstat seeked to %llu\n", lastino);
+
+			lastino = (lastino > 0) ? lastino - 1 : 0;
 		}
 
 		mlog( MLOG_NITTY + 1,
