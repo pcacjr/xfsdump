@@ -1750,8 +1750,15 @@ estimate_dump_space( xfs_bstat_t *statp )
 		 */
 		if (hsm_fs_ctxtp) {
 			off64_t	bytes;
+			int accurate;
 
-			if (HsmEstimateFileSpace(hsm_fs_ctxtp, statp, &bytes))
+			/* if -z or multiple streams are being used,
+			 * we need an accurate estimate. otherwise a
+			 * quick estimate will do.
+			 */
+			accurate = maxdumpfilesize || drivecnt > 1;
+
+			if (HsmEstimateFileSpace(hsm_fs_ctxtp, statp, &bytes, accurate))
 				return bytes;
 		}
 		return statp->bs_blocks * ( off64_t )statp->bs_blksize;

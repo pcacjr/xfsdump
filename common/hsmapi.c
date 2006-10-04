@@ -256,27 +256,56 @@ extern int
 HsmEstimateFileSpace(
 	hsm_fs_ctxt_t	*contextp,
 const	xfs_bstat_t	*statp,
-	off64_t		*bytes)
+	off64_t		*bytes,
+	int		accurate)
 {
-	/* This code is assuming that there are no MIG files, and so any
-	   file with DMAPI event bits set will be dumped as OFL.
-	   It is too expensive to actually differentiate MIG files from
-	   other types just for the sake of an estimate. The non-dir dump
-	   size estimation will be somewhat low if there are MIG files,
-	   which could affect the distribution of a multi-stream dump.
-	*/
-	if ((statp->bs_mode & S_IFMT) != S_IFREG) {
-		return 0;       /* not a regular file */
-	}
-	if ((statp->bs_xflags & XFS_XFLAG_HASATTR) == 0) {
-		return 0;       /* no DMF attribute can possibly exist */
-	}
-	if ((statp->bs_dmevmask & DMF_EV_BITS) == 0) {
-		return 0;
-	}
+	/* If the estimate needs to be accurate, then we'll have to
+	 * pay the price and read the DMF attribute, if there is one,
+	 * to determine exactly what DMF state the file is in. Otherwise,
+	 * make a guess based on information in the bstat.
+	 */
+	if (accurate) {
+		dmf_fs_ctxt_t	*dmf_fs_ctxtp = (dmf_fs_ctxt_t *)contextp;
+		dmf_f_ctxt_t	dmf_f_ctxt;
 
-	*bytes = 0;
-	return 1;
+		/* This is an implicit HsmAllocateFileContext call. */
+
+		dmf_f_ctxt.fsys = *dmf_fs_ctxtp;
+		dmf_f_ctxt.candidate = 0;
+
+		/* Initialize the file context to determine the file's state. */
+
+		if (HsmInitFileContext((hsm_f_ctxt_t *)&dmf_f_ctxt, statp)) {
+			return 0;
+		}
+
+		/* If the file is dualstate, make it appear offline. */
+
+		if (dmf_f_ctxt.candidate) {
+			*bytes = 0;	/* treat the entire file as offline */
+			return 1;
+		} else {
+			return 0;
+		}
+	} else {
+		/* This code is assuming that there are no MIG files, and so any
+		   file with DMAPI event bits set will be dumped as OFL. The
+		   non-dir dump size estimation will be somewhat low if there
+		   are MIG files.
+		 */
+		if ((statp->bs_mode & S_IFMT) != S_IFREG) {
+			return 0;       /* not a regular file */
+		}
+		if ((statp->bs_xflags & XFS_XFLAG_HASATTR) == 0) {
+			return 0;       /* no DMF attribute can possibly exist */
+		}
+		if ((statp->bs_dmevmask & DMF_EV_BITS) == 0) {
+			return 0;
+		}
+
+		*bytes = 0;
+		return 1;
+	}
 }
 
 

@@ -3,6 +3,9 @@ xfsdump-2.2.43 (02 October 2006)
 	  interest, rather than always doing a full scan. Useful
 	  for dumps that contain only a subset of the inodes
 	  in a filesystem (incrementals, subtree dumps, etc.).
+	- Produce a more accurate dump size estimate when
+	  it is worthwhile to do so (when using multiple dump
+	  streams or when skipping files based on size).
 
 xfsdump-2.2.42 (08 August 2006)
 	- Rework code to remove the DMAPI build and run-time dependency.

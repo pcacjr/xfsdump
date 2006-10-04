@@ -94,7 +94,8 @@ extern int
 HsmEstimateFileSpace(
 	hsm_fs_ctxt_t	*contextp,
 const	xfs_bstat_t	*statp,
-	off64_t		*bytes);
+	off64_t		*bytes,
+	int		accurate);
 
 
 /******************************************************************************
