@@ -3959,6 +3959,30 @@ dump_file( void *arg1,
 	case S_IFREG:
 		/* ordinary file
 		 */
+
+		/* filter out any files that have grown beyond the
+		 * max file size since the initial scan.
+		 */
+		if (maxdumpfilesize) {
+			off64_t estimated_size = statp->bs_blocks *
+						 ( off64_t )statp->bs_blksize;
+
+			if (hsm_fs_ctxtp) {
+				HsmEstimateFileSpace(hsm_fs_ctxtp,
+						     contextp->cc_hsm_f_ctxtp,
+						     statp,
+						     &estimated_size,
+						     1);
+			}
+
+			if (estimated_size > maxdumpfilesize) {
+				mlog( MLOG_DEBUG | MLOG_NOTE,
+				      "ino %llu increased beyond maximum size: "
+				      "NOT dumping\n",
+				      statp->bs_ino);
+				return RV_OK;
+			}
+		}
 		rv = dump_file_reg( drivep,
 				    contextp,
 				    scwhdrp,

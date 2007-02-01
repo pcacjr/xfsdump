@@ -92,7 +92,8 @@ HsmDeleteFsysContext(
 
 extern int
 HsmEstimateFileSpace(
-	hsm_fs_ctxt_t	*contextp,
+	hsm_fs_ctxt_t	*fscontextp,
+	hsm_f_ctxt_t	*fcontextp,
 const	xfs_bstat_t	*statp,
 	off64_t		*bytes,
 	int		accurate);

@@ -1758,7 +1758,7 @@ estimate_dump_space( xfs_bstat_t *statp )
 			 */
 			accurate = maxdumpfilesize || drivecnt > 1;
 
-			if (HsmEstimateFileSpace(hsm_fs_ctxtp, statp, &bytes, accurate))
+			if (HsmEstimateFileSpace(hsm_fs_ctxtp, NULL, statp, &bytes, accurate))
 				return bytes;
 		}
 		return statp->bs_blocks * ( off64_t )statp->bs_blksize;

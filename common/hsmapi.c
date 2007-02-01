@@ -254,7 +254,8 @@ HsmDeleteFsysContext(
 
 extern int
 HsmEstimateFileSpace(
-	hsm_fs_ctxt_t	*contextp,
+	hsm_fs_ctxt_t	*fscontextp,
+	hsm_f_ctxt_t	*fcontextp,
 const	xfs_bstat_t	*statp,
 	off64_t		*bytes,
 	int		accurate)
@@ -262,10 +263,20 @@ const	xfs_bstat_t	*statp,
 	/* If the estimate needs to be accurate, then we'll have to
 	 * pay the price and read the DMF attribute, if there is one,
 	 * to determine exactly what DMF state the file is in. Otherwise,
-	 * make a guess based on information in the bstat.
+	 * make a guess based on information in the bstat. If a
+	 * hsm_f_ctxt_t was provided, an accurate estimate is free.
 	 */
-	if (accurate) {
-		dmf_fs_ctxt_t	*dmf_fs_ctxtp = (dmf_fs_ctxt_t *)contextp;
+	if (fcontextp) {
+		dmf_f_ctxt_t	*dmf_f_ctxt = (dmf_f_ctxt_t *)fcontextp;
+
+		if (dmf_f_ctxt->candidate) {
+			*bytes = 0;	/* treat the entire file as offline */
+			return 1;
+		} else {
+			return 0;
+		}
+	} else if (accurate) {
+		dmf_fs_ctxt_t	*dmf_fs_ctxtp = (dmf_fs_ctxt_t *)fscontextp;
 		dmf_f_ctxt_t	dmf_f_ctxt;
 
 		/* This is an implicit HsmAllocateFileContext call. */
