@@ -2540,11 +2540,21 @@ content_complete( void )
 			      "\n"),
 			      elapsed );
 		} else {
-			if ( quotafilecheck("user", persp->a.dstdir, CONTENT_QUOTAFILE)
-			     || quotafilecheck("project", persp->a.dstdir, CONTENT_PQUOTAFILE)
-			     || quotafilecheck("group", persp->a.dstdir, CONTENT_GQUOTAFILE) ) {
-				mlog( MLOG_NORMAL, _("use \'xfs_quota\' to restore quotas\n") );
-			}
+			int found;
+
+			found = quotafilecheck("user",
+					       persp->a.dstdir,
+					       CONTENT_QUOTAFILE);
+			found += quotafilecheck("project",
+						persp->a.dstdir,
+						CONTENT_PQUOTAFILE);
+			found += quotafilecheck("group",
+						persp->a.dstdir,
+						CONTENT_GQUOTAFILE);
+
+			if (found)
+				mlog( MLOG_NORMAL,
+				      _("use \'xfs_quota\' to restore quotas\n") );
 
 			mlog( MLOG_VERBOSE, _(
 			      "restore complete"
