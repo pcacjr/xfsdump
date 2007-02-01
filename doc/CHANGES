@@ -1,3 +1,14 @@
+xfsdump-2.2.44 (01 February 2007)
+	- Fix use of getopt's optopt variable. Thanks to Kouta Ooizumi.
+	- Initialize xfsdump's logging facility earlier. Thanks to
+	  Kouta Ooizumi.
+	- Log a message for each quota file restored, not just the first.
+	- When using -z, check a file's size against the max dump file
+	  size just before dumping the file, rather than only during the
+	  initial scan, to account for changes during the dump.
+	- A sync needs to be issued before the first inode scan to avoid
+	  potentially skipping modified files in an incremental dump.
+
 xfsdump-2.2.43 (02 October 2006)
 	- Change the inode scans to seek to the next inode of
 	  interest, rather than always doing a full scan. Useful
