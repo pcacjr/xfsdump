@@ -95,6 +95,7 @@ extern char *mlog_ss_names[ MLOG_SS_CNT ];
 /* initializes the mlog abstraction. split into two phases to
  * unravel some initialization sequencing problems.
  */
+extern void mlog_init0( void );
 extern bool_t mlog_init1( intgen_t argc, char *argv[ ] );
 extern bool_t mlog_init2( void );
 

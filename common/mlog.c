@@ -118,6 +118,28 @@ static int mlog_main_exit_code = -1;
 static rv_t mlog_main_exit_return = RV_NONE;
 static rv_t mlog_main_exit_hint = RV_NONE;
 
+void
+mlog_init0( void )
+{
+	int i;
+
+#ifdef DUMP
+	mlog_fp = stderr;
+#endif /* DUMP */
+#ifdef RESTORE
+	mlog_fp = stdout;
+#endif /* RESTORE */
+
+	/* initialize stream count. will be updated later by call to
+	 * mlog_tell_streamcnt( ), after drive layer has counted drives
+	 */
+	mlog_streamcnt = 1;
+
+	for( i = 0 ; i < MLOG_SS_CNT ; i++ ) {
+		mlog_level_ss[ i ] = MLOG_VERBOSE;
+	}
+}
+
 bool_t
 mlog_init1( intgen_t argc, char *argv[ ] )
 {
@@ -126,18 +148,6 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 	ix_t soix;
 	size_t vsymcnt;
 	intgen_t c;
-
-#ifdef DUMP
-        mlog_fp = stderr;
-#endif /* DUMP */
-#ifdef RESTORE
-        mlog_fp = stdout;
-#endif /* RESTORE */
-
-	/* initialize stream count. will be updated later by call to
-	 * mlog_tell_streamcnt( ), after drive layer has counted drives
-	 */
-	mlog_streamcnt = 1;
 
 	/* prepare an array of suboption token strings. this will be the
 	 * concatenation of the subsystem names with the verbosity symbols.

@@ -192,6 +192,10 @@ main( int argc, char *argv[] )
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 
+	/* bootstrap message logging (stage 0)
+	*/
+	mlog_init0();
+
 	/* Get the parent's pid. will be used in signal handling
 	 * to differentiate parent from children.
 	 */

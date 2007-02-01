@@ -40,6 +40,7 @@ struct spm {
 typedef struct spm spm_t;
 extern pid_t parentpid;
 static spm_t spm[ STREAM_SIMMAX * 3 ];
+static bool_t initialized = BOOL_FALSE;
 
 void
 stream_init( void )
@@ -53,7 +54,7 @@ stream_init( void )
 #endif /* HIDDEN */
 
 	( void )memset( ( void * )spm, 0, sizeof( spm ));
-
+	initialized = BOOL_TRUE;
 }
 
 /*
@@ -135,6 +136,9 @@ stream_find_all( stream_state_t states[], int nstates,
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 	ASSERT(nstates > 0 && npids > 0);
+
+	if (!initialized)
+		return 0;
 
 	/* lock - make sure we get a consistent snapshot of the stream status */
 	lock();
