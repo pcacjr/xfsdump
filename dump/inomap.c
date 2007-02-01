@@ -162,6 +162,14 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	intgen_t stat;
 	intgen_t rval;
 
+        /* do a sync so that bulkstat will pick up inode changes
+         * that are currently in the inode cache. this is necessary
+         * for incremental dumps in order to have the dump time
+         * accurately reflect what inodes were included in this dump.
+         * (PV 881455)
+         */
+	sync();
+
 	/* copy stat ptrs
 	 */
 	inomap_statphasep = statphasep;
