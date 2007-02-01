@@ -609,7 +609,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				return BOOL_FALSE;
 			}
 			contextp->dc_ringlen = ( size_t )atoi( optarg );
@@ -619,7 +619,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
 				      _("-%c argument must be "
 				      "between %u and %u: ignoring %u\n"),
-				      optopt,
+				      c,
 				      RINGLEN_MIN,
 				      RINGLEN_MAX,
 				      contextp->dc_ringlen );
@@ -642,7 +642,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 			    mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 				    _("-%c argument missing\n"),
-				    optopt );
+				    c );
 			    return -10;
 			}
 			cmdlineblksize = ( u_int32_t )atoi( optarg );
@@ -655,7 +655,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				return BOOL_FALSE;
 			}
                         /* given in Mb */
@@ -664,7 +664,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
 				      _("-%c argument must be a "
 				      "positive number (Mb): ignoring %u\n"),
-				      optopt,
+				      c,
 				      contextp->dc_filesz );
 				return BOOL_FALSE;
                         }

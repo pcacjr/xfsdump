@@ -109,7 +109,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 		mlog( MLOG_NORMAL, _(
 		      "too many -%c arguments: "
 		      "maximum is %d when running in miniroot\n"),
-		      optopt,
+		      GETOPT_DUMPDEST,
 		      1 );
 		usage( );
 		return BOOL_FALSE;
@@ -146,7 +146,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}

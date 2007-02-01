@@ -233,7 +233,7 @@ main( int argc, char *argv[] )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
@@ -244,7 +244,7 @@ main( int argc, char *argv[] )
 			     errno == ERANGE ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument (%s) invalid\n"),
-				      optopt,
+				      c,
 				      optarg );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
@@ -255,7 +255,7 @@ main( int argc, char *argv[] )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
@@ -266,7 +266,7 @@ main( int argc, char *argv[] )
 			     errno == ERANGE ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument (%s) invalid\n"),
-				      optopt,
+				      c,
 				      optarg );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
@@ -284,7 +284,7 @@ main( int argc, char *argv[] )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return mlog_exit(EXIT_ERROR, RV_OPT);
 			}
@@ -1222,14 +1222,14 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( optfilename ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
 				      _("-%c allowed only once\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}

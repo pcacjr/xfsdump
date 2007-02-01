@@ -107,8 +107,8 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 				mlog( MLOG_NORMAL,
 				      _("too many -%c arguments: "
 				      "\"-%c %s\" already given\n"),
-				      optopt,
-				      optopt,
+				      c,
+				      c,
 				      medialabel );
 				usage( );
 				return 0;
@@ -116,7 +116,7 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL,
 				      _("-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return 0;
 			}

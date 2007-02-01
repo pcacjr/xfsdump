@@ -179,7 +179,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 				fprintf( stderr,
 					 _("%s: -%c argument missing\n"),
 					 progname,
-					 optopt );
+					 c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -195,7 +195,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 					fprintf( stderr,
 						 _("%s: -%c argument invalid\n"),
 						 progname,
-						 optopt );
+						 c );
 					usage( );
 					return BOOL_FALSE;
 				}
@@ -210,7 +210,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 							 "%s requires a "
 							 "verbosity value\n"),
 							 progname,
-							 optopt,
+							 c,
 						mlog_ss_names[ suboptix ] );
 						usage( );
 						return BOOL_FALSE;
@@ -225,7 +225,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 							 "does not require "
 							 "a value\n"),
 							 progname,
-							 optopt );
+							 c );
 						usage( );
 						return BOOL_FALSE;
 					}
@@ -238,7 +238,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 						 _("%s: -%c argument "
 						 "invalid\n"),
 						 progname,
-						 optopt );
+						 c );
 					usage( );
 					return BOOL_FALSE;
 				}

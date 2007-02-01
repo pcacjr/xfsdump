@@ -927,7 +927,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -935,7 +935,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "unable to get status of -%c argument %s:"
 				      " %s\n"),
-				      optopt,
+				      c,
 				      optarg,
 				      strerror( errno ));
 				return BOOL_FALSE;
@@ -953,7 +953,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -964,7 +964,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 					mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					      "-%c argument %s is an "
 					      "invalid pathname\n"),
-					      optopt,
+					      c,
 					      optarg );
 					usage( );
 					return BOOL_FALSE;
@@ -981,7 +981,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( rval ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "cannot stat -%c argument %s (%s): %s\n"),
-				      optopt,
+				      c,
 				      optarg,
 				      tranp->t_hkdir,
 				      strerror( errno ));
@@ -992,7 +992,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument %s (%s) "
 				      "is not a directory\n"),
-				      optopt,
+				      c,
 				      optarg,
 				      tranp->t_hkdir );
 				usage( );
@@ -1005,8 +1005,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "too many -%c arguments: "
 				      "\"-%c %s\" already given\n"),
-				      optopt,
-				      optopt,
+				      c,
+				      c,
 				      tranp->t_reqdumplab );
 				usage( );
 				return BOOL_FALSE;
@@ -1014,7 +1014,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -1023,7 +1023,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			     sizeofmember( pers_t, s.dumplab )) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument %s too long: max is %d\n"),
-				      optopt,
+				      c,
 				      optarg,
 				      sizeofmember( pers_t, s.dumplab ));
 				usage( );
@@ -1036,21 +1036,21 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( tranp->t_reqdumpidvalpr ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "too many -%c arguments\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if (uuid_parse( optarg, tranp->t_reqdumpid ) < 0 ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument not a valid uuid\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -1065,14 +1065,14 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			     optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
 			if ( optarg[ 0 ] == '/' ) {
 				mlog( MLOG_NORMAL, _(
 				      "-%c argument must be relative\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -1111,7 +1111,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					"-%c argument missing\n"),
-					optopt );
+					c );
 				usage( );
 				return BOOL_FALSE;
 			}

@@ -127,8 +127,8 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                                 mlog( MLOG_NORMAL,
                                       _("too many -%c arguments: "
                                       "\"-%c %s\" already given\n"),
-                                      optopt,
-                                      optopt,
+                                      c,
+                                      c,
                                       dumplabel );
                                 usage( );
                                 return 0;
@@ -136,7 +136,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         if ( ! optarg || optarg[ 0 ] == '-' ) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
                                       _("-%c argument missing\n"),
-                                      optopt );
+                                      c );
                                 usage( );
                                 return 0;
                         }
@@ -147,14 +147,14 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         if ( ! uuid_is_null( ghdrp->gh_dumpid )) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
                                       _("too many -%c arguments\n"),
-                                      optopt );
+                                      c );
                                 usage( );
                                 return 0;
                         }
                         if ( ! optarg || optarg[ 0 ] == '-' ) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
                                       _("-%c argument missing\n"),
-                                      optopt );
+                                      c );
                                 usage( );
                                 return 0;
                         }
@@ -162,7 +162,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 			if ( ! uuid_parse( optarg, ghdrp->gh_dumpid ) ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR,
 				      _("-%c argument not a valid uuid\n"),
-				      optopt );
+				      c );
                                 usage( );
                                 return 0;
                         }
@@ -176,7 +176,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
                         if ( ! optarg || optarg[ 0 ] == '-' ) {
                                 mlog( MLOG_NORMAL | MLOG_ERROR,
                                       _("-%c argument missing\n"),
-                                      optopt );
+                                      c );
                                 usage( );
                                 return 0;
                         }

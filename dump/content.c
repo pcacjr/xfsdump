@@ -599,7 +599,7 @@ content_init( intgen_t argc,
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -608,7 +608,7 @@ content_init( intgen_t argc,
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument must be "
 				      "between 0 and %d\n"),
-				      optopt,
+				      c,
 				      LEVEL_MAX );
 				usage( );
 				return BOOL_FALSE;
@@ -618,7 +618,7 @@ content_init( intgen_t argc,
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -626,7 +626,7 @@ content_init( intgen_t argc,
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument (subtree) "
 				      "must be a relative pathname\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -636,7 +636,7 @@ content_init( intgen_t argc,
 			if ( ! optarg || optarg [ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -646,7 +646,7 @@ content_init( intgen_t argc,
 			     ( maxdumpfilesize == ULONGLONG_MAX && errno == ERANGE ) ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument is not a valid file size\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -668,7 +668,7 @@ content_init( intgen_t argc,
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 					"-%c argument missing\n"),
-				    optopt );
+				    c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -685,7 +685,7 @@ content_init( intgen_t argc,
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument missing\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -695,7 +695,7 @@ content_init( intgen_t argc,
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument not a valid "
 				      "dump session id\n"),
-				      optopt );
+				      c );
 				usage( );
 				return BOOL_FALSE;
 			}
@@ -1663,14 +1663,14 @@ baseuuidbypass:
 					mlog( MLOG_NORMAL, _(
 					      "more -%c arguments "
 					      "than number of drives\n"),
-					      optopt );
+					      c );
 					usage( );
 					return BOOL_FALSE;
 				}
 				if ( ! optarg || optarg[ 0 ] == '-' ) {
 					mlog( MLOG_NORMAL, _(
 					      "-%c argument missing\n"),
-					      optopt );
+					      c );
 					usage( );
 					return BOOL_FALSE;
 				}
