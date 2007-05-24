@@ -19,7 +19,7 @@
 /*
  * fsr - file system reorganizer
  *
- * fsr [-d] [-v] [-n] [-s] [-g] [-t mins] [-f leftf] [-m mtab]
+ * fsr [-d] [-v] [-n] [-s] [-g] [-t secs] [-f leftf] [-m mtab]
  * fsr [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...
  *
  * If invoked in the first form fsr does the following: starting with the
@@ -358,7 +358,21 @@ main(int argc, char **argv)
 void
 usage(int ret)
 {
-	fprintf(stderr, _("Usage: %s [xfsfile] ...\n"), progname);
+	fprintf(stderr, _(
+"Usage: %s [-d] [-v] [-n] [-s] [-g] [-t time] [-p passes] [-f leftf] [-m mtab]\n"
+"       %s [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...\n\n"
+"Options:\n"
+"       -n              Do nothing, only interesting with -v. Not\n"
+"                       effective with in mtab mode.\n"
+"       -s		Print statistics only.\n"
+"       -g              Print to syslog (default if stdout not a tty).\n"
+"       -t time         How long to run in seconds.\n"
+"       -p passes	Number of passes before terminating global re-org.\n"
+"       -f leftoff      Use this instead of /etc/fsrlast.\n"
+"       -m mtab         Use something other than /etc/mtab.\n"
+"       -d              Debug, print even more.\n"
+"       -v		Verbose, more -v's more verbose.\n"
+		), progname, progname);
 	exit(ret);
 }
 
@@ -915,7 +929,7 @@ fsrfile_common(
 	}
 	if (fsx.fsx_xflags & XFS_XFLAG_NODEFRAG) {
 		if (vflag)
-			fsrprintf(_("%s: marked as don't defrag, ignoring\n"), 
+			fsrprintf(_("%s: marked as don't defrag, ignoring\n"),
 			    fname);
 		return(0);
 	}
@@ -1533,7 +1547,7 @@ tmp_init(char *mnt)
 	sprintf(buf, "%s/.fsr", mnt);
 
 	mask = umask(0);
-	if (mkdir(buf, 0777) < 0) {
+	if (mkdir(buf, 0700) < 0) {
 		if (errno == EEXIST) {
 			if (dflag)
 				fsrprintf(_("tmpdir already exists: %s\n"),

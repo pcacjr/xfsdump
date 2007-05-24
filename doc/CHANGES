@@ -1,3 +1,7 @@
+xfsdump-2.2.45 (24 May 2007)
+	- Change fsr's temp directory mode to 0700 to deny full access.
+	- Update fsr's usage text.
+
 xfsdump-2.2.44 (01 February 2007)
 	- Fix use of getopt's optopt variable. Thanks to Kouta Ooizumi.
 	- Initialize xfsdump's logging facility earlier. Thanks to
