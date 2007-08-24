@@ -275,7 +275,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
 		return 0;
 	    }
 
-	    new_fd = open(dst_idxfile, O_CREAT|O_RDWR);
+	    new_fd = open(dst_idxfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
 	    if(new_fd < 0) {
 		put_error("Error: unable to open inventory index file");
 		return 0;
@@ -616,7 +616,7 @@ stobj_create( char *fname )
     invt_sescounter_t sescnt;
 
     /* create the new storage object */
-    if (( fd = open( fname, O_RDWR | O_EXCL | O_CREAT )) < 0 ) {
+    if (( fd = open( fname, O_RDWR | O_EXCL | O_CREAT, S_IRUSR|S_IWUSR )) < 0 ) {
 	return -1;
     }
     

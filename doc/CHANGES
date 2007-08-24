@@ -1,3 +1,6 @@
+xfsdump-2.2.46 (24 Aug 2007)
+	- Specify mode on all open(2) calls that use O_CREAT.
+
 xfsdump-2.2.45 (24 May 2007)
 	- Change fsr's temp directory mode to 0700 to deny full access.
 	- Update fsr's usage text.

@@ -429,7 +429,7 @@ oref_resolve_new_invidx(
 	int stobjfd, fd;
 	inv_idbtoken_t tok;
 
-	if ((fd = open ( fname , O_RDWR | O_CREAT ) ) < 0 ) {
+	if ((fd = open ( fname , O_RDWR | O_CREAT, S_IRUSR|S_IWUSR ) ) < 0 ) {
 		INV_PERROR ( fname );
 		return INV_ERR;
 	}

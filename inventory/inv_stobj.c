@@ -527,7 +527,7 @@ stobj_create( char *fname )
 #endif	
 
 	/* create the new storage object */
-	if (( fd = open( fname, INV_OFLAG(forwhat) | O_EXCL | O_CREAT )) < 0 ) {
+	if (( fd = open( fname, INV_OFLAG(forwhat) | O_EXCL | O_CREAT, S_IRUSR|S_IWUSR )) < 0 ) {
 		INV_PERROR ( fname );
 		memset( fname, 0, INV_STRLEN );
 		return -1;
@@ -1083,7 +1083,7 @@ stobj_unpack_sessinfo(
 
 #ifdef INVT_DELETION
 	{
-		int tmpfd = open( "moids", O_RDWR | O_CREAT );	
+		int tmpfd = open( "moids", O_RDWR | O_CREAT, S_IRUSR|S_IWUSR );
 		u_int j;
 		invt_mediafile_t *mmf = s->mfiles;
 		for (i=0; i< s->ses->s_cur_nstreams; i++ ) {

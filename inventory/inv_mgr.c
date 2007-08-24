@@ -692,7 +692,7 @@ invmgr_lockinit( void )
 {
 	if ( invlock_fd == -1 ) {
 		if (( invlock_fd = open( INV_LOCKFILE, 
-					O_RDONLY | O_CREAT )) < 0 ) {
+					O_RDONLY | O_CREAT, S_IRUSR|S_IWUSR )) < 0 ) {
 			INV_PERROR( INV_LOCKFILE );
 			return BOOL_FALSE;
 		}

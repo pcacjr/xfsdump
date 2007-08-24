@@ -257,7 +257,7 @@ idx_create( char *fname, inv_oflag_t forwhat )
 	   the db for SEARCH_ONLY. */
 	ASSERT( forwhat != INV_SEARCH_ONLY );
 
-	if ((fd = open ( fname , INV_OFLAG(forwhat) | O_CREAT ) ) < 0 ) {
+	if ((fd = open ( fname , INV_OFLAG(forwhat) | O_CREAT, S_IRUSR|S_IWUSR ) ) < 0 ) {
 		INV_PERROR ( fname );
 		return INV_TOKEN_NULL;
 	}

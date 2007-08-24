@@ -96,7 +96,7 @@ fstab_put_entry( uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat )
 		if ( errno != ENOENT ) {
 			return -1;
 		}
-		if ((fd = open( INV_FSTAB, INV_OFLAG(forwhat) | O_CREAT ))
+		if ((fd = open( INV_FSTAB, INV_OFLAG(forwhat) | O_CREAT, S_IRUSR|S_IWUSR ))
 		    < 0 ) {
 			INV_PERROR ( INV_FSTAB );
 			return -1;
