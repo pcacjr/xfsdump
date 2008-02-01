@@ -3818,26 +3818,42 @@ status_failed_message( drive_t *drivep )
 static bool_t
 is_variable( drive_t *drivep, bool_t *varblk )
 {
-        bool_t ok;
-        struct mtblkinfo minfo;
 	drive_context_t *contextp;
 
 	contextp = ( drive_context_t * )drivep->d_contextp;
 
- 	ok = mt_blkinfo(contextp->dc_fd, &minfo);
-	if ( ! ok ) {
-		/* failure
-		 */
-		return BOOL_FALSE;
+	if (TS_ISDRIVER) {
+		char value[MT_ATTR_MAX_VALLEN+1];
+		struct mt_attr mtattr;
+
+		value[0] = '\0';
+		mtattr.ma_value = value;
+		mtattr.ma_name = MT_ATTR_NAME_VARIABLE;
+		mtattr.ma_vlen = sizeof(value);
+
+		ioctl(contextp->dc_fd, MTGETATTR, &mtattr);
+
+		if (strcmp(value, MT_ATTR_VALUE_TRUE) == 0)
+			*varblk = BOOL_TRUE;
+		else if (strcmp(value, MT_ATTR_VALUE_FALSE) == 0)
+			*varblk = BOOL_FALSE;
+		else
+			return BOOL_FALSE; /* failure */
+	} else {
+		bool_t ok;
+		struct mtblkinfo minfo;
+
+		ok = mt_blkinfo(contextp->dc_fd, &minfo);
+		if (!ok )
+			return BOOL_FALSE; /* failure */
+
+		/* for Linux scsi driver the blksize == 0 if variable */
+		if (minfo.curblksz == 0)
+			*varblk = BOOL_TRUE;
+		else
+			*varblk = BOOL_FALSE;
 	}
 
-        /* for Linux scsi driver the blksize == 0 if variable */
-	if (minfo.curblksz == 0) {
-	    *varblk = BOOL_TRUE;
-	}
-	else {
-	    *varblk = BOOL_FALSE;
-	}
 	return BOOL_TRUE;
 }
 

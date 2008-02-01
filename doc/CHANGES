@@ -1,3 +1,7 @@
+xfsdump-2.2.47 (01 Feb 2008)
+	- Correctly detect whether a tape device is in variable or
+	  fixed block mode when using the TS tape driver.
+
 xfsdump-2.2.46 (24 Aug 2007)
 	- Specify mode on all open(2) calls that use O_CREAT.
 
