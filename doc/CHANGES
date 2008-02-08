@@ -1,3 +1,6 @@
+xfsdump-2.2.48 (07 Feb 2008)
+	- Prune dump sessions with 0 media files even when using -m.
+
 xfsdump-2.2.47 (01 Feb 2008)
 	- Correctly detect whether a tape device is in variable or
 	  fixed block mode when using the TS tape driver.

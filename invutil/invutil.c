@@ -821,7 +821,8 @@ CheckAndPruneStObjFile( bool_t checkonly,
 }
 
 /* If any of the media objects have a label which matches the one supplied
- * by the user, or if none is supplied, say the session is prunable.
+ * by the user, or if none is supplied, or if the session has no media
+ * objects, say the session is prunable.
  * Otherwise, say it should be bypassed.
  */
 
@@ -833,6 +834,7 @@ uses_specified_mf_label(
 	char *r_mf_label)
 {
     int			s, m;
+    int			num_media_objects = 0;
     invt_stream_t	*StObjstrm;
     invt_mediafile_t	*StObjmed;
 
@@ -842,7 +844,7 @@ uses_specified_mf_label(
     for ( s = 0; s < (int) StObjses->s_cur_nstreams; s++ ) {
 	StObjstrm = (invt_stream_t *)
 	    (temp + StObjhdr->sh_streams_off + (s * sizeof(invt_stream_t)));
-	for ( m = 0; m < StObjstrm->st_nmediafiles; m++) {
+	for ( m = 0; m < StObjstrm->st_nmediafiles; m++, num_media_objects++) {
 	    StObjmed = (invt_mediafile_t *)
 		(temp + StObjstrm->st_firstmfile + (m * sizeof(invt_mediafile_t)));
 	    if (!strncmp(StObjmed->mf_label, r_mf_label, 
@@ -854,6 +856,10 @@ uses_specified_mf_label(
 	    }
 	}
     }
+
+    if (!num_media_objects)
+	    return 1; /* prune */
+
     return 0;	/* don't prune */
 }
 
