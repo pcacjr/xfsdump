@@ -1,3 +1,15 @@
+xfsdump (2.2.48-1) unstable; urgency=low
+
+  * New upstream release
+  * xfsdump depends on ${misc:Depends}
+  * Add debian/watch
+  * Add homepage control header
+  * Fix the following lintian issues:
+    W: xfsdump source: package-uses-deprecated-debhelper-compat-version 1
+    W: xfsdump source: ancient-standards-version 3.5.9 (current is 3.7.3)
+
+ -- Anibal Monsalve Salazar <anibal@debian.org>  Wed, 23 Apr 2008 22:06:34 +1000
+
 xfsdump (2.2.45-1) unstable; urgency=low
 
   * New upstream release (closes: #417894).
