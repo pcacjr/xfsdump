@@ -19,6 +19,7 @@
 #define SWAP_H
 
 #include <xfs/xfs.h>
+#include <swab.h>
 
 #if __BYTE_ORDER == __BIG_ENDIAN
 #define XFS_NATIVE_HOST 1
