@@ -1,3 +1,7 @@
+xfsdump-2.2.49 (17 Feb 2008)
+	- Fix up error handling in _rmt_open in librmt.
+	  Warnings reported by Michal Marek <mmarek@novell.com>
+
 xfsdump-2.2.48 (07 Feb 2008)
 	- Prune dump sessions with 0 media files even when using -m.
 

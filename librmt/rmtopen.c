@@ -171,7 +171,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 	    }
 
 	    rmt_f = popen(cmd, "r");
-	    if (rmt_f < 0) {
+	    if (rmt_f == NULL) {
 		_rmt_msg(RMTWARN, _(
 		"rmtopen: failed to detect remote host type using \"%s\"\n"),
 			cmd);
@@ -183,7 +183,7 @@ static int _rmt_open (char *path, int oflag, int mode)
 		char *c  = fgets(uname, sizeof(uname), rmt_f);
 	        pclose(rmt_f);
 
-		if (c < 0) {
+		if (c == NULL) {
 		    _rmt_msg(RMTWARN, _(
 		"rmtopen: failed to detect remote host type reading \"%s\"\n"),
 			cmd);
