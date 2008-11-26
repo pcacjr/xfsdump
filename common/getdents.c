@@ -72,8 +72,6 @@ extern int __have_no_getdents64;
 # endif
 #endif
 
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-
 
 /* For Linux we need a special version of this file since the
    definition of `struct dirent' is not the same for the kernel and
