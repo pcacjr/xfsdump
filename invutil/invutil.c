@@ -1082,18 +1082,12 @@ mmap_n_bytes(int fd, size_t count, bool_t checkonly, char *path)
 void
 usage (void)
 {
-    char linebuf[ 200 ];
     int pfxsz;
-    int ps;
+    int ps = 0;
     char *ns = "";
 
-    fprintf( stderr, "%s: %s\n", g_programName, g_programVersion );
-    snprintf( linebuf, sizeof(linebuf), "Usage: %s ", g_programName );
-    pfxsz = strlen( linebuf );
-    assert( pfxsz < sizeof( linebuf ));
-    ps = 0;
-
-    fprintf( stderr, linebuf );
+    fprintf(stderr, "%s: %s\n", g_programName, g_programVersion);
+    pfxsz = fprintf(stderr, "Usage: %s ", g_programName);
 
 #ifdef REVEAL
     ULO( "(output debug information)", GETOPT_DEBUG );

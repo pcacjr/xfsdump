@@ -960,20 +960,12 @@ main( int argc, char *argv[] )
 void
 usage( void )
 {
-	char linebuf[ 200 ];
 	int pfxsz;
-	int ps;
+	int ps = 0;
 	char *ns = "";
 
-	sprintf( linebuf,
-		 _("%s: usage: %s "),
-		 progname,
-		 basename( progname ));
-	pfxsz = strlen( linebuf );
-	ASSERT( pfxsz < sizeof( linebuf ));
-	ps = 0;
-
-	fprintf( stderr, linebuf );
+	pfxsz = fprintf(stderr, _("%s: usage: %s "),
+				progname, basename(progname));
 
 #ifdef DUMP
 	ULO(_("(dump DMF dualstate files as offline)"),	GETOPT_DUMPASOFFLINE );
