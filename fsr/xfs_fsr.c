@@ -16,31 +16,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/*
- * fsr - file system reorganizer
- *
- * fsr [-d] [-v] [-n] [-s] [-g] [-t secs] [-f leftf] [-m mtab]
- * fsr [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...
- *
- * If invoked in the first form fsr does the following: starting with the
- * dev/inum specified in /etc/fsrlast this reorgs each reg file in each file
- * system found in /etc/mtab.  After 2 hours of this we record the current
- * dev/inum in /etc/fsrlast.  If there is no /etc/fsrlast fsr starts at the
- * top of /etc/mtab.
- *
- *	-g		print to syslog (default if stdout not a tty)
- *	-m mtab		use something other than /etc/mtab
- *	-t time		how long to run
- *	-f leftoff	use this instead of /etc/fsrlast
- *
- *	-v		verbose. more -v's more verbose
- *	-d		debug. print even more
- *	-n		do nothing.  only interesting with -v.  Not
- *			effective with in mtab mode.
- *	-s		print statistics only.
- *	-p passes	Number of passes before terminating global re-org.
- */
-
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 #include "config.h"
@@ -63,6 +38,7 @@
 #define XFS_XFLAG_NODEFRAG 0x00002000 /* src dependancy, remove later */
 #endif
 
+#define _PATH_FSRLAST	"/var/tmp/.fsrlast_xfs"
 
 char *progname;
 
@@ -98,7 +74,7 @@ static __int64_t	minimumfree = 2048;
 #define min(x, y) ((x) < (y) ? (x) : (y))
 
 static time_t howlong = 7200;		/* default seconds of reorganizing */
-static char *leftofffile = "/var/tmp/.fsrlast_xfs";/* where we left off last */
+static char *leftofffile = _PATH_FSRLAST; /* where we left off last */
 static char *mtab = MOUNTED;
 static time_t endtime;
 static time_t starttime;
@@ -368,11 +344,11 @@ usage(int ret)
 "       -g              Print to syslog (default if stdout not a tty).\n"
 "       -t time         How long to run in seconds.\n"
 "       -p passes	Number of passes before terminating global re-org.\n"
-"       -f leftoff      Use this instead of /etc/fsrlast.\n"
+"       -f leftoff      Use this instead of %s.\n"
 "       -m mtab         Use something other than /etc/mtab.\n"
 "       -d              Debug, print even more.\n"
 "       -v		Verbose, more -v's more verbose.\n"
-		), progname, progname);
+		), progname, progname, _PATH_FSRLAST);
 	exit(ret);
 }
 
