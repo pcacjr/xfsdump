@@ -880,17 +880,23 @@ fsrfile_common(
 		}
 	}
 
-	/* Check if there is room to copy the file */
-	if ( statvfs64( (fsname == NULL ? fname : fsname), &vfss) < 0) {
+	/*
+	 * Check if there is room to copy the file.
+	 *
+	 * Note that xfs_bstat.bs_blksize returns the filesystem blocksize,
+	 * not the optimal I/O size as struct stat.
+	 */
+	if (statvfs64(fsname ? fsname : fname, &vfss) < 0) {
 		fsrprintf(_("unable to get fs stat on %s: %s\n"),
 			fname, strerror(errno));
-		return (-1);
+		return -1;
 	}
 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
-
-	if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
+	if (statp->bs_blksize * statp->bs_blocks >
+	    vfss.f_bfree * bsize - minimumfree) {
 		fsrprintf(_("insufficient freespace for: %s: "
-			"size=%lld: ignoring\n"), fname, statp->bs_size);
+			    "size=%lld: ignoring\n"), fname,
+			    statp->bs_blksize * statp->bs_blocks);
 		return 1;
 	}
 
