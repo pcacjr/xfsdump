@@ -197,8 +197,6 @@ inomap_restore_pers( drive_t *drivep,
 	 */
 	ASSERT( INOPERSEG == ( sizeof( (( seg_t * )0 )->lobits ) * NBBY ));
 	ASSERT( sizeof( hnk_t ) == HNKSZ );
-	ASSERT( HNKSZ >= pgsz );
-	ASSERT( ! ( HNKSZ % pgsz ));
 	ASSERT( sizeof( pers_t ) <= PERSSZ );
 
 	/* get inomap info from media hdr
@@ -224,8 +222,6 @@ inomap_restore_pers( drive_t *drivep,
 
 	/* mmap the persistent hdr and space for the map
 	 */
-	ASSERT( sizeof( hnk_t ) * ( size_t )hnkcnt >= pgsz );
-	ASSERT( ! ( sizeof( hnk_t ) * ( size_t )hnkcnt % pgsz ));
 	persp = ( pers_t * ) mmap_autogrow(
 				     PERSSZ
 				     +
@@ -355,8 +351,6 @@ inomap_sync_pers( char *hkdir )
 	/* sanity checks
 	 */
 	ASSERT( sizeof( hnk_t ) == HNKSZ );
-	ASSERT( HNKSZ >= pgsz );
-	ASSERT( ! ( HNKSZ % pgsz ));
 
 	/* only needed once per session
 	 */

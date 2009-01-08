@@ -210,7 +210,7 @@ typedef struct extent_group_context extent_group_context_t;
 
 /* minimum sizes for extended attributes buffers
  */
-#define EXTATTR_LISTBUF_SZ	( 4 * pgsz )
+#define EXTATTR_LISTBUF_SZ	( XATTR_LIST_MAX )
 #define EXTATTR_RTRVARRAY_LEN	( 1 * pgsz )
 #define EXTATTR_DUMPBUF_SZ	( 4 * pgsz )
 
