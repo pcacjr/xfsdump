@@ -1493,7 +1493,7 @@ baseuuidbypass:
 	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP
 					|
 					CIH_DUMPATTR_DIRDUMP;
-	if ( subtreep ) {
+	if ( subtreecnt ) {
 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_SUBTREE;
 	}
 	if ( sc_inv_updatepr ) {
