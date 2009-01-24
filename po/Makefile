@@ -31,7 +31,6 @@ XGETTEXTFILES =	\
 		$(TOPDIR)/dump/content.c \
 		$(TOPDIR)/dump/inomap.c \
 		$(TOPDIR)/dump/var.c \
-		$(TOPDIR)/fsr/xfs_fsr.c \
 		$(TOPDIR)/inventory/inv_api.c \
 		$(TOPDIR)/inventory/inv_core.c \
 		$(TOPDIR)/inventory/inv_fstab.c \

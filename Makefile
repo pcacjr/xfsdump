@@ -16,7 +16,7 @@ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
 
 LIB_SUBDIRS = include librmt
-TOOL_SUBDIRS = common fsr inventory invutil dump restore \
+TOOL_SUBDIRS = common inventory invutil dump restore \
 	m4 man doc po debian build
 
 SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
@@ -29,7 +29,7 @@ else
 endif
 
 # tool/lib dependencies
-fsr invutil dump restore: librmt
+invutil dump restore: librmt
 
 ifeq ($(HAVE_BUILDDEFS), yes)
 include $(BUILDRULES)
