@@ -1,3 +1,12 @@
+xfsdump-3.0.0
+	- Bump major package version number to signify changed
+	  dependencies and moved binaries (xfs_fsr and estimate
+	  have moved into xfsprogs).
+	- xfsdump should no longer make use of internal XFS
+	  headers and libraries, in particular no use of libxfs
+	  is permitted in this package anymore (such detailed
+	  on-disk format knowledge is the realm of xfsprogs).
+
 xfsdump-2.2.49 (17 Feb 2008)
 	- Fix up error handling in _rmt_open in librmt.
 	  Warnings reported by Michal Marek <mmarek@novell.com>
