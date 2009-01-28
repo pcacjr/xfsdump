@@ -5,7 +5,7 @@
 TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
-LSRCFILES = changelog compat control copyright rules shlibs.local watch
+LSRCFILES = changelog compat control copyright rules shlibs.local
 
 default:
 

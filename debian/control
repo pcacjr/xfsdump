@@ -2,13 +2,15 @@ Source: xfsdump
 Section: admin
 Priority: optional
 Maintainer: Nathan Scott <nathans@debian.org>
-Uploaders: Anibal Monsalve Salazar <anibal@debian.org>, Niv Sardi <xaiki@debian.org>
-Build-Depends: xfslibs-dev (>= 2.6.4), uuid-dev, libattr1-dev (>= 2.4.14), libncurses-dev, autoconf, debhelper (>= 5), gettext, libtool
+Uploaders: Anibal Monsalve Salazar <anibal@debian.org>
+Build-Depends: xfslibs-dev (>= 3.0.0), uuid-dev, libattr1-dev (>= 2.4.14), libncurses-dev, autoconf, debhelper (>= 5), gettext, libtool
 Standards-Version: 3.7.3
 Homepage: http://oss.sgi.com/projects/xfs/
 
 Package: xfsdump
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: acl, attr, quota
+Conflicts: xfsprogs (<< 3.0.0)
 Architecture: any
 Description: Administrative utilities for the XFS filesystem
  The xfsdump package contains xfsdump, xfsrestore and a number of
