@@ -6,6 +6,8 @@ xfsdump-3.0.0
 	  headers and libraries, in particular no use of libxfs
 	  is permitted in this package anymore (such detailed
 	  on-disk format knowledge is the realm of xfsprogs).
+	- Fix xfsdump/xfsrestore to work on systems with 64k
+	  page size.
 
 xfsdump-2.2.49 (17 Feb 2008)
 	- Fix up error handling in _rmt_open in librmt.
