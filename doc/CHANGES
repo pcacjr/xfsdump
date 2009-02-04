@@ -1,4 +1,4 @@
-xfsdump-3.0.0
+xfsdump-3.0.0 (4 February 2009)
 	- Bump major package version number to signify changed
 	  dependencies and moved binaries (xfs_fsr and estimate
 	  have moved into xfsprogs).
