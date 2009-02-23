@@ -6735,7 +6735,8 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
         sts = system( buf );
         if( sts != 0 ) {
             mlog( MLOG_ERROR, _(
-                  "%s failed with exit status: %d\n"), REPQUOTA, sts);
+                  "%s failed with exit status: %d\n"), REPQUOTA,
+		  sts == -1 ? -1 : WEXITSTATUS(sts));
             return BOOL_FALSE;
         }
         if((fd = open( quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
