@@ -2,8 +2,6 @@ Summary: Administrative utilities for the XFS filesystem.
 Name: @pkg_name@
 Version: @pkg_version@
 Release: @pkg_release@
-Distribution: @pkg_distribution@
-Packager: Silicon Graphics, Inc. <http://www.sgi.com/>
 BuildRoot: @build_root@ 
 Requires: xfsprogs >= 3.0.0, attr >= 2.0.0
 Source: @pkg_name@-@pkg_version@.src.tar.gz
