@@ -9,8 +9,11 @@ ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
 endif
 
-CONFIGURE = configure include/builddefs include/config.h
-LSRCFILES = configure configure.in aclocal.m4 Makepkgs install-sh README VERSION
+CONFIGURE = aclocal.m4 configure config.guess config.sub \
+	    ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+	    m4/ltversion.m4 m4/lt~obsolete.m4 \
+	    include/builddefs include/config.h
+LSRCFILES = configure.in Makepkgs install-sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
 	Logs/* built .census install.* install-dev.* *.gz
@@ -21,7 +24,7 @@ TOOL_SUBDIRS = common inventory invutil dump restore \
 
 SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 
-default: include/builddefs include/config.h
+default: configure include/builddefs include/config.h
 ifeq ($(HAVE_BUILDDEFS), no)
 	$(MAKE) -C . $@
 else
@@ -37,7 +40,15 @@ else
 clean:	# if configure hasn't run, nothing to clean
 endif
 
+# Recent versions of libtool require the -i option for copying auxiliary
+# files (config.sub, config.guess, install-sh, ltmain.sh), while older
+# versions will copy those files anyway, and don't understand -i.
+LIBTOOLIZE_INSTALL = `libtoolize -n -i >/dev/null 2>/dev/null && echo -i`
+
 configure include/builddefs:
+	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
+	cp include/install-sh .
+	aclocal -I m4
 	autoconf
 	./configure \
 		--prefix=/ \
@@ -60,9 +71,6 @@ include/config.h: include/builddefs
 		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
 	fi
 
-aclocal.m4::
-	aclocal --acdir=`pwd`/m4 --output=$@
-
 install: default $(addsuffix -install,$(SUBDIRS))
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
@@ -77,4 +85,5 @@ install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
 
 realclean distclean: clean
 	rm -f $(LDIRT) $(CONFIGURE)
+	rm -f include/builddefs include/config.h install-sh libtool
 	rm -rf autom4te.cache Logs

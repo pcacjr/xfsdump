@@ -6,7 +6,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 HFILES = swab.h swap.h
-LSRCFILES = builddefs.in buildmacros buildrules config.h.in
+LSRCFILES = builddefs.in buildmacros buildrules config.h.in install-sh
 
 default install install-dev :
 
