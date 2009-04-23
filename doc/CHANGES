@@ -2,7 +2,7 @@ xfsdump-3.0.1
 	- Update the Makepkgs script to generate proper source tarballs.
 	- Small specfile improvements, thanks to Jan Engelhardt.
 	- Fix parallel builds, thanks to Mike Frysinger.
-	- Various autoconf/libtoool fixes, thanks to Andreas Gruenbacher.
+	- Various autoconf/libtool fixes, thanks to Andreas Gruenbacher.
 
 xfsdump-3.0.0 (4 February 2009)
 	- Bump major package version number to signify changed
