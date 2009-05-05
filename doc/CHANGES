@@ -1,4 +1,4 @@
-xfsdump-3.0.1
+xfsdump-3.0.1 (5 May 2009)
 	- Update the Makepkgs script to generate proper source tarballs.
 	- Small specfile improvements, thanks to Jan Engelhardt.
 	- Fix parallel builds, thanks to Mike Frysinger.
