@@ -1,3 +1,10 @@
+xfsdump (3.0.2) unstable; urgency=low
+
+  * New bugfix release
+  * Update packaging dependencies on latest xfsprogs (closes: #527651)
+
+ -- Nathan Scott <nathans@debian.org>  Sat, 09 May 2009 04:42:48 +1000
+
 xfsdump (3.0.0-1) unstable; urgency=low
 
   * New upstream release

@@ -22,7 +22,7 @@ config: .census
 .census:
 	@echo "== dpkg-buildpackage: configure" 1>&2
 	$(checkdir)
-	$(options) $(MAKE) configure
+	$(options) $(MAKE) include/config.h
 	touch .census
 
 clean:
