@@ -1,3 +1,7 @@
+xfsdump-3.0.3 (23 Oct 2009)
+	- Now uses lpath_to_handle() when restoring symlinks, to avoid
+	  dangling links or links that refer to non-XFS file systems.
+
 xfsdump-3.0.2 (9 May 2009)
 	- Update the Debian packaging and resolve xfsprogs dependencies.
 
