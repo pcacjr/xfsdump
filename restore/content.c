@@ -797,6 +797,7 @@ static void partial_reg(ix_t d_index, xfs_ino_t ino, off64_t fsize,
                         off64_t offset, off64_t sz);
 static bool_t partial_check (xfs_ino_t ino, off64_t fsize);
 static bool_t partial_check2 (partial_rest_t *isptr, off64_t fsize);
+static int do_fssetdm_by_handle( char *path, fsdmidata_t *fdmp);
 static int quotafilecheck(char *type, char *dstdir, char *quotafile);
 
 /* definition of locally defined global variables ****************************/
@@ -7894,28 +7895,14 @@ restore_symlink( drive_t *drivep,
 		}
 
 		if ( persp->a.restoredmpr) {
-			fsdmidata_t fssetdm;
-			void *hanp;
-			size_t hlen=0;
+		fsdmidata_t fssetdm;
+		
+		/*	Restore DMAPI fields. */
 
-			/*	Restore DMAPI fields. */
-			fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
-			fssetdm.fsd_padding = 0;
-			fssetdm.fsd_dmstate = bstatp->bs_dmstate;
-
-			if (lpath_to_handle(persp->a.dstdir, path, &hanp, &hlen)) {
-				mlog( MLOG_NORMAL | MLOG_WARNING, _(
-					"lpath_to_handle of %s failed: %s\n"),
-					path, strerror( errno ));
-			} else {
-				if (fssetdm_by_handle(hanp, hlen, &fssetdm)) {
-					mlog( MLOG_NORMAL | MLOG_WARNING,
-						_("fssetdm_by_handle of %s "
-						"failed: %s\n"),
-						path, strerror( errno ));
-				}
-				free_handle(hanp, hlen);
-			}
+		fssetdm.fsd_dmevmask = bstatp->bs_dmevmask;
+		fssetdm.fsd_padding = 0;
+		fssetdm.fsd_dmstate = bstatp->bs_dmstate;
+		rval = do_fssetdm_by_handle(path, &fssetdm);
 		}
 	}
 
@@ -9535,6 +9522,32 @@ display_needed_objects( purp_t purp,
 		mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK,
 		      _("no additional media objects needed\n") );
 	}
+}
+
+static int
+do_fssetdm_by_handle(
+	char		*path,
+	fsdmidata_t	*fdmp)
+{
+	void		*hanp;
+	size_t		hlen=0;
+	int		rc;
+
+	if (path_to_handle(path, &hanp, &hlen)) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"path_to_handle of %s failed:%s\n"),
+			path, strerror( errno ));
+		return -1;
+	}
+
+	rc = fssetdm_by_handle(hanp, hlen, fdmp);
+	free_handle(hanp, hlen);
+	if (rc) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"fssetdm_by_handle of %s failed %s\n"),
+			path, strerror( errno ));
+	}
+	return rc;
 }
 
 static int
