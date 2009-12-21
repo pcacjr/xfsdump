@@ -3,23 +3,22 @@
 
 # build system
 .census
-Logs/
 include/config.h
 include/builddefs
 install-sh
 
-# magic diretory symlinks
-#include/disk
-#include/xfs
-
-# Makepgs
-build/src-manifest
-build/xfsdump-*.tar.gz
+# packaging
 doc/CHANGES.gz
 xfsdump-*
+xfsdump_*
 
 # autoconf generated files
 aclocal.m4
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltsugar.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
 autom4te.cache/
 config.guess
 config.log
@@ -37,6 +36,9 @@ ltmain.sh
 # gettext
 po/xfsdump.pot
 po/*.mo
+
+# cscope stuff
+cscope.*
 
 # quilt stuff
 .pc/

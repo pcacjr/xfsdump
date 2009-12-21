@@ -19,11 +19,6 @@ LIBUUID = @libuuid@
 LIBCURSES = @libcurses@
 LIBHANDLE = @libhdl@
 
-prefix = @prefix@
-exec_prefix = @exec_prefix@
-top_builddir = @top_builddir@
-datarootdir = @datarootdir@
-
 PKG_NAME	= @pkg_name@
 PKG_USER	= @pkg_user@
 PKG_GROUP	= @pkg_group@
@@ -31,10 +26,15 @@ PKG_RELEASE	= @pkg_release@
 PKG_VERSION	= @pkg_version@
 PKG_PLATFORM	= @pkg_platform@
 PKG_DISTRIBUTION= @pkg_distribution@
-PKG_BIN_DIR	= @bindir@
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+datarootdir	= @datarootdir@
+top_builddir	= @top_builddir@
+
 PKG_SBIN_DIR	= @sbindir@
-PKG_LIB_DIR	= @libdir@@libdirsuffix@
-PKG_DEVLIB_DIR	= @libexecdir@@libdirsuffix@
+PKG_ROOT_SBIN_DIR = @root_sbindir@
+PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
 PKG_INC_DIR	= @includedir@
 PKG_MAN_DIR	= @mandir@
 PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
@@ -55,6 +55,7 @@ MAKEDEPEND	= @makedepend@
 MSGFMT		= @msgfmt@
 MSGMERGE	= @msgmerge@
 XGETTEXT	= @xgettext@
+LOCALIZED_FILES	= @LOCALIZED_FILES@
 
 RPM		= @rpm@
 RPMBUILD	= @rpmbuild@
@@ -66,14 +67,15 @@ ENABLE_GETTEXT	= @enable_gettext@
 
 HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
 
-LCFLAGS += -DXFS_BIG_FILES=1 -DXFS_BIG_FILESYSTEMS=1
+GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+#	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
 
 ifeq ($(PKG_PLATFORM),linux)
-PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+PCFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 $(GCCFLAGS)
 DEPENDFLAGS = -D__linux__
 endif
 ifeq ($(PKG_PLATFORM),darwin)
-PCFLAGS = -traditional-cpp
+PCFLAGS = -traditional-cpp $(GCCFLAGS)
 DEPENDFLAGS = -D__APPLE__
 endif
 ifeq ($(PKG_PLATFORM),irix)
@@ -82,17 +84,16 @@ DEPENDFLAGS = -D__sgi__
 endif
 ifeq ($(PKG_PLATFORM),freebsd)
 PLDLIBS = -L/usr/local/lib -lintl
-PCFLAGS = -I/usr/local/include
+PCFLAGS = -I/usr/local/include $(GCCFLAGS)
 DEPENDFLAGS = -D__FreeBSD__
 endif
 
-
-GCFLAGS = $(OPTIMIZER) $(DEBUG) -funsigned-char -fno-strict-aliasing -Wall \
+GCFLAGS = $(OPTIMIZER) $(DEBUG) \
 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include
 
-# Global, Platform, Local CFLAGS
-CFLAGS += $(GCFLAGS) $(PCFLAGS) $(LCFLAGS) $(CPPFLAGS)
+# First, Global, Platform, Local CFLAGS
+CFLAGS += $(FCFLAGS) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
 
 include $(TOPDIR)/include/buildmacros
 

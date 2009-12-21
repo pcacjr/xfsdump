@@ -9,20 +9,25 @@ ifeq ($(HAVE_BUILDDEFS), yes)
 include $(TOPDIR)/include/builddefs
 endif
 
-CONFIGURE = aclocal.m4 configure config.guess config.sub configure install-sh \
-	    ltmain.sh m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
-	    m4/ltversion.m4 m4/lt~obsolete.m4
-LSRCFILES = configure.in Makepkgs release.sh README VERSION $(CONFIGURE)
+SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
+SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
+
+CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
 
 LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
-	Logs/* built .census install.* install-dev.* *.gz autom4te.cache/* \
-	libtool include/builddefs include/config.h
+	built .census install.* install-dev.* *.gz autom4te.cache/* libtool \
+	include/builddefs include/config.h
 
-LIB_SUBDIRS = include librmt
-TOOL_SUBDIRS = common inventory invutil dump restore \
-	m4 man doc po debian build
+ifeq ($(HAVE_BUILDDEFS), yes)
+LDIRDIRT = $(SRCDIR)
+LDIRT += $(SRCTAR)
+endif
 
-SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
+LIB_SUBDIRS = librmt
+TOOL_SUBDIRS = common inventory invutil dump restore m4 man doc po debian
+
+SUBDIRS = include $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 
 default: include/builddefs include/config.h
 ifeq ($(HAVE_BUILDDEFS), no)
@@ -32,6 +37,7 @@ else
 endif
 
 # tool/lib dependencies
+$(LIB_SUBDIRS) $(TOOL_SUBDIRS): include
 invutil dump restore: librmt
 
 ifeq ($(HAVE_BUILDDEFS), yes)
@@ -52,19 +58,7 @@ configure:
 	autoconf
 
 include/builddefs: configure
-	./configure \
-		--prefix=/ \
-		--exec-prefix=/ \
-		--sbindir=/sbin \
-		--bindir=/usr/sbin \
-		--libdir=/lib \
-		--libexecdir=/usr/lib \
-		--enable-lib64=yes \
-		--includedir=/usr/include \
-		--mandir=/usr/share/man \
-		--datadir=/usr/share \
-		$$LOCAL_CONFIGURE_OPTIONS
-	touch .census
+	./configure $$LOCAL_CONFIGURE_OPTIONS
 
 include/config.h: include/builddefs
 ## Recover from the removal of $@
@@ -90,3 +84,32 @@ distclean: clean
 
 realclean: distclean
 	rm -f $(CONFIGURE)
+
+#
+# All this gunk is to allow for a make dist on an unconfigured tree
+#
+dist: include/builddefs include/config.h default
+ifeq ($(HAVE_BUILDDEFS), no)
+	$(MAKE) -C . $@
+else
+	$(MAKE) $(SRCTAR)
+endif
+
+deb: include/builddefs include/config.h
+ifeq ($(HAVE_BUILDDEFS), no)
+	$(MAKE) -C . $@
+else
+	$(MAKE) $(SRCDIR)
+	$(MAKE) -C po
+	$(MAKE) source-link
+	cd $(SRCDIR) && dpkg-buildpackage
+endif
+
+$(SRCDIR) : $(_FORCE)
+	rm -fr $@
+	mkdir -p $@
+
+$(SRCTAR) : default $(SRCDIR)
+	$(MAKE) source-link
+	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+	echo Wrote: $@

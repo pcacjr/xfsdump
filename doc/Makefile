@@ -6,7 +6,7 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 README = README.xfsdump
-LSRCFILES = INSTALL PORTING CHANGES COPYING $(README) \
+LSRCFILES = INSTALL CHANGES COPYING $(README) \
 	xfsdump.html xfsdump_ts.txt \
 	*.obj *.gif
 
@@ -21,7 +21,7 @@ CHANGES.gz:
 
 install: default
 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
-	$(INSTALL) -m 644 PORTING CHANGES.gz $(README) $(PKG_DOC_DIR)
+	$(INSTALL) -m 644 CHANGES.gz $(README) $(PKG_DOC_DIR)
 ifeq ($(PKG_DISTRIBUTION), debian)
 	$(INSTALL) -S CHANGES.gz $(PKG_DOC_DIR)/changelog.gz
 else

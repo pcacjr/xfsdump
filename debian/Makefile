@@ -6,6 +6,8 @@ TOPDIR = ..
 include $(TOPDIR)/include/builddefs
 
 LSRCFILES = changelog compat control copyright rules shlibs.local
+LDIRDIRT = xfsdump
+LDIRT = files *.log *.substvars *.debhelper
 
 default:
 

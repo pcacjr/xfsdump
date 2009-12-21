@@ -8,8 +8,7 @@ include $(TOPDIR)/include/builddefs
 
 clean clobber : $(addsuffix -clean,$(SUBDIRS))
 	rm -f $(DIRT)
-	@rm -fr .libs
-
+	rm -fr $(DIRDIRT)
 %-clean:
 	$(MAKE) -C $* clean
 
@@ -21,6 +20,17 @@ ifdef SUBDIRS
 $(SUBDIRS):
 	$(MAKE) -C $@
 endif
+
+source-link: 
+	@test -z "$$DIR" && DIR="."; \
+	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
+	    if test -d $$f ; then \
+		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
+	    else \
+		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+	    fi; \
+	done
 
 #
 # Standard targets
@@ -40,21 +50,28 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
 endif
 
 ifdef POTHEAD
-%.pot: $(XGETTEXTFILES)
-	$(XGETTEXT) --language=C --keyword=_ -o $@ $(XGETTEXTFILES)
+$(POTHEAD): $(XGETTEXTFILES)
+	$(XGETTEXT) --language=C --keyword=_ --keyword=N_ -o $@ $(XGETTEXTFILES)
 
-# Generate temp .po files, to check whether translations need updating.
-# Not by default, due to gettext output differences between versions.
-%.po: $(POTHEAD)
-#	$(MSGMERGE) -o $@.tmpo $@ $(POTHEAD)
-#	if ! diff $@.tmpo $@ >/dev/null; then echo "$@ dated, see $@.tmpo"; fi
+# Update translations
+update-po: $(POTHEAD) $(wildcard $(TOPDIR)/po/*.po)
+	catalogs=$(wildcard $(TOPDIR)/po/*.po); \
+	for cat in $$catalogs; do \
+	  lang=`basename $$cat .po`; \
+	  mv $$lang.po $$lang.old.po; \
+	  echo "$$lang:"; \
+	  if $(MSGMERGE) $$lang.old.po $(POTHEAD) -o $$lang.po; then \
+	    rm -f $$lang.old.po; \
+	  else \
+	    echo "msgmerge for $$lang failed!"; \
+	    rm -f $$lang.po; \
+	    mv $$lang.old.po $$lang.po; \
+	  fi; \
+	done
 
 %.mo: %.po
-	$(MSGFMT) -o $@ $<
+	$(MSGFMT) -c --statistics -o $@ $<
 endif
-
-source :
-	$(SOURCE_MAKERULE)
 
 endif # _BUILDRULES_INCLUDED_
 
@@ -63,7 +80,8 @@ $(_FORCE):
 .PHONY : depend
 
 DEPENDSCRIPT := $(MAKEDEPEND) $(DEPENDFLAGS) -f - -- $(CFLAGS) -- $(CFILES) | \
-	$(SED) -e 's,`pwd`,$(TOPDIR),g' \
+	$(SED) \
+	    -e 's,`pwd`,$(TOPDIR),g' \
 	    -e 's,  */[^ ]*,,g' \
 	    -e '/^[^ ]*: *$$/d' \
 	    -e '/^ *$$/d'
@@ -84,8 +102,8 @@ ifeq ($(shell test -f .dep && echo .dep), .dep)
 include .dep
 else
 ifdef LTLIBRARY
-$(LTOBJECTS): $(HFILES)
+$(LTOBJECTS): $(HFILES) $(LHFILES)
 else
-$(OBJECTS): $(HFILES)
+$(OBJECTS): $(HFILES) $(LHFILES)
 endif
 endif
