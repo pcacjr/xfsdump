@@ -76,10 +76,23 @@ main(int argc, char *argv[])
 	    debug = BOOL_TRUE;
 	    break;
 	case GETOPT_INTERACTIVE:
+	    if (force) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_FORCE,
+			 c );
+		usage();
+	    }
 	    interactive_option = BOOL_TRUE;
 	    break;
-	case GETOPT_NONINTERACTIVE:
-	    interactive_option = BOOL_FALSE;
+	case GETOPT_NONINTERACTIVE: /* obsoleted by -F */
+	    if (interactive_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_INTERACTIVE,
+			 c );
+		usage();
+	    }
 	    force = BOOL_TRUE;
 	    break;
 	case GETOPT_UUID:
@@ -87,6 +100,13 @@ main(int argc, char *argv[])
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
 			 g_programName,
 			 GETOPT_CHECKPRUNEFSTAB,
+			 c );
+		usage();
+	    }
+	    if (mntpnt_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_PRUNEMNT,
 			 c );
 		usage();
 	    }
@@ -104,13 +124,6 @@ main(int argc, char *argv[])
 			 c );
 		usage();
 	    }
-	    if (r_mf_label) {
-		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
-			 g_programName,
-			 GETOPT_PRUNEMEDIALABEL,
-			 c );
-		usage();
-	    }
 	    if (uuid_option) {
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
 			 g_programName,
@@ -121,6 +134,13 @@ main(int argc, char *argv[])
 	    check_option = BOOL_TRUE;
 	    break;
 	case GETOPT_FORCE:
+	    if (interactive_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_INTERACTIVE,
+			 c );
+		usage();
+	    }
 	    force = BOOL_TRUE;
 	    break;
 	case GETOPT_PRUNEMNT:
@@ -131,23 +151,48 @@ main(int argc, char *argv[])
 			 c );
 		usage();
 	    }
+	    if (uuid_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
+			 g_programName,
+			 GETOPT_UUID,
+			 c );
+		usage();
+	    }
 	    mntpnt_option = BOOL_TRUE;
 	    mntPoint = optarg;
 	    break;
 	case GETOPT_PRUNEMEDIALABEL:
-	    if (check_option) {
-		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
-			 g_programName,
-			 GETOPT_CHECKPRUNEFSTAB,
-			 c );
-		usage();
-	    }
 	    r_mf_label = optarg;
 	    break;
 	default:
 	    usage();
 	    break;
 	}
+    }
+
+    if (r_mf_label != NULL && !(mntpnt_option || uuid_option)) {
+	    fprintf( stderr, "%s: -%c requires either -%c or -%c\n",
+			 g_programName,
+			 GETOPT_PRUNEMEDIALABEL,
+			 GETOPT_PRUNEMNT,
+			 GETOPT_UUID );
+	    usage();
+    }
+
+    /* date string only passed for -u and -M */
+    if (uuid_option || mntpnt_option) {
+	    if (optind != (argc - 1)) {
+		    fprintf(stderr, "%s: Date missing for -%c option\n",
+		    	 g_programName,
+			 uuid_option ? GETOPT_UUID : GETOPT_PRUNEMNT);
+		    usage();
+	    }
+    } else {
+	    if (optind != argc) {
+		    fprintf(stderr, "%s: Extra arguments specified\n",
+		    	 g_programName);
+		    usage();
+	    }
     }
 
     /* sanity check the inventory database directory, setup global paths
@@ -167,16 +212,7 @@ main(int argc, char *argv[])
 		temptime, NULL);
     }
     else if (uuid_option || mntpnt_option) {
-        char *dateStr;
-        time32_t timeSecs;
-
-        if (optind != (argc - 1) ) {
-            fprintf( stderr, "%s: Date missing for prune option\n", 
-		     g_programName );
-            usage();
-        }
-        dateStr = argv[optind];
-        timeSecs = ParseDate(dateStr);
+        time32_t timeSecs = ParseDate(argv[optind]);
 
 	if (interactive_option) {
 	    invutil_interactive(inventory_path, mntPoint, &uuid, timeSecs);
@@ -189,18 +225,7 @@ main(int argc, char *argv[])
 	}
     }
     else if ( interactive_option ) {
-        char *dateStr;
-        time32_t timeSecs;
-
-        if (optind != (argc - 1) ) {
-	    timeSecs = 0;
-        }
-	else {
-	    dateStr = argv[optind];
-	    timeSecs = ParseDate(dateStr);
-	}
-
-	invutil_interactive(inventory_path, NULL, NULL, timeSecs);
+	invutil_interactive(inventory_path, mntPoint, &uuid, 0);
 	printf("\n");
     }
     else {
@@ -293,14 +318,15 @@ ParseDate(char *strDate)
 #endif
 
     if (*fmt == NULL || (date = mktime(&tm)) < 0) {
-        fprintf(stderr, "%s: bad date, \"%s\" for -M option\n",
-                g_programName, strDate );
+        fprintf(stderr, "%s: bad date, \"%s\"\n", g_programName, strDate );
         usage(); 
     }
 
     /* HACK to ensure tm_isdst is set BEFORE calling mktime(3) */ 
     if (tm.tm_isdst) {
         int dst = tm.tm_isdst;
+        memset (&tm, 0, sizeof (struct tm));
+        tm.tm_isdst = dst;
         (void)strptime(strDate, *fmt, &tm); 
         tm.tm_isdst = dst;
         date = mktime(&tm);
@@ -1075,44 +1101,19 @@ mmap_n_bytes(int fd, size_t count, bool_t checkonly, char *path)
     return temp;
 }
 
-/* ULO and ULN are taken from dump/common/main.c */
-
-#define ULO( f, o )	fprintf( stderr,		\
-				 "%*s[ -%c " f " ]\n",	\
-				 ps,			\
-				 ns,			\
-				 o ),			\
-			ps = pfxsz
-
-#define ULN( f )	fprintf( stderr,		\
-				 "%*s[ " f " ]\n",	\
-				 ps,			\
-				 ns ),			\
-			ps = pfxsz
-
 void
 usage (void)
 {
     int pfxsz;
-    int ps = 0;
-    char *ns = "";
 
     fprintf(stderr, "%s: %s\n", g_programName, g_programVersion);
-    pfxsz = fprintf(stderr, "Usage: %s ", g_programName);
-
-#ifdef REVEAL
-    ULO( "(output debug information)", GETOPT_DEBUG );
-#endif /* REVEAL */
-    ULO( "(interactive)", GETOPT_INTERACTIVE );
-    ULO( "<uuid> (prune uuid)", GETOPT_UUID );
-#ifdef REVEAL
-    ULO( "(wait for locks)", GETOPT_WAITFORLOCKS );
-#endif /* REVEAL */
-    ULO( "(don't prompt)", GETOPT_FORCE );
-    ULO( "<mountpoint> (prune mountpoint)", GETOPT_PRUNEMNT );
-    ULO( "<medialabel> (prune specific media)", GETOPT_PRUNEMEDIALABEL );
-    ULO( "(check inventory inconsistencies)", GETOPT_CHECKPRUNEFSTAB );
-    ULN( "<mm/dd/yyyy> (date for mountpoint and uuid prune)" );
+    pfxsz = fprintf(stderr, "Usage: \n");
+    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -M mount_point mm/dd/yyyy\n",
+		    pfxsz, "", g_programName);
+    fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -u UUID mm/dd/yyyy\n",
+		    pfxsz, "", g_programName);
+    fprintf(stderr, "%*s%s -i\n", pfxsz, "", g_programName);
+    fprintf(stderr, "%*s%s -C\n", pfxsz, "", g_programName);
 
     exit(1);
 }

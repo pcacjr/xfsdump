@@ -22,7 +22,7 @@
 
 #define GETOPT_DEBUG		'd'	/* debug */
 #define GETOPT_INTERACTIVE	'i'	/* interactive mode */
-#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode (default) */
+#define GETOPT_NONINTERACTIVE	'n'	/* non interactive mode - obsoleted by -F */
 #define GETOPT_UUID		'u'	/* prune uuid */
 #define GETOPT_WAITFORLOCKS	'w'	/* wait for locks */
 #define GETOPT_CHECKPRUNEFSTAB	'C'	/* check and prune fstab */

@@ -3,8 +3,8 @@
 xfsinvutil \- \&xfsdump inventory database checking and pruning utility
 .SH SYNOPSIS
 .nf
-\f3xfsinvutil\f1 [\-F|\-i] [\-u \f2UUID\f1] [\-M \f2mount_point\f1]
-		 [\-m \f2media_label\f1] \f2mm/dd/yyyy\f1
+\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-M \f2mount_point\f1 \f2mm/dd/yyyy\f1
+\f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-u \f2UUID\f1 \f2mm/dd/yyyy\f1
 \f3xfsinvutil\f1 \-i
 \f3xfsinvutil\f1 \-C
 .fi
@@ -20,37 +20,12 @@ dump session,
 stream, and
 media file.
 .P
-Over time, this database may grow too large as
-.I xfsdump (8)
-and
-.IR xfsrestore (8)
-do not remove entries from the inventory. The database may also develop
-inconsistencies for various reasons such as operator errors etc., 
-that may cause
-.I xfsdump
-or
-.I xfsrestore
-to print error or warning messages.
-.P
 .I xfsinvutil 
-is an utility to check this inventory database for consistency,
+is a utility to check this inventory database for consistency,
 to remove entries of dump sessions which may no longer be of
 relevance, and to browse the contents of the inventory.
 .P
-.I xfsinvutil
-may be used in three different modes.  In the first mode
-.I xfsinvutil
-steps over each dump session recorded in the inventory and prompts for
-a yes or no response to whether each session should be pruned.  The
-second is a batch mode in which
-.I xfsinvutil
-will prune every entry matching the supplied criteria.  The third mode
-allows the user to browse the inventory in detail, to delete or
-undelete records at will and also to import inventories from other
-hosts.
-.P
 The following command line options are available:
-.P
 .TP 5
 \f3\-F\f1
 Don't prompt the operator.  When
@@ -63,38 +38,23 @@ entry. With this option the deletion is performed, no questions asked.
 \f3\-i\f1
 Interactive mode.  Causes
 .I xfsinvutil
-to run in a mode that will allow the operator to browse the contents of
-the inventory. Please refer to the
+to run in a mode that will allow the operator to browse and modify the
+contents of the inventory. Please refer to the
 .B "Interactive Mode"
 section below for more information.
 .TP 5
 \f3\-M\f1 \f2mount_point mm/dd/yyyy\f1
-Specifies the mount point and cut-off date of inventory entries to
-be selected for pruning.  
+Prunes dump sessions identified by the given mount point which were
+created prior to the specified date. Optionally \f3\-m\f1 may be
+be specified to further limit the matching dump sessions by media
+label.
 .I xfsinvutil
-prompts the operator when a dump session in the inventory is
-identified by the mount point and was created prior to the specified
-date.
-The operator can then select specific dump sessions for removal from
-the inventory database.
-This prompt will not happen if the \f3\-n\f1 option is used; it will
-be assumed that the pruning is wanted.
-.I xfsinvutil 
-also performs consistency checks on other inventory database entries when
-invoked with this option. 
-.RS
-.PP
-The \f2mountpoint\f1 must match the mount point as specified in
-the inventory shown using
-.I xfsdump
-with the \f3\-I\f1 option.
-This includes the host name and the mount path.
-.RE
+will prompt the operator prior to pruning a dump session unless
+the \f3\-F\f1 or \f3\-i\f1 options are given.
 .TP 5
-\f3\-u\f1 \f2UUID\f1
-Specifies the filesystem universally unique identifier (UUID) of
-inventory entries to be selected for pruning.  This option is
-equivalent to the \f3\-M\f1 option.
+\f3\-u\f1 \f2UUID mm/dd/yyyy\f1
+Like \f3\-M\f1, except the matching filesystem is specified
+using its universally unique identifier (UUID) instead of its mount point.
 .TP 5
 \f3\-m\f1 \f2media_label\f1
 If specified, only sessions with at least one media file whose label
@@ -103,12 +63,6 @@ in addition to those imposed by the date and the \f3\-M\f1 or
 \f3\-u\f1 options.  This option allows the pruning of all inventory
 references to media which may have been overwritten or lost. Note that
 this option does not apply to sessions with no media files.
-.TP 5
-.B \-n
-With this option, 
-.I xfsinvutil 
-will not ask any confirmation questions regarding sessions to prune.
-(It is the "Nike" option).
 .TP 5
 .B \-C
 With this option, 
