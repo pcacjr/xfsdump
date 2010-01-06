@@ -29,6 +29,7 @@
 #include "mlog.h"
 #include "inv_priv.h"
 #include "getopt.h"
+#include "timeutil.h"
 #include "invutil.h"
 
 char	*g_programName;
@@ -43,7 +44,7 @@ bool_t	redraw_options = BOOL_FALSE;
 
 #ifndef HAVE_CURSES
 int
-invutil_interactive(char *path, char *mountpt, uuid_t *uuidp, time_t timeSecs)
+invutil_interactive(char *path, char *mountpt, uuid_t *uuidp, time32_t timeSecs)
 {
 	fprintf(stderr, "%s: libcurses support not compiled in, "
 			"interactive mode is unavailable.\n", g_programName);
@@ -161,13 +162,13 @@ main(int argc, char *argv[])
 
     if (check_option) {
         char *tempstr = "test";
-        time_t temptime = 0;
+        time32_t temptime = 0;
         CheckAndPruneFstab(inventory_path, BOOL_TRUE, tempstr, &uuid,
 		temptime, NULL);
     }
     else if (uuid_option || mntpnt_option) {
         char *dateStr;
-        time_t timeSecs;
+        time32_t timeSecs;
 
         if (optind != (argc - 1) ) {
             fprintf( stderr, "%s: Date missing for prune option\n", 
@@ -189,7 +190,7 @@ main(int argc, char *argv[])
     }
     else if ( interactive_option ) {
         char *dateStr;
-        time_t timeSecs;
+        time32_t timeSecs;
 
         if (optind != (argc - 1) ) {
 	    timeSecs = 0;
@@ -237,11 +238,12 @@ mntpnt_equal(char *s1, char *s2)
 }
 
 
-time_t
+time32_t
 ParseDate(char *strDate)
 {
     struct tm tm;
     time_t date = 0;
+    time32_t date32;
     char **fmt;
     char *templateStr[] = {
         "%m/%d/%Y %I:%M:%S %p",
@@ -304,13 +306,21 @@ ParseDate(char *strDate)
         date = mktime(&tm);
     }
 
+    /* xfsdump inventory uses time32_t for portability.
+     * make sure the given date did not overflow... */
+    date32 = date;
+    if (date32 != date) {
+        fprintf(stderr, "%s: date out of range: \"%s\"\n", g_programName, strDate);
+        usage();
+    }
+
 #ifdef INV_DEBUG
     printf("INV_DEBUG: the date entered is %s\n", strDate);
     printf("INV_DEBUG: the hour parsed from string is %d\n", tm.tm_hour);
-    printf("INV_DEBUG: the date entered in secs is %ld\n", date);
+    printf("INV_DEBUG: the date entered in secs is %d\n", date32);
 #endif /* INV_DEBUG */
 
-    return date;
+    return date32;
 }
 
 char *
@@ -360,7 +370,7 @@ GetFstabFullPath(char *inv_path)
 
 void
 CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
-	uuid_t *uuidp, time_t prunetime, char *r_mf_label)
+	uuid_t *uuidp, time32_t prunetime, char *r_mf_label)
 {
     char	*fstabname;
     char	*mapaddr;
@@ -502,7 +512,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
 int
 CheckAndPruneInvIndexFile( bool_t checkonly,
 			   char *idxFileName,
-			   time_t prunetime,
+			   time32_t prunetime,
 			   char *r_mf_label) 
 {
     char	*temp;
@@ -543,9 +553,10 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 	printf("         Checking access for\n"
 	       "          %s\n", invIndexEntry[i].ie_filename);
 	if (debug) {
-	    printf("          Time:\tbegin  %s\t\tend    %s", 
-		   ctime((time_t *)&(invIndexEntry[i].ie_timeperiod.tp_start)),
-		   ctime((time_t *)&(invIndexEntry[i].ie_timeperiod.tp_end)));
+	    printf("          Time:\tbegin  %s",
+		   ctime32(&(invIndexEntry[i].ie_timeperiod.tp_start)));
+	    printf("\t\tend    %s",
+		   ctime32(&(invIndexEntry[i].ie_timeperiod.tp_end)));
 	}
 
 	if (( access( invIndexEntry[i].ie_filename, R_OK | W_OK ) == -1)  &&
@@ -620,7 +631,7 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 int
 CheckAndPruneStObjFile( bool_t checkonly,
 			char *StObjFileName,
-			time_t prunetime,
+			time32_t prunetime,
 		        char *r_mf_label) 
 {
     char	response[GEN_STRLEN];
@@ -672,7 +683,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 	    printf("            Session %d: %s %s", 
 		   sescount++,
 		   StObjses->s_mountpt,
-		   ctime( (time_t *)&StObjhdr->sh_time ));
+		   ctime32(&StObjhdr->sh_time));
 	}
 	if (debug) {
 	    /* Note that the DMF people use some of this debug
@@ -693,7 +704,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 	    if (StObjhdr->sh_pruned)
 		printf("            Pruned Session: %s %s", 
 		       StObjses->s_mountpt,
-		       ctime( (time_t *)&StObjhdr->sh_time ));
+		       ctime32(&StObjhdr->sh_time));
 	    printf("\t\tdevice:\t\t%s\n", StObjses->s_devpath);
 	    printf("\t\tsession label:\t\"%s\"\n", StObjses->s_label);
 	    uuid_unparse( StObjses->s_sesid, str );
@@ -733,7 +744,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 	}
 
 #ifdef INV_DEBUG
-        printf("INV_DEBUG: sh_time = %ld, prunetime = %ld\n", 
+        printf("INV_DEBUG: sh_time = %d, prunetime = %d\n",
 	       StObjhdr->sh_time, prunetime);
         printf("INV_DEBUG: checkonly = %d, sh_pruned = %d\n",
                checkonly, StObjhdr->sh_pruned); 
@@ -755,7 +766,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 			"LABEL\t\t:\t%s\n"
 			"TIME OF DUMP\t:\t%s",
                         str, StObjses->s_mountpt, StObjses->s_devpath,
-                        StObjses->s_label, ctime( (time_t *)&StObjhdr->sh_time ));
+                        StObjses->s_label, ctime32(&StObjhdr->sh_time));
 		removeflag = BOOL_TRUE;
 	    }
 	    else {
@@ -764,7 +775,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
 		printf("UUID\t\t:\t%s\nMOUNT POINT\t:\t%s\n"
 		       "DEV PATH\t:\t%s\nTIME OF DUMP\t:\t%s",
 		       str, StObjses->s_mountpt, StObjses->s_devpath,
-		       ctime( (time_t *)&StObjhdr->sh_time ));
+		       ctime32(&StObjhdr->sh_time));
 		while ( GotResponse == BOOL_FALSE )
 		{
 		    char *chp;

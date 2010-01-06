@@ -85,6 +85,7 @@ dump/rec_hdr.h
 dump/ring.[ch]
 dump/sproc.[ch]
 dump/stream.[ch]
+dump/timeutil.[ch]
 dump/ts_mtio.h
 dump/types.h
 dump/util.[ch]
@@ -94,6 +95,7 @@ invutil/inv_files.c
 invutil/inv_priv.h
 invutil/inventory.h
 invutil/mlog.h
+invutil/timeutil.[ch]
 invutil/types.h
 invutil/util.h
 
@@ -131,6 +133,7 @@ restore/rec_hdr.h
 restore/ring.[ch]
 restore/sproc.[ch]
 restore/stream.[ch]
+restore/timeutil.[ch]
 restore/ts_mtio.h
 restore/types.h
 restore/util.[ch]

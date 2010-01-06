@@ -37,6 +37,7 @@
 #include <malloc.h>
 
 #include "types.h"
+#include "timeutil.h"
 #include "util.h"
 #include "cldmgr.h"
 #include "qlock.h"
@@ -9347,7 +9348,6 @@ display_dump_label( bool_t lockpr,
 	char dump_string_uuid[UUID_STR_LEN + 1];
 	char media_string_uuid[UUID_STR_LEN + 1];
 	char fs_string_uuid[UUID_STR_LEN + 1];
-	time_t gh_timestamp = (time_t)grhdrp->gh_timestamp; 
 
 	ASSERT( scrhdrp->cih_level >= 0 );
 	ASSERT( scrhdrp->cih_level < 10 );
@@ -9376,7 +9376,7 @@ display_dump_label( bool_t lockpr,
 	      crhdrp->ch_fsdevice );
 	mlog( mllevel | MLOG_NOLOCK,
 	      _("session time: %s"),
-	      ctime_r( &gh_timestamp, dateline ));
+	      ctime32_r( &grhdrp->gh_timestamp, dateline ));
 	mlog( mllevel | MLOG_NOLOCK,
 	      _("level: %s%s\n"),
 	      level_string,

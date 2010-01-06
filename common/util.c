@@ -22,7 +22,6 @@
 
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <time.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
@@ -506,25 +505,6 @@ diriter( jdm_fshandle_t *fshandlep,
 		*cbrvalp = 0;
 		return 0;
 	}
-}
-
-char *
-ctime32(const time32_t *timep)
-{
-   time_t t = (time_t) *timep;
-   return ctime(&t);
-}
-
-char *
-ctimennl( const time32_t *clockp )
-{
-	char *p = ctime32( clockp );
-
-	if ( p && strlen( p ) > 0 ) {
-		p[ strlen( p ) - 1 ] = 0;
-	}
-
-	return p;
 }
 
 int 

@@ -14,7 +14,7 @@ LSRCFILES = arch_xlate.c arch_xlate.h \
 	main.c media.c media.h media_rmvtape.h mlog.c mlog.h \
 	namreg.c namreg.h openutil.c openutil.h path.c path.h qlock.c qlock.h \
 	rec_hdr.h ring.c ring.h sproc.c sproc.h stream.c \
-	stream.h ts_mtio.h types.h util.c util.h
+	stream.h timeutil.c timeutil.h ts_mtio.h types.h util.c util.h
 
 default install install-dev :
 

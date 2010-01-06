@@ -470,7 +470,7 @@ list_undelete(node_t *current, node_t *list)
 }
 
 int
-list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time_t prunetime)
+list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time32_t prunetime)
 {
     node_t *n;
     data_t *d;
@@ -565,7 +565,7 @@ create_windows()
 }
 
 int
-invutil_interactive(char *inv_path, char *mountpt, uuid_t *uuidp, time_t timeSecs)
+invutil_interactive(char *inv_path, char *mountpt, uuid_t *uuidp, time32_t timeSecs)
 {
     int		keyc;
     node_t	*menulist;

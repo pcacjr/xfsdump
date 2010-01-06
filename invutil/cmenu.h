@@ -55,7 +55,7 @@ typedef struct menu_ops_s {
     int (* op_highlight		) (WINDOW *win, node_t *current, node_t *list);
     int (* op_unhighlight	) (WINDOW *win, node_t *current, node_t *list);
     int (* op_commit		) (WINDOW *win, node_t *current, node_t *list);
-    int (* op_prune		) (char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
+    int (* op_prune		) (char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
 } menu_ops_t;
 
 typedef struct {

@@ -42,6 +42,7 @@
 #include "exit.h"
 #include "types.h"
 #include "path.h"
+#include "timeutil.h"
 #include "util.h"
 #include "lock.h"
 #include "qlock.h"

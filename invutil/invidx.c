@@ -32,6 +32,7 @@
 #include "list.h"
 #include "invidx.h"
 #include "stobj.h"
+#include "timeutil.h"
 
 invidx_fileinfo_t *invidx_file;
 int invidx_numfiles;
@@ -418,27 +419,6 @@ delete_stobj_entries(int fd, int deletepos)
 }
 
 int
-find_invidx_insert_point(int fd, time_t sh_time)
-{
-    int i;
-    invt_counter_t cnt;
-    invt_entry_t tmpentry;
-
-    lseek(fd, 0, SEEK_SET);
-    read_n_bytes(fd, (char *)&cnt, sizeof(cnt), "invidx file");
-
-    for(i = 0; i < cnt.ic_curnum; i++) {
-	read_n_bytes(fd, (char *)&tmpentry, sizeof(tmpentry), "invidx file");
-	if(tmpentry.ie_timeperiod.tp_start <= sh_time
-	   && tmpentry.ie_timeperiod.tp_end >= sh_time) {
-	    break;
-	}
-    }
-
-    return i;
-}
-
-int
 find_stobj_insert_point(int fd, invt_seshdr_t *hdr)
 {
     int i;
@@ -462,8 +442,8 @@ int
 update_invidx_entry(int fd, char *filename, int stobj_fd)
 {
     int i;
-    time_t start_time;
-    time_t end_time;
+    time32_t start_time;
+    time32_t end_time;
     invt_counter_t cnt;
     invt_seshdr_t hdr;
     invt_sescounter_t sescnt;
@@ -718,11 +698,11 @@ invidx_highlight(WINDOW *win, node_t *current, node_t *list)
     snprintf(txt, sizeof(txt), "path:  %s", invtentry->ie_filename);
     put_info_line(1, txt);
 
-    snprintf(txt, sizeof(txt), "start: %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_start));
+    snprintf(txt, sizeof(txt), "start: %s", ctime32(&invtentry->ie_timeperiod.tp_start));
     txt[strlen(txt) - 1] = '\0';
     put_info_line(2, txt);
 
-    snprintf(txt, sizeof(txt), "end:   %s", ctime((time_t*)&invtentry->ie_timeperiod.tp_end));
+    snprintf(txt, sizeof(txt), "end:   %s", ctime32(&invtentry->ie_timeperiod.tp_end));
     txt[strlen(txt) - 1] = '\0';
     put_info_line(3, txt);
 
@@ -757,7 +737,7 @@ invidx_undelete(WINDOW *win, node_t *current, node_t *list)
 
 /*ARGSUSED*/
 int
-invidx_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
+invidx_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
 {
     data_t *d;
     invt_entry_t *invidx_entry;

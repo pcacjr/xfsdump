@@ -27,6 +27,7 @@ COMMINCL = \
 	ring.h \
 	sproc.h \
 	stream.h \
+	timeutil.h \
 	ts_mtio.h \
 	types.h \
 	util.h
@@ -65,6 +66,7 @@ COMMON = \
 	ring.c \
 	sproc.c \
 	stream.c \
+	timeutil.c \
 	util.c
 
 LOCALS = \

@@ -172,7 +172,7 @@ fstab_highlight(WINDOW *win, node_t *current, node_t *list)
 
 /*ARGSUSED*/
 int
-fstab_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
+fstab_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
 {
     data_t		*d;
     invt_fstab_t	*fstabentry;

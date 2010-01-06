@@ -33,7 +33,7 @@ int stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list);
 int stobjmed_highlight(WINDOW *win, node_t *current, node_t *list);
 int stobj_select(WINDOW *win, node_t *current, node_t *list);
 int stobjsess_commit(WINDOW *win, node_t *current, node_t *list);
-int stobj_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list);
+int stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list);
 int stobj_undelete(WINDOW *win, node_t *current, node_t *list);
 int stobjmed_commit(WINDOW *win, node_t *current, node_t *list);
 int stobjstrm_commit(WINDOW *win, node_t *current, node_t *list);

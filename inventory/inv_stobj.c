@@ -28,7 +28,7 @@
 #include <sys/mman.h>
 
 #include "types.h"
-#include "util.h"
+#include "timeutil.h"
 #include "mlog.h"
 #include "inv_priv.h"
 #include "arch_xlate.h"

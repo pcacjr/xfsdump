@@ -27,6 +27,7 @@
 #include "getopt.h"
 
 #include "invutil.h"
+#include "timeutil.h"
 #include "cmenu.h"
 #include "list.h"
 #include "stobj.h"
@@ -184,7 +185,7 @@ stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
     snprintf(txt, sizeof(txt), "pruned:  %s, flags: %#x, time: %s",
 	    (stobjhdr->sh_pruned == BOOL_TRUE) ? "yes" : "no",
 	    stobjhdr->sh_flag,
-	    ctime((time_t *)&(stobjhdr->sh_time)));
+	    ctime32(&(stobjhdr->sh_time)));
     txt[strlen(txt)-1] = '\0';
     put_info_line(1, txt);
 
@@ -291,7 +292,7 @@ stobj_select(WINDOW *win, node_t *current, node_t *list)
 
 /*ARGSUSED*/
 int
-stobj_prune(char *mountpt, uuid_t *uuidp, time_t prunetime, node_t *node, node_t *list)
+stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node_t *list)
 {
     data_t *d;
     stobjsess_t *stobj;

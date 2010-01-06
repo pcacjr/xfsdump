@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
 COMMINCL = \
 	global.h \
 	mlog.h \
-	util.h \
+	timeutil.h \
 	types.h
 
 INVINCL = \
@@ -17,6 +17,9 @@ INVINCL = \
 
 INVCOMMON = \
 	inv_files.c
+
+COMMON = \
+	timeutil.c
 
 CURSESCOMMON = \
 	cmenu.c \
