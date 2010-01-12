@@ -1,3 +1,9 @@
+xfsdump (3.0.4) unstable; urgency=low
+
+  * New bugfix release
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 13 Jan 2009 17:46:03 +1100
+
 xfsdump (3.0.2) unstable; urgency=low
 
   * New bugfix release

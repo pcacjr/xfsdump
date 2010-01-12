@@ -1,3 +1,8 @@
+xfsdump-3.0.4
+	- Improve xfsinvutil man page and argument processing.
+	- Fix timestamp handling on 64-bit architectures in xfsinvutil.
+	- Various build system improvements.
+
 xfsdump-3.0.2 (9 May 2009)
 	- Update the Debian packaging and resolve xfsprogs dependencies.
 
