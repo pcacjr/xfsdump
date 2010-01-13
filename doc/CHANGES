@@ -1,4 +1,4 @@
-xfsdump-3.0.4
+xfsdump-3.0.4 (13 January 2010)
 	- Improve xfsinvutil man page and argument processing.
 	- Fix timestamp handling on 64-bit architectures in xfsinvutil.
 	- Various build system improvements.
