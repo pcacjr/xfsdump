@@ -71,7 +71,9 @@ install: default
 install-dev:
 
 $(COMMINCL) $(COMMON):
-	$(RM) $@; $(LN_S) ../common/$@ $@
+	@echo "    [LN]     $@"
+	$(Q)$(RM) $@; $(LN_S) ../common/$@ $@
 
 $(INVINCL) $(INVCOMMON):
-	$(RM) $@; $(LN_S) ../inventory/$@ $@
+	@echo "    [LN]     $@"
+	$(Q)$(RM) $@; $(LN_S) ../inventory/$@ $@
