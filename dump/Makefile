@@ -94,7 +94,7 @@ LTDEPENDENCIES = $(LIBRMT)
 
 LCFLAGS = -DDUMP -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DSIZEEST -DPIPEINVFIX
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -105,6 +105,8 @@ install: default
 	$(INSTALL) -S $(PKG_ROOT_SBIN_DIR)/$(LTCOMMAND) $(PKG_SBIN_DIR)/$(LTCOMMAND)
 install-dev:
 
+depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+
 $(COMMINCL) $(COMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../common/$@ $@
@@ -112,3 +114,5 @@ $(COMMINCL) $(COMMON):
 $(INVINCL) $(INVCOMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../inventory/$@ $@
+
+-include .dep

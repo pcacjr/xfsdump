@@ -15,8 +15,10 @@ CFILES = \
     rmtaccess.c  rmtcreat.c    rmtioctl.c  rmtopen.c    rmtwrite.c \
     rmtmsg.c
 
-default: $(LTLIBRARY)
+default: ltdepend $(LTLIBRARY)
 
 include $(BUILDRULES)
 
 install install-dev: default
+
+-include .dep

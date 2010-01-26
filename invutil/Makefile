@@ -61,7 +61,7 @@ else
 LSRCFILES += $(CURSESCOMMON) $(CURSESINCL)
 endif
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -70,6 +70,8 @@ install: default
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:
 
+depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+
 $(COMMINCL) $(COMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../common/$@ $@
@@ -77,3 +79,5 @@ $(COMMINCL) $(COMMON):
 $(INVINCL) $(INVCOMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../inventory/$@ $@
+
+-include .dep

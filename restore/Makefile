@@ -106,7 +106,7 @@ LCFLAGS = -DRESTORE -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX \
 	-DEOMFIX -DSESSCPLT -DWHITEPARSE -DNODECHK -DDIRENTHDR_CHECKSUM \
 	-DF_FSSETDM
 
-default: $(LTCOMMAND)
+default: depend $(LTCOMMAND)
 
 include $(BUILDRULES)
 
@@ -117,6 +117,8 @@ install: default
 	$(INSTALL) -S $(PKG_ROOT_SBIN_DIR)/$(LTCOMMAND) $(PKG_SBIN_DIR)/$(LTCOMMAND)
 install-dev:
 
+depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+
 $(COMMINCL) $(COMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../common/$@ $@
@@ -124,3 +126,5 @@ $(COMMINCL) $(COMMON):
 $(INVINCL) $(INVCOMMON):
 	@echo "    [LN]     $@"
 	$(Q)$(RM) $@; $(LN_S) ../inventory/$@ $@
+
+-include .dep
