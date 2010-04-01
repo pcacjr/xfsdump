@@ -498,9 +498,9 @@ static bool_t sc_savequotas = BOOL_TRUE;
 /* save quota information in dump
  */
 static quota_info_t quotas[] = {
-	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT },
-	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT },
-	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT }
+	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT, 0 },
+	{ "project quota",	BOOL_TRUE,	CONTENT_PQUOTAFILE,	"", "-pf", XFS_QUOTA_PDQ_ACCT, 0 },
+	{ "group quota",	BOOL_TRUE,	CONTENT_GQUOTAFILE,	"", "-gf", XFS_QUOTA_GDQ_ACCT, 0 }
 };
 
 /* definition of locally defined global functions ****************************/
@@ -3976,7 +3976,9 @@ dump_file( void *arg1,
 						     1);
 			}
 
-			if (estimated_size > maxdumpfilesize) {
+			/* quota files are exempt from max size check */
+			if (estimated_size > maxdumpfilesize &&
+			    !is_quota_file(statp->bs_ino)) {
 				mlog( MLOG_DEBUG | MLOG_NOTE,
 				      "ino %llu increased beyond maximum size: "
 				      "NOT dumping\n",
@@ -6698,6 +6700,18 @@ check_complete_flags( void )
 	return completepr;
 }
 
+extern bool_t
+is_quota_file(ino_t ino)
+{
+	int i;
+
+	for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
+		if (quotas[i].savequotas && ino == quotas[i].quotaino)
+			return BOOL_TRUE;
+	}
+	return BOOL_FALSE;
+}
+
 #define REPQUOTA "xfs_quota"
 
 static bool_t
@@ -6707,6 +6721,7 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
         char            buf[1024] = "";
         int             fd;
         char            tmp;
+        struct stat     statb;
 
         mlog( MLOG_VERBOSE, _(
 		"saving %s information for: %s\n"), quotainfo->desc, mntpnt );
@@ -6747,6 +6762,16 @@ save_quotas( char *mntpnt, quota_info_t *quotainfo )
                   strerror( errno ));
             return BOOL_FALSE;
         }
+        if(fstat(fd, &statb) < 0) {
+            mlog( MLOG_ERROR, _(
+                  "stat failed %s: %s\n"),
+                  quotainfo->quotapath,
+                  strerror( errno ));
+            close(fd);
+            return BOOL_FALSE;
+        }
+        quotainfo->quotaino = statb.st_ino;
+
         /* open and read dump file to ensure it is in the dump */
         read(fd, &tmp, 1);
         close(fd);

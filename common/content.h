@@ -65,6 +65,8 @@ typedef struct content_hdr content_hdr_t;
 #define CONTENT_PQUOTAFILE	"xfsdump_quotas_proj"
 #define CONTENT_GQUOTAFILE	"xfsdump_quotas_group"
 
+#ifdef DUMP
+
 struct quota_info {
 	char *	desc;		/* Quotas type (user, project, etc) */
 	bool_t	savequotas;	/* Quotas saved OK */
@@ -72,10 +74,14 @@ struct quota_info {
 	char	quotapath[MAXPATHLEN]; /* Full path to quotafile */
 	char *	repquotaargs;	/* Args to repquota to create this quotafile */
 	int	statflag;	/* quota stats flag for this type */
+	ino_t	quotaino;	/* ino of the quota file */
 };
 
 typedef struct quota_info quota_info_t;
 
+extern bool_t is_quota_file(ino_t ino);
+
+#endif /* DUMP */
 
 #ifdef DUMP
 extern bool_t content_init( intgen_t argc,

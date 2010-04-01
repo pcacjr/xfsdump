@@ -558,10 +558,12 @@ cb_add( void *arg1,
 		} else {
 			estimated_size = estimate_dump_space( statp );
 
-			/* skip if size is greater than prune size
+			/* skip if size is greater than prune size. quota
+			 * files are exempt from the check.
 			 */
 			if ( maxdumpfilesize > 0 &&
-			     estimated_size > maxdumpfilesize ) {
+			     estimated_size > maxdumpfilesize &&
+			     !is_quota_file(statp->bs_ino) ) {
 				mlog( MLOG_DEBUG | MLOG_EXCLFILES,
 				      "pruned ino %llu, owner %u, estimated size %llu: maximum size exceeded\n",
 				      statp->bs_ino,
