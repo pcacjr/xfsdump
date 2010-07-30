@@ -13,4 +13,4 @@ default install install-dev:
 
 include $(BUILDRULES)
 
--include .dep
+-include .ltdep

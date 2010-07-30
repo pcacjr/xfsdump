@@ -105,7 +105,7 @@ install: default
 	$(INSTALL) -S $(PKG_ROOT_SBIN_DIR)/$(LTCOMMAND) $(PKG_SBIN_DIR)/$(LTCOMMAND)
 install-dev:
 
-depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 
 $(COMMINCL) $(COMMON):
 	@echo "    [LN]     $@"
