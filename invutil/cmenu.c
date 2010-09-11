@@ -21,6 +21,7 @@
 
 #include <ncurses.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 #include "types.h"
 #include "mlog.h"

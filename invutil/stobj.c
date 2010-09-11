@@ -20,6 +20,7 @@
 #include <xfs/jdm.h>
 #include <ncurses.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "types.h"
 #include "mlog.h"
