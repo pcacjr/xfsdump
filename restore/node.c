@@ -42,7 +42,9 @@ extern size_t pgmask;
 
 /* macros for manipulating node handles when handle consistency
  * checking is enabled. the upper bits of a handle will be loaded
- * with the node gen count, described below.
+ * with the node gen count, described below. this should not be
+ * used for production code, it cuts into the number of dirents
+ * that xfsrestore can handle.
  */
 #define HDLGENCNT		4
 #define	HDLGENSHIFT		( NBBY * sizeof ( nh_t ) - HDLGENCNT )
