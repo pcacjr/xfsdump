@@ -111,10 +111,6 @@ extern size_t pgmask;
  */
 #define NODESPERSEGMIN	1000000
 
-/* how many nodes to place on free list at a time
- */
-#define VIRGSACRMAX	8192 /* fudged: 8192 48 byte nodes (24 or 96 pages) */
-
 /* a node is identified internally by its index into the backing store.
  * this index is the offset of the node into the segmented portion of
  * backing store (follows the abstraction header page) divided by the
@@ -380,72 +376,41 @@ node_alloc( void )
 	nix_t nix;
 	u_char_t *p;
 	nh_t nh;
-	register nix_t *linkagep;
 #ifdef NODECHK
-	register u_char_t *hkpp;
-	register u_char_t gen;
-	register u_char_t unq;
+	u_char_t *hkpp;
+	u_char_t gen = 0;
+	u_char_t unq;
 #endif /* NODECHK */
 
-	/* if free list is depleted, map in a new window at the
-	 * end of backing store. put all nodes on free list.
-	 * initialize the gen count to the node index, and the unique
-	 * pattern to the free pattern.
+	/* if there's a node available on the free list, use it.
+	 * otherwise get the next one from the current virgin segment,
+	 * or allocate a new virgin segment if the current one is depleted.
 	 */
-	if ( node_hdrp->nh_freenix == NIX_NULL ) {
-		nix_t virgbegnix; /* abs. nix of first node in virg seg */
-		nix_t virgendnix; /* abs. nix of next node after last */
-		nix_t sacrcnt; /* how many virgins to put on free list */
-		nix_t sacrnix; 
+	if ( node_hdrp->nh_freenix != NIX_NULL ) {
+		nix_t *linkagep;
+		off64_t off;
 
-		ASSERT( node_hdrp->nh_virgrelnix
-			<
-			( nix_t )node_hdrp->nh_nodesperseg );
-		virgbegnix = OFF2NIX( node_hdrp->nh_virgsegreloff )
-			     +
-			     node_hdrp->nh_virgrelnix;
-		virgendnix =
-		      OFF2NIX( ( node_hdrp->nh_virgsegreloff
-			       +
-			       ( off64_t )node_hdrp->nh_segsz ) );
-#ifdef TREE_DEBUG
-		mlog(MLOG_DEBUG | MLOG_TREE,
-		   "node_alloc(): create freelist - "
-		   "virg_begin=%lld virg_end=%lld\n",
-		   virgbegnix, virgendnix); 
-#endif
-		ASSERT( virgendnix > virgbegnix );
-		sacrcnt = min( VIRGSACRMAX, virgendnix - virgbegnix );
-		ASSERT( sacrcnt >= 1 );
-		p = 0; /* keep lint happy */
-		win_map( NIX2OFF( virgbegnix ), ( void ** )&p );
+		nix = node_hdrp->nh_freenix;
+
+		off = NIX2OFF( nix );
+		win_map( off, ( void ** )&p );
 		if (p == NULL)
-		    return NH_NULL;
-		node_hdrp->nh_freenix = virgbegnix;
-		for ( sacrnix = virgbegnix
-		      ;
-		      sacrnix < virgbegnix + sacrcnt - 1
-		      ;
-		      p += node_hdrp->nh_nodesz, sacrnix++ ) {
-			linkagep = ( nix_t * )p;
-			*linkagep = sacrnix + 1;
-#ifdef NODECHK
-			hkpp = p + node_hdrp->nh_nodehkix;
-			gen = ( u_char_t )sacrnix;
-			*hkpp = ( u_char_t )HKPMKHKP( ( size_t )gen,
-						      NODEUNQFREE );
-#endif /* NODECHK */
-		}
-		linkagep = ( nix_t * )p;
-		*linkagep = NIX_NULL;
+			return NH_NULL;
 #ifdef NODECHK
 		hkpp = p + node_hdrp->nh_nodehkix;
-		gen = ( u_char_t )sacrnix;
-		*hkpp = HKPMKHKP( gen, NODEUNQFREE );
+		gen = ( u_char_t )( HKPGETGEN( *p ) + ( u_char_t )1 );
+		unq = HKPGETUNQ( *hkpp );
+		ASSERT( unq != NODEUNQALCD );
+		ASSERT( unq == NODEUNQFREE );
 #endif /* NODECHK */
-		node_hdrp->nh_virgrelnix += sacrcnt;
-		win_unmap( node_hdrp->nh_virgsegreloff, ( void ** )&p );
 
+		/* adjust the free list */
+		linkagep = ( nix_t * )p;
+		node_hdrp->nh_freenix = *linkagep;
+
+		win_unmap( off, ( void ** )&p );
+
+	} else {
 		if ( node_hdrp->nh_virgrelnix
 		     >=
 		     ( nix_t )node_hdrp->nh_nodesperseg ) {
@@ -468,14 +433,11 @@ node_alloc( void )
 			mlog( MLOG_DEBUG,
 			      "pre-growing new node array segment at %lld "
 			      "size %lld\n",
-			      node_hdrp->nh_firstsegoff 
-			      +
-			      node_hdrp->nh_virgsegreloff
-			      +
-			      ( off64_t )node_hdrp->nh_segsz,
+			      node_hdrp->nh_firstsegoff +
+			      node_hdrp->nh_virgsegreloff,
 			      ( off64_t )node_hdrp->nh_segsz );
 			rval = ftruncate64( node_fd,
-					    node_hdrp->nh_firstsegoff 
+					    node_hdrp->nh_firstsegoff
 					    +
 					    node_hdrp->nh_virgsegreloff
 					    +
@@ -484,59 +446,31 @@ node_alloc( void )
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 				      "unable to autogrow node segment %llu: "
 				      "%s (%d)\n"),
-				      node_hdrp->nh_virgsegreloff
-				      /
-				      ( off64_t )node_hdrp->nh_segsz,
+				      OFF2NIX(node_hdrp->nh_virgsegreloff),
 				      strerror( errno ),
 				      errno );
 			}
 		}
+
+		nix = OFF2NIX( node_hdrp->nh_virgsegreloff )
+			+
+			node_hdrp->nh_virgrelnix++;
 	}
-
-	/* map in window containing node at top of free list,
-	 * and adjust free list.
-	 */
-	nix = node_hdrp->nh_freenix;
-#ifdef TREE_DEBUG
-	mlog(MLOG_DEBUG | MLOG_TREE,
-	   "node_alloc(): win_map(%llu) and get head from node freelist\n",
-           NIX2OFF(nix));
-#endif
-	win_map( NIX2OFF( nix ), ( void ** )&p );
-	if (p == NULL)
-	    return NH_NULL;
-#ifdef NODECHK
-	hkpp = p + node_hdrp->nh_nodehkix;
-	unq = HKPGETUNQ( *hkpp );
-	ASSERT( unq != NODEUNQALCD );
-	ASSERT( unq == NODEUNQFREE );
-#endif /* NODECHK */
-	linkagep = ( nix_t * )p;
-	node_hdrp->nh_freenix = *linkagep;
-
-	/* clean the node
-	 */
-	memset( ( void * )p, 0, node_hdrp->nh_nodesz );
 
 	/* build a handle for node
 	 */
 	ASSERT( nix <= NIX_MAX );
 #ifdef NODECHK
+	win_map( NIX2OFF( nix ), ( void ** )&p );
+	if (p == NULL)
+		abort();
 	hkpp = p + ( int )node_hdrp->nh_nodehkix;
-	gen = ( u_char_t )( HKPGETGEN( *p ) + ( u_char_t )1 );
 	nh = HDLMKHDL( gen, nix );
 	*hkpp = HKPMKHKP( gen, NODEUNQALCD );
+	win_unmap( NIX2OFF( nix ), ( void ** )&p );
 #else /* NODECHK */
 	nh = ( nh_t )nix;
 #endif /* NODECHK */
-
-	/* unmap window
-	 */
-#ifdef TREE_DEBUG
-	mlog(MLOG_DEBUG | MLOG_TREE,
-	   "node_alloc(): win_unmap(%llu)\n", NIX2OFF(nix));
-#endif
-	win_unmap( NIX2OFF( nix ), ( void ** )&p );
 
 	return nh;
 }
