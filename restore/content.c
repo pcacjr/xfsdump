@@ -71,6 +71,13 @@
 
 /* structure definitions used locally ****************************************/
 
+#define HOUSEKEEPING_MAGIC	0x686b6d61
+	/* "hkma" - see the housekeeping_magic field of pers_t below.
+	 */
+#define HOUSEKEEPING_VERSION	1
+	/* see the housekeeping_version field of pers_t below.
+	 */
+
 #define WRITE_TRIES_MAX	3
 	/* retry loop tuning for write(2) workaround
 	 */
@@ -358,12 +365,43 @@ struct stream_context {
 
 typedef struct stream_context stream_context_t;
 
-/* persistent state file header - two parts: accumulation state
- * which spans several sessions, and session state. each has a valid
- * bit, and no fields are valid until the valid bit is set.
- * all elements defined such that a bzero results in a valid initial state.
+/* persistent state file header - on-disk format information plus
+ * accumulation state (which spans several sessions) and session state.
+ * the latter two have a valid bit, and their fields are not valid until
+ * the valid bit is set. all elements defined such that a bzero results
+ * in a valid initial state.
  */
 struct pers {
+	/* on-disk format information used to verify that xfsrestore
+	 * can make sense of the data in xfsrestorehousekeepingdir
+	 * when running in cumulative mode or when resuming a restore.
+	 *
+	 * for backwards/forwards compatibility, this struct must be
+	 * the first field! also any changes to the struct must address
+	 * compatibility with other xfsrestore versions.
+	 */
+	struct {
+		size32_t housekeeping_magic;
+			/* used to determine if this struct has been
+			 * initialized, and whether the machine's
+			 * endianness is the same as the previous
+			 * invocation. (data written to xfsrestore's
+			 * state directory is not converted to an
+			 * endian-neutral format since it only persists
+			 * for the life of one or more restore sessions.)
+			 */
+		size32_t housekeeping_version;
+			/* version of the data structures used in the
+			 * state files in housekeepingdir. this must be
+			 * bumped whenever the on-disk format changes.
+			 */
+		size64_t pagesize;
+			/* headers in the persistent state files
+			 * are aligned on page size boundaries, so
+			 * this cannot change betweeen invocations.
+			 */
+	} v;
+
 	/* command line arguments from first session, and session
 	 * history.
 	 */
@@ -1301,6 +1339,49 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		      strerror( errno ));
 		return BOOL_FALSE;
 	}
+
+	/* but first setup or verify the on-disk format information
+	 */
+	if ( ! persp->a.valpr ) {
+		/* this is the first restore session
+		 */
+		persp->v.housekeeping_magic = HOUSEKEEPING_MAGIC;
+		persp->v.housekeeping_version = HOUSEKEEPING_VERSION;
+		persp->v.pagesize = pgsz;
+
+	} else {
+		/* cumulative or resuming a restore, verify the header
+		 */
+		if ( persp->v.housekeeping_magic != HOUSEKEEPING_MAGIC ) {
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "%s format corrupt or wrong endianness "
+			      "(0x%x, expected 0x%x)\n"),
+			      hkdirname,
+			      persp->v.housekeeping_magic,
+			      HOUSEKEEPING_MAGIC );
+			return BOOL_FALSE;
+		}
+		if ( persp->v.housekeeping_version != HOUSEKEEPING_VERSION ) {
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "%s format version differs from previous "
+			      "restore (%u, expected %u)\n"),
+			      hkdirname,
+			      persp->v.housekeeping_version,
+			      HOUSEKEEPING_VERSION );
+			return BOOL_FALSE;
+		}
+		if ( persp->v.pagesize != pgsz ) {
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "%s format differs from previous "
+			      "restore due to page size change "
+			      "(was %lu, now %lu)\n"),
+			      hkdirname,
+			      persp->v.pagesize,
+			      pgsz );
+			return BOOL_FALSE;
+		}
+	}
+
 	if ( ! persp->a.valpr ) {
 		if ( ! dstdir ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
@@ -1565,7 +1646,8 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		stpgcnt = 0;
 		newstpgcnt = ( stsz + pgmask ) / pgsz;
 		descpgcnt = 0;
-		memset( ( void * )persp, 0, sizeof( pers_t ));
+		memset( ( void * )&persp->a, 0,
+			sizeof( pers_t ) - offsetofmember( pers_t, a ));
 	} else if ( ! persp->s.valpr ) {
 		stpgcnt = persp->a.stpgcnt;
 		newstpgcnt = stpgcnt;

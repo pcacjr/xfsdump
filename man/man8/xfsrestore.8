@@ -61,6 +61,18 @@ The deltas must be applied in the order they were produced.
 Each delta applied must have been produced with the previously applied
 delta as its base.
 .P
+.I xfsrestore
+keeps state information in the
+.IR xfsrestorehousekeepingdir ,
+to inform subsequent invocations when used in
+cumulative mode, or in the event a restore is interrupted.
+To ensure that the state information can be processed,
+a compatible version of
+.I xfsrestore
+must be used for each subsequent invocation. Additionally,
+each invocation must run on a system of the same endianness
+and page size.
+.P
 The options to
 .I xfsrestore
 are:
@@ -78,11 +90,11 @@ option allows the operator to specify an alternate directory,
 in which
 .I xfsrestore
 creates the
-.I xfsrestorehousekeeping
+.I xfsrestorehousekeepingdir
 directory.
-When performing a cumulative (\f3\-r\f1 option) restore,
-each successive invocation of \f2xfsrestore\f1 must specify the same alternate
-directory.
+When performing a cumulative (\f3\-r\f1 option) restore or
+resuming (\f3\-R\f1 option) a restore, each successive invocation
+must specify the same alternate directory.
 .TP 5
 \f3\-b\f1 \f2blocksize\f1
 Specifies the blocksize, in bytes, to be used for the restore. 
@@ -205,7 +217,11 @@ Source tape drive is a QIC tape.  QIC tapes only use a 512 byte
 blocksize, for which \f2xfsrestore\f1 must make special allowances.
 .TP 5
 \f3\-r\f1
-Selects the cumulative mode of operation.
+Selects the cumulative mode of operation. The
+.B \-a
+and
+.I destination
+options must be the same for each invocation.
 .TP 5
 \f3\-s\f1 \f2subtree\f1
 Specifies a subtree to restore.
