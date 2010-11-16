@@ -115,12 +115,12 @@ extern size_t pgmask;
  */
 typedef off64_t nix_t;
 #define NIX_NULL OFF64MAX
-#define NIX2OFF( nix )	( nix * ( nix_t )node_hdrp->nh_nodesz )
-#define OFF2NIX( noff )	( noff / ( nix_t )node_hdrp->nh_nodesz )
 
 /* reserve the firstpage for a header to save persistent context
  */
 #define NODE_HDRSZ	pgsz
+
+typedef intgen_t relnix_t;
 
 struct node_hdr {
 	size_t nh_nodesz;
@@ -151,20 +151,15 @@ struct node_hdr {
 	off64_t nh_firstsegoff;
 		/* offset into backing store of the first segment
 		 */
-	off64_t nh_virgsegreloff;
-		/* offset (relative to beginning of first segment) into
-		 * backing store of segment containing one or
-		 * more virgin nodes. relative to beginning of segmented
-		 * portion of backing store. bumped only when all of the
-		 * nodes in the segment have been placed on the free list.
-		 * when bumped, nh_virginrelnix is simultaneously set back
-		 * to zero.
+	nh_t nh_virgnix;
+		/* node handle of next virgin node
 		 */
-	nix_t nh_virgrelnix;
-		/* relative node index within the segment identified by
-		 * nh_virgsegreloff of the next node not yet placed on the
-		 * free list. never reaches nh_nodesperseg: instead set
-		 * to zero and bump nh_virgsegreloff by one segment.
+	intgen_t nh_segixshift;
+		/* bitshift used to extract the segment index from an nh_t
+		 */
+	relnix_t nh_relnixmask;
+		/* bitmask used to extract the node index from an nh_t
+		 * (relative to the start of a segment)
 		 */
 };
 
@@ -172,6 +167,76 @@ typedef struct node_hdr node_hdr_t;
 
 static node_hdr_t *node_hdrp;
 static intgen_t node_fd;
+
+static inline segix_t
+nh2segix( nh_t nh )
+{
+	return nh >> node_hdrp->nh_segixshift;
+}
+
+static inline relnix_t
+nh2relnix( nh_t nh )
+{
+	return nh & node_hdrp->nh_relnixmask;
+}
+
+static inline void
+node_map_internal( nh_t nh, void **pp )
+{
+	win_map( nh2segix( nh ), pp );
+	if ( *pp != NULL ) {
+		relnix_t relnix = nh2relnix( nh );
+		*pp = ( void * )( ( char * )( *pp ) +
+				( ( off64_t )relnix *
+				  node_hdrp->nh_nodesz ) );
+	}
+}
+
+/* ARGSUSED */
+static inline void
+node_unmap_internal( nh_t nh, void **pp, bool_t freepr )
+{
+	nix_t nix;
+#ifdef NODECHK
+	register u_char_t hkp;
+	register u_char_t hdlgen;
+	register u_char_t nodegen;
+	register u_char_t nodeunq;
+#endif /* NODECHK */
+
+	ASSERT( pp );
+	ASSERT( *pp );
+	ASSERT( nh != NH_NULL );
+
+	/* convert the handle into an index
+	 */
+#ifdef NODECHK
+	hdlgen = HDLGETGEN( nh );
+	nix = HDLGETNIX( nh );
+#else /* NODECHK */
+	nix = ( nix_t )nh;
+#endif /* NODECHK */
+
+	ASSERT( nix <= NIX_MAX );
+
+#ifdef NODECHK
+	hkp = *( *( u_char_t ** )pp + node_hdrp->nh_nodehkix );
+	nodegen = HKPGETGEN( hkp );
+	ASSERT( nodegen == hdlgen );
+	nodeunq = HKPGETUNQ( hkp );
+	if ( ! freepr ) {
+		ASSERT( nodeunq != NODEUNQFREE );
+		ASSERT( nodeunq == NODEUNQALCD );
+	} else {
+		ASSERT( nodeunq != NODEUNQALCD );
+		ASSERT( nodeunq == NODEUNQFREE );
+	}
+#endif /* NODECHK */
+
+	/* unmap the window containing the node
+	 */
+	win_unmap( nh2segix( nix ), pp ); /* zeros *pp */
+}
 
 /* ARGSUSED */
 bool_t
@@ -190,12 +255,13 @@ node_init( intgen_t fd,
 	size_t winmapmax;
 	size_t segcount;
 	intgen_t segixshift;
-	intgen_t rval;
 
 	/* sanity checks
 	 */
 	ASSERT( sizeof( node_hdr_t ) <= NODE_HDRSZ );
 	ASSERT( sizeof( nh_t ) < sizeof( off64_t ));
+	ASSERT( sizeof( nh_t ) <= sizeof( segix_t ));
+	ASSERT( sizeof( nh_t ) <= sizeof( relnix_t ));
 	ASSERT( nodehkix < usrnodesz );
 	ASSERT( usrnodesz >= sizeof( char * ) + 1 );
 		/* so node is at least big enough to hold
@@ -309,31 +375,13 @@ node_init( intgen_t fd,
 	node_hdrp->nh_nodealignsz = nodealignsz;
 	node_hdrp->nh_freenix = NIX_NULL;
 	node_hdrp->nh_firstsegoff = off + ( off64_t )NODE_HDRSZ;
-	node_hdrp->nh_virgsegreloff = 0;
-	node_hdrp->nh_virgrelnix = 0;
+	node_hdrp->nh_virgnix = 0;
+	node_hdrp->nh_segixshift = segixshift;
+	node_hdrp->nh_relnixmask = nodesperseg - 1;
 
 	/* save transient context
 	 */
 	node_fd = fd;
-
-	/* autogrow the first segment
-	 */
-	mlog( MLOG_DEBUG,
-	      "pre-growing new node array segment at %lld "
-	      "size %lld\n",
-	      node_hdrp->nh_firstsegoff,
-	      ( off64_t )node_hdrp->nh_segsz );
-	rval = ftruncate64( node_fd,
-			    node_hdrp->nh_firstsegoff
-			    +
-			    ( off64_t )node_hdrp->nh_segsz );
-	if ( rval ) {
-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
-		      "unable to autogrow first node segment: %s (%d)\n"),
-		      strerror( errno ),
-		      errno );
-		return BOOL_FALSE;
-	}
 
 	/* initialize the window abstraction
 	 */
@@ -415,12 +463,10 @@ node_alloc( void )
 	 */
 	if ( node_hdrp->nh_freenix != NIX_NULL ) {
 		nix_t *linkagep;
-		off64_t off;
 
 		nix = node_hdrp->nh_freenix;
 
-		off = NIX2OFF( nix );
-		win_map( off, ( void ** )&p );
+		node_map_internal( nix, ( void ** )&p );
 		if (p == NULL)
 			return NH_NULL;
 #ifdef NODECHK
@@ -435,66 +481,59 @@ node_alloc( void )
 		linkagep = ( nix_t * )p;
 		node_hdrp->nh_freenix = *linkagep;
 
-		win_unmap( off, ( void ** )&p );
+		node_unmap_internal( nix, ( void ** )&p, BOOL_TRUE );
 
 	} else {
-		if ( node_hdrp->nh_virgrelnix
-		     >=
-		     ( nix_t )node_hdrp->nh_nodesperseg ) {
+		if ( nh2relnix( node_hdrp->nh_virgnix ) == 0 ) {
+			/* need to start a new virgin segment */
 			intgen_t rval;
-			ASSERT( node_hdrp->nh_virgrelnix
-				==
-				( nix_t )node_hdrp->nh_nodesperseg );
-			ASSERT( node_hdrp->nh_virgsegreloff
+			off64_t new_seg_off =
+				node_hdrp->nh_firstsegoff +
+				( off64_t )nh2segix( node_hdrp->nh_virgnix ) *
+				( off64_t )node_hdrp->nh_segsz;
+
+			ASSERT( new_seg_off
 				<=
 				OFF64MAX - ( off64_t )node_hdrp->nh_segsz );
-#ifdef TREE_DEBUG
-			mlog(MLOG_DEBUG | MLOG_TREE,
-			    "node_alloc(): runout of nodes for freelist in "
-                            "this segment - nodes used = %lld\n", 
-                            node_hdrp->nh_virgrelnix);
-#endif
-			node_hdrp->nh_virgsegreloff +=
-					( off64_t )node_hdrp->nh_segsz;
-			node_hdrp->nh_virgrelnix = 0;
 			mlog( MLOG_DEBUG,
 			      "pre-growing new node array segment at %lld "
 			      "size %lld\n",
-			      node_hdrp->nh_firstsegoff +
-			      node_hdrp->nh_virgsegreloff,
+			      new_seg_off,
 			      ( off64_t )node_hdrp->nh_segsz );
 			rval = ftruncate64( node_fd,
-					    node_hdrp->nh_firstsegoff
-					    +
-					    node_hdrp->nh_virgsegreloff
+					    new_seg_off
 					    +
 					    ( off64_t )node_hdrp->nh_segsz );
 			if ( rval ) {
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
-				      "unable to autogrow node segment %llu: "
+				      "unable to autogrow node segment %u: "
 				      "%s (%d)\n"),
-				      OFF2NIX(node_hdrp->nh_virgsegreloff),
+				      nh2segix( node_hdrp->nh_virgnix ),
 				      strerror( errno ),
 				      errno );
 			}
 		}
 
-		nix = OFF2NIX( node_hdrp->nh_virgsegreloff )
-			+
-			node_hdrp->nh_virgrelnix++;
+		nix = node_hdrp->nh_virgnix++;
 	}
 
 	/* build a handle for node
 	 */
-	ASSERT( nix <= NIX_MAX );
+	if ( nix > NIX_MAX ) {
+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
+		  "dump contains too many dirents, "
+		  "restore can only handle %llu\n"),
+		  NIX_MAX );
+		return NH_NULL;
+	}
 #ifdef NODECHK
-	win_map( NIX2OFF( nix ), ( void ** )&p );
+	node_map_internal( nix , ( void ** )&p );
 	if (p == NULL)
 		abort();
 	hkpp = p + ( int )node_hdrp->nh_nodehkix;
 	nh = HDLMKHDL( gen, nix );
 	*hkpp = HKPMKHKP( gen, NODEUNQALCD );
-	win_unmap( NIX2OFF( nix ), ( void ** )&p );
+	node_unmap_internal( nix, ( void ** )&p, BOOL_FALSE );
 #else /* NODECHK */
 	nh = ( nh_t )nix;
 #endif /* NODECHK */
@@ -530,7 +569,7 @@ node_map( nh_t nh )
 	/* map in
 	 */
 	p = 0; /* keep lint happy */
-	win_map( NIX2OFF( nix ), ( void ** )&p );
+	node_map_internal( nix, ( void ** )&p );
 	if (p == NULL)
 	    return NULL;
 
@@ -544,52 +583,6 @@ node_map( nh_t nh )
 #endif /* NODECHK */
 
 	return ( void * )p;
-}
-
-/* ARGSUSED */
-static void
-node_unmap_internal( nh_t nh, void **pp, bool_t internalpr )
-{
-	nix_t nix;
-#ifdef NODECHK
-	register u_char_t hkp;
-	register u_char_t hdlgen;
-	register u_char_t nodegen;
-	register u_char_t nodeunq;
-#endif /* NODECHK */
-
-	ASSERT( pp );
-	ASSERT( *pp );
-	ASSERT( nh != NH_NULL );
-
-	/* convert the handle into an index
-	 */
-#ifdef NODECHK
-	hdlgen = HDLGETGEN( nh );
-	nix = HDLGETNIX( nh );
-#else /* NODECHK */
-	nix = ( nix_t )nh;
-#endif /* NODECHK */
-
-	ASSERT( nix <= NIX_MAX );
-
-#ifdef NODECHK
-	hkp = *( *( u_char_t ** )pp + node_hdrp->nh_nodehkix );
-	nodegen = HKPGETGEN( hkp );
-	ASSERT( nodegen == hdlgen );
-	nodeunq = HKPGETUNQ( hkp );
-	if ( ! internalpr ) {
-		ASSERT( nodeunq != NODEUNQFREE );
-		ASSERT( nodeunq == NODEUNQALCD );
-	} else {
-		ASSERT( nodeunq != NODEUNQALCD );
-		ASSERT( nodeunq == NODEUNQFREE );
-	}
-#endif /* NODECHK */
-
-	/* unmap the window containing the node
-	 */
-	win_unmap( NIX2OFF( nix ), pp ); /* zeros *pp */
 }
 
 void

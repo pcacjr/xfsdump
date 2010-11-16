@@ -30,6 +30,7 @@
 #include "mlog.h"
 #include "qlock.h"
 #include "mmap.h"
+#include "win.h"
 
 extern size_t pgsz;
 extern size_t pgmask;
@@ -48,7 +49,7 @@ extern size_t pgmask;
 /* window descriptor
  */
 struct win {
-	size_t w_segix;
+	segix_t w_segix;
 		/* index of segment mapped by this window
 		 */
 	void *w_p;
@@ -69,7 +70,7 @@ typedef struct win win_t;
 
 /* forward declarations
  */
-static void win_segmap_resize( size_t segix );
+static void win_segmap_resize( segix_t segix );
 
 /* transient state
  */
@@ -177,31 +178,16 @@ win_init( intgen_t fd,
 }
 
 void
-win_map( off64_t off, void **pp )
+win_map( segix_t segix, void **pp )
 {
-	size_t offwithinseg;
-	size_t segix;
 	off64_t segoff;
 	win_t *winp;
 
 	CRITICAL_BEGIN();
 
-	/* calculate offset within segment
-	 */
-	offwithinseg = ( size_t )( off % ( off64_t )tranp->t_segsz );
-
-	/* calculate segment index
-	 */
-	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
-
-	/* calculate offset of segment
-	 */
-	segoff = off - ( off64_t )offwithinseg;
-
 #ifdef TREE_DEBUG
 	mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
-	     "win_map(off=%lld,addr=%x): off within = %llu, segoff = %lld\n",
-	      off, pp, offwithinseg, segoff);
+	     "win_map(segix=%u,addr=%p)\n", segix, pp);
 #endif
 	/* resize the array if necessary */
 	if ( segix >= tranp->t_segmaplen )
@@ -243,7 +229,7 @@ win_map( off64_t off, void **pp )
 			ASSERT( ! winp->w_nextp );
 		}
 		winp->w_refcnt++;
-		*pp = ( void * )( ( char * )( winp->w_p ) + offwithinseg );
+		*pp = winp->w_p;
 		CRITICAL_END();
 		return;
 	}
@@ -287,6 +273,10 @@ win_map( off64_t off, void **pp )
 		return;
 	}
 
+	/* calculate offset of segment
+	 */
+	segoff = segix * ( off64_t )tranp->t_segsz;
+
 	/* map the window
 	 */
 	ASSERT( tranp->t_segsz >= 1 );
@@ -320,7 +310,7 @@ win_map( off64_t off, void **pp )
 		if (error == ENOMEM && tranp->t_lruheadp) {
 			mlog( MLOG_NORMAL | MLOG_ERROR,
 		      		_("win_map(): try to select a different win_t\n"));
-			win_map(off, pp);
+			win_map(segix, pp);
 			return;
 		}
 		*pp = NULL;
@@ -331,22 +321,17 @@ win_map( off64_t off, void **pp )
 	winp->w_refcnt++;
 	tranp->t_segmap[winp->w_segix] = winp;
 
-	*pp = ( void * )( ( char * )( winp->w_p ) + offwithinseg );
+	*pp = winp->w_p;
 
 	CRITICAL_END();
 }
 
 void
-win_unmap( off64_t off, void **pp )
+win_unmap( segix_t segix, void **pp )
 {
-	size_t segix;
 	win_t *winp;
 
 	CRITICAL_BEGIN();
-
-	/* calculate segment index
-	 */
-	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
 
 	/* verify window mapped
 	 */
@@ -390,7 +375,7 @@ win_unmap( off64_t off, void **pp )
 }
 
 static void
-win_segmap_resize(size_t segix)
+win_segmap_resize(segix_t segix)
 {
 	size_t oldlen;
 	win_t **new_part;
