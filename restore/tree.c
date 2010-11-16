@@ -236,6 +236,14 @@ struct link_iter_context {
 };
 typedef struct link_iter_context link_iter_context_t;
 
+/* used for caching parent pathname from previous Node2path result
+ */
+struct path_cache {
+	nh_t nh;
+	intgen_t len;
+	char buf[MAXPATHLEN];
+};
+typedef struct path_cache path_cache_t;
 
 /* declarations of externally defined global symbols *************************/
 
@@ -254,7 +262,8 @@ static nh_t Node_alloc( xfs_ino_t ino,
 static void Node_free( nh_t *nhp );
 static node_t * Node_map( nh_t nh );
 static void Node_unmap( nh_t nh, node_t **npp );
-static intgen_t Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz );
+static intgen_t Node2path_recurse( nh_t nh, char *buf,
+				   intgen_t bufsz, intgen_t level );
 static void adopt( nh_t parh, nh_t cldh, nrh_t nrh );
 static nrh_t disown( nh_t cldh );
 static void selsubtree( nh_t nh, bool_t sensepr );
@@ -3435,7 +3444,7 @@ Node2path( nh_t nh, char *path, char *errmsg )
 {
 	intgen_t remainingcnt;
 	path[ 0 ] = 0; /* in case root node passed in */
-	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN );
+	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN, 0 );
 	if ( remainingcnt <= 0 ) {
 		node_t *np = Node_map( nh );
 		xfs_ino_t ino = np->n_ino;
@@ -3459,13 +3468,15 @@ Node2path( nh_t nh, char *path, char *errmsg )
  * works because the buffer size is secretly 2 * MAXPATHLEN.
  */
 static intgen_t
-Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
+Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 {
+	static path_cache_t cache = { NH_NULL, 0, "" };
 	node_t *np;
 	nh_t parh;
 	xfs_ino_t ino;
 	gen_t gen;
 	nrh_t nrh;
+	char *oldbuf;
 	intgen_t oldbufsz;
 	intgen_t namelen;
 
@@ -3473,6 +3484,14 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
 	 */
 	if ( nh == persp->p_rooth ) {
 		return bufsz;
+	}
+
+	/* if we have a cache hit, no need to recurse any further
+	 */
+	if ( nh == cache.nh ) {
+		ASSERT( bufsz > cache.len );
+		strcpy( buf, cache.buf );
+		return bufsz - cache.len;
 	}
 
 	/* extract useful node members
@@ -3486,8 +3505,9 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
 
 	/* build path to parent
 	 */
+	oldbuf = buf;
 	oldbufsz = bufsz;
-	bufsz = Node2path_recurse( parh, buf, bufsz ); /* RECURSION */
+	bufsz = Node2path_recurse( parh, buf, bufsz, level+1 ); /* RECURSION */
 	if ( bufsz <= 0 ) {
 		return bufsz;
 	}
@@ -3517,10 +3537,22 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
 		ASSERT( namelen > 0 );
 	}
 
-	/* return remaining buffer size
+	/* update remaining buffer size
 	 */
 	bufsz -= namelen;
 	ASSERT( bufsz + MAXPATHLEN > 0 );
+
+	/* update the cache if we're the target's parent
+	 * (and the pathname is not too long)
+	 */
+	if ( level == 1 && bufsz > 0 ) {
+		cache.nh = nh;
+		strcpy( cache.buf, oldbuf );
+		cache.len = oldbufsz - bufsz;
+	}
+
+	/* return remaining buffer size
+	 */
 	return bufsz;
 }
 
