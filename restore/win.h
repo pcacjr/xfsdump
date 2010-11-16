@@ -25,8 +25,7 @@
  */
 void win_init( intgen_t fd,
 	       off64_t rngoff,		/* offset into file of windowing */
-	       size_t winsz,		/* window size */
-	       size64_t segtablesz,     /* estimate of segment table size */
+	       size64_t winsz,		/* window size */
 	       size_t wincntmax );	/* max number of windows to manage */
 
 /* supply a pointer to the portion of the file identified by off.

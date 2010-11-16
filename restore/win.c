@@ -80,7 +80,7 @@ struct tran {
 	off64_t t_firstoff;
 		/* offset of first seg within backing store (for mmap( ))
 		 */
-	size_t t_segsz;
+	size64_t t_segsz;
 		/* backing store segment / window size
 		 */
 	size_t t_winmax;
@@ -147,8 +147,7 @@ win_getnum_mmaps(void)
 void
 win_init( intgen_t fd,
 	  off64_t firstoff,
-	  size_t segsz,
-	  size64_t segtablesz,
+	  size64_t segsz,
 	  size_t winmax )
 {
 	/* validate parameters
@@ -167,7 +166,7 @@ win_init( intgen_t fd,
 	tranp->t_segsz = segsz;
 	tranp->t_winmax = winmax;
 
-	tranp->t_segmaplen = (size_t)(segtablesz / segsz) + 1;
+	tranp->t_segmaplen = SEGMAP_INCR;
 	tranp->t_segmap = (win_t **)
 	calloc( tranp->t_segmaplen, sizeof(win_t *) );
 	ASSERT( tranp->t_segmap );
