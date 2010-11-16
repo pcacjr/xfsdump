@@ -26,8 +26,8 @@
 
 /* nrh_t - handle to a registered name
  */
-typedef size32_t nrh_t;
-#define NRH_NULL	SIZE32MAX
+typedef size64_t nrh_t;
+#define NRH_NULL	SIZE64MAX
 
 
 /* namreg_init - creates the name registry. resync is TRUE if the

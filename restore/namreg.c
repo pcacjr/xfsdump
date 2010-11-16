@@ -72,26 +72,20 @@ typedef struct namreg_tran namreg_tran_t;
  */
 #define CHKBITCNT		2
 #define	CHKBITSHIFT		( NBBY * sizeof( nrh_t ) - CHKBITCNT )
-#define	CHKBITLOMASK		( ( 1 << CHKBITCNT ) - 1 )
+#define	CHKBITLOMASK		( ( 1ULL << CHKBITCNT ) - 1 )
 #define	CHKBITMASK		( CHKBITLOMASK << CHKBITSHIFT )
 #define CHKHDLCNT		CHKBITSHIFT
-#define CHKHDLMASK		( ( 1 << CHKHDLCNT ) - 1 )
-#define CHKGETBIT( h )		( ( h >> CHKBITSHIFT ) & CHKBITLOMASK )
-#define CHKGETHDL( h )		( h & CHKHDLMASK )
-#define CHKMKHDL( c, h )	( ( ( c << CHKBITSHIFT ) & CHKBITMASK )	\
+#define CHKHDLMASK		( ( 1ULL << CHKHDLCNT ) - 1 )
+#define CHKGETBIT( h )		( ( (h) >> CHKBITSHIFT ) & CHKBITLOMASK )
+#define CHKGETHDL( h )		( (h) & CHKHDLMASK )
+#define CHKMKHDL( c, h )	( ( ( (c) << CHKBITSHIFT ) & CHKBITMASK )	\
 				  |					\
-				  ( h & CHKHDLMASK ))
+				  ( (h) & CHKHDLMASK ))
 #define HDLMAX			( ( off64_t )CHKHDLMASK )
 
 #else /* NAMREGCHK */
 
-#define HDLMAX			( ( ( off64_t )1			\
-				    <<					\
-				    ( ( off64_t )NBBY			\
-				      *					\
-				      ( off64_t )sizeof( nrh_t )))	\
-				  -					\
-				  ( off64_t )2 ) /* 2 to avoid NRH_NULL */
+#define HDLMAX			( NRH_NULL - 1 )
 
 #endif /* NAMREGCHK */
 

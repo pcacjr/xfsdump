@@ -166,19 +166,18 @@ typedef struct tran tran_t;
 #define NODESZ	48
 
 struct node {
-	xfs_ino_t n_ino;		/* 8  8 ino */
-	nrh_t n_nrh;		/* 4 12 handle to name in name registry */
-	dah_t n_dah;		/* 4 16 handle to directory attributes */
-	nh_t n_hashh;		/* 4 20 hash array */
-	nh_t n_parh;		/* 4 24 parent */
-	nh_t n_sibh;		/* 4 28 sibling list */
-	nh_t n_sibprevh;	/* 4 32 prev sibling list - dbl link list */
-	nh_t n_cldh;		/* 4 36 children list */
-	nh_t n_lnkh;		/* 4 40 hard link list */
-	gen_t n_gen;		/* 2 42 generation count mod 0x10000 */
-	u_char_t n_flags;	/* 1 43 action and state flags */
-	u_char_t n_nodehkbyte;	/* 1 44 given to node abstraction */
-	int32_t pad;		/* 4 48 padding to 8 byte boundary */
+	xfs_ino_t n_ino;	/* 8  8 ino */
+	nrh_t n_nrh;		/* 8 16 handle to name in name registry */
+	dah_t n_dah;		/* 4 20 handle to directory attributes */
+	nh_t n_hashh;		/* 4 24 hash array */
+	nh_t n_parh;		/* 4 28 parent */
+	nh_t n_sibh;		/* 4 32 sibling list */
+	nh_t n_sibprevh;	/* 4 36 prev sibling list - dbl link list */
+	nh_t n_cldh;		/* 4 40 children list */
+	nh_t n_lnkh;		/* 4 44 hard link list */
+	gen_t n_gen;		/* 2 46 generation count mod 0x10000 */
+	u_char_t n_flags;	/* 1 47 action and state flags */
+	u_char_t n_nodehkbyte;	/* 1 48 given to node abstraction */
 };
 
 typedef struct node node_t;
@@ -3393,9 +3392,9 @@ Node_free( nh_t *nhp )
 		namreg_del( np->n_nrh );
 		np->n_nrh = NRH_NULL;
 	}
-	if ( np->n_dah != NRH_NULL ) {
+	if ( np->n_dah != DAH_NULL ) {
 		dirattr_del( np->n_dah );
-		np->n_dah = NRH_NULL;
+		np->n_dah = DAH_NULL;
 	}
 	np->n_flags = 0;
 	np->n_parh = NH_NULL;
