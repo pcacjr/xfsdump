@@ -49,9 +49,11 @@ extern nrh_t namreg_add( char *name, size_t namelen );
  */
 extern void namreg_del( nrh_t nrh );
 
-/* namreg_flush - flush namreg I/O buffer.  Returns 0 if successful.
+/* namreg_map - mmap the name registry, allowing for much
+ * faster namreg_get() lookups. once called, additional
+ * entries cannot be added.
  */
-extern rv_t namreg_flush( void );
+extern rv_t namreg_map( void );
 
 /* namreg_get - retrieves the name identified by the index.
  * fills the buffer with the null-terminated name from the registry.

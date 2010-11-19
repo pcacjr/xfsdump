@@ -3026,7 +3026,7 @@ applydirdump( drive_t *drivep,
 			return rv;
 		}
 
-		if ((rv = namreg_flush()) != RV_OK) {
+		if ((rv = namreg_map()) != RV_OK) {
 			return rv;
 		}
 

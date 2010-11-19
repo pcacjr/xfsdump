@@ -57,6 +57,7 @@ typedef struct namreg_pers namreg_pers_t;
 struct namreg_tran {
 	char *nt_pathname;
 	int nt_fd;
+	char *nt_map;
 	bool_t nt_at_endpr;
 	size_t nt_off;
 	char nt_buf[NAMREG_BUFSIZE];
@@ -96,6 +97,7 @@ extern size_t pgsz;
 
 /* forward declarations of locally defined static functions ******************/
 
+static rv_t namreg_flush( void );
 
 /* definition of locally defined global variables ****************************/
 
@@ -262,6 +264,7 @@ namreg_add( char *name, size_t namelen )
 	 */
 	ASSERT( ntp );
 	ASSERT( npp );
+	ASSERT( !ntp->nt_map );
 
 	/* make sure file pointer is positioned to append
 	 */
@@ -326,7 +329,7 @@ namreg_del( nrh_t nrh )
 	 */
 }
 
-rv_t
+static rv_t
 namreg_flush( void )
 {
 	ssize_t nwritten;
@@ -367,6 +370,7 @@ namreg_get( nrh_t nrh,
 	off64_t newoff;
 	intgen_t nread;
 	size_t len;
+	char *in_bufp;
 	static char read_buf[256];
 	/* long enough for the longest allowed name (255), plus 1 for length */
 #ifdef NAMREGCHK
@@ -403,41 +407,51 @@ namreg_get( nrh_t nrh,
 
 	lock( );
 
-	if ( ntp->nt_at_endpr && ntp->nt_off ) {
-		if (namreg_flush() != RV_OK) {
+	if ( ntp->nt_map ) {
+
+		in_bufp = ntp->nt_map + newoff - NAMREG_PERS_SZ;
+
+	} else {
+
+		if ( ntp->nt_at_endpr && ntp->nt_off ) {
+			if (namreg_flush() != RV_OK) {
+				unlock( );
+				return -3;
+			}
+		}
+
+		/* seek to the name
+		*/
+		newoff = lseek64( ntp->nt_fd, newoff, SEEK_SET );
+		if ( newoff == ( off64_t )-1 ) {
 			unlock( );
+			mlog( MLOG_NORMAL, _(
+				"lseek of namreg failed: %s\n"),
+				strerror( errno ));
 			return -3;
 		}
-	}
+		ntp->nt_at_endpr = BOOL_FALSE;
 
-	/* seek to the name
-	 */
-	newoff = lseek64( ntp->nt_fd, newoff, SEEK_SET );
-	if ( newoff == ( off64_t )-1 ) {
-		unlock( );
-		mlog( MLOG_NORMAL, _(
-		      "lseek of namreg failed: %s\n"),
-		      strerror( errno ));
-		return -3;
-	}
+		/* read the name length and the name itself in one call
+		 * NOTE: assumes read_buf is big enough for the longest
+		 * allowed name (255 chars) plus one byte for length.
+		 */
+		nread = read( ntp->nt_fd, ( void * )read_buf, sizeof(read_buf) );
+		if ( nread <= 0 ) {
+			unlock( );
+			mlog( MLOG_NORMAL, _(
+				"read of namreg failed: %s (nread = %d)\n"),
+				strerror( errno ),
+				nread );
+			return -3;
+		}
 
-	/* read the name length and the name itself in one call
-	 * NOTE: assumes read_buf is big enough for the longest
-	 * allowed name (255 chars) plus one byte for length.
-	 */
-	nread = read( ntp->nt_fd, ( void * )read_buf, sizeof(read_buf) );
-	if ( nread <= 0 ) {
-		unlock( );
-		mlog( MLOG_NORMAL, _(
-		      "read of namreg failed: %s (nread = %d)\n"),
-		      strerror( errno ),
-		      nread );
-		return -3;
+		in_bufp = read_buf;
 	}
 
 	/* deal with a short caller-supplied buffer
 	 */
-	len = ( size_t )read_buf[0];
+	len = ( size_t )in_bufp[0];
 	if ( bufsz < len + 1 ) {
 		unlock( );
 		return -1;
@@ -445,7 +459,7 @@ namreg_get( nrh_t nrh,
 
 	/* copy the name into the caller-supplied buffer.
 	 */
-	strncpy(bufp, read_buf+1, len);
+	strncpy(bufp, in_bufp+1, len);
 
 #ifdef NAMREGCHK
 
@@ -460,13 +474,37 @@ namreg_get( nrh_t nrh,
 	/* null-terminate the string if room
 	 */
 	bufp[ len ] = 0;
-
-	ntp->nt_at_endpr = BOOL_FALSE;
 	
 	unlock( );
 
 	return ( intgen_t )len;
 }
 
+rv_t
+namreg_map( void )
+{
+	rv_t rv;
+
+	/* ensure all entries have been written */
+	if ( (rv = namreg_flush()) != RV_OK ) {
+		return rv;
+	}
+
+	ntp->nt_map = ( char * ) mmap_autogrow(
+					npp->np_appendoff - NAMREG_PERS_SZ,
+					ntp->nt_fd,
+					NAMREG_PERS_SZ );
+
+	/* it's okay if this fails, just fall back to (the much slower)
+	 * seek-and-read lookups.
+	 */
+	if ( ntp->nt_map == ( char * )-1 ) {
+		mlog( MLOG_DEBUG, "failed to map namreg: %s\n",
+			strerror( errno ) );
+		ntp->nt_map = NULL;
+	}
+
+	return RV_OK;
+}
 
 /* definition of locally defined static functions ****************************/
