@@ -70,7 +70,7 @@ install: default
 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
 install-dev:
 
-depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
 
 $(COMMINCL) $(COMMON):
 	@echo "    [LN]     $@"
