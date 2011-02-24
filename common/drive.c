@@ -137,10 +137,6 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 	opterr = 0;
 	driveix = 0;
 	while ( ( c = getopt( argc, argv, GETOPT_CMDSTRING )) != EOF ) {
-		char optarray[100];
-		char *devname;
-		char *token;
-
 		switch ( c ) {
 		case GETOPT_DUMPDEST:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
@@ -151,21 +147,9 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 				return BOOL_FALSE;
 			}
 
-			/* remove the device name from the rest of the
-			 * parameter string. note that strdup malloc()s
-			 * a string; important since optarray is an auto.
-			 */
-			ASSERT( strlen( optarg ) < sizeof( optarray ));
-			strncpy( optarray, optarg, sizeof( optarray ));
-			optarray[ sizeof( optarray ) - 1 ] = 0;
-			if ( ( token = strtok( optarray, "," )) == NULL ) {
-				token = optarray;
-			}
-			devname = strdup( token );
-
 			/* allocate a drive descriptor
 			 */
-			drivepp[ driveix ] = drive_alloc( devname, driveix );
+			drivepp[ driveix ] = drive_alloc( optarg, driveix );
 			driveix++;
 			break;
 		}
