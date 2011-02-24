@@ -60,15 +60,18 @@ main(int argc, char *argv[])
     bool_t mntpnt_option = BOOL_FALSE;
     bool_t uuid_option = BOOL_FALSE;
     bool_t interactive_option = BOOL_FALSE;
+    bool_t session_option = BOOL_FALSE;
     static char version[32];
     char *mntPoint = NULL;
     char *r_mf_label = NULL;
     uuid_t uuid;
+    uuid_t session;
 
     snprintf(version, sizeof(version), "version %s", VERSION);
     g_programName = basename(argv[0]);
     g_programVersion = version;
     uuid_clear(uuid);
+    uuid_clear(session);
 
     while((c = getopt( argc, argv, GETOPT_CMDSTRING)) != EOF) {
 	switch(c) {
@@ -80,6 +83,13 @@ main(int argc, char *argv[])
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
 			 g_programName,
 			 GETOPT_FORCE,
+			 c );
+		usage();
+	    }
+	    if (session_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_PRUNESESSION,
 			 c );
 		usage();
 	    }
@@ -103,10 +113,10 @@ main(int argc, char *argv[])
 			 c );
 		usage();
 	    }
-	    if (mntpnt_option) {
+	    if (mntpnt_option || session_option) {
 		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
 			 g_programName,
-			 GETOPT_PRUNEMNT,
+			 mntpnt_option ? GETOPT_PRUNEMNT : GETOPT_PRUNESESSION,
 			 c );
 		usage();
 	    }
@@ -131,6 +141,13 @@ main(int argc, char *argv[])
 			 c );
 		usage();
 	    }
+	    if (session_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_PRUNESESSION,
+			 c );
+		usage();
+	    }
 	    check_option = BOOL_TRUE;
 	    break;
 	case GETOPT_FORCE:
@@ -151,10 +168,10 @@ main(int argc, char *argv[])
 			 c );
 		usage();
 	    }
-	    if (uuid_option) {
-		fprintf( stderr, "%s: may not specify both -%c and -%c\n", 
+	    if (uuid_option || session_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
 			 g_programName,
-			 GETOPT_UUID,
+			 uuid_option ? GETOPT_UUID : GETOPT_PRUNESESSION,
 			 c );
 		usage();
 	    }
@@ -163,6 +180,31 @@ main(int argc, char *argv[])
 	    break;
 	case GETOPT_PRUNEMEDIALABEL:
 	    r_mf_label = optarg;
+	    break;
+	case GETOPT_PRUNESESSION:
+	    if (check_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_CHECKPRUNEFSTAB,
+			 c );
+		usage();
+	    }
+	    if (interactive_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 GETOPT_INTERACTIVE,
+			 c );
+		usage();
+	    }
+	    if (mntpnt_option || uuid_option) {
+		fprintf( stderr, "%s: may not specify both -%c and -%c\n",
+			 g_programName,
+			 mntpnt_option ? GETOPT_PRUNEMNT : GETOPT_UUID,
+			 c );
+		usage();
+	    }
+	    session_option = BOOL_TRUE;
+	    uuid_parse(optarg, session);
 	    break;
 	default:
 	    usage();
@@ -209,7 +251,12 @@ main(int argc, char *argv[])
         char *tempstr = "test";
         time32_t temptime = 0;
         CheckAndPruneFstab(inventory_path, BOOL_TRUE, tempstr, &uuid,
-		temptime, NULL);
+		&session, temptime, NULL);
+    }
+    else if (session_option) {
+	CheckAndPruneFstab(
+		    inventory_path, BOOL_FALSE , mntPoint, &uuid,
+		    &session, (time32_t)0, r_mf_label);
     }
     else if (uuid_option || mntpnt_option) {
         time32_t timeSecs = ParseDate(argv[optind]);
@@ -221,7 +268,7 @@ main(int argc, char *argv[])
 	else {
 	    CheckAndPruneFstab(
 		    inventory_path, BOOL_FALSE , mntPoint, &uuid,
-		    timeSecs, r_mf_label);
+		    &session, timeSecs, r_mf_label);
 	}
     }
     else if ( interactive_option ) {
@@ -396,7 +443,7 @@ GetFstabFullPath(char *inv_path)
 
 void
 CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
-	uuid_t *uuidp, time32_t prunetime, char *r_mf_label)
+	uuid_t *uuidp, uuid_t *sessionp, time32_t prunetime, char *r_mf_label)
 {
     char	*fstabname;
     char	*mapaddr;
@@ -410,8 +457,9 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
     invt_fstab_t *fstabentry;
     invt_counter_t *counter,cnt;
 
-    if (mountPt == NULL && uuid_is_null(*uuidp)) {
-	fprintf( stderr, "%s: neither mountpoint nor uuid specified\n", g_programName );
+    if (mountPt == NULL && uuid_is_null(*uuidp) && uuid_is_null(*sessionp)) {
+	fprintf( stderr, "%s: mountpoint, uuid or session "
+			 "must be specified\n", g_programName );
 	fprintf( stderr, "%s: abnormal termination\n", g_programName );
 	exit(1);
     }
@@ -480,10 +528,16 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
 		    printf("     Match on directory name only: %s\n", mountPt);
 		    IdxCheckOnly = BOOL_FALSE;
 		}
+		else if (!uuid_is_null(*sessionp)) {
+		    // no session id to match against yet, defer deciding if this is
+		    // a check-only run until we have a session
+		    IdxCheckOnly = BOOL_FALSE;
+		}
 	    }
 
 	    if (CheckAndPruneInvIndexFile(
-			IdxCheckOnly, invname , prunetime, r_mf_label) == -1 ) {
+			IdxCheckOnly, invname, sessionp,
+			prunetime, r_mf_label) == -1 ) {
 		removeflag = BOOL_TRUE;
 	    }
 
@@ -538,6 +592,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
 int
 CheckAndPruneInvIndexFile( bool_t checkonly,
 			   char *idxFileName,
+			   uuid_t *sessionp,
 			   time32_t prunetime,
 			   char *r_mf_label) 
 {
@@ -551,7 +606,6 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
     invt_entry_t *invIndexEntry;
     invt_counter_t *counter;
     invt_counter_t header;
-    bool_t IdxCheckOnly = BOOL_TRUE;
 
     printf("      processing index file \n"
 	   "       %s\n",idxFileName);
@@ -594,14 +648,8 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 	    removeflag = BOOL_TRUE;
 	}    
 
-	if (( !removeflag ) && (checkonly == BOOL_FALSE) && 
-		( invIndexEntry[i].ie_timeperiod.tp_start < prunetime))
-	{
-	    IdxCheckOnly = BOOL_FALSE;
-	    printf("          Mount point match\n");
-	}
-	if (CheckAndPruneStObjFile(IdxCheckOnly, invIndexEntry[i].ie_filename,
-		    prunetime, r_mf_label) == -1) {
+	if (CheckAndPruneStObjFile(checkonly, invIndexEntry[i].ie_filename,
+		    sessionp, prunetime, r_mf_label) == -1) {
 	    removeflag = BOOL_TRUE; /* The StObj is gone */
 	}
 
@@ -657,6 +705,7 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
 int
 CheckAndPruneStObjFile( bool_t checkonly,
 			char *StObjFileName,
+			uuid_t *sessionp,
 			time32_t prunetime,
 		        char *r_mf_label) 
 {
@@ -668,6 +717,7 @@ CheckAndPruneStObjFile( bool_t checkonly,
     bool_t	removeflag;
     int		prunedcount = 0;
     int		removedcount = 0;
+    bool_t	session_match;
 
     struct stat	sb;
     char	str[UUID_STR_LEN + 1];
@@ -776,9 +826,14 @@ CheckAndPruneStObjFile( bool_t checkonly,
                checkonly, StObjhdr->sh_pruned); 
 #endif
 
+	session_match = !uuid_compare(*sessionp, StObjses->s_sesid);
+	if (session_match) {
+	    printf("\t\tMatch on session id\n");
+	}
+
 	if ((checkonly == BOOL_FALSE)
 	    && (! StObjhdr->sh_pruned)
-	    && (StObjhdr->sh_time < prunetime)
+	    && ((StObjhdr->sh_time < prunetime) || session_match)
 	    && (uses_specified_mf_label(StObjhdr, StObjses, temp, r_mf_label))){
 	    bool_t GotResponse = BOOL_FALSE;
 
@@ -1111,6 +1166,8 @@ usage (void)
     fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -M mount_point mm/dd/yyyy\n",
 		    pfxsz, "", g_programName);
     fprintf(stderr, "%*s%s [-F|-i] [-m media_label] -u UUID mm/dd/yyyy\n",
+		    pfxsz, "", g_programName);
+    fprintf(stderr, "%*s%s [-F] -s SESSION_ID\n",
 		    pfxsz, "", g_programName);
     fprintf(stderr, "%*s%s -i\n", pfxsz, "", g_programName);
     fprintf(stderr, "%*s%s -C\n", pfxsz, "", g_programName);

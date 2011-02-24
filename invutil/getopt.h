@@ -18,7 +18,7 @@
 #ifndef GETOPT_H
 #define GETOPT_H
 
-#define GETOPT_CMDSTRING	"dilnu:wCFM:m:"
+#define GETOPT_CMDSTRING	"dilnu:wCFM:m:s:"
 
 #define GETOPT_DEBUG		'd'	/* debug */
 #define GETOPT_INTERACTIVE	'i'	/* interactive mode */
@@ -29,5 +29,6 @@
 #define GETOPT_FORCE		'F'	/* force - do not ask for confirmation */
 #define GETOPT_PRUNEMNT		'M'	/* prune mount point */
 #define GETOPT_PRUNEMEDIALABEL	'm'	/* prune media label */
+#define GETOPT_PRUNESESSION	's'	/* prune session id */
 
 #endif /* GETOPT_H */

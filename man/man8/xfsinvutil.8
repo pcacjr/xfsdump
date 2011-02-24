@@ -5,6 +5,7 @@ xfsinvutil \- \&xfsdump inventory database checking and pruning utility
 .nf
 \f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-M \f2mount_point\f1 \f2mm/dd/yyyy\f1
 \f3xfsinvutil\f1 [\-F|\-i] [\-m \f2media_label\f1] \-u \f2UUID\f1 \f2mm/dd/yyyy\f1
+\f3xfsinvutil\f1 [\-F] \-s \f2SESSION_ID\f1
 \f3xfsinvutil\f1 \-i
 \f3xfsinvutil\f1 \-C
 .fi
@@ -63,6 +64,12 @@ in addition to those imposed by the date and the \f3\-M\f1 or
 \f3\-u\f1 options.  This option allows the pruning of all inventory
 references to media which may have been overwritten or lost. Note that
 this option does not apply to sessions with no media files.
+.TP 5
+\f3\-s\f1 \f2SESSION_ID\f1
+Prunes the dump session identified by the given session id.
+.I xfsinvutil
+will prompt the operator prior to pruning a dump session unless
+the \f3\-F\f1 option is given.
 .TP 5
 .B \-C
 With this option, 

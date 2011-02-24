@@ -44,9 +44,10 @@ extern bool_t	wait_for_locks;
 char *	GetFstabFullPath(char *);
 char *	GetNameOfInvIndex (char *, uuid_t);
 char *	GetNameOfStobj (char *inv_path, char *filename);
-void	CheckAndPruneFstab(char *, bool_t, char *, uuid_t *, time32_t, char *);
-int	CheckAndPruneInvIndexFile( bool_t, char *, time32_t, char *);
-int	CheckAndPruneStObjFile( bool_t, char *, time32_t, char *);
+void	CheckAndPruneFstab(
+		char *, bool_t, char *, uuid_t *, uuid_t *, time32_t, char *);
+int	CheckAndPruneInvIndexFile( bool_t, char *, uuid_t *, time32_t, char *);
+int	CheckAndPruneStObjFile( bool_t, char *, uuid_t *, time32_t, char *);
 int	uses_specified_mf_label(
 		invt_seshdr_t *, invt_session_t *, char	*, char *);
 time32_t ParseDate(char *);
