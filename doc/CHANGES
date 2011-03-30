@@ -1,3 +1,30 @@
+xfsdump-3.0.5 (30 March 2011)
+	- Release tags will now be digitally signed
+	- Quota files will now be dumped, regardless of the maxsize
+	  setting
+	- The new "-s sessid" flag allows inventory sessions to be
+	  pruned by their session ID.
+	- Fixed a bug in handling long dump filenames, and dropped
+	  (undocumented) support for encoding certain parameters
+	  within the dump filename
+	- NODECHK is now off by default, meaning xfsrestore will now
+	  support 16 times more directory entries (4 billion)
+	- nrh_t is now 64 bits wide, allowing xfsrestore to support
+	  dumps with up to 4 billion directory entries
+	- nix_t is no longer useful, and has been eliminated
+	- Memory use in xfsrestore is better managed now.  Segments
+	  of nodes are now power-of-2 sized, and allocated nodes are
+	  no longer needlessly zeroed and linked into the free list.
+	- Pathname resolution in xfsrestore has a number of
+	  performance improvements
+	- Better checking has been implemented for compatibility
+	  when resuming a cumulative restore
+	- Build system output has been cleaned up considerably
+	- Dead "namreg" code has been removed
+	- Build dependencies are now determined automatically
+	- Other miscellaneous build system improvements, as well bug
+	  fixes thanks to Mike Frysinger and Arkadiusz Miśkiewicz.
+
 xfsdump-3.0.4 (13 January 2010)
 	- Improve xfsinvutil man page and argument processing.
 	- Fix timestamp handling on 64-bit architectures in xfsinvutil.
