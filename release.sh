@@ -3,7 +3,7 @@
 # Automate generation a new release
 #
 
-. VERSION
+. ./VERSION
 
 version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
 date=`date +"%-d %B %Y"`
