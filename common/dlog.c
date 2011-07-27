@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
@@ -186,7 +187,6 @@ dlog_multi_query( char *querystr[ ],
 	/* sanity
 	 */
 	ASSERT( dlog_allowed_flag );
-	ASSERT( choicecnt < 9 );
 
 	/* display query description strings
 	 */
@@ -245,24 +245,21 @@ dlog_multi_query( char *querystr[ ],
 				  prepromptstr,
 				  choicecnt );
 		if ( ok ) {
+			long int val;
+			char *end = buf;
+
 			if ( ! strlen( buf )) {
 				return defaultix;
 			}
-			if ( strlen( buf ) != 1 ) {
+
+			val = strtol( buf, &end, 10 );
+			if ( *end != '\0' || val < 1 || val > choicecnt ) {
 				prepromptstr = _(
-				    "please enter a single "
-				    "digit response (1 to %d)");
-				continue;
-			}
-			if ( buf[ 0 ] < '1'
-			     ||
-			     buf[ 0 ] >= '1' + ( u_char_t )choicecnt ) {
-				prepromptstr = _(
-				      "please enter a single digit "
+				      "please enter a value "
 				      "between 1 and %d inclusive ");
 				continue;
 			}
-			return ( size_t )( buf[ 0 ] - '1' );
+			return val - 1; // return value is a 0-based index
 		} else {
 			return exceptionix;
 		}
