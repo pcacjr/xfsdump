@@ -11,6 +11,7 @@ DEBUG = @debug_build@
 OPTIMIZER = @opt_build@
 MALLOCLIB = @malloc_lib@
 LOADERFLAGS = @LDFLAGS@
+CFLAGS = @CFLAGS@
 
 LIBRMT = $(TOPDIR)/librmt/librmt.la
 LIBXFS = @libxfs@
