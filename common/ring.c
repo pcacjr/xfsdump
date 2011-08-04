@@ -412,7 +412,6 @@ ring_slave_entry( void *ringctxp )
 	sigset( SIGHUP, SIG_IGN );
 	sigset( SIGINT, SIG_IGN );
 	sigset( SIGQUIT, SIG_IGN );
-	sigset( SIGPIPE, SIG_IGN );
 	sigset( SIGALRM, SIG_IGN );
 	sigset( SIGCLD, SIG_IGN );
 

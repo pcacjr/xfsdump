@@ -21,7 +21,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <signal.h>
 #include <errno.h>
 
 #include "rmtlib.h"
@@ -55,20 +54,16 @@ unsigned int nbyte;
 static int _rmt_write(int fildes, char *buf, unsigned int nbyte)
 {
 	char buffer[BUFMAGIC];
-	void (*pstat)();
 
 	sprintf(buffer, "W%d\n", nbyte);
 	if (_rmt_command(fildes, buffer) == -1)
 		return(-1);
 
-	pstat = signal(SIGPIPE, SIG_IGN);
 	if (write(WRITE(fildes), buf, nbyte) == nbyte)
 	{
-		signal (SIGPIPE, pstat);
 		return(_rmt_status(fildes));
 	}
 
-	signal (SIGPIPE, pstat);
 	_rmt_abort(fildes);
 	setoserror( EIO );
 	return(-1);

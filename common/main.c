@@ -135,7 +135,6 @@ static time32_t stop_deadline;
 static bool_t stop_in_progress;
 static bool_t sighup_received;
 static bool_t sigterm_received;
-static bool_t sigpipe_received;
 static bool_t sigquit_received;
 static bool_t sigint_received;
 static size_t prbcld_cnt;
@@ -547,13 +546,18 @@ main( int argc, char *argv[] )
 	 * be released at pre-emption points and upon pausing in the main
 	 * loop.
 	 */
+
+	/* always ignore SIGPIPE, instead handle EPIPE as part
+	 * of normal sys call error handling
+	 */
+	sigset( SIGPIPE, SIG_IGN );
+
 	if ( ! miniroot && ! pipeline ) {
 		stop_in_progress = BOOL_FALSE;
 		coredump_requested = BOOL_FALSE;
 		sighup_received = BOOL_FALSE;
 		sigterm_received = BOOL_FALSE;
 		sigint_received = BOOL_FALSE;
-		sigpipe_received = BOOL_FALSE;
 		sigquit_received = BOOL_FALSE;
 		sigstray_received = BOOL_FALSE;
 		prbcld_cnt = 0;
@@ -563,8 +567,6 @@ main( int argc, char *argv[] )
 		sighold( SIGHUP );
 		sigset( SIGTERM, sighandler );
 		sighold( SIGTERM );
-		sigset( SIGPIPE, sighandler );
-		sighold( SIGPIPE );
 		sigset( SIGQUIT, sighandler );
 		sighold( SIGQUIT );
 		alarm( 0 );
@@ -596,7 +598,6 @@ main( int argc, char *argv[] )
 		sigset( SIGINT, sighandler );
 		sigset( SIGHUP, sighandler );
 		sigset( SIGTERM, sighandler );
-		sigset( SIGPIPE, sighandler );
 
 		ok = drive_init2( argc,
 				  argv,
@@ -804,16 +805,6 @@ main( int argc, char *argv[] )
 			sigterm_received = BOOL_FALSE;
 		}
 
-		/* request a stop on loss of write pipe
-		 */
-		if ( sigpipe_received ) {
-			mlog( MLOG_DEBUG | MLOG_PROC,
-			      "SIGPIPE received\n" );
-			stop_requested = BOOL_TRUE;
-			stop_timeout = STOP_TIMEOUT;
-			sigpipe_received = BOOL_FALSE;
-		}
-		
 		/* operator send SIGQUIT. treat like an interrupt,
 		 * but force a core dump
 		 */
@@ -889,14 +880,12 @@ main( int argc, char *argv[] )
 		sigrelse( SIGINT );
 		sigrelse( SIGHUP );
 		sigrelse( SIGTERM );
-		sigrelse( SIGPIPE );
 		sigrelse( SIGQUIT );
 		sigrelse( SIGALRM );
 		( void )sigpause( SIGCLD );
 		sighold( SIGCLD );
 		sighold( SIGALRM );
 		sighold( SIGQUIT );
-		sighold( SIGPIPE );
 		sighold( SIGTERM );
 		sighold( SIGHUP );
 		sighold( SIGINT );
@@ -1130,11 +1119,9 @@ preemptchk( int flg )
 	sigrelse( SIGINT );
 	sigrelse( SIGHUP );
 	sigrelse( SIGTERM );
-	sigrelse( SIGPIPE );
 	sigrelse( SIGQUIT );
 
 	sighold( SIGQUIT );
-	sighold( SIGPIPE );
 	sighold( SIGTERM );
 	sighold( SIGHUP );
 	sighold( SIGINT );
@@ -1170,13 +1157,6 @@ preemptchk( int flg )
 		sigterm_received = BOOL_FALSE;
 	}
 
-	if ( sigpipe_received ) {
-		mlog( MLOG_DEBUG | MLOG_PROC,
-		      "SIGPIPE received\n" );
-		preempt_requested = BOOL_TRUE;
-		sigpipe_received = BOOL_FALSE;
-	}
-	
 	if ( sigquit_received ) {
 		mlog( MLOG_DEBUG | MLOG_PROC,
 		      "SIGQUIT received (preempt)\n" );
@@ -1602,14 +1582,6 @@ sighandler( int signo )
 			dlog_desist( );
 			sigquit_received = BOOL_TRUE;
 			return;
-		case SIGPIPE:
-			/* immediately disable further dialogs,
-			 * and ignore subsequent signals
-			 */
-			dlog_desist( );
-			sigpipe_received = BOOL_TRUE;
-			( void )sigset( signo, SIG_IGN );
-			return;
 		case SIGALRM:
 			return;
 		default:
@@ -1637,14 +1609,6 @@ sighandler( int signo )
 		case SIGQUIT:
 			/* can get SIGQUIT during dialog: just dismiss
 			 */
-			return;
-		case SIGPIPE:
-			/* forward write pipe failures to parent,
-			 * and ignore subsequent failures
-			 */
-			dlog_desist( );
-			kill( parentpid, SIGPIPE );
-			( void )sigset( signo, SIG_IGN );
 			return;
 		case SIGALRM:
 			/* accept and do nothing about alarm signals
@@ -1678,7 +1642,6 @@ childmain( void *arg1 )
 	sigset( SIGTERM, SIG_IGN );
 	sigset( SIGINT, SIG_IGN );
 	sigset( SIGQUIT, SIG_IGN );
-	sigset( SIGPIPE, SIG_IGN );
 	sigset( SIGALRM, SIG_IGN );
 	sigset( SIGCLD, SIG_IGN );
 

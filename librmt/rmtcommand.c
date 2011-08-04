@@ -21,7 +21,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <signal.h>
 #include <errno.h>
 
 #include "rmtlib.h"
@@ -36,19 +35,16 @@ int fildes;
 char *buf;
 {
 	register int blen;
-	void (*pstat)();
 
 	_rmt_msg(RMTDBG, "rmtcommand: fd = %d, buf = %s\n", fildes, buf);
 
 /*
- *	save current pipe status and try to make the request
+ *	try to make the request
  */
 
 	blen = strlen(buf);
-	pstat = signal(SIGPIPE, SIG_IGN);
 	if (write(WRITE(fildes), buf, blen) == blen)
 	{
-		signal(SIGPIPE, pstat);
 		return(0);
 	}
 
@@ -56,7 +52,6 @@ char *buf;
  *	something went wrong. close down and go home
  */
 
-	signal(SIGPIPE, pstat);
 	_rmt_abort(fildes);
 
 	setoserror( EIO );
