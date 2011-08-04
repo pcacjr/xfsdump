@@ -24,11 +24,9 @@
 #include <sys/sem.h>
 #include <sys/prctl.h>
 #include <time.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/sysmacros.h>
-#include <sys/signal.h>
 #include <malloc.h>
 #include <sched.h>
 
@@ -55,12 +53,6 @@
 
 /* remote tape protocol debug
  */
-#ifdef OPENMASKED
-static intgen_t open_masked_signals( char *path, int oflags );
-#else /* OPENMASKED */
-#define open_masked_signals(p,f)	open(p,f)
-#endif /* OPENMASKED */
-
 #ifdef RMT
 #ifdef RMTDBG
 #define	open(p,f)		dbgrmtopen(p,f)
@@ -539,7 +531,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 
 	if ( strchr( drivep->d_pathname, ':')) {
 		errno = 0;
-		fd = open_masked_signals( drivep->d_pathname, O_RDONLY );
+		fd = open( drivep->d_pathname, O_RDONLY );
 		if ( fd < 0 ) {
 			return -10;
 		}
@@ -4682,7 +4674,7 @@ Open( drive_t *drivep )
 	ASSERT( contextp->dc_fd == -1 );
 
 	errno = 0;
-	contextp->dc_fd = open_masked_signals( drivep->d_pathname, oflags );
+	contextp->dc_fd = open( drivep->d_pathname, oflags );
 
 	if ( contextp->dc_fd <= 0 ) {
 		return BOOL_FALSE;
@@ -5425,52 +5417,6 @@ isefsdump( drive_t *drivep )
 		return BOOL_FALSE;
 	}
 }
-
-#ifdef OPENMASKED
-
-static intgen_t
-open_masked_signals( char *pathname, int oflags )
-{
-	bool_t isrmtpr;
-	SIG_PF sigalrm_save;
-	SIG_PF sigint_save;
-	SIG_PF sighup_save;
-	SIG_PF sigquit_save;
-	SIG_PF sigcld_save;
-	intgen_t rval;
-	intgen_t saved_errno;
-
-	if ( strchr( pathname, ':') ) {
-		isrmtpr = BOOL_TRUE;
-	} else {
-		isrmtpr = BOOL_FALSE;
-	}
-
-	if ( isrmtpr ) {
-		sigalrm_save = sigset( SIGALRM, SIG_IGN );
-		sigint_save = sigset( SIGINT, SIG_IGN );
-		sighup_save = sigset( SIGHUP, SIG_IGN );
-		sigquit_save = sigset( SIGQUIT, SIG_IGN );
-		sigcld_save = sigset( SIGCLD, SIG_IGN );
-	}
-
-	errno = 0;
-	rval = open( pathname, oflags );
-	saved_errno = errno;
-
-	if ( isrmtpr ) {
-		( void )sigset( SIGCLD, sigcld_save );
-		( void )sigset( SIGQUIT, sigquit_save );
-		( void )sigset( SIGHUP, sighup_save );
-		( void )sigset( SIGINT, sigint_save );
-		( void )sigset( SIGALRM, sigalrm_save );
-	}
-
-	errno = saved_errno;
-	return rval;
-}
-
-#endif /* OPENMASKED */
 
 /*
  * General purpose routine which dredges through procfs trying to
