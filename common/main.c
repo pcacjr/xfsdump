@@ -599,6 +599,7 @@ main( int argc, char *argv[] )
 		sigset( SIGINT, sighandler );
 		sigset( SIGHUP, sighandler );
 		sigset( SIGTERM, sighandler );
+		sigset( SIGQUIT, sighandler );
 
 		ok = drive_init2( argc,
 				  argv,
@@ -1487,6 +1488,11 @@ mrh_sighandler( int signo )
 static void
 sighandler( int signo )
 {
+	/* dialog gets first crack at the signal
+	 */
+	if ( dlog_sighandler( signo ) )
+		return;
+
 	/* if in miniroot, don't do anything risky. just quit.
 	 */
 	if ( miniroot || pipeline ) {

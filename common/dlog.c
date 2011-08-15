@@ -40,6 +40,8 @@ static volatile bool_t dlog_allowed_flag = BOOL_FALSE;
 static bool_t dlog_timeouts_flag = BOOL_FALSE;
 static char *promptstr = " -> ";
 
+static sigset_t dlog_registered_sigs;
+
 static bool_t promptinput( char *buf,
 			   size_t bufsz,
 			   ix_t *exceptionixp,
@@ -50,7 +52,6 @@ static bool_t promptinput( char *buf,
 			   ix_t sigquitix,
 			   char *fmt, ... );
 static void dlog_string_query_print( void *ctxp, char *fmt, ... );
-static void sighandler( int );
 
 bool_t
 dlog_init( int argc, char *argv[ ] )
@@ -66,6 +67,8 @@ dlog_init( int argc, char *argv[ ] )
 	dlog_ttyfd = 0; /* stdin */
 	dlog_allowed_flag = BOOL_TRUE;
 	dlog_timeouts_flag = BOOL_TRUE;
+
+	sigemptyset( &dlog_registered_sigs );
 
 	/* look for command line option claiming the operator knows
 	 * what's up.
@@ -342,10 +345,15 @@ dlog_string_ack( char *ackstr[ ], size_t ackcnt )
  */
 static volatile int dlog_signo_received;
 
-static void
-sighandler( int signo )
+bool_t
+dlog_sighandler( int signo )
 {
+	if ( sigismember( &dlog_registered_sigs, signo ) < 1 )
+		return BOOL_FALSE;
+	// only process the first signal
+	sigemptyset( &dlog_registered_sigs );
 	dlog_signo_received = signo;
+	return BOOL_TRUE;
 }
 
 /* ARGSUSED */
@@ -374,10 +382,6 @@ promptinput( char *buf,
 	     ... )
 {
 	va_list args;
-	void (* sigint_save)(int) = NULL;
-	void (* sighup_save)(int) = NULL;
-	void (* sigterm_save)(int) = NULL;
-	void (* sigquit_save)(int) = NULL;
 	time32_t now = time( NULL );
 	intgen_t nread = -1;
 	pid_t pid = getpid( );
@@ -410,27 +414,28 @@ promptinput( char *buf,
 	/* set up signal handling
 	 */
 	dlog_signo_received = -1;
+	sigemptyset( &dlog_registered_sigs );
 	if ( sigintix != IXMAX ) {
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sigrelse( SIGINT );
 		}
-		sigint_save = sigset( SIGINT, sighandler );
+		sigaddset( &dlog_registered_sigs, SIGINT );
 	}
 	if ( sighupix != IXMAX ) {
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sigrelse( SIGHUP );
 		}
-		sighup_save = sigset( SIGHUP, sighandler );
+		sigaddset( &dlog_registered_sigs, SIGHUP );
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sigrelse( SIGTERM );
 		}
-		sigterm_save = sigset( SIGTERM, sighandler );
+		sigaddset( &dlog_registered_sigs, SIGTERM );
 	}
 	if ( sigquitix != IXMAX ) {
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sigrelse( SIGQUIT );
 		}
-		sigquit_save = sigset( SIGQUIT, sighandler );
+		sigaddset( &dlog_registered_sigs, SIGQUIT );
 	}
 
 	/* wait for input, timeout, or interrupt.
@@ -457,24 +462,21 @@ promptinput( char *buf,
 
 	/* restore signal handling
 	 */
+	sigemptyset( &dlog_registered_sigs );
 	if ( sigquitix != IXMAX ) {
-		( void )sigset( SIGQUIT, sigquit_save );
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sighold( SIGQUIT );
 		}
 	}
 	if ( sighupix != IXMAX ) {
-		( void )sigset( SIGHUP, sighup_save );
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sighold( SIGHUP );
 		}
-		( void )sigset( SIGTERM, sigterm_save );
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sighold( SIGTERM );
 		}
 	}
 	if ( sigintix != IXMAX ) {
-		( void )sigset( SIGINT, sigint_save );
 		if ( pid == parentpid && ! miniroot ) {
 			( void )sighold( SIGINT );
 		}

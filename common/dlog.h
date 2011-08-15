@@ -41,6 +41,9 @@ extern void dlog_desist( void );
  */
 extern intgen_t dlog_fd( void );
 
+/* returns BOOL_TRUE if a dialog consumed the given signal
+ */
+extern bool_t dlog_sighandler( int signo );
 
 /* bracket a dialog session
  */
