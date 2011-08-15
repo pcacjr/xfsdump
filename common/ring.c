@@ -404,15 +404,19 @@ ring_slave_put( ring_t *ringp, ring_msg_t *msgp )
 static int
 ring_slave_entry( void *ringctxp )
 {
+	sigset_t blocked_set;
 	ring_t *ringp = ( ring_t * )ringctxp;
 	enum { LOOPMODE_NORMAL, LOOPMODE_IGNORE, LOOPMODE_DIE } loopmode;
 
-	/* ignore signals
+	/* block signals, let the main thread handle them
 	 */
-	sigset( SIGHUP, SIG_IGN );
-	sigset( SIGINT, SIG_IGN );
-	sigset( SIGQUIT, SIG_IGN );
-	sigset( SIGALRM, SIG_IGN );
+	sigemptyset( &blocked_set );
+	sigaddset( &blocked_set, SIGINT );
+	sigaddset( &blocked_set, SIGHUP );
+	sigaddset( &blocked_set, SIGTERM );
+	sigaddset( &blocked_set, SIGQUIT );
+	sigaddset( &blocked_set, SIGALRM );
+	sigprocmask( SIG_SETMASK, &blocked_set, NULL );
 
 	/* record slave pid to be used to kill slave
 	 */

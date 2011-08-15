@@ -1701,6 +1701,7 @@ baseuuidbypass:
 	if ( sc_inv_updatepr ) {
 		char *qmntpnt;
 		char *qfsdevice;
+		sigset_t tty_set, orig_set;
 
 		rval = atexit( inv_cleanup );
 		ASSERT( ! rval );
@@ -1738,9 +1739,11 @@ baseuuidbypass:
 
 		/* hold tty signals while creating a new inventory session
 		 */
-		( void )sighold( SIGINT );
-		( void )sighold( SIGQUIT );
-		( void )sighold( SIGHUP );
+		sigemptyset( &tty_set );
+		sigaddset( &tty_set, SIGINT );
+		sigaddset( &tty_set, SIGQUIT );
+		sigaddset( &tty_set, SIGHUP );
+		sigprocmask( SIG_BLOCK, &tty_set, &orig_set );
 
 		sc_inv_sestoken = inv_writesession_open( sc_inv_idbtoken,
 						&fsid,
@@ -1755,9 +1758,7 @@ baseuuidbypass:
 						qmntpnt,
 						qfsdevice );
 		if( sc_inv_sestoken == INV_TOKEN_NULL ) {
-			( void )sigrelse( SIGINT );
-			( void )sigrelse( SIGQUIT );
-			( void )sigrelse( SIGHUP );
+			sigprocmask( SIG_SETMASK, &orig_set, NULL );
 			return BOOL_FALSE;
 		}
 
@@ -1782,16 +1783,12 @@ baseuuidbypass:
 				free( ( void * )drvpath );
 			}
 			if ( sc_inv_stmtokenp[ strmix ] == INV_TOKEN_NULL ) {
-				( void )sigrelse( SIGINT );
-				( void )sigrelse( SIGQUIT );
-				( void )sigrelse( SIGHUP );
+				sigprocmask( SIG_SETMASK, &orig_set, NULL );
 				return BOOL_FALSE;
 			}
 		}
 
-		( void )sigrelse( SIGINT );
-		( void )sigrelse( SIGQUIT );
-		( void )sigrelse( SIGHUP );
+		sigprocmask( SIG_SETMASK, &orig_set, NULL );
 	}
 
 	/* set media change flags to FALSE;

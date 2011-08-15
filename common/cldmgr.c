@@ -23,7 +23,6 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/prctl.h>
-#include <signal.h>
 #include <errno.h>
 
 #include "types.h"
@@ -217,10 +216,6 @@ cldmgr_entry( void *arg1 )
 	/* REFERENCED */
 	bool_t ok;
 
-	signal( SIGHUP, SIG_IGN );
-	signal( SIGINT, SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	alarm( 0 );
 	cldp->c_pid = pid;
 	ok = qlock_thrdinit( );
 	ASSERT( ok );

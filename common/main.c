@@ -167,6 +167,7 @@ main( int argc, char *argv[] )
 	bool_t coredump_requested = BOOL_FALSE;
 	intgen_t exitcode;
 	rlim64_t tmpstacksz;
+	struct sigaction sa;
 	bool_t ok;
 	/* REFERENCED */
 	int rval;
@@ -546,17 +547,22 @@ main( int argc, char *argv[] )
 	 * loop.
 	 */
 
-	/* always ignore SIGPIPE, instead handle EPIPE as part
-	 * of normal sys call error handling
-	 */
-	sigset( SIGPIPE, SIG_IGN );
+	sigfillset(&sa.sa_mask);
+	sa.sa_flags = 0;
 
-	/* explicitly ignore SIGCHLD so that if librmt rsh sessions exit
-	 * early they do not become zombies
+	/* always ignore SIGPIPE, instead handle EPIPE as part
+	 * of normal sys call error handling.
+	 *
+	 * explicitly ignore SIGCHLD so that if librmt rsh sessions
+	 * exit early they do not become zombies.
 	 */
-	sigset( SIGCHLD, SIG_IGN );
+	sa.sa_handler = SIG_IGN;
+	sigaction( SIGPIPE, &sa, NULL );
+	sigaction( SIGCHLD, &sa, NULL );
 
 	if ( ! miniroot && ! pipeline ) {
+		sigset_t blocked_set;
+
 		stop_in_progress = BOOL_FALSE;
 		coredump_requested = BOOL_FALSE;
 		sighup_received = BOOL_FALSE;
@@ -565,17 +571,23 @@ main( int argc, char *argv[] )
 		sigquit_received = BOOL_FALSE;
 		sigstray_received = BOOL_FALSE;
 		prbcld_cnt = 0;
-		sigset( SIGINT, sighandler );
-		sighold( SIGINT );
-		sigset( SIGHUP, sighandler );
-		sighold( SIGHUP );
-		sigset( SIGTERM, sighandler );
-		sighold( SIGTERM );
-		sigset( SIGQUIT, sighandler );
-		sighold( SIGQUIT );
+
 		alarm( 0 );
-		sigset( SIGALRM, sighandler );
-		sighold( SIGALRM );
+
+		sigemptyset( &blocked_set );
+		sigaddset( &blocked_set, SIGINT );
+		sigaddset( &blocked_set, SIGHUP );
+		sigaddset( &blocked_set, SIGTERM );
+		sigaddset( &blocked_set, SIGQUIT );
+		sigaddset( &blocked_set, SIGALRM );
+		sigprocmask( SIG_SETMASK, &blocked_set, NULL );
+
+		sa.sa_handler = sighandler;
+		sigaction( SIGINT, &sa, NULL );
+		sigaction( SIGHUP, &sa, NULL );
+		sigaction( SIGTERM, &sa, NULL );
+		sigaction( SIGQUIT, &sa, NULL );
+		sigaction( SIGALRM, &sa, NULL );
 	}
 
 	/* do content initialization.
@@ -596,10 +608,11 @@ main( int argc, char *argv[] )
 	if ( miniroot || pipeline ) {
 		intgen_t exitcode;
 
-		sigset( SIGINT, sighandler );
-		sigset( SIGHUP, sighandler );
-		sigset( SIGTERM, sighandler );
-		sigset( SIGQUIT, sighandler );
+		sa.sa_handler = sighandler;
+		sigaction( SIGINT, &sa, NULL );
+		sigaction( SIGHUP, &sa, NULL );
+		sigaction( SIGTERM, &sa, NULL );
+		sigaction( SIGQUIT, &sa, NULL );
 
 		ok = drive_init2( argc,
 				  argv,
@@ -691,6 +704,7 @@ main( int argc, char *argv[] )
 		time32_t now;
 		bool_t stop_requested = BOOL_FALSE;
 		intgen_t stop_timeout = -1;
+		sigset_t empty_set;
 
 		/* if there was an initialization error,
 		 * immediately stop all children.
@@ -879,16 +893,8 @@ main( int argc, char *argv[] )
 
 		/* sleep until next signal
 		 */
-		sigrelse( SIGINT );
-		sigrelse( SIGHUP );
-		sigrelse( SIGTERM );
-		sigrelse( SIGQUIT );
-		( void )sigpause( SIGALRM );
-		sighold( SIGALRM );
-		sighold( SIGQUIT );
-		sighold( SIGTERM );
-		sighold( SIGHUP );
-		sighold( SIGINT );
+		sigemptyset( &empty_set );
+		sigsuspend( &empty_set );
 		( void )alarm( 0 );
 	}
 
@@ -896,14 +902,9 @@ main( int argc, char *argv[] )
 	 */
 	if ( coredump_requested ) {
 		mlog( MLOG_DEBUG | MLOG_PROC,
-		      "parent sending SIGQUIT to self (pid %d)\n",
+		      "core dump requested, aborting (pid %d)\n",
 		      parentpid );
-		sigrelse( SIGQUIT );
-		sigset( SIGQUIT, SIG_DFL );
-		kill( parentpid, SIGQUIT );
-		for ( ; ; ) {
-			sleep( 1 );
-		}
+		abort();
 	}
 
 	/* determine if dump or restore was interrupted
@@ -1076,6 +1077,10 @@ bool_t
 preemptchk( int flg )
 {
 	bool_t preempt_requested;
+	int i;
+	int sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGQUIT };
+	int num_sigs = sizeof(sigs) / sizeof(sigs[0]);
+	sigset_t pending_set, handle_set;
 
 	/* see if a progress report needed
 	 */
@@ -1112,15 +1117,14 @@ preemptchk( int flg )
 	/* release signals momentarily to let any pending ones
 	 * invoke signal handler and set flags
 	 */
-	sigrelse( SIGINT );
-	sigrelse( SIGHUP );
-	sigrelse( SIGTERM );
-	sigrelse( SIGQUIT );
-
-	sighold( SIGQUIT );
-	sighold( SIGTERM );
-	sighold( SIGHUP );
-	sighold( SIGINT );
+	sigpending( &pending_set );
+	for ( i = 0; i < num_sigs; i++ ) {
+		if ( sigismember( &pending_set, sigs[i] ) == 1 ) {
+			sigfillset( &handle_set );
+			sigdelset( &handle_set, sigs[i] );
+			sigsuspend( &handle_set );
+		}
+	}
 
 	preempt_requested = BOOL_FALSE;
 
@@ -1548,14 +1552,6 @@ childmain( void *arg1 )
 	ix_t stix;
 	intgen_t exitcode;
 	drive_t *drivep;
-
-	/* ignore signals
-	 */
-	sigset( SIGHUP, SIG_IGN );
-	sigset( SIGTERM, SIG_IGN );
-	sigset( SIGINT, SIG_IGN );
-	sigset( SIGQUIT, SIG_IGN );
-	sigset( SIGALRM, SIG_IGN );
 
 	/* Determine which stream I am.
 	 */

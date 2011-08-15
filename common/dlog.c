@@ -32,9 +32,6 @@
 #include "dlog.h"
 #include "getopt.h"
 
-extern bool_t miniroot;
-extern pid_t parentpid;
-
 static int dlog_ttyfd = -1;
 static volatile bool_t dlog_allowed_flag = BOOL_FALSE;
 static bool_t dlog_timeouts_flag = BOOL_FALSE;
@@ -384,7 +381,7 @@ promptinput( char *buf,
 	va_list args;
 	time32_t now = time( NULL );
 	intgen_t nread = -1;
-	pid_t pid = getpid( );
+	sigset_t orig_set;
 
 	/* display the pre-prompt
 	 */
@@ -412,31 +409,27 @@ promptinput( char *buf,
 	}
 
 	/* set up signal handling
+	 * the mlog lock is held for the life of the dialog (see dlog_begin)
+	 * and it's possible the main thread, which normally does the signal
+	 * handling, is now waiting on the mlog lock trying to log a message.
+	 * so unblock the relevant signals for this thread. note this means
+	 * the current thread or the main thread might handle one of these
+	 * signals.
 	 */
 	dlog_signo_received = -1;
 	sigemptyset( &dlog_registered_sigs );
 	if ( sigintix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sigrelse( SIGINT );
-		}
 		sigaddset( &dlog_registered_sigs, SIGINT );
 	}
 	if ( sighupix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sigrelse( SIGHUP );
-		}
 		sigaddset( &dlog_registered_sigs, SIGHUP );
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sigrelse( SIGTERM );
-		}
 		sigaddset( &dlog_registered_sigs, SIGTERM );
 	}
 	if ( sigquitix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sigrelse( SIGQUIT );
-		}
 		sigaddset( &dlog_registered_sigs, SIGQUIT );
 	}
+
+	sigprocmask( SIG_UNBLOCK, &dlog_registered_sigs, &orig_set );
 
 	/* wait for input, timeout, or interrupt.
 	 * note we come out of the select() frequently in order to
@@ -462,25 +455,8 @@ promptinput( char *buf,
 
 	/* restore signal handling
 	 */
+	sigprocmask( SIG_SETMASK, &orig_set, NULL );
 	sigemptyset( &dlog_registered_sigs );
-	if ( sigquitix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sighold( SIGQUIT );
-		}
-	}
-	if ( sighupix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sighold( SIGHUP );
-		}
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sighold( SIGTERM );
-		}
-	}
-	if ( sigintix != IXMAX ) {
-		if ( pid == parentpid && ! miniroot ) {
-			( void )sighold( SIGINT );
-		}
-	}
 	
 	/* check for timeout or interrupt
 	 */
