@@ -100,7 +100,6 @@ static bool_t set_rlimits( void );
 #ifdef RESTORE
 static bool_t set_rlimits( size64_t * );
 #endif /* RESTORE */
-static char *exit_codestring( intgen_t code );
 static char *sig_numstring( intgen_t num );
 static char *strpbrkquotes( char *p, const char *sep );
 
@@ -2317,38 +2316,6 @@ set_rlimits( size64_t *vmszp )
 	*vmszp = vmsz;
 #endif /* RESTORE */
 	return BOOL_TRUE;
-}
-
-struct exit_printmap {
-	intgen_t code;
-	char *string;
-};
-
-typedef struct exit_printmap exit_printmap_t;
-
-static exit_printmap_t exit_printmap[ ] = {
-	{EXIT_NORMAL,	"EXIT_NORMAL"},
-	{EXIT_ERROR,	"EXIT_ERROR"},
-	{EXIT_INTERRUPT,"EXIT_INTERRUPT"},
-	{EXIT_FAULT,	"EXIT_FAULT"}
-};
-
-static char *
-exit_codestring( intgen_t code )
-{
-	exit_printmap_t *p = exit_printmap;
-	exit_printmap_t *endp = exit_printmap
-				+
-				( sizeof( exit_printmap )
-				  /
-				  sizeof( exit_printmap[ 0 ] ));
-	for ( ; p < endp ; p++ ) {
-		if ( p->code == code ) {
-			return p->string;
-		}
-	}
-
-	return "???";
 }
 
 struct sig_printmap {
