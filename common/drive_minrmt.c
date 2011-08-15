@@ -316,9 +316,6 @@ static intgen_t Write( drive_t *drivep,
 static intgen_t record_hdr_validate( drive_t *drivep,
 				     char *bufp,
 				     bool_t chkoffpr );
-static void ring_thread( void *clientctxp,
-			 int ( * entryp )( void *ringctxp ),
-			 void *ringctxp );
 static int ring_read( void *clientctxp, char *bufp );
 static int ring_write( void *clientctxp, char *bufp );
 static double percent64( off64_t num, off64_t denom );
@@ -602,7 +599,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 		contextp->dc_ringp = ring_create( contextp->dc_ringlen,
 						  STAPE_MAX_RECSZ,
 						  contextp->dc_ringpinnedpr,
-						  ring_thread,
+						  drivep->d_index,
 						  ring_read,
 						  ring_write,
 						  ( void * )drivep,
@@ -3799,24 +3796,6 @@ ring_write( void *clientctxp, char *bufp )
 {
 	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE, BOOL_TRUE );
 }
-
-static void
-ring_thread( void *clientctxp,
-	     int ( * entryp )( void *ringctxp ),
-	     void *ringctxp )
-{
-	drive_t *drivep = ( drive_t * )clientctxp;
-	/* REFERENCED */
-	bool_t ok;
-
-	ok = cldmgr_create( entryp,
-			    CLONE_VM,
-			    drivep->d_index,
-			    _("slave"),
-			    ringctxp );
-	ASSERT( ok );
-}
-
 
 static ring_msg_t *
 Ring_get( ring_t *ringp )

@@ -154,9 +154,9 @@ typedef struct ring ring_t;
 	
 
 /* ring_create - creates a ring. parameters supply the length of the ring,
- * the read/write buffer size, a function for creating a thread, a function
- * for reading, a function for writing, and a pointer to client context for the
- * read and write functions. returns a pointer to a ring if successful, a NULL
+ * the read/write buffer size, the drive index, a function for reading, a
+ * function for writing, and a pointer to client context for the read and
+ * write functions. returns a pointer to a ring if successful, a NULL
  * pointer if not. the read and write functions should return 0 on success,
  * or an error code on failure which will be recorded in the rm_rval field
  * of the message invoking the failed operation. if null pointer returned,
@@ -168,9 +168,7 @@ typedef struct ring ring_t;
 extern ring_t *ring_create( size_t ringlen,
 			    size_t bufsz,
 			    bool_t pinpr,
-			    void ( * threadfunc )( void *clientctxp,
-					    int ( * entryp )( void *ringctxp ),
-						   void *ringctxp ),
+			    ix_t drive_index,
 			    int ( * readfunc )( void *clientctxp, char *bufp ),
 			    int ( * writefunc )( void *clientctxp, char *bufp ),
 			    void *clientctxp,
