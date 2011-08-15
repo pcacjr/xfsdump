@@ -59,15 +59,9 @@ static pid_t cldmgr_parentpid;
 bool_t
 cldmgr_init( void )
 {
-	/* REFERENCED */
-	intgen_t rval;
-
 	( void )memset( ( void * )cld, 0, sizeof( cld ));
 	cldmgr_stopflag = BOOL_FALSE;
 	cldmgr_parentpid = getpid( );
-
-	rval = atexit( cldmgr_killall );
-	ASSERT( ! rval );
 
 	return BOOL_TRUE;
 }
@@ -123,27 +117,6 @@ cldmgr_stop( void )
 	 * locked up by main loop dialog
 	 */
 	cldmgr_stopflag = BOOL_TRUE;
-}
-
-/* cldmgr_killall()
- *
- */
-void
-cldmgr_killall( void )
-{
-	cld_t *p = cld;
-	cld_t *ep = cld + sizeof( cld ) / sizeof( cld[ 0 ] );
-
-	signal( SIGCLD, SIG_IGN );
-	for ( ; p < ep ; p++ ) {
-		if ( p->c_busy ) {
-			mlog( MLOG_NITTY | MLOG_PROC,
-			      "sending SIGKILL to pid %d\n",
-			      p->c_pid );
-			kill( p->c_pid, SIGKILL );
-			cldmgr_died( p->c_pid );
-		}
-	}
 }
 
 void
@@ -247,7 +220,6 @@ cldmgr_entry( void *arg1 )
 	signal( SIGHUP, SIG_IGN );
 	signal( SIGINT, SIG_IGN );
 	signal( SIGQUIT, SIG_IGN );
-	signal( SIGCLD, SIG_DFL );
 	alarm( 0 );
 	cldp->c_pid = pid;
 	ok = qlock_thrdinit( );

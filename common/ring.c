@@ -413,7 +413,6 @@ ring_slave_entry( void *ringctxp )
 	sigset( SIGINT, SIG_IGN );
 	sigset( SIGQUIT, SIG_IGN );
 	sigset( SIGALRM, SIG_IGN );
-	sigset( SIGCLD, SIG_IGN );
 
 	/* record slave pid to be used to kill slave
 	 */

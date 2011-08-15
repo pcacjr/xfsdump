@@ -483,7 +483,6 @@ main( int argc, char *argv[] )
 	 */
 	ok = drive_init1( argc, argv, miniroot );
 	if ( ! ok ) {
-		cldmgr_killall( );
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
@@ -552,6 +551,11 @@ main( int argc, char *argv[] )
 	 */
 	sigset( SIGPIPE, SIG_IGN );
 
+	/* explicitly ignore SIGCHLD so that if librmt rsh sessions exit
+	 * early they do not become zombies
+	 */
+	sigset( SIGCHLD, SIG_IGN );
+
 	if ( ! miniroot && ! pipeline ) {
 		stop_in_progress = BOOL_FALSE;
 		coredump_requested = BOOL_FALSE;
@@ -572,8 +576,6 @@ main( int argc, char *argv[] )
 		alarm( 0 );
 		sigset( SIGALRM, sighandler );
 		sighold( SIGALRM );
-		sigset( SIGCLD, sighandler );
-		sighold( SIGCLD );
 	}
 
 	/* do content initialization.
@@ -585,7 +587,6 @@ main( int argc, char *argv[] )
 	ok = content_init( argc, argv, vmsz / VMSZ_PER );
 #endif /* RESTORE */
 	if ( ! ok ) {
-		cldmgr_killall( );
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
@@ -881,9 +882,7 @@ main( int argc, char *argv[] )
 		sigrelse( SIGHUP );
 		sigrelse( SIGTERM );
 		sigrelse( SIGQUIT );
-		sigrelse( SIGALRM );
-		( void )sigpause( SIGCLD );
-		sighold( SIGCLD );
+		( void )sigpause( SIGALRM );
 		sighold( SIGALRM );
 		sighold( SIGQUIT );
 		sighold( SIGTERM );
@@ -895,10 +894,6 @@ main( int argc, char *argv[] )
 	/* check if core dump requested
 	 */
 	if ( coredump_requested ) {
-		mlog( MLOG_DEBUG | MLOG_PROC,
-		      "killing all remaining children\n" );
-		cldmgr_killall( );
-		sleep( 1 );
 		mlog( MLOG_DEBUG | MLOG_PROC,
 		      "parent sending SIGQUIT to self (pid %d)\n",
 		      parentpid );
@@ -1492,11 +1487,6 @@ mrh_sighandler( int signo )
 static void
 sighandler( int signo )
 {
-	/* get the pid and stream index
-	 */
-	pid_t pid = getpid( );
-	intgen_t stix = stream_getix( pid );
-
 	/* if in miniroot, don't do anything risky. just quit.
 	 */
 	if ( miniroot || pipeline ) {
@@ -1516,117 +1506,34 @@ sighandler( int signo )
 		exit( rval );
 	}
 
-	/* if death of a child of a child, bury the child and return.
-	 * probably rmt.
-	 */
-	if ( pid != parentpid && signo == SIGCLD ) {
-		intgen_t stat;
-		( void )wait( &stat );
-		( void )sigset( signo, sighandler );
-		return;
+	switch ( signo ) {
+	case SIGHUP:
+		/* immediately disable further dialogs
+		*/
+		dlog_desist( );
+		sighup_received = BOOL_TRUE;
+		break;
+	case SIGTERM:
+		/* immediately disable further dialogs
+		*/
+		dlog_desist( );
+		sigterm_received = BOOL_TRUE;
+		break;
+	case SIGINT:
+		sigint_received = BOOL_TRUE;
+		break;
+	case SIGQUIT:
+		/* immediately disable further dialogs
+		 */
+		dlog_desist( );
+		sigquit_received = BOOL_TRUE;
+		break;
+	case SIGALRM:
+		break;
+	default:
+		sigstray_received = signo;
+		break;
 	}
-
-	/* if neither parent nor managed child nor slave, exit
-	 */
-	if ( pid != parentpid && stix == -1 ) {
-		exit( 0 );
-	}
-
-	/* parent signal handling
-	 */
-	if ( pid == parentpid ) {
-		pid_t cid;
-		intgen_t stat;
-		switch ( signo ) {
-		case SIGCLD:
-			/* bury the child and notify the child manager
-			 * abstraction of its death, and record death stats
-			 */
-			cid = wait( &stat );
-			stix = stream_getix( cid );
-			cldmgr_died( cid );
-			if ( WIFSIGNALED( stat ) || WEXITSTATUS( stat ) > 0 ) {
-				if ( prbcld_cnt == 0 ) {
-					if ( WIFSIGNALED( stat )) {
-						prbcld_pid = cid;
-						prbcld_xc = 0;
-						prbcld_signo = WTERMSIG( stat );
-					} else if ( WEXITSTATUS( stat ) > 0 ) {
-						prbcld_pid = cid;
-						prbcld_xc = WEXITSTATUS( stat );
-						prbcld_signo = 0;
-					}
-				}
-				prbcld_cnt++;
-			}
-			( void )sigset( signo, sighandler );
-			return;
-		case SIGHUP:
-			/* immediately disable further dialogs
-			 */
-			dlog_desist( );
-			sighup_received = BOOL_TRUE;
-			return;
-		case SIGTERM:
-			/* immediately disable further dialogs
-			 */
-			dlog_desist( );
-			sigterm_received = BOOL_TRUE;
-			return;
-		case SIGINT:
-			sigint_received = BOOL_TRUE;
-			return;
-		case SIGQUIT:
-			/* immediately disable further dialogs
-			 */
-			dlog_desist( );
-			sigquit_received = BOOL_TRUE;
-			return;
-		case SIGALRM:
-			return;
-		default:
-			sigstray_received = signo;
-			return;
-		}
-	}
-
-	/* managed child handling
-	 */
-	if ( stream_getix( pid ) != -1 ) {
-		switch ( signo ) {
-		case SIGHUP:
-			/* can get SIGHUP during dialog: just dismiss
-			 */
-			return;
-		case SIGTERM:
-			/* can get SIGTERM during dialog: just dismiss
-			 */
-			return;
-		case SIGINT:
-			/* can get SIGINT during dialog: just dismiss
-			 */
-			return;
-		case SIGQUIT:
-			/* can get SIGQUIT during dialog: just dismiss
-			 */
-			return;
-		case SIGALRM:
-			/* accept and do nothing about alarm signals
-			 */
-			return;
-		default:
-			/* should not be any other captured signals:
-			 * request a core dump
-			 */
-			mlog_exit( EXIT_FAULT, RV_NONE );
-			exit( EXIT_FAULT );
-			return;
-		}
-	}
-
-	/* if some other child, just exit
-	 */
-	exit( 0 );
 }
 
 static int
@@ -1643,7 +1550,6 @@ childmain( void *arg1 )
 	sigset( SIGINT, SIG_IGN );
 	sigset( SIGQUIT, SIG_IGN );
 	sigset( SIGALRM, SIG_IGN );
-	sigset( SIGCLD, SIG_IGN );
 
 	/* Determine which stream I am.
 	 */

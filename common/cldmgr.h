@@ -40,10 +40,6 @@ extern bool_t cldmgr_create( int ( * entry )( void *arg1 ),
  */
 extern void cldmgr_stop( void );
 
-/* cldmgr_killall - kills all children
- */
-extern void cldmgr_killall( void );
-
 /* cldmgr_died - tells the child manager that the child died
  */
 extern void cldmgr_died( pid_t pid );
