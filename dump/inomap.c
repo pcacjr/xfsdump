@@ -1089,13 +1089,11 @@ inomap_init( intgen_t igrpcnt )
 	return 0;
 }
 
-#ifdef SIZEEST
 u_int64_t
 inomap_getsz( void )
 {
 	return (inomap.lastseg.hnkoff + 1) * HNKSZ;
 }
-#endif /* SIZEEST */
 
 static inline bool_t
 inomap_validaddr( seg_addr_t *addrp )

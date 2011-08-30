@@ -35,7 +35,6 @@
 #include "media.h"
 #include "arch_xlate.h"
 
-#ifdef RMT
 /* this rmt junk is here because the rmt protocol supports writing ordinary
  * (non-device) files in the remote /dev directory! yuck!
  */
@@ -52,7 +51,6 @@ extern int rmtioctl( int, int, ... );
 extern int rmtopen( char *, int, ... );
 extern int rmtread( int, void*, uint);
 extern int rmtwrite( int, const void *, uint);
-#endif
 
 
 /* drive_simple.c - drive strategy for standard in or a file

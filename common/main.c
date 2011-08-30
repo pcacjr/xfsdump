@@ -970,9 +970,7 @@ usage( void )
 	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY );
 	ULO(_("<maximum file size>"),			GETOPT_MAXDUMPFILESIZE );
 	ULO(_("(don't dump extended file attributes)"),	GETOPT_NOEXTATTR );
-#ifdef BASED
 	ULO(_("<base dump session id>"),		GETOPT_BASED );
-#endif /* BASED */
 #ifdef REVEAL
 	ULO(_("(generate tape record checksums)"),	GETOPT_RECCHKSUM );
 #endif /* REVEAL */
@@ -1043,9 +1041,7 @@ usage( void )
 #ifdef REVEAL
 	ULO(_("(pin down I/O buffers)"),		GETOPT_RINGPIN );
 #endif /* REVEAL */
-#ifdef SESSCPLT
 	ULO(_("(force interrupted session completion)"),GETOPT_SESSCPLT );
-#endif /* SESSCPLT */
 	ULO(_("(resume)"),				GETOPT_RESUME );
 	ULO(_("<session id>"),				GETOPT_SESSIONID );
 	ULO(_("(don't timeout dialogs)"),		GETOPT_NOTIMEOUTS );

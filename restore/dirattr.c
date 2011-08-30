@@ -197,11 +197,9 @@ static dirattr_pers_t *dpp = 0;
 bool_t
 dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 {
-#ifdef SESSCPLT
 	if ( dtp ) {
 		return BOOL_TRUE;
 	}
-#endif /* SESSCPLT */
 
 	/* sanity checks
 	 */

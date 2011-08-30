@@ -511,11 +511,9 @@ tree_sync( char *hkdir,
 	bool_t ok;
 	intgen_t rval;
 
-#ifdef SESSCPLT
 	if ( persp ) {
 		return BOOL_TRUE;
 	}
-#endif /* SESSCPLT */
 
 	/* sanity checks
 	 */
@@ -3028,8 +3026,6 @@ tsi_cmd_quit( void *ctxp,
 {
 }
 
-#ifdef WHITEPARSE
-
 static int parse( int slotcnt, char **slotbuf, char *string );
 
 static void
@@ -3046,31 +3042,6 @@ tsi_cmd_parse( char *buf )
 
 	tranp->t_inter.i_argc = ( size_t )min( max( 0, wordcnt ), INTER_ARGMAX );
 }
-
-#else /* WHITEPARSE */
-
-static void
-tsi_cmd_parse( char *buf )
-{
-	size_t argc;
-	char *t;
-	char *b;
-
-	if ( ! buf ) {
-		tranp->t_inter.i_argc = 0;
-		return;
-	}
-
-	argc = 0;
-	b = buf;
-	while ( argc < INTER_ARGMAX && ( t = strtok( b, " \t" )) != 0 ) {
-		tranp->t_inter.i_argv[ argc++ ] = t;
-		b = 0;
-	}
-	tranp->t_inter.i_argc = argc;
-}
-
-#endif /* WHITEPARSE */
 
 struct tsi_cmd_tbl {
 	char *tct_pattern;
@@ -4579,8 +4550,6 @@ tree_chk2_recurse( nh_t cldh, nh_t parh )
 
 #endif /* TREE_CHK */
 
-#ifdef WHITEPARSE
-
 static char *whites = " \t\r\n\v\f";
 
 static int is_white( char c );
@@ -4893,8 +4862,6 @@ octal_to_size( char c )
 
 	return 0;
 }
-
-#endif /* WHITEPARSE */
 
 static int
 mkdir_r(char *path)

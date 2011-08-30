@@ -386,9 +386,7 @@ static int getxfsqstat( char *fsdev );
 bool_t content_media_change_needed;
 char *media_change_alert_program = NULL;
 hsm_fs_ctxt_t *hsm_fs_ctxtp = NULL;
-#ifdef SIZEEST
 u_int64_t hdr_mfilesz = 0;
-#endif /* SIZEEST */
 u_int64_t maxdumpfilesize = 0;
 bool_t allowexcludefiles_pr = BOOL_FALSE;
 
@@ -555,12 +553,9 @@ content_init( intgen_t argc,
 	bool_t ok;
 	extern char *optarg;
 	extern int optind, opterr, optopt;
-#ifdef BASED
 	char *baseuuidstr = NULL;
 	uuid_t baseuuid;
 	bool_t baseuuidvalpr;
-#endif /* BASED */
-#ifdef SIZEEST
 	u_int64_t dircnt;
 	u_int64_t nondircnt;
 	u_int64_t datasz;
@@ -569,7 +564,6 @@ content_init( intgen_t argc,
 	u_int64_t direntsz;
 	u_int64_t filesz;
 	u_int64_t size_estimate;
-#endif /* SIZEEST */
 
 	/* basic sanity checks
 	 */
@@ -597,9 +591,7 @@ content_init( intgen_t argc,
 	optind = 1;
 	opterr = 0;
 	subtreecnt = 0;
-#ifdef BASED
 	baseuuidvalpr = BOOL_FALSE;
-#endif /* BASED */
 	while ( ( c = getopt( argc, argv, GETOPT_CMDSTRING )) != EOF ) {
 		switch ( c ) {
 		case GETOPT_LEVEL:
@@ -687,7 +679,6 @@ content_init( intgen_t argc,
 		case GETOPT_DUMPASOFFLINE:
 			sc_dumpasoffline = BOOL_TRUE;
 			break;
-#ifdef BASED
 		case GETOPT_BASED:
 			if ( ! optarg || optarg[ 0 ] == '-' ) {
 				mlog( MLOG_NORMAL | MLOG_ERROR, _(
@@ -707,11 +698,9 @@ content_init( intgen_t argc,
 				return BOOL_FALSE;
 			}
 			baseuuidvalpr = BOOL_TRUE;
-#endif /* BASED */
 		}
 	}
 
-#ifdef BASED
 	if ( resumereqpr && baseuuidvalpr ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR, _(
 		      "may not specify both -%c and -%c\n"),
@@ -719,7 +708,6 @@ content_init( intgen_t argc,
 		      GETOPT_RESUME );
 		return BOOL_FALSE;
 	}
-#endif /* BASED */
 
 	/* the user may specify stdout as the destination, by a single
 	 * dash ('-') with no option letter. This must appear between
@@ -815,20 +803,6 @@ content_init( intgen_t argc,
 			     sizeof( cwhdrtemplatep->ch_fstype ));
 	uuid_copy( cwhdrtemplatep->ch_fsid, fsid );
 
-
-#ifndef PIPEINVFIX
-
-	/* use of any pipes precludes inventory update
-	 */
-	for ( strmix = 0 ; strmix < drivecnt ; strmix++ ) {
-		if ( drivepp[ strmix ]->d_isnamedpipepr
-		     ||
-		     drivepp[ strmix ]->d_isunnamedpipepr ) {
-			sc_inv_updatepr = BOOL_FALSE;
-		}
-	}
-#endif /* ! PIPEINVFIX */
-
 	/* write quota information */
 	if( sc_savequotas ) {
 
@@ -881,7 +855,6 @@ content_init( intgen_t argc,
 			     INV_SEARCH_ONLY,
 			     ( void * )&fsid );
 
-#ifdef BASED
 	/* if a based request, look for the indicated session.
 	 * if found, and not interrupted, this will be used as an
 	 * incremental base. if interrupted, will be used as
@@ -997,7 +970,6 @@ content_init( intgen_t argc,
 		inv_idbt = INV_TOKEN_NULL;
 		goto baseuuidbypass;
 	}
-#endif /* BASED */
 
 	/* look for the most recent dump at a level less than the level
 	 * of this dump. extract the time, level, id, and predicates partial
@@ -1122,9 +1094,7 @@ content_init( intgen_t argc,
 		samefoundpr = BOOL_TRUE;
 	}
 
-#ifdef BASED
 baseuuidbypass:
-#endif /* BASED */
 
 	/* now determine the incremental and resume bases, if any.
 	 */
@@ -1528,7 +1498,6 @@ baseuuidbypass:
 	scwhdrtemplatep->cih_rootino = sc_rootxfsstatp->bs_ino;
 	inomap_writehdr( scwhdrtemplatep );
 
-#ifdef SIZEEST
 	/* log the dump size. just a rough approx.
 	 */
 	dircnt = scwhdrtemplatep->cih_inomap_dircnt;
@@ -1567,7 +1536,6 @@ baseuuidbypass:
 	      "file hdrs: %llu bytes, datasz: %llu bytes\n",
 	      GLOBAL_HDR_SZ, inomapsz, direntsz,
 	      filesz, datasz );
-#endif /* SIZEEST */
 
 	/* extract the progress stat denominators from the write hdr
 	 * template. placed there by inomap_writehdr( )
@@ -3985,9 +3953,7 @@ dump_file( void *arg1,
 	case S_IFNAM:
 #endif
 	case S_IFLNK:
-#ifdef DOSOCKS
 	case S_IFSOCK:
-#endif /* DOSOCKS */
 		/* only need a filehdr_t; no data
 		 */
 		rv = dump_file_spec( drivep, contextp, fshandlep, statp );
@@ -3998,18 +3964,6 @@ dump_file( void *arg1,
 			contextp->cc_stat_lastino = statp->bs_ino;
 		}
 		break; /* drop out of switch to extattr dump */
-#ifndef DOSOCKS
-	case S_IFSOCK:
-		/* don't dump these
-		 */
-		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
-			lock( );
-			sc_stat_nondirdone++;
-			unlock( );
-			contextp->cc_stat_lastino = statp->bs_ino;
-		}
-		return RV_OK;
-#endif /* ! DOSOCKS */
 	case S_IFDIR:
 	default:
 		/* don't know how to dump these

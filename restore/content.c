@@ -19,10 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
-#ifdef DOSOCKS
 #include <sys/socket.h>
 #include <sys/un.h>
-#endif /* DOSOCKS */
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -874,9 +872,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	bool_t ownerpr;	/* cmd line chown/chmod requested */
 	bool_t restoredmpr; /* cmd line restore dm api attrs specification */
 	bool_t restoreextattrpr; /* cmd line restore extended attr spec */
-#ifdef SESSCPLT
 	bool_t sesscpltpr; /* force completion of prev interrupted session */
-#endif /* SESSCPLT */
 	ix_t stcnt;	/* cmd line number of subtrees requested */
 	bool_t firststsensepr;
 	bool_t firststsenseprvalpr;
@@ -938,9 +934,7 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	ownerpr = BOOL_FALSE;
 	restoredmpr = BOOL_FALSE;
 	restoreextattrpr = BOOL_TRUE;
-#ifdef SESSCPLT
 	sesscpltpr = BOOL_FALSE;
-#endif /* SESSCPLT */
 	stcnt = 0;
 	firststsensepr = firststsenseprvalpr = BOOL_FALSE;
 	stsz = 0;
@@ -1159,11 +1153,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		case GETOPT_NOEXTATTR:
 			restoreextattrpr = BOOL_FALSE;
 			break;
-#ifdef SESSCPLT
 		case GETOPT_SESSCPLT:
 			sesscpltpr = BOOL_TRUE;
 			break;
-#endif /* SESSCPLT */
 		case GETOPT_SMALLWINDOW:
 			/* obsolete */
 			break;
@@ -1405,7 +1397,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			usage( );
 			return BOOL_FALSE;
 		}
-#ifdef SESSCPLT
 		if ( sesscpltpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
@@ -1414,7 +1405,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			usage( );
 			return BOOL_FALSE;
 		}
-#endif /* SESSCPLT */
 	} else if ( ! persp->s.valpr ) {
 		if ( ! cumpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
@@ -1430,7 +1420,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			usage( );
 			return BOOL_FALSE;
 		}
-#ifdef SESSCPLT
 		if ( sesscpltpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option invalid: there is no "
@@ -1439,7 +1428,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			usage( );
 			return BOOL_FALSE;
 		}
-#endif /* SESSCPLT */
 		if ( existpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating "
@@ -1477,7 +1465,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			return BOOL_FALSE;
 		}
 	} else {
-#ifdef SESSCPLT
 		if ( ! resumepr && ! sesscpltpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c option required to resume "
@@ -1489,15 +1476,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			      GETOPT_SESSCPLT );
 			return BOOL_FALSE;
 		}
-#else /* SESSCPLT */
-		if ( ! resumepr ) {
-			mlog( MLOG_NORMAL | MLOG_ERROR, _(
-			      "-%c option required to resume previously "
-			      "interrupted restore session\n"),
-			      GETOPT_RESUME );
-			return BOOL_FALSE;
-		}
-#endif /* SESSCPLT */
 		if ( tranp->t_reqdumplabvalpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "-%c valid only when initiating restore\n"),
@@ -1569,7 +1547,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 	 */
 	ownerpr = ( geteuid( ) == 0 ) ? BOOL_TRUE : ownerpr;
 
-#ifdef SESSCPLT
 	/* force completion of interrupted restore if asked to do so
 	 */
 	if ( sesscpltpr ) {
@@ -1637,7 +1614,6 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			return EXIT_FAULT;
 		}
 	}
-#endif /* SESSCPLT */
 
 	/* for the three cases, calculate old and new mapping params
 	 * and wipe partial state
@@ -2158,13 +2134,11 @@ content_stream_restore( ix_t thrdix )
 			     sizeof( persp->s.dumplab ));
 		sessp = 0;
 
-#ifdef PIPEINVFIX
 		/* don't look at the online inventory if the input is piped
 		 */
 		if ( ! drivep->d_isnamedpipepr
 		     &&
 		     ! drivep->d_isunnamedpipepr ) {
-#endif /* PIPEINVFIX */
 			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
 						     &sessp );
 			if ( ok && sessp ) {
@@ -2173,9 +2147,7 @@ content_stream_restore( ix_t thrdix )
 				persp->s.fullinvpr = pi_transcribe( sessp );
 				inv_free_session( &sessp );
 			}
-#ifdef PIPEINVFIX
 		}
-#endif /* PIPEINVFIX */
 		fileh = pi_addfile( Mediap,
 				    grhdrp,
 				    drhdrp,
@@ -2513,9 +2485,7 @@ content_stream_restore( ix_t thrdix )
 		switch ( rv ) {
 		case RV_OK:
 			DH2F( fileh )->f_nondirdonepr = BOOL_TRUE;
-#ifdef EOMFIX
 			Media_end( Mediap );
-#endif /* EOMFIX */
 			break;
 		case RV_INTR:
 		case RV_DRIVE:
@@ -2542,9 +2512,6 @@ content_stream_restore( ix_t thrdix )
 	lock( );
 	if ( tranp->t_sync5 == SYNC_BUSY ) {
 		unlock( );
-#ifndef EOMFIX
-		Media_end( Mediap );
-#endif /* ! EOMFIX */
 		return EXIT_NORMAL;
 	}
 	tranp->t_sync5 = SYNC_BUSY;
@@ -2566,28 +2533,16 @@ content_stream_restore( ix_t thrdix )
 	case RV_OK:
 		break;
 	case RV_ERROR:
-#ifndef EOMFIX
-		Media_end( Mediap );
-#endif /* ! EOMFIX */
 		return EXIT_ERROR;
 	case RV_INTR:
-#ifndef EOMFIX
-		Media_end( Mediap );
-#endif /* ! EOMFIX */
 		return EXIT_NORMAL;
 	case RV_CORE:
 	default:
-#ifndef EOMFIX
-		Media_end( Mediap );
-#endif /* ! EOMFIX */
 		return EXIT_FAULT;
 	}
 
 	/* made it! I'm last, now exit
 	 */
-#ifndef EOMFIX
-	Media_end( Mediap );
-#endif /* ! EOMFIX */
 	return EXIT_NORMAL;
 }
 
@@ -6436,9 +6391,6 @@ pi_hiteod( ix_t strmix, ix_t objix )
 static void
 pi_hiteom( ix_t strmix, ix_t objix )
 {
-#ifndef EOMFIX
-	pi_seestrmend( strmix );
-#endif /* ! EOMFIX */
 	pi_seeobjstrmend( strmix, objix );
 }
 
@@ -7253,9 +7205,7 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 #ifdef S_IFNAM
 		case S_IFNAM:
 #endif
-#ifdef DOSOCKS
 		case S_IFSOCK:
-#endif /* DOSOCKS */
 			ok = restore_spec( fhdrp, rvp, path1 );
 			return ok;
 		case S_IFLNK:
@@ -7707,11 +7657,9 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 		printstr = _("XENIX named pipe");
 		break;
 #endif
-#ifdef DOSOCKS
 	case S_IFSOCK:
 		printstr = _("UNIX domain socket");
 		break;
-#endif /* DOSOCKS */
 	default:
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "%s: unknown file type: mode 0x%x ino %llu\n"),
@@ -7734,7 +7682,6 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 	}
 
 	if ( ! tranp->t_toconlypr ) {
-#ifdef DOSOCKS
 		if ( ( bstatp->bs_mode & S_IFMT ) == S_IFSOCK ) {
 			int sockfd;
 			struct sockaddr_un addr;
@@ -7782,29 +7729,25 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 				return BOOL_TRUE;
 			}
 			( void )close( sockfd );
-			goto sockbypass;
-		}
-#endif /* DOSOCKS */
 
-		/* create the node
-		 */
-		rval = mknod( path,
-			      ( mode_t )bstatp->bs_mode,
-			      ( dev_t )IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
-		if ( rval && rval != EEXIST ) {
-			mlog( MLOG_VERBOSE | MLOG_WARNING, _(
-			      "unable to create %s "
-			      "ino %llu %s: %s: discarding\n"),
-			      printstr,
-			      fhdrp->fh_stat.bs_ino,
-			      path,
-			      strerror( errno ));
-			return BOOL_TRUE;
+		} else {
+			/* create the node
+			*/
+			rval = mknod( path,
+				      ( mode_t )bstatp->bs_mode,
+				      ( dev_t )IRIX_DEV_TO_KDEVT(bstatp->bs_rdev));
+			if ( rval && rval != EEXIST ) {
+				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
+				      "unable to create %s "
+				      "ino %llu %s: %s: discarding\n"),
+				      printstr,
+				      fhdrp->fh_stat.bs_ino,
+				      path,
+				      strerror( errno ));
+				return BOOL_TRUE;
+			}
 		}
 
-#ifdef DOSOCKS
-sockbypass:
-#endif /* DOSOCKS */
 		/* set the owner and group (if enabled)
 		 */
 		if ( persp->a.ownerpr ) {

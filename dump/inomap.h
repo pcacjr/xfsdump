@@ -64,9 +64,7 @@ extern bool_t inomap_build( jdm_fshandle_t *fshandlep,
 			    size64_t statcnt,
 			    size64_t *statdonep );
 
-#ifdef SIZEEST
 extern u_int64_t inomap_getsz( void );
-#endif /* SIZEEST */
 
 /* inomap_skip - tell inomap about inodes to skip in the dump
  */

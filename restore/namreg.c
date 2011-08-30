@@ -114,11 +114,9 @@ static namreg_pers_t *npp = 0;
 bool_t
 namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 {
-#ifdef SESSCPLT
 	if ( ntp ) {
 		return BOOL_TRUE;
 	}
-#endif /* SESSCPLT */
 
 	/* sanity checks
 	 */

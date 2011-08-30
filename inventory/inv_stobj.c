@@ -1287,23 +1287,16 @@ stobj_convert_sessinfo(inv_session_t **buf, invt_sessinfo_t *sinfo)
 {
 	inv_session_t  *ises;
 	int i, j, nmf;
-#ifdef INVCONVFIX
 	int nstreams;
 	invt_mediafile_t *mf;
-#endif /* INVCONVFIX */
 
 	ises = calloc( 1, sizeof( inv_session_t ) );
 
 	stobj_convert_session(ises, sinfo->ses, sinfo->seshdr);
 	ises->s_streams = calloc( ises->s_nstreams, sizeof( inv_stream_t ) );
-#ifdef INVCONVFIX
 	mf = sinfo->mfiles;
 	nstreams = (int) ises->s_nstreams;
 	for ( i = 0 ; i < nstreams ; i++ ) {
-#else /* INVCONVFIX */
-	i = (int) ises->s_nstreams;
-	while ( i-- ) {
-#endif /* INVCONVFIX */
 		stobj_convert_strm(&ises->s_streams[i], &sinfo->strms[i]);
 		nmf = (int) ises->s_streams[i].st_nmediafiles;
 		ises->s_streams[i].st_mediafiles = calloc( (u_int) nmf,
@@ -1311,11 +1304,7 @@ stobj_convert_sessinfo(inv_session_t **buf, invt_sessinfo_t *sinfo)
 
 		for ( j = 0; j < nmf; j++ ) {
 			stobj_convert_mfile( &ises->s_streams[i].st_mediafiles[j],
-#ifdef INVCONVFIX
 					     mf++ );
-#else /* INVCONVFIX */
-					     sinfo->mfiles);
-#endif /* INVCONVFIX */
 		}
 	}
 	

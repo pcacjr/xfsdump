@@ -53,7 +53,6 @@
 
 /* remote tape protocol debug
  */
-#ifdef RMT
 #ifdef RMTDBG
 #define	open(p,f)		dbgrmtopen(p,f)
 #define	close(fd)		dbgrmtclose(fd)
@@ -67,7 +66,6 @@
 #define	read rmtread
 #define	write rmtwrite
 #endif /* RMTDBG */
-#endif /* RMT */
 
 /* if the media file header structure changes, this number must be
  * bumped, and STAPE_VERSION_1 must be defined and recognized.
@@ -284,21 +282,17 @@ typedef long mtstat_t;
 
 extern void usage( void );
 #ifdef DUMP
-#ifdef SIZEEST
 extern u_int64_t hdr_mfilesz;
-#endif /* SIZEEST */
 #endif /* DUMP */
 
 /* remote tape protocol declarations (should be a system header file)
  */
-#ifdef RMT
 extern int rmtopen( char *, int, ... );
 extern int rmtclose( int );
 extern int rmtfstat( int, struct stat * );
 extern int rmtioctl( int, int, ... );
 extern int rmtread( int, void*, uint);
 extern int rmtwrite( int, const void *, uint);
-#endif /* RMT */
 
 
 /* forward declarations of locally defined static functions ******************/
@@ -390,7 +384,6 @@ static void map_ts_status( struct mtget *, struct mtget_sgi );
 
 /* RMT trace stubs
  */
-#ifdef RMT
 #ifdef RMTDBG
 static int dbgrmtopen( char *, int );
 static int dbgrmtclose( int );
@@ -398,7 +391,6 @@ static int dbgrmtioctl( int, int, void *);
 static int dbgrmtread( int, void*, uint);
 static int dbgrmtwrite( int, void *, uint);
 #endif /* RMTDBG */
-#endif /* RMT */
 
 /* definition of locally defined global variables ****************************/
 
@@ -3292,7 +3284,6 @@ set_recommended_sizes( drive_t *drivep )
 	if (contextp->dc_filesz > 0) {
 		fsize = contextp->dc_filesz;
 #ifdef DUMP
-#ifdef SIZEEST
 		if ( hdr_mfilesz > fsize ) {
 			mlog( MLOG_WARNING, _(
 			      "recommended media file size of %llu Mb less than"
@@ -3301,7 +3292,6 @@ set_recommended_sizes( drive_t *drivep )
 			      hdr_mfilesz / ( 1024 * 1024 ),
 			      drivep->d_pathname );
 		}
-#endif /* SIZEEST */
 #endif /* DUMP */
         }
 
@@ -3657,7 +3647,6 @@ tape_rec_checksum_check( drive_context_t *contextp, char *bufp )
 
 /* to trace rmt operations
  */
-#ifdef RMT
 #ifdef RMTDBG
 static int
 dbgrmtopen( char *path, int flags )
@@ -3732,7 +3721,6 @@ dbgrmtwrite( int fd, void *p, uint sz )
 	return rval;
 }
 #endif /* RMTDBG */
-#endif /* RMT */
 
 /* display_access_failed_message()
  *	Print tape device open/access failed message.
