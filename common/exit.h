@@ -29,12 +29,12 @@ static inline const char *
 exit_codestring( intgen_t code )
 {
 	switch ( code ) {
-	case EXIT_NORMAL:    return "EXIT_NORMAL";
-	case EXIT_ERROR:     return "EXIT_ERROR";
-	case EXIT_INTERRUPT: return "EXIT_INTERRUPT";
-	case EXIT_FAULT:     return "EXIT_FAULT";
+	case EXIT_NORMAL:    return "SUCCESS";
+	case EXIT_ERROR:     return "ERROR";
+	case EXIT_INTERRUPT: return "INTERRUPT";
+	case EXIT_FAULT:     return "FAULT";
 	}
-	return "???";
+	return "UNKNOWN";
 }
 
 #endif /* EXIT_H */

@@ -457,11 +457,6 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 	}
 }
 
-
-static const char *exit_strings[] =
-	{ "SUCCESS", "ERROR", "INTERRUPT", "", "FAULT" };
-
-
 /*
  * Map RV codes to actual error messages.
  */
@@ -584,7 +579,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 	      "%s: %d: mlog_exit called: "
 	      "exit_code: %s return: %s (%s)\n",
 	      file, line,
-	      exit_strings[exit_code],
+	      exit_codestring(exit_code),
 	      rvp->rv_string, rvp->rv_desc);
 
 	if (rv < 0 || rv >= _RV_NUM) {
@@ -780,12 +775,7 @@ mlog_exit_flush(void)
 	if (interrupt) status_str = "INTERRUPT";
 	else if (quit) status_str = "QUIT";
 	else if (incomplete) status_str = "INCOMPLETE";
-#ifdef NDEBUG
-	/* We should never get here, but if we do make sure we don't die
-	   horribly when not running debug. */
-	else if (! VALID_EXIT_CODE(mlog_main_exit_code)) status_str = "UNKNOWN";
-#endif /* NDEBUG */
-	else status_str = exit_strings[mlog_main_exit_code];
+	else status_str = exit_codestring(mlog_main_exit_code);
 
 	/* now print the overall state of the dump/restore */
 	fprintf(mlog_fp, "%s: %s Status: %s\n", progname, PROGSTR_CAPS, status_str);
