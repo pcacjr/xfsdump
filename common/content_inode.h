@@ -347,4 +347,31 @@ typedef struct extattrhdr extattrhdr_t;
 	/* a linux "secure" mode attribute
 	 */
 
+/* Routines for calculating and validating checksums on xfsdump headers.
+ * The header length must be an integral number of u_int32_t's.
+ */
+static inline u_int32_t
+calc_checksum(void *bufp, size_t len)
+{
+	u_int32_t sum = 0;
+	u_int32_t *sump = bufp;
+	u_int32_t *endp = sump + len / sizeof(u_int32_t);
+	ASSERT(len % sizeof(u_int32_t) == 0);
+	while (sump < endp)
+		sum += *sump++;
+	return ~sum + 1;
+}
+
+static inline bool_t
+is_checksum_valid(void *bufp, size_t len)
+{
+	u_int32_t sum = 0;
+	u_int32_t *sump = bufp;
+	u_int32_t *endp = sump + len / sizeof(u_int32_t);
+	ASSERT(len % sizeof(u_int32_t) == 0);
+	while (sump < endp)
+		sum += *sump++;
+	return sum == 0 ? BOOL_TRUE : BOOL_FALSE;
+}
+
 #endif /* CONTENT_INODE_H */

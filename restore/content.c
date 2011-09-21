@@ -8000,11 +8000,6 @@ read_filehdr( drive_t *drivep, filehdr_t *fhdrp, bool_t fhcs )
 	drive_ops_t *dop = drivep->d_opsp;
 	/* REFERENCED */
 	intgen_t nread;
-#ifdef FILEHDR_CHECKSUM
-	register u_int32_t *sump = ( u_int32_t * )fhdrp;
-	register u_int32_t *endp = ( u_int32_t * )( fhdrp + 1 );
-	register u_int32_t sum;
-#endif /* FILEHDR_CHECKSUM */
 	intgen_t rval;
 	filehdr_t tmpfh;
 
@@ -8041,21 +8036,18 @@ read_filehdr( drive_t *drivep, filehdr_t *fhdrp, bool_t fhcs )
 	      bstatp->bs_ino,
 	      bstatp->bs_mode );
 
-#ifdef FILEHDR_CHECKSUM
 	if ( fhcs ) {
 		if ( ! ( fhdrp->fh_flags & FILEHDR_FLAGS_CHECKSUM )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "corrupt file header\n") );
 			return RV_CORRUPT;
 		}
-		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
-		if ( sum ) {
+		if ( !is_checksum_valid( fhdrp, FILEHDR_SZ )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "bad file header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
-#endif /* FILEHDR_CHECKSUM */
 
 	return RV_OK;
 }
@@ -8067,11 +8059,6 @@ read_extenthdr( drive_t *drivep, extenthdr_t *ehdrp, bool_t ehcs )
 	drive_ops_t *dop = drivep->d_opsp;
 	/* REFERENCED */
 	intgen_t nread;
-#ifdef EXTENTHDR_CHECKSUM
-	register u_int32_t *sump = ( u_int32_t * )ehdrp;
-	register u_int32_t *endp = ( u_int32_t * )( ehdrp + 1 );
-	register u_int32_t sum;
-#endif /* EXTENTHDR_CHECKSUM */
 	intgen_t rval;
 	extenthdr_t tmpeh;
 
@@ -8108,21 +8095,18 @@ read_extenthdr( drive_t *drivep, extenthdr_t *ehdrp, bool_t ehcs )
 	      ehdrp->eh_type,
 	      ehdrp->eh_flags );
 
-#ifdef EXTENTHDR_CHECKSUM
 	if ( ehcs ) {
 		if ( ! ( ehdrp->eh_flags & EXTENTHDR_FLAGS_CHECKSUM )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "corrupt extent header\n") );
 			return RV_CORRUPT;
 		}
-		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
-		if ( sum ) {
+		if ( !is_checksum_valid( ehdrp, EXTENTHDR_SZ )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "bad extent header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
-#endif /* EXTENTHDR_CHECKSUM */
 
 	return RV_OK;
 }
@@ -8137,11 +8121,6 @@ read_dirent( drive_t *drivep,
 	drive_ops_t *dop = drivep->d_opsp;
 	/* REFERENCED */
 	intgen_t nread;
-#ifdef DIRENTHDR_CHECKSUM
-	register u_int32_t *sump = ( u_int32_t * )dhdrp;
-	register u_int32_t *endp = ( u_int32_t * )( dhdrp + 1 );
-	register u_int32_t sum;
-#endif /* DIRENTHDR_CHECKSUM */
 	intgen_t rval;
 	direnthdr_t tmpdh;
 
@@ -8180,21 +8159,18 @@ read_dirent( drive_t *drivep,
 	      ( size_t )dhdrp->dh_gen,
 	      ( size_t )dhdrp->dh_sz );
 
-#ifdef DIRENTHDR_CHECKSUM
 	if ( dhcs ) {
 		if ( dhdrp->dh_sz == 0 ) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "corrupt directory entry header\n") );
 			return RV_CORRUPT;
 		}
-		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
-		if ( sum ) {
+		if ( !is_checksum_valid( dhdrp, DIRENTHDR_SZ )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "bad directory entry header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
-#endif /* DIRENTHDR_CHECKSUM */
 
 	/* if null, return
 	 */
@@ -8246,11 +8222,6 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 	drive_ops_t *dop = drivep->d_opsp;
 	/* REFERENCED */
 	intgen_t nread;
-#ifdef EXTATTRHDR_CHECKSUM
-	register u_int32_t *sump = ( u_int32_t * )ahdrp;
-	register u_int32_t *endp = ( u_int32_t * )( ahdrp + 1 );
-	register u_int32_t sum;
-#endif /* EXTATTRHDR_CHECKSUM */
 	intgen_t rval;
 	extattrhdr_t tmpah;
 
@@ -8288,21 +8259,18 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 	      ahdrp->ah_valsz,
 	      ahdrp->ah_checksum );
 
-#ifdef EXTATTRHDR_CHECKSUM
 	if ( ahcs ) {
 		if ( ! ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "corrupt extattr header\n") );
 			return RV_CORRUPT;
 		}
-		for ( sum = 0 ; sump < endp ; sum += *sump++ ) ;
-		if ( sum ) {
+		if ( !is_checksum_valid( ahdrp, EXTATTRHDR_SZ )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "bad extattr header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
-#endif /* EXTATTRHDR_CHECKSUM */
 
 	return RV_OK;
 }
