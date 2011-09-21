@@ -1906,7 +1906,7 @@ content_stream_restore( ix_t thrdix )
 		      "chdir %s failed: %s\n"),
 		      persp->a.dstdir,
 		      strerror( errno ));
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_ERROR);
 	}
 
 	/* set my file creation mask to zero, to avoid modifying the
@@ -1927,7 +1927,7 @@ content_stream_restore( ix_t thrdix )
 		      _("malloc of stream context failed (%d bytes): %s\n"),
 		      sizeof(stream_context_t),
 		      strerror( errno ));
-		return EXIT_ERROR;
+		return mlog_exit(EXIT_ERROR, RV_ERROR);
 	}
 	strctxp->sc_fd = -1;
 	Mediap->M_drivep->d_strmcontextp = (void *)strctxp;
@@ -1948,7 +1948,7 @@ content_stream_restore( ix_t thrdix )
 			unlock( );
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, RV_INTR);
 			}
 			continue;
 		}
@@ -1965,7 +1965,7 @@ content_stream_restore( ix_t thrdix )
 		     * into pi, and makes persp->s.dumpid valid.
 		     */
 		if ( ok == BOOL_ERROR ) {
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, RV_OPT);
 		}
 		tranp->t_dumpidknwnpr = ok;
 		tranp->t_sync1 = SYNC_DONE;
@@ -2012,11 +2012,11 @@ content_stream_restore( ix_t thrdix )
 		case RV_QUIT:
 		case RV_DRIVE:
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		dcaps = drivep->d_capabilities;
 
@@ -2026,7 +2026,7 @@ content_stream_restore( ix_t thrdix )
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
 				Media_end( Mediap );
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, RV_INTR);
 			}
 			lock( );
 		}
@@ -2110,7 +2110,7 @@ content_stream_restore( ix_t thrdix )
 		}
 		if ( cldmgr_stop_requested( )) {
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, RV_INTR);
 		}
 		if ( ! matchpr ) {
 			Media_end( Mediap );
@@ -2121,13 +2121,13 @@ content_stream_restore( ix_t thrdix )
 			     ( ! ( dcaps & DRIVE_CAP_FILES )
 			       &&
 			       ! ( dcaps & DRIVE_CAP_REMOVABLE ))) {
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, RV_QUIT);
 			}
 			continue;
 		}
 		if ( ! dumpcompat( resumepr, level, *baseidp, BOOL_TRUE )) {
 			Media_end( Mediap );
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, RV_COMPAT);
 		}
 		strncpyterm( persp->s.dumplab,
 			     grhdrp->gh_dumplabel,
@@ -2158,7 +2158,7 @@ content_stream_restore( ix_t thrdix )
 			 * if this is a match
 			 */
 		if ( fileh == DH_NULL ) {
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, RV_ERROR);
 		}
 		uuid_copy(persp->s.dumpid,grhdrp->gh_dumpid);
 		persp->s.begintime = time( 0 );
@@ -2198,11 +2198,11 @@ content_stream_restore( ix_t thrdix )
 		case RV_QUIT:
 		case RV_DRIVE:
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		dcaps = drivep->d_capabilities;
 		ASSERT( fileh != DH_NULL );
@@ -2229,7 +2229,7 @@ content_stream_restore( ix_t thrdix )
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
 				Media_end( Mediap );
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, RV_INTR);
 			}
 			lock( );
 		}
@@ -2250,7 +2250,7 @@ content_stream_restore( ix_t thrdix )
 					   scrhdrp->cih_inomap_dircnt );
 			if ( ! ok ) {
 				Media_end( Mediap );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_ERROR);
 			}
 			tranp->t_dirattrinitdonepr = BOOL_TRUE;
 		}
@@ -2265,7 +2265,7 @@ content_stream_restore( ix_t thrdix )
 					  scrhdrp->cih_inomap_nondircnt );
 			if ( ! ok ) {
 				Media_end( Mediap );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_ERROR);
 			}
 			tranp->t_namreginitdonepr = BOOL_TRUE;
 		}
@@ -2298,7 +2298,7 @@ content_stream_restore( ix_t thrdix )
 					persp->a.dstdirisxfspr );
 			if ( ! ok ) {
 				Media_end( Mediap );
-				return EXIT_ERROR;
+				return mlog_exit(EXIT_ERROR, RV_ERROR);
 			}
 			tranp->t_treeinitdonepr = BOOL_TRUE;
 		}
@@ -2329,11 +2329,11 @@ content_stream_restore( ix_t thrdix )
 		case RV_INTR:
 		case RV_DRIVE:
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 	}
 
@@ -2368,7 +2368,7 @@ content_stream_restore( ix_t thrdix )
 			sleep( 1 );
 			if ( cldmgr_stop_requested( )) {
 				Media_end( Mediap );
-				return EXIT_NORMAL;
+				return mlog_exit(EXIT_NORMAL, RV_INTR);
 			}
 			lock( );
 		}
@@ -2388,14 +2388,14 @@ content_stream_restore( ix_t thrdix )
 			break;
 		case RV_ERROR:
 			Media_end( Mediap );
-			return EXIT_ERROR;
+			return mlog_exit(EXIT_ERROR, RV_ERROR);
 		case RV_INTR:
 			Media_end( Mediap );
-			return EXIT_INTERRUPT;
+			return mlog_exit(EXIT_INTERRUPT, RV_INTR);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 
 		/* now that we have a tree and inomap, scan the
@@ -2448,11 +2448,11 @@ content_stream_restore( ix_t thrdix )
 		case RV_QUIT:
 		case RV_DRIVE:
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 		dcaps = drivep->d_capabilities;
 		ASSERT( fileh > DH_NULL );
@@ -2491,11 +2491,11 @@ content_stream_restore( ix_t thrdix )
 		case RV_DRIVE:
 		case RV_INCOMPLETE:
 			Media_end( Mediap );
-			return EXIT_NORMAL;
+			return mlog_exit(EXIT_NORMAL, rv);
 		case RV_CORE:
 		default:
 			Media_end( Mediap );
-			return EXIT_FAULT;
+			return mlog_exit(EXIT_FAULT, rv);
 		}
 	}
 
@@ -2512,7 +2512,7 @@ content_stream_restore( ix_t thrdix )
 	lock( );
 	if ( tranp->t_sync5 == SYNC_BUSY ) {
 		unlock( );
-		return EXIT_NORMAL;
+		return mlog_exit(EXIT_NORMAL, RV_DONE);
 	}
 	tranp->t_sync5 = SYNC_BUSY;
 	unlock( );
@@ -2529,21 +2529,15 @@ content_stream_restore( ix_t thrdix )
 	mlog( MLOG_DEBUG,
 	      "tree finalize\n" );
 	rv = finalize( path1, path2 );
-	switch ( rv ) {
-	case RV_OK:
-		break;
-	case RV_ERROR:
-		return EXIT_ERROR;
-	case RV_INTR:
-		return EXIT_NORMAL;
-	case RV_CORE:
-	default:
-		return EXIT_FAULT;
+	if (rv == RV_OK || rv == RV_INTR) {
+		rval = EXIT_NORMAL;
+	} else if (rv == RV_ERROR) {
+		rval = EXIT_ERROR;
+	} else {
+		rval = EXIT_FAULT;
 	}
 
-	/* made it! I'm last, now exit
-	 */
-	return EXIT_NORMAL;
+	return mlog_exit(rval, rv);
 }
 
 /* called after all threads have exited. scans state to decide
