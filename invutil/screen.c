@@ -27,11 +27,10 @@ put_line(WINDOW *win, int line, char *msg, int attr, alignment_t alignment)
 {
     int c;
     int cols;
-    int lines;
     int msglen;
     static char text[256];
 
-    getmaxyx(win, lines, cols);
+    cols = getmaxx(win);
     cols--;
     if(cols > 255) {
 	cols = 255;
