@@ -339,12 +339,16 @@ typedef struct extattrhdr extattrhdr_t;
 #define EXTATTRHDR_FLAGS_NULL		( 1 << 1 )
 	/* marks the end of the attributes associated with the leading filehdr_t
 	 */
-#define EXTATTRHDR_FLAGS_CHECKSUM	( 1 << 2 )
-	/* checksum is present
+#define EXTATTRHDR_FLAGS_OLD_CHECKSUM	( 1 << 2 )
+	/* old xfsdumps used this flag to indicate a checksum is present,
+	 * but the checksum was not calculated properly. the presence of
+	 * this flag now indicates a checksum that cannot be verified.
 	 */
-
 #define EXTATTRHDR_FLAGS_SECURE		( 1 << 3 )
 	/* a linux "secure" mode attribute
+	 */
+#define EXTATTRHDR_FLAGS_CHECKSUM	( 1 << 4 )
+	/* checksum is present.
 	 */
 
 /* Routines for calculating and validating checksums on xfsdump headers.

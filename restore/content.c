@@ -8197,14 +8197,27 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 	      ahdrp->ah_checksum );
 
 	if ( ahcs ) {
-		if ( ! ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM )) {
+		if ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM ) {
+			if ( !is_checksum_valid( ahdrp, EXTATTRHDR_SZ )) {
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
+					"bad extattr header checksum\n") );
+				return RV_CORRUPT;
+			}
+		} else if ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_OLD_CHECKSUM ) {
+			/* possibly a corrupt header, but most likely an old
+			 * header, which cannot be verified due to a bug in how
+			 * its checksum was calculated.
+			 */
+			static bool_t warned = BOOL_FALSE;
+			if ( !warned ) {
+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
+					"ignoring old-style extattr "
+					"header checksums\n") );
+				warned = BOOL_TRUE;
+			}
+		} else {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "corrupt extattr header\n") );
-			return RV_CORRUPT;
-		}
-		if ( !is_checksum_valid( ahdrp, EXTATTRHDR_SZ )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			      "bad extattr header checksum\n") );
 			return RV_CORRUPT;
 		}
 	}
