@@ -1,3 +1,13 @@
+xfsdump-3.0.6 (13 October 2011)
+	- Unconditionally add checksums to various dump headers in
+	  xfsdump.
+	- Verify dump header checksums if present in xfsrestore.
+	- Convert to using the POSIX signal API.
+	- Remove restriction of 8 options in dialogs.
+	- Various refactoring and internal cleanups to xfsdump and
+	  xfsrestore.
+	- Build system fixes, thanks to Ted Ts'o.
+
 xfsdump-3.0.5 (30 March 2011)
 	- Release tags will now be digitally signed
 	- Quota files will now be dumped, regardless of the maxsize
