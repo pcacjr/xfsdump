@@ -130,6 +130,7 @@ typedef struct content_inode_hdr content_inode_hdr_t;
 #define CIH_DUMPATTR_DIRENTHDR_GEN		( 1 << 11 )
 #define CIH_DUMPATTR_EXTATTR			( 1 << 12 )
 #define CIH_DUMPATTR_EXTATTRHDR_CHECKSUM	( 1 << 13 )
+#define CIH_DUMPATTR_NOTSELFCONTAINED		( 1 << 14 )
 
 
 /* timestruct_t - time structure

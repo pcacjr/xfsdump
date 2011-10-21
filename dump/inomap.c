@@ -72,6 +72,7 @@ static intgen_t cb_context( bool_t last,
 			    startpt_t *,
 			    size_t,
 			    intgen_t,
+			    bool_t,
 			    bool_t *);
 static void cb_context_free( void );
 static intgen_t cb_count_inogrp( void *, intgen_t, xfs_inogrp_t *);
@@ -148,6 +149,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	      drange_t *resumerangep,
 	      char *subtreebuf[],
 	      ix_t subtreecnt,
+	      bool_t skip_unchanged_dirs,
 	      startpt_t *startptp,
 	      size_t startptcnt,
 	      ix_t *statphasep,
@@ -205,6 +207,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 			   startptp,
 			   startptcnt,
 			   igrpcnt,
+			   skip_unchanged_dirs,
 			   &pruneneeded );
  	if ( rval ) {
  		free( ( void * )bstatbufp );
@@ -432,6 +435,7 @@ static off64_t cb_target;	/* set by cb_spinit(), used by cb_startpt() */
 static off64_t cb_dircnt;	/* number of dirs CHANGED or PRUNE */
 static off64_t cb_nondircnt;	/* number of non-dirs CHANGED */
 static bool_t *cb_pruneneededp; /* set by cb_context() */
+static bool_t cb_skip_unchanged_dirs;	/* set by cb_context() */
 
 /* cb_context - initializes the call back context for the add and prune
  * phases of inomap_build().
@@ -446,6 +450,7 @@ cb_context( bool_t last,
 	    startpt_t *startptp,
 	    size_t startptcnt,
 	    intgen_t igrpcnt,
+	    bool_t skip_unchanged_dirs,
 	    bool_t *pruneneededp )
 {
 	cb_last = last;
@@ -460,6 +465,7 @@ cb_context( bool_t last,
 	cb_dircnt = 0;
 	cb_nondircnt = 0;
 	cb_pruneneededp = pruneneededp;
+	cb_skip_unchanged_dirs = skip_unchanged_dirs;
 
 	if (inomap_init( igrpcnt ))
 		return -1;
@@ -642,12 +648,19 @@ cb_add( void *arg1,
 		ASSERT( changed );
 	} else {
 		if ( mode == S_IFDIR ) {
-			*cb_pruneneededp = BOOL_TRUE;
-			inomap_add( cb_inomap_contextp,
-				    ino,
-				    (gen_t)statp->bs_gen,
-				    MAP_DIR_SUPPRT );
-			cb_dircnt++;
+			if ( cb_skip_unchanged_dirs ) {
+				inomap_add( cb_inomap_contextp,
+					    ino,
+					    (gen_t)statp->bs_gen,
+					    MAP_DIR_NOCHNG );
+			} else {
+				*cb_pruneneededp = BOOL_TRUE;
+				inomap_add( cb_inomap_contextp,
+					    ino,
+					    (gen_t)statp->bs_gen,
+					    MAP_DIR_SUPPRT );
+				cb_dircnt++;
+			}
 		} else {
 			inomap_add( cb_inomap_contextp,
 				    ino,

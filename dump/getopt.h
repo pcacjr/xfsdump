@@ -27,7 +27,7 @@
  * facilitating easy changes.
  */
 
-#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CEFG:H:I:JL:M:NO:PRSTUVWY:Z"
+#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:Z"
 
 #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
 #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
@@ -58,7 +58,7 @@
 #define	GETOPT_NOEXTATTR	'A'	/* do not dump ext. file attributes */
 #define	GETOPT_BASED		'B'	/* specify session to base increment */
 #define GETOPT_RECCHKSUM	'C'	/* use record checksums */
-/*				'D'	*/
+#define GETOPT_NOUNCHANGEDDIRS	'D'	/* skip unchanged directories */
 #define	GETOPT_ERASE		'E'	/* pre-erase media */
 #define GETOPT_FORCE		'F'	/* don't prompt (getopt.c) */
 #define GETOPT_MINSTACKSZ	'G'	/* minimum stack size (bytes) */

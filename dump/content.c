@@ -533,6 +533,7 @@ content_init( intgen_t argc,
 	char mntpnt[ GLOBAL_HDR_STRING_SZ ];
 	char fsdevice[ GLOBAL_HDR_STRING_SZ ];
 	char fstype[ CONTENT_HDR_FSTYPE_SZ ];
+	bool_t skip_unchanged_dirs = BOOL_FALSE;
 	uuid_t fsid;
 	bool_t underfoundpr;
 	ix_t underlevel = ( ix_t )( -1 );
@@ -650,6 +651,9 @@ content_init( intgen_t argc,
 				return BOOL_FALSE;
 			}
 			maxdumpfilesize *= 1024;
+			break;
+		case GETOPT_NOUNCHANGEDDIRS:
+			skip_unchanged_dirs = BOOL_TRUE;
 			break;
 		case GETOPT_EXCLUDEFILES:
 			allowexcludefiles_pr = BOOL_TRUE;
@@ -1443,6 +1447,7 @@ baseuuidbypass:
 			   sc_resumerangep,
 			   subtreep,
 			   subtreecnt,
+			   skip_unchanged_dirs,
 			   sc_startptp,
 			   drivecnt,
 			   &sc_stat_inomapphase,
@@ -1483,6 +1488,10 @@ baseuuidbypass:
 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_INCREMENTAL;
 		scwhdrtemplatep->cih_last_time = sc_incrbasetime;
 		uuid_copy(scwhdrtemplatep->cih_last_id, sc_incrbaseid);
+		if ( skip_unchanged_dirs ) {
+			scwhdrtemplatep->cih_dumpattr |=
+				CIH_DUMPATTR_NOTSELFCONTAINED;
+		}
 	}
 	if ( sc_resumepr ) {
 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_RESUME;

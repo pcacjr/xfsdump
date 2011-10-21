@@ -2906,6 +2906,13 @@ applydirdump( drive_t *drivep,
 		persp->s.marknorefdonepr = BOOL_TRUE;
 	}
 
+	if ( scrhdrp->cih_dumpattr & CIH_DUMPATTR_NOTSELFCONTAINED ) {
+		mlog( MLOG_NORMAL | MLOG_NOTE, _(
+		      "dump is not self-contained, "
+		      "orphaned files expected if base dump(s) "
+		      "was not applied\n") );
+	}
+
 	if ( ! persp->s.dirdonepr ) {
 		rv_t rv;
 		dah_t dah;

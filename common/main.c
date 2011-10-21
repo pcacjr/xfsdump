@@ -974,6 +974,7 @@ usage( void )
 #ifdef REVEAL
 	ULO(_("(generate tape record checksums)"),	GETOPT_RECCHKSUM );
 #endif /* REVEAL */
+	ULO(_("(skip unchanged directories)"),		GETOPT_NOUNCHANGEDDIRS );
 	ULO(_("(pre-erase media)"),			GETOPT_ERASE );
 	ULO(_("(don't prompt)"),			GETOPT_FORCE );
 #ifdef REVEAL
