@@ -2499,12 +2499,6 @@ content_stream_restore( ix_t thrdix )
 		}
 	}
 
-	/* out of media files, so finish the last file that
-	 * was being worked on.
-	 */
-	if ((strctxp->sc_bstat.bs_mode & S_IFMT) == S_IFREG)
-		restore_complete_reg(strctxp);
-
 	/* finally, choose one thread to do final processing
 	 * and cleanup. the winner waits, the losers all exit.
 	 * once the losers exit, the winner can perform cleanup.
@@ -3330,6 +3324,7 @@ applynondirdump( drive_t *drivep,
 		 char *path2,
 		 filehdr_t *fhdrp )
 {
+	rv_t rv = RV_UNKNOWN;
 	bool_t fhcs;
 	bool_t ehcs;
 	bool_t ahcs;
@@ -3360,18 +3355,24 @@ applynondirdump( drive_t *drivep,
 	 */
 	pi_bracketneededegrps( fileh, &first_egrp, &next_egrp );
 
+	/* initialize the stream context
+	 */
+	memset(&strctxp->sc_bstat, 0, sizeof(bstat_t));
+	strctxp->sc_path[0] = '\0';
+	strctxp->sc_fd = -1;
+
 	for ( ; ; ) {
 		drive_ops_t *dop = drivep->d_opsp;
 		drive_mark_t drivemark;
 		bstat_t *bstatp = &fhdrp->fh_stat;
 		bool_t resyncpr = BOOL_FALSE;
-		rv_t rv;
 		intgen_t rval;
 
 		/* if a null file header, break
 		 */
 		if ( fhdrp->fh_flags & FILEHDR_FLAGS_NULL ) {
-			break;
+			rv = RV_OK;
+			goto applynondirdump_out;
 		}
 
 		/* if working on a different file than we were previously,
@@ -3379,8 +3380,7 @@ applynondirdump( drive_t *drivep,
 		 */
 		if ( bstatp->bs_ino != strctxp->sc_bstat.bs_ino ) {
 
-			if ((strctxp->sc_bstat.bs_mode & S_IFMT) == S_IFREG)
-				restore_complete_reg(strctxp);
+			restore_complete_reg(strctxp);
 
 			/* start new ino */
 			memcpy(&strctxp->sc_bstat, bstatp, sizeof(bstat_t));
@@ -3411,7 +3411,8 @@ applynondirdump( drive_t *drivep,
 		case RV_OK:
 			break;
 		case RV_EOD:
-			return RV_OK;
+			rv = RV_OK;
+			goto applynondirdump_out;
 		case RV_CORRUPT:
 			rval = ( * dop->do_next_mark )( drivep );
 			if ( rval ) {
@@ -3419,12 +3420,13 @@ applynondirdump( drive_t *drivep,
 				      "unable to resync media file: "
 				      "some portion of dump will NOT "
 				      "be restored\n") );
-				return RV_OK;  /* treat as EOD */
+				rv = RV_OK;  /* treat as EOD */
+				goto applynondirdump_out;
 			}
 			resyncpr = BOOL_TRUE;
 			break;
 		default:
-			return rv;
+			goto applynondirdump_out;
 		}
 
 		/* update stats if appropriate
@@ -3464,7 +3466,8 @@ applynondirdump( drive_t *drivep,
 			case RV_OK:
 				break;
 			case RV_EOD:
-				return RV_OK;
+				rv = RV_OK;
+				goto applynondirdump_out;
 			case RV_CORRUPT:
 				rval = ( * dop->do_next_mark )( drivep );
 				if ( rval ) {
@@ -3472,11 +3475,12 @@ applynondirdump( drive_t *drivep,
 					      "unable to resync media file: "
 					      "some portion of dump will NOT "
 					      "be restored\n") );
-					return RV_OK;  /* treat as EOD */
+					rv = RV_OK;  /* treat as EOD */
+					goto applynondirdump_out;
 				}
 				resyncpr = BOOL_TRUE;
 			default:
-				return rv;
+				goto applynondirdump_out;
 			}
 
 			if ( resyncpr && rv == RV_OK ) {
@@ -3508,7 +3512,16 @@ applynondirdump( drive_t *drivep,
 			preemptchk( );
 		}
 	}
-	return RV_OK;
+
+applynondirdump_out:
+
+	/* We've hit the end of this media file or encountered corruption.
+	 * In either case, we may not be back to complete the metadata for
+	 * this file, so attempt to complete it now.
+	 */
+	restore_complete_reg(strctxp);
+
+	return rv;
 }
 
 /* ARGSUSED */
@@ -7500,6 +7513,9 @@ restore_complete_reg(stream_context_t *strcxtp)
 	struct utimbuf utimbuf;
 	intgen_t rval;
 
+	// only applies to regular files
+	if (!S_ISREG((strcxtp->sc_bstat.bs_mode)))
+		return BOOL_TRUE;
 
 	if (fd < 0)
 		return BOOL_TRUE;
