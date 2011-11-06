@@ -285,6 +285,8 @@ pa_gen( pa_t *pap )
 	for ( i = 0 ; i < pap->pa_cnt ; i++ ) {
 		sz += strlen( pap->pa_array[ i ] ) + 1;
 	}
+	if ( i == 0 )
+		sz++;
 	sz++;
 
 	retp = ( char * )malloc( sz );
