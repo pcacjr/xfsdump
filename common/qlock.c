@@ -568,43 +568,6 @@ return 0;
 #endif /* HIDDEN */
 }
 
-qbarrierh_t
-qbarrier_alloc( void )
-{
-#ifdef HIDDEN
-	barrier_t *barrierp;
-
-	/* sanity checks
-	 */
-	ASSERT( qlock_inited );
-	ASSERT( qlock_usp );
-
-	/* allocate a us barrier
-	 */
-	barrierp = new_barrier( qlock_usp );
-	ASSERT( barrierp );
-
-	return ( qbarrierh_t )barrierp;
-#else
-return 0;
-#endif /* HIDDEN */
-}
-
-void
-qbarrier( qbarrierh_t qbarrierh, size_t thrdcnt )
-{
-#ifdef HIDDEN
-	barrier_t *barrierp = ( barrier_t * )qbarrierh;
-
-	/* sanity checks
-	 */
-	ASSERT( qlock_inited );
-	ASSERT( qlock_usp );
-
-	barrier( barrierp, thrdcnt );
-#endif /* HIDDEN */
-}
-
 /* internal ordinal map abstraction
  */
 #ifdef HIDDEN

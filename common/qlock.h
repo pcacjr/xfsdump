@@ -102,15 +102,4 @@ extern size_t qsemPblocked( qsemh_t qsemh );
 	/* number of threads currently blocked on this semaphore
 	 */
 
-typedef void *qbarrierh_t;
-#define QBARRIERH_NULL	0
-	/* opaque handle
-	 */
-extern qbarrierh_t qbarrier_alloc( void );
-	/* allocates a rendezvous barrier
-	 */
-extern void qbarrier( qbarrierh_t barrierh, size_t thrdcnt );
-	/* causes thrdcnt threads to rendezvous
-	 */
-
 #endif /* QLOCK_H */

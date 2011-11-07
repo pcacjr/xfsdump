@@ -64,9 +64,6 @@
 #include "getdents.h"
 #include "arch_xlate.h"
 
-#undef SYNCDIR
-#define SYNCDIR
-
 /* max "unsigned long long int"
  */
 #define ULONGLONG_MAX	18446744073709551615LLU
@@ -231,7 +228,6 @@ typedef struct extent_group_context extent_group_context_t;
 struct pds {
 	enum { PDS_NULL,		/* per-drive activity not begun */
 	       PDS_INOMAP,		/* dumping inomap */
-	       PDS_DIRRENDEZVOUS,	/* waiting to dump dirs */
 	       PDS_DIRDUMP,		/* dumping dirs */
 	       PDS_NONDIR,		/* dumping nondirs */
 	       PDS_INVSYNC,		/* waiting for inventory */
@@ -263,9 +259,6 @@ static rv_t dump_dirs( ix_t strmix,
 		       xfs_bstat_t *bstatbufp,
 		       size_t bstatbuflen,
 		       void *inomap_contextp );
-#ifdef SYNCDIR
-static rv_t dump_dirs_rendezvous( void );
-#endif /* SYNCDIR */
 static rv_t dump_dir( ix_t strmix,
 		      jdm_fshandle_t *,
 		      intgen_t,
@@ -485,12 +478,6 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
 	 */
-#ifdef SYNCDIR
-static size_t sc_thrdsdirdumpsynccnt = 0;
-static size_t sc_thrdswaitingdirdumpsync1 = 0;
-static size_t sc_thrdswaitingdirdumpsync2 = 0;
-static qbarrierh_t sc_barrierh;
-#endif /* SYNCDIR */
 
 static bool_t sc_savequotas = BOOL_TRUE;
 /* save quota information in dump
@@ -1466,14 +1453,13 @@ baseuuidbypass:
 	var_skip( &fsid, inomap_skip );
 
 	/* fill in write header template content info. always produce
-	 * an inomap and dir dump for each media file.
+	 * an inomap for each media file. the dirdump flag will be set
+	 * in content_stream_dump() for streams which dump the directories.
 	 */
 	ASSERT( sizeof( cwhdrtemplatep->ch_specific ) >= sizeof( *scwhdrtemplatep ));
 	scwhdrtemplatep->cih_mediafiletype = CIH_MEDIAFILETYPE_DATA;
 	scwhdrtemplatep->cih_level = ( int32_t )sc_level;
-	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP
-					|
-					CIH_DUMPATTR_DIRDUMP;
+	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP;
 	if ( subtreecnt ) {
 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_SUBTREE;
 	}
@@ -1714,22 +1700,6 @@ baseuuidbypass:
 		}
 	}
 
-#ifdef SYNCDIR
-	/* allocate a barrier to synchronize directory dumping
-	 */
-	if ( drivecnt > 1 ) {
-		sc_barrierh = qbarrier_alloc( );
-	}
-
-	/* initialize the number of players in the synchronized dir dump.
-	 * they drop out when last media file complete. MUST be modified
-	 * under lock( ).
-	 */
-	sc_thrdsdirdumpsynccnt = drivecnt;
-
-#endif /* SYNCDIR */
-
-
 	return BOOL_TRUE;
 }
 
@@ -1876,10 +1846,6 @@ content_statline( char **linespp[ ] )
 		case PDS_INOMAP:
 			strcat( statline[ statlinecnt ],
 				"dumping inomap" );
-			break;
-		case PDS_DIRRENDEZVOUS:
-			strcat( statline[ statlinecnt ],
-				"waiting for synchronized directory dump" );
 			break;
 		case PDS_DIRDUMP:
 			sprintf( &statline[ statlinecnt ]
@@ -2157,6 +2123,11 @@ content_stream_dump( ix_t strmix )
 		scwhdrp->cih_endpt.sp_flags = STARTPT_FLAGS_END;
 	}
 
+	// the first stream dumps the directories
+	if ( strmix == 0 ) {
+		scwhdrp->cih_dumpattr |= CIH_DUMPATTR_DIRDUMP;
+	}
+
 	/* fill in inomap fields of write hdr
 	 */
 	inomap_writehdr( scwhdrp );
@@ -2322,39 +2293,41 @@ content_stream_dump( ix_t strmix )
 			return mlog_exit(EXIT_FAULT, rv);
 		}
 
-		/* now dump the directories. use the bigstat iterator
-		 * capability to call my dump_dir function
-		 * for each directory in the bitmap.
+		/* now dump the directories, if this is a stream that dumps
+		 * directories. use the bigstat iterator capability to call
+		 * my dump_dir function for each directory in the bitmap.
 		 */
-		sc_stat_pds[ strmix ].pds_dirdone = 0;
-		rv = dump_dirs( strmix,
-				bstatbufp,
-				bstatbuflen,
-				inomap_contextp );
-		if ( rv == RV_INTR ) {
-			stop_requested = BOOL_TRUE;
-			goto decision_more;
-		}
-		if ( rv == RV_EOM ) {
-			hit_eom = BOOL_TRUE;
-			goto decision_more;
-		}
-		if ( rv == RV_DRIVE ) {
-			free( ( void * )bstatbufp );
-			return mlog_exit(EXIT_NORMAL, rv);
-		}
-		if ( rv == RV_ERROR ) {
-			free( ( void * )bstatbufp );
-			return mlog_exit(EXIT_ERROR, rv);
-		}
-		if ( rv == RV_CORE ) {
-			free( ( void * )bstatbufp );
-			return mlog_exit(EXIT_FAULT, rv);
-		}
-		ASSERT( rv == RV_OK );
-		if ( rv != RV_OK ) {
-			free( ( void * )bstatbufp );
-			return mlog_exit(EXIT_FAULT, rv);
+		if ( scwhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP ) {
+			sc_stat_pds[ strmix ].pds_dirdone = 0;
+			rv = dump_dirs( strmix,
+					bstatbufp,
+					bstatbuflen,
+					inomap_contextp );
+			if ( rv == RV_INTR ) {
+				stop_requested = BOOL_TRUE;
+				goto decision_more;
+			}
+			if ( rv == RV_EOM ) {
+				hit_eom = BOOL_TRUE;
+				goto decision_more;
+			}
+			if ( rv == RV_DRIVE ) {
+				free( ( void * )bstatbufp );
+				return mlog_exit(EXIT_NORMAL, rv);
+			}
+			if ( rv == RV_ERROR ) {
+				free( ( void * )bstatbufp );
+				return mlog_exit(EXIT_ERROR, rv);
+			}
+			if ( rv == RV_CORE ) {
+				free( ( void * )bstatbufp );
+				return mlog_exit(EXIT_FAULT, rv);
+			}
+			ASSERT( rv == RV_OK );
+			if ( rv != RV_OK ) {
+				free( ( void * )bstatbufp );
+				return mlog_exit(EXIT_FAULT, rv);
+			}
 		}
 
 		/* finally, dump the non-directory files beginning with this
@@ -2526,20 +2499,6 @@ decision_more:
 		 * been committed.
 		 */
 		done = all_nondirs_committed;
-
-#ifdef SYNCDIR
-		/* drop out of the synchronous dump game if done
-		 */
-		if ( done ) {
-			/* REFERENCED */
-			size_t tmpthrdsdirdumpsynccnt;
-			lock( );
-			tmpthrdsdirdumpsynccnt = sc_thrdsdirdumpsynccnt;
-			sc_thrdsdirdumpsynccnt--;
-			unlock( );
-			ASSERT( tmpthrdsdirdumpsynccnt > 0 );
-		}
-#endif /* SYNCDIR */
 
 		/* tell the inventory about the media file
 		 */
@@ -2833,22 +2792,6 @@ dump_dirs( ix_t strmix,
 		__s32 buflenout;
 		intgen_t rval;
 
-#ifdef SYNCDIR
-		/* have all threads rendezvous
-		 */
-		if ( sc_thrdsdirdumpsynccnt > 1 && stream_cnt( ) > 1 ) {
-			rv_t rv;
-			mlog( bulkstatcallcnt == 0 ? MLOG_VERBOSE : MLOG_NITTY,
-			      _("waiting for synchronized directory dump\n") );
-			sc_stat_pds[ strmix ].pds_phase = PDS_DIRRENDEZVOUS;
-			rv = dump_dirs_rendezvous( );
-			if ( rv == RV_INTR ) {
-				return RV_INTR;
-			}
-			ASSERT( rv == RV_OK );
-		}
-#endif /* SYNCDIR */
-
 		if ( bulkstatcallcnt == 0 ) {
 			mlog( MLOG_VERBOSE, _(
 			      "dumping directories\n") );
@@ -2947,58 +2890,6 @@ dump_dirs( ix_t strmix,
 	}
 	/* NOTREACHED */
 }
-
-#ifdef SYNCDIR
-static rv_t
-dump_dirs_rendezvous( void )
-{
-	static size_t localsync1;
-	static size_t localsync2;
-
-	sc_thrdswaitingdirdumpsync2 = 0;
-	lock( );
-	sc_thrdswaitingdirdumpsync1++;
-	localsync1 = sc_thrdswaitingdirdumpsync1;
-	localsync2 = sc_thrdswaitingdirdumpsync2;
-	unlock( );
-	while ( localsync2 == 0
-		&&
-		localsync1 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
-		sleep( 1 );
-		if ( cldmgr_stop_requested( )) {
-			lock( );
-			sc_thrdswaitingdirdumpsync1--;
-			unlock( );
-			return RV_INTR;
-		}
-		lock( );
-		localsync1 = sc_thrdswaitingdirdumpsync1;
-		localsync2 = sc_thrdswaitingdirdumpsync2;
-		unlock( );
-	}
-	lock( );
-	sc_thrdswaitingdirdumpsync1--;
-	sc_thrdswaitingdirdumpsync2++;
-	localsync2 = sc_thrdswaitingdirdumpsync2;
-	unlock( );
-	while ( localsync2 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
-		sleep( 1 );
-		if ( cldmgr_stop_requested( )) {
-			return RV_INTR;
-		}
-		lock( );
-		localsync2 = sc_thrdswaitingdirdumpsync2;
-		unlock( );
-	}
-	if ( cldmgr_stop_requested( )) {
-		return RV_INTR;
-	}
-	
-	qbarrier( sc_barrierh, min( stream_cnt( ), sc_thrdsdirdumpsynccnt ));
-
-	return RV_OK;
-}
-#endif /* SYNCDIR */
 
 static rv_t
 dump_dir( ix_t strmix,

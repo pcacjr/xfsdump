@@ -625,6 +625,9 @@ struct tran {
 	intgen_t t_persfd;
 		/* file descriptor of the persistent state file
 		 */
+	size64_t t_dirdumps;
+		/* bitset of streams which contain a directory dump
+		 */
 	sync_t t_sync1;
 		/* to single-thread attempt to validate command line
 		 * selection of dump with online inventory
@@ -1183,6 +1186,12 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		usage( );
 		return BOOL_FALSE;
 	}
+
+	/* assume all streams contain a directory dump. streams will remove
+	 * themselves from this bitset if they do not contain a directory dump.
+	 */
+	ASSERT( drivecnt <= sizeof(tranp->t_dirdumps) * NBBY );
+	tranp->t_dirdumps = ( 1ULL << drivecnt ) - 1;
 
 	/* the user may specify stdin as the restore source stream,
 	 * by a single dash ('-') with no option letter. This must
@@ -2235,6 +2244,30 @@ content_stream_restore( ix_t thrdix )
 		}
 		if ( tranp->t_sync3 == SYNC_DONE ) {
 			unlock( );
+			continue;
+		}
+		if ( !(scrhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP) ) {
+			/* if no streams have a directory dump, issue a
+			 * message and exit. first set SYNC_BUSY to prevent
+			 * other threads from coming through here and issuing
+			 * the same message.
+			 */
+			tranp->t_dirdumps &= ~(1ULL << thrdix);
+			if ( !tranp->t_dirdumps ) {
+				tranp->t_sync3 = SYNC_BUSY;
+			}
+			unlock( );
+			if ( !tranp->t_dirdumps ) {
+				mlog( MLOG_VERBOSE | MLOG_ERROR, _(
+					"no directory dump found\n") );
+				Media_end( Mediap );
+				return mlog_exit(EXIT_NORMAL, RV_ERROR);
+			}
+			sleep( 1 );
+			if ( cldmgr_stop_requested( )) {
+				Media_end( Mediap );
+				return mlog_exit(EXIT_NORMAL, RV_INTR);
+			}
 			continue;
 		}
 		tranp->t_sync3 = SYNC_BUSY;
