@@ -21,19 +21,13 @@
 /* qlock - quick locks abstraction
  *
  * threads may allocate quick locks using qlock_alloc, and free them with
- * qlock_free. the abstraction is initialized with qlock_init. the underlying
- * mechanism is the IRIX us lock primitive. in order to use this, a temporary
- * shared arena is created in /tmp. this will be automatically unlinked
- * when the last thread exits.
+ * qlock_free. the abstraction is initialized with qlock_init.
  *
  * deadlock detection is accomplished by giving an ordinal number to each
  * lock allocated, and record all locks held by each thread. locks may not
  * be acquired out of order. that is, subsequently acquired locks must have
  * a lower ordinal than all locks currently held. for convenience, the ordinals
  * of all locks to be allocated will be defined in this file.
- *
- * ADDITION: added counting semaphores. simpler to do here since same
- * shared arena can be used.
  */
 
 #define QLOCK_ORD_CRIT	0
@@ -54,7 +48,7 @@ typedef void *qlockh_t;
 	/* opaque handle
 	 */
 
-extern bool_t qlock_init( bool_t miniroot );
+extern bool_t qlock_init( void );
 	/* called by main to initialize abstraction. returns FALSE if
 	 * utility should abort.
 	 */
@@ -97,9 +91,6 @@ extern bool_t qsemPwouldblock( qsemh_t qsemh );
 	 */
 extern size_t qsemPavail( qsemh_t qsemh );
 	/* number of resources available
-	 */
-extern size_t qsemPblocked( qsemh_t qsemh );
-	/* number of threads currently blocked on this semaphore
 	 */
 
 #endif /* QLOCK_H */

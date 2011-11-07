@@ -8911,7 +8911,8 @@ partial_reg( ix_t d_index,
 
 	/* If not found, find a free one, fill it in and return */
 	if ( ! isptr ) {
-		mlog(MLOG_NITTY, "partial_reg: no entry found for %llu\n", ino);
+		mlog(MLOG_NITTY | MLOG_NOLOCK,
+			"partial_reg: no entry found for %llu\n", ino);
 		/* find a free one */
 		for (i=0; i < partialmax; i++ ) {
 			if (persp->a.parrest[i].is_ino == 0) {
@@ -8950,8 +8951,10 @@ found:
 		/* no existing entry for this drive, fill in the values */
 		bsptr->offset = offset;
 		bsptr->endoffset = endoffset;
-		mlog(MLOG_NITTY, "partial_reg: update entry [%d]: "
-		     "<off = %lld, end = %lld>\n", d_index, offset, endoffset);
+		mlog(MLOG_NITTY | MLOG_NOLOCK,
+			"partial_reg: update entry [%d]: "
+			"<off = %lld, end = %lld>\n",
+			d_index, offset, endoffset);
 	} else {
 		bool_t ret;
 
@@ -8960,9 +8963,11 @@ found:
 		 */
 		bsptr->endoffset = endoffset;
 		ret = partial_check2(isptr, fsize);
-		mlog(MLOG_NITTY, "partial_reg: extend entry [%d]: "
-		     "<end = %lld>\n", d_index, endoffset);
-		mlog(MLOG_NITTY, "partial_reg: partial_check returns: %d\n", ret);
+		mlog(MLOG_NITTY | MLOG_NOLOCK,
+			"partial_reg: extend entry [%d]: <end = %lld>\n",
+			d_index, endoffset);
+		mlog(MLOG_NITTY | MLOG_NOLOCK,
+			"partial_reg: partial_check returns: %d\n", ret);
 	}
 
 	pi_unlock();

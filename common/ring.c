@@ -258,9 +258,7 @@ ring_reset( ring_t *ringp, ring_msg_t *msgp )
 	/* re-initialize the ring
 	 */
 	ASSERT( qsemPavail( ringp->r_ready_qsemh ) == 0 );
-	ASSERT( qsemPblocked( ringp->r_ready_qsemh ) == 0 );
 	ASSERT( qsemPavail( ringp->r_active_qsemh ) == 0 );
-	ASSERT( qsemPblocked( ringp->r_active_qsemh ) <= 1 );
 	ringp->r_ready_in_ix = 0;
 	ringp->r_ready_out_ix = 0;
 	ringp->r_active_in_ix = 0;
@@ -277,9 +275,7 @@ ring_reset( ring_t *ringp, ring_msg_t *msgp )
 		qsemV( ringp->r_ready_qsemh );
 	}
 	ASSERT( qsemPavail( ringp->r_ready_qsemh ) == ringp->r_len );
-	ASSERT( qsemPblocked( ringp->r_ready_qsemh ) == 0 );
 	ASSERT( qsemPavail( ringp->r_active_qsemh ) == 0 );
-	ASSERT( qsemPblocked( ringp->r_active_qsemh ) <= 1 );
 }
 
 void

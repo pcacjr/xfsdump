@@ -359,7 +359,7 @@ main( int argc, char *argv[] )
 
 	/* initialize the spinlock allocator
 	 */
-	ok = qlock_init( miniroot );
+	ok = qlock_init( );
 	if ( ! ok ) {
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
