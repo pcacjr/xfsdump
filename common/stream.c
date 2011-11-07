@@ -86,19 +86,18 @@ stream_register( pthread_t tid, intgen_t streamix )
 	p->s_exit_hint = RV_NONE;
 }
 
+/* NOTE: lock() must be held when calling stream_dead() */
 void
 stream_dead( pthread_t tid )
 {
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
-	lock();
 	for ( ; p < ep ; p++ )
 		if ( pthread_equal( p->s_tid, tid ) ) {
 			p->s_state = S_ZOMBIE;
 			break;
 		}
-	unlock();
 	ASSERT( p < ep );
 }
 

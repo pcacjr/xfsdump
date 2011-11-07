@@ -43,6 +43,7 @@ typedef enum { S_FREE, S_RUNNING, S_ZOMBIE } stream_state_t;
 
 extern void stream_init( void );
 extern void stream_register( pthread_t tid, intgen_t streamix );
+/* NOTE: lock() must be held when calling stream_dead */
 extern void stream_dead( pthread_t tid );
 extern void stream_free( pthread_t tid );
 extern int stream_find_all( stream_state_t states[],

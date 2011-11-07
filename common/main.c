@@ -137,10 +137,6 @@ static bool_t sighup_received;
 static bool_t sigterm_received;
 static bool_t sigquit_received;
 static bool_t sigint_received;
-static size_t prbcld_cnt;
-static pid_t prbcld_pid;
-static intgen_t prbcld_xc;
-static intgen_t prbcld_signo;
 /* REFERENCED */
 static intgen_t sigstray_received;
 static bool_t progrpt_enabledpr;
@@ -168,6 +164,8 @@ main( int argc, char *argv[] )
 	intgen_t exitcode;
 	rlim64_t tmpstacksz;
 	struct sigaction sa;
+	intgen_t prbcld_xc = EXIT_NORMAL;
+	intgen_t xc;
 	bool_t ok;
 	/* REFERENCED */
 	int rval;
@@ -563,7 +561,6 @@ main( int argc, char *argv[] )
 		sigint_received = BOOL_FALSE;
 		sigquit_received = BOOL_FALSE;
 		sigstray_received = BOOL_FALSE;
-		prbcld_cnt = 0;
 
 		alarm( 0 );
 
@@ -573,6 +570,7 @@ main( int argc, char *argv[] )
 		sigaddset( &blocked_set, SIGTERM );
 		sigaddset( &blocked_set, SIGQUIT );
 		sigaddset( &blocked_set, SIGALRM );
+		sigaddset( &blocked_set, SIGUSR1 );
 		pthread_sigmask( SIG_SETMASK, &blocked_set, NULL );
 
 		sa.sa_handler = sighandler;
@@ -581,6 +579,7 @@ main( int argc, char *argv[] )
 		sigaction( SIGTERM, &sa, NULL );
 		sigaction( SIGQUIT, &sa, NULL );
 		sigaction( SIGALRM, &sa, NULL );
+		sigaction( SIGUSR1, &sa, NULL );
 	}
 
 	/* do content initialization.
@@ -710,31 +709,16 @@ main( int argc, char *argv[] )
 		 * stop. furthermore, note that core should be dumped if
 		 * the child explicitly exited with EXIT_FAULT.
 		 */
-		if ( prbcld_cnt ) {
-			if ( prbcld_xc == EXIT_FAULT || prbcld_signo != 0 ) {
+		xc = cldmgr_join( );
+		if ( xc ) {
+			if ( xc == EXIT_FAULT ) {
 				coredump_requested = BOOL_TRUE;
 				stop_timeout = ABORT_TIMEOUT;
 			} else {
 				stop_timeout = STOP_TIMEOUT;
 			}
+			prbcld_xc = xc;
 			stop_requested = BOOL_TRUE;
-			if ( prbcld_xc != EXIT_NORMAL ) {
-				mlog( MLOG_DEBUG | MLOG_PROC,
-				      "child (pid %d) requested stop: "
-				      "exit code %d (%s)\n",
-				      prbcld_pid,
-				      prbcld_xc,
-				      exit_codestring( prbcld_xc ));
-			} else if ( prbcld_signo ) {
-				ASSERT( prbcld_signo );
-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC,
-				      _("child (pid %d) faulted: "
-				      "signal number %d (%s)\n"),
-				      prbcld_pid,
-				      prbcld_signo,
-				      sig_numstring( prbcld_signo ));
-			}
-			prbcld_cnt = 0;
 		}
 			
 		/* all children died normally. break out.
@@ -1528,6 +1512,7 @@ sighandler( int signo )
 		sigquit_received = BOOL_TRUE;
 		break;
 	case SIGALRM:
+	case SIGUSR1:
 		break;
 	default:
 		sigstray_received = signo;

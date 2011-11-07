@@ -39,9 +39,12 @@ extern bool_t cldmgr_create( int ( * entry )( void *arg1 ),
  */
 extern void cldmgr_stop( void );
 
-/* cldmgr_died - tells the child manager that the child died
+/* cldmgr_join - join child threads that have exited.
+ * returns EXIT_NORMAL if all exited normally (or no threads have exited),
+ * EXIT_FAULT if any threads requested a core dump, or another EXIT_*
+ * value if any threads exited abnormally.
  */
-extern void cldmgr_died( pthread_t tid );
+extern intgen_t cldmgr_join( void );
 
 /* cldmgr_stop_requested - returns TRUE if the child should gracefully
  * terminate.
