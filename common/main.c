@@ -357,13 +357,6 @@ main( int argc, char *argv[] )
 		miniroot = BOOL_TRUE;
 	}
 
-	/* initialize the spinlock allocator
-	 */
-	ok = qlock_init( );
-	if ( ! ok ) {
-		return mlog_exit(EXIT_ERROR, RV_INIT);
-	}
-
 	/* initialize message logging (stage 2) - allocate the message lock
 	 */
 	ok = mlog_init2( );

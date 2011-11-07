@@ -213,12 +213,8 @@ cldmgr_entry( void *arg1 )
 {
 	cld_t *cldp = ( cld_t * )arg1;
 	pid_t pid = getpid( );
-	/* REFERENCED */
-	bool_t ok;
 
 	cldp->c_pid = pid;
-	ok = qlock_thrdinit( );
-	ASSERT( ok );
 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
 		stream_register( pid, ( intgen_t )cldp->c_streamix );
 	}

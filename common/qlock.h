@@ -21,7 +21,7 @@
 /* qlock - quick locks abstraction
  *
  * threads may allocate quick locks using qlock_alloc, and free them with
- * qlock_free. the abstraction is initialized with qlock_init.
+ * qlock_free.
  *
  * deadlock detection is accomplished by giving an ordinal number to each
  * lock allocated, and record all locks held by each thread. locks may not
@@ -46,15 +46,6 @@
 typedef void *qlockh_t;
 #define QLOCKH_NULL	0
 	/* opaque handle
-	 */
-
-extern bool_t qlock_init( void );
-	/* called by main to initialize abstraction. returns FALSE if
-	 * utility should abort.
-	 */
-
-extern bool_t qlock_thrdinit( void );
-	/* called by each thread to prepare it for participation
 	 */
 
 extern qlockh_t qlock_alloc( ix_t ord );
