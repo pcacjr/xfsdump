@@ -3441,7 +3441,7 @@ Node2path( nh_t nh, char *path, char *errmsg )
 static intgen_t
 Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 {
-	static path_cache_t cache = { NH_NULL, 0, "" };
+	static __thread path_cache_t cache = { NH_NULL, 0, "" };
 	node_t *np;
 	nh_t parh;
 	xfs_ino_t ino;
