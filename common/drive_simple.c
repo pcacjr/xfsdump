@@ -98,8 +98,8 @@ extern size_t pgsz;
 
 /* strategy functions
  */
-static intgen_t ds_match( int, char *[], drive_t *, bool_t );
-static intgen_t ds_instantiate( int, char *[], drive_t *, bool_t );
+static intgen_t ds_match( int, char *[], drive_t * );
+static intgen_t ds_instantiate( int, char *[], drive_t * );
 
 /* declare manager operators
  */
@@ -178,7 +178,7 @@ static drive_ops_t drive_ops = {
  */
 /* ARGSUSED */
 static intgen_t
-ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ds_match( int argc, char *argv[], drive_t *drivep )
 {
 	bool_t isrmtpr;
 	struct stat64 statbuf;
@@ -221,7 +221,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
  */
 /*ARGSUSED*/
 static bool_t
-ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ds_instantiate( int argc, char *argv[], drive_t *drivep )
 {
 	drive_context_t *contextp;
 

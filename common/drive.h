@@ -140,15 +140,13 @@ struct drive_strategy {
 		     */
 	intgen_t ( * ds_match )( intgen_t argc,
 				 char *argv[ ],
-				 struct drive *drivep,
-				 bool_t singlethreaded );
+				 struct drive *drivep );
 		    /* returns degree of match. drivep has been pre-allocated
 		     * and initialized with generic info.
 		     */
 	bool_t ( * ds_instantiate )( intgen_t argc,
 				     char *argv[ ],
-				     struct drive *drivep,
-				     bool_t singlethreaded );
+				     struct drive *drivep );
 		    /* creates a drive manager instance, by filling in the
 		     * blanks of the pre-allocated drive descriptor
 		     * returns FALSE on failure.
@@ -648,7 +646,7 @@ extern size_t partialmax;
  *
  * Returns FALSE if utility should be aborted.
  */
-extern bool_t drive_init1( int argc, char *argv[], bool_t singlethreaded );
+extern bool_t drive_init1( int argc, char *argv[] );
 
 
 /* drive_init2 - allocate and initialize read and write hdr buffers,

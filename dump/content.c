@@ -244,7 +244,6 @@ typedef struct pds pds_t;
 extern void usage( void );
 extern bool_t preemptchk( int );
 extern char *homedir;
-extern bool_t miniroot;
 extern bool_t pipeline;
 extern bool_t stdoutpiped;
 extern char *sistr;
@@ -2352,7 +2351,7 @@ content_stream_dump( ix_t strmix )
 					     inomap_next_nondir,
 					     inomap_contextp,
 					     ( intgen_t * )&rv,
-					     ( miniroot || pipeline ) ?
+					     pipeline ?
 					       (bool_t (*)(int))preemptchk : 0,
 					     bstatbufp,
 					     bstatbuflen );
@@ -2586,24 +2585,22 @@ decision_more:
 	 * from all streams have been registered.
 	 */
 	if ( drivep->d_capabilities & DRIVE_CAP_FILES ) {
-		if ( ! miniroot ) {
-			if ( stream_cnt( ) > 1 ) {
-				mlog( MLOG_VERBOSE, _(
-				      "waiting for synchronized "
-				      "session inventory dump\n") );
-				sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
-			}
+		if ( stream_cnt( ) > 1 ) {
+			mlog( MLOG_VERBOSE, _(
+			      "waiting for synchronized "
+			      "session inventory dump\n") );
+			sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
+		}
 
-			/* first be sure all threads have begun
-			 */
-			while ( sc_thrdsarrivedcnt < drivecnt ) {
-				sleep( 1 );
-			}
-			/* now wait for survivors to checkin
-			 */
-			while ( sc_thrdsdonecnt < stream_cnt( )) {
-				sleep( 1 );
-			}
+		/* first be sure all threads have begun
+		*/
+		while ( sc_thrdsarrivedcnt < drivecnt ) {
+			sleep( 1 );
+		}
+		/* now wait for survivors to checkin
+		*/
+		while ( sc_thrdsdonecnt < stream_cnt( )) {
+			sleep( 1 );
 		}
 		/* proceeed
 		 */

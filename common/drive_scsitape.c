@@ -299,8 +299,8 @@ extern int rmtwrite( int, const void *, uint);
 
 /* strategy functions
  */
-static intgen_t ds_match( int, char *[], drive_t *, bool_t );
-static intgen_t ds_instantiate( int, char *[], drive_t *, bool_t );
+static intgen_t ds_match( int, char *[], drive_t * );
+static intgen_t ds_instantiate( int, char *[], drive_t * );
 
 /* manager operations
  */
@@ -506,7 +506,7 @@ is_scsi_driver(char *pathname)
  */
 /* ARGSUSED */
 static intgen_t
-ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ds_match( int argc, char *argv[], drive_t *drivep )
 {
 	struct mtget mt_stat;
 	intgen_t fd;
@@ -544,7 +544,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
  */
 /*ARGSUSED*/
 static bool_t
-ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ds_instantiate( int argc, char *argv[], drive_t *drivep )
 {
 	drive_context_t *contextp;
 	intgen_t c;
@@ -567,9 +567,10 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	ASSERT( contextp );
 	memset( ( void * )contextp, 0, sizeof( *contextp ));
 
-	/* transfer indication of singlethreadedness to context
+	/* do not enable a separate I/O thread,
+	 * more testing to be done first...
 	 */
-	contextp->dc_singlethreadedpr = singlethreaded;
+	contextp->dc_singlethreadedpr = BOOL_TRUE;
 
 	/* scan the command line for the I/O buffer ring length
 	 * and record checksum request
@@ -670,7 +671,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	/* if threads not allowed, allocate a record buffer. otherwise
 	 * create a ring, from which buffers will be taken.
 	 */
-	if ( singlethreaded ) {
+	if ( contextp->dc_singlethreadedpr ) {
 		contextp->dc_bufp = ( char * )memalign( PGSZ, STAPE_MAX_RECSZ );
 		ASSERT( contextp->dc_bufp );
 	} else {

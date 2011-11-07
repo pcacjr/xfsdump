@@ -27,7 +27,7 @@
  * facilitating easy changes.
  */
 
-#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:Z"
+#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:"
 
 #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
 #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
@@ -80,6 +80,6 @@
 #define	GETOPT_SHOWLOGLEVEL	'W'	/* show level of log messages */
 /*				'X'	*/
 #define	GETOPT_RINGLEN		'Y'	/* specify I/O buffer ring length */
-#define	GETOPT_MINIROOT		'Z'	/* apply miniroot restrictions */
+/*				'Z'	   used on irix for miniroot */
 
 #endif /* GETOPT_H */

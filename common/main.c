@@ -87,10 +87,6 @@ bool_t preemptchk( int );
 static bool_t loadoptfile( int *argcp, char ***argvp );
 static char * stripquotes( char *p );
 static void shiftleftby1( char *p, char *endp );
-static bool_t in_miniroot_heuristic( void );
-#ifdef HIDDEN
-static void mrh_sighandler( int );
-#endif
 static void sighandler( int );
 static int childmain( void * );
 static bool_t sigint_dialog( void );
@@ -111,11 +107,6 @@ intgen_t version = 3;
 intgen_t subversion = 0;
 char *progname = 0;			/* used in all error output */
 char *homedir = 0;			/* directory invoked from */
-#ifdef HIDDEN
-bool_t miniroot = BOOL_FALSE;
-#else
-bool_t miniroot = BOOL_TRUE;
-#endif /* HIDDEN */
 bool_t pipeline = BOOL_FALSE;
 bool_t stdoutpiped = BOOL_FALSE;
 pthread_t parenttid;
@@ -215,16 +206,11 @@ main( int argc, char *argv[] )
 	if ( ! ok ) {
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
-	/* scan the command line for the miniroot, info, progress
+	/* scan the command line for the info, progress
 	 * report options, and stacksz.
 	 */
 	minstacksz = MINSTACKSZ;
 	maxstacksz = MAXSTACKSZ;
-#ifdef HIDDEN
-	miniroot = BOOL_FALSE;
-#else
-	miniroot = BOOL_TRUE;
-#endif /* HIDDEN */
 	infoonly = BOOL_FALSE;
 	progrpt_enabledpr = BOOL_FALSE;
 	optind = 1;
@@ -275,9 +261,6 @@ main( int argc, char *argv[] )
 			}
 			maxstacksz = tmpstacksz;
 			break;
-                case GETOPT_MINIROOT:
-                        miniroot = BOOL_TRUE;
-                        break;
 		case GETOPT_HELP:
 			infoonly = BOOL_TRUE;
 			mlog_exit_hint(RV_USAGE);
@@ -347,13 +330,6 @@ main( int argc, char *argv[] )
 #endif /* RESTORE */
 	if ( ! ok ) {
 		return mlog_exit(EXIT_ERROR, RV_INIT);
-	}
-
-	/* perform an experiment to determine if we are in the miniroot.
-	 * various features will be disallowed if in miniroot.
-	 */
-	if ( ! miniroot && in_miniroot_heuristic( )) {
-		miniroot = BOOL_TRUE;
 	}
 
 	/* initialize message logging (stage 2) - allocate the message lock
@@ -473,7 +449,7 @@ main( int argc, char *argv[] )
 	 * terribly time-consuming here. A second initialization pass
 	 * will be done shortly.
 	 */
-	ok = drive_init1( argc, argv, miniroot );
+	ok = drive_init1( argc, argv );
 	if ( ! ok ) {
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
@@ -503,11 +479,7 @@ main( int argc, char *argv[] )
 	      VERSION,
 	      version,
 	      subversion );
-	if ( miniroot ) {
-		mlog( MLOG_VERBOSE | MLOG_BARE, _(
-		      " - "
-		      "Running single-threaded\n") );
-	} else if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
+	if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
 		mlog( MLOG_VERBOSE | MLOG_BARE, _(
 		      " - "
 		      "type %s for status and control\n"),
@@ -531,11 +503,10 @@ main( int argc, char *argv[] )
 	 */
 	mlog_tell_streamcnt( drivecnt );
 
-	/* initialize the state of signal processing. if miniroot or
-	 * pipeline, just want to exit when a signal is received. otherwise,
-	 * hold signals so they don't interfere with sys calls; they will
-	 * be released at pre-emption points and upon pausing in the main
-	 * loop.
+	/* initialize the state of signal processing. if in a pipeline, just
+	 * want to exit when a signal is received. otherwise, hold signals so
+	 * they don't interfere with sys calls; they will be released at
+	 * pre-emption points and upon pausing in the main loop.
 	 */
 
 	sigfillset(&sa.sa_mask);
@@ -551,7 +522,7 @@ main( int argc, char *argv[] )
 	sigaction( SIGPIPE, &sa, NULL );
 	sigaction( SIGCHLD, &sa, NULL );
 
-	if ( ! miniroot && ! pipeline ) {
+	if ( ! pipeline ) {
 		sigset_t blocked_set;
 
 		stop_in_progress = BOOL_FALSE;
@@ -594,10 +565,9 @@ main( int argc, char *argv[] )
 		return mlog_exit(EXIT_ERROR, RV_INIT);
 	}
 
-	/* if miniroot or a pipeline, go single-threaded
-	 * with just one stream.
+	/* if in a pipeline, go single-threaded with just one stream.
 	 */
-	if ( miniroot || pipeline ) {
+	if ( pipeline ) {
 		intgen_t exitcode;
 
 		sa.sa_handler = sighandler;
@@ -977,9 +947,6 @@ usage( void )
 	ULO(_("(show verbosity in messages)"),		GETOPT_SHOWLOGLEVEL );
 #endif /* REVEAL */
 	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
-#ifdef REVEAL
-	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
-#endif /* REVEAL */
 	ULN(_("- (stdout)") );
 	ULN(_("<source (mntpnt|device)>") );
 #endif /* DUMP */
@@ -1030,9 +997,6 @@ usage( void )
 #endif /* REVEAL */
 	ULO(_("<excluded subtree> ..."),		GETOPT_NOSUBTREE );
 	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
-#ifdef REVEAL
-	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
-#endif /* REVEAL */
 	ULN(_("- (stdin)") );
 	ULN(_("<destination>") );
 #endif /* RESTORE */
@@ -1081,9 +1045,9 @@ preemptchk( int flg )
 		return BOOL_FALSE;
 	}
 
-	/* signals not caught in these cases
+	/* signals not caught if in a pipeline
 	 */
-	if ( miniroot || pipeline ) {
+	if ( pipeline ) {
 		return BOOL_FALSE;
 	}
 
@@ -1400,66 +1364,6 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	return BOOL_TRUE;
 }
 
-#ifdef HIDDEN
-static pid_t mrh_cid;
-#endif
-
-static bool_t
-in_miniroot_heuristic( void )
-{
-	return BOOL_TRUE;
-
-#ifdef HIDDEN
-	SIG_PF prev_handler_hup;
-	SIG_PF prev_handler_term;
-	SIG_PF prev_handler_int;
-	SIG_PF prev_handler_quit;
-	SIG_PF prev_handler_cld;
-	bool_t in_miniroot;
-
-	/* attempt to call sproc.
-	 */
-	prev_handler_hup = sigset( SIGHUP, SIG_IGN );
-	prev_handler_term = sigset( SIGTERM, SIG_IGN );
-	prev_handler_int = sigset( SIGINT, SIG_IGN );
-	prev_handler_quit = sigset( SIGQUIT, SIG_IGN );
-	prev_handler_cld = sigset( SIGCLD, mrh_sighandler );
-	( void )sighold( SIGCLD );
-	mrh_cid = ( pid_t )sproc( ( void ( * )( void * ))exit, PR_SALL, 0 );
-	if ( mrh_cid < 0 ) {
-		in_miniroot = BOOL_TRUE;
-	} else {
-		while ( mrh_cid >= 0 ) {
-			( void )sigpause( SIGCLD );
-		}
-		in_miniroot = BOOL_FALSE;
-	}
-	( void )sigset( SIGHUP, prev_handler_hup );
-	( void )sigset( SIGTERM, prev_handler_term );
-	( void )sigset( SIGINT, prev_handler_int );
-	( void )sigset( SIGQUIT, prev_handler_quit );
-	( void )sigset( SIGCLD, prev_handler_cld );
-
-	return in_miniroot;
-#endif /* HIDDEN */
-}
-
-#ifdef HIDDEN
-static void
-mrh_sighandler( int signo )
-{
-	if ( signo == SIGCLD ) {
-		pid_t cid;
-		intgen_t stat;
-
-		cid = wait( &stat );
-		if ( cid == mrh_cid ) {
-			mrh_cid = -1;
-		}
-	}
-}
-#endif
-
 /* parent and children share this handler. 
  */
 static void
@@ -1470,9 +1374,9 @@ sighandler( int signo )
 	if ( dlog_sighandler( signo ) )
 		return;
 
-	/* if in miniroot, don't do anything risky. just quit.
+	/* if in pipeline, don't do anything risky. just quit.
 	 */
-	if ( miniroot || pipeline ) {
+	if ( pipeline ) {
 		intgen_t rval;
 
 		mlog( MLOG_TRACE | MLOG_NOTE | MLOG_NOLOCK | MLOG_PROC,

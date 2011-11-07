@@ -66,10 +66,6 @@ option. Other techniques, such as making a second copy of the dump
 image, provide more protection against media failures than multiple
 media files will.
 .P
-However, the current implementation in Linux only supports one destination
-and running single threaded. Therefore, the above comments
-regarding multiple streams describe the possible future capabilities.
-.P
 .I xfsdump
 maintains an online dump inventory in \f2/var/lib/xfsdump/inventory\f1.
 The
@@ -391,8 +387,8 @@ Specify I/O buffer ring length.
 uses a ring of output buffers to achieve maximum throughput
 when dumping to tape drives.
 The default ring length is 3.
-However, this is only supported when running multi-threaded
-which has not been done for Linux yet - making this option benign.
+However, this is not currently enabled on
+Linux yet, making this option benign.
 .TP 5
 .B \-
 A lone

@@ -660,7 +660,6 @@ typedef struct tran tran_t;
 extern void usage( void );
 extern bool_t preemptchk( void );
 extern char *homedir;
-extern bool_t miniroot;
 extern bool_t pipeline;
 extern bool_t stdoutpiped;
 extern char *sistr;
@@ -2544,14 +2543,12 @@ content_stream_restore( ix_t thrdix )
 	}
 	tranp->t_sync5 = SYNC_BUSY;
 	unlock( );
-	if ( ! miniroot ) {
-		if ( drivecnt > 1 ) {
-			mlog( MLOG_TRACE,
-			      "waiting for other streams to exit\n" );
-		}
-		while ( cldmgr_otherstreamsremain( thrdix )) {
-			sleep( 1 );
-		}
+	if ( drivecnt > 1 ) {
+		mlog( MLOG_TRACE,
+		      "waiting for other streams to exit\n" );
+	}
+	while ( cldmgr_otherstreamsremain( thrdix )) {
+		sleep( 1 );
 	}
 
 	mlog( MLOG_DEBUG,
@@ -3006,10 +3003,10 @@ applydirdump( drive_t *drivep,
 				return RV_INTR;
 			}
 
-			/* if miniroot or pipeline , call preemptchk( ) to
+			/* if in a pipeline , call preemptchk( ) to
 			 * print status reports
 			 */
-			if ( miniroot || pipeline )
+			if ( pipeline )
 			{
 				mlog( MLOG_DEBUG ,
 					"preemptchk( )\n");
@@ -3543,10 +3540,10 @@ applynondirdump( drive_t *drivep,
 				       fhdrp->fh_offset );
 		}
 
-		/* if miniroot or pipeline , call preemptchk( ) to
+		/* if in a pipeline , call preemptchk( ) to
 		 * print status reports
 		 */
-		if ( miniroot || pipeline )
+		if ( pipeline )
 		{
 			mlog( MLOG_DEBUG ,
 				"preemptchk( )\n");

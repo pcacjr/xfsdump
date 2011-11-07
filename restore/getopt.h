@@ -26,7 +26,7 @@
  * purpose is to contain that command string.
  */
 
-#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
+#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:"
 
 #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
 #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
@@ -79,6 +79,6 @@
 #define	GETOPT_SHOWLOGLEVEL	'W'	/* show level of log messages */
 #define	GETOPT_NOSUBTREE	'X'	/* subtree to exclude */
 #define	GETOPT_RINGLEN		'Y'	/* specify I/O buffer ring length */
-#define	GETOPT_MINIROOT		'Z'	/* apply miniroot restrictions */
+/*				'Z'	   used on irix for miniroot */
 
 #endif /* GETOPT_H */

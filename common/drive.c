@@ -81,7 +81,7 @@ static drive_strategy_t *strategypp[] = {
  * specified on the command line.
  */
 bool_t
-drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+drive_init1( int argc, char *argv[ ] )
 {
 	intgen_t c;
 	ix_t driveix;
@@ -101,18 +101,6 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 			drivecnt++;
 			break;
 		}
-	}
-
-	/* validate drive count
-	 */
-	if ( singlethreaded && drivecnt > 1 ) {
-		mlog( MLOG_NORMAL, _(
-		      "too many -%c arguments: "
-		      "maximum is %d when running in miniroot\n"),
-		      GETOPT_DUMPDEST,
-		      1 );
-		usage( );
-		return BOOL_FALSE;
 	}
 
 	/* allocate an array to hold ptrs to drive descriptors
@@ -221,8 +209,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 			intgen_t score;
 			score = ( * sp->ds_match )( argc,
 						    argv,
-						    drivep,
-						    singlethreaded );
+						    drivep );
 			if ( ! bestsp || score > bestscore ) {
 				bestsp = sp;
 				bestscore = score;
@@ -237,8 +224,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
 		      bestsp->ds_description );
 		ok = ( * bestsp->ds_instantiate )( argc,
 						   argv,
-						   drivep,
-						   singlethreaded );
+						   drivep );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
