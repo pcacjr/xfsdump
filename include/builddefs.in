@@ -16,6 +16,7 @@ CFLAGS = @CFLAGS@
 LIBRMT = $(TOPDIR)/librmt/librmt.la
 LIBXFS = @libxfs@
 LIBATTR = @libattr@
+LIBPTHREAD = @libpthread@
 LIBUUID = @libuuid@
 LIBCURSES = @libcurses@
 LIBHANDLE = @libhdl@
