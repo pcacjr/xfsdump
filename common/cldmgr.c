@@ -24,6 +24,7 @@
 #include <sys/sem.h>
 #include <sys/prctl.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "types.h"
 #include "lock.h"
@@ -31,14 +32,13 @@
 #include "stream.h"
 #include "mlog.h"
 #include "cldmgr.h"
-#include "sproc.h"
 
 extern size_t pgsz;
 
 #define CLD_MAX	( STREAM_SIMMAX * 2 )
 struct cld {
 	bool_t c_busy;
-	pid_t c_pid;
+	pthread_t c_tid;
 	ix_t c_streamix;
 	int ( * c_entry )( void *arg1 );
 	void * c_arg1;
@@ -50,32 +50,31 @@ static cld_t cld[ CLD_MAX ];
 static bool_t cldmgr_stopflag;
 
 static cld_t *cldmgr_getcld( void );
-static cld_t * cldmgr_findbypid( pid_t );
-static int cldmgr_entry( void * );
+static cld_t * cldmgr_findbytid( pthread_t );
+static void *cldmgr_entry( void * );
 /* REFERENCED */
-static pid_t cldmgr_parentpid;
+static pthread_t cldmgr_parenttid;
 
 bool_t
 cldmgr_init( void )
 {
 	( void )memset( ( void * )cld, 0, sizeof( cld ));
 	cldmgr_stopflag = BOOL_FALSE;
-	cldmgr_parentpid = getpid( );
+	cldmgr_parenttid = pthread_self( );
 
 	return BOOL_TRUE;
 }
 
 bool_t
 cldmgr_create( int ( * entry )( void *arg1 ),
-	       u_intgen_t inh,
 	       ix_t streamix,
 	       char *descstr,
 	       void *arg1 )
 {
 	cld_t *cldp;
-	pid_t cldpid;
+	intgen_t rval;
 
-	ASSERT( getpid( ) == cldmgr_parentpid );
+	ASSERT( pthread_equal( pthread_self( ), cldmgr_parenttid ) );
 
 	cldp = cldmgr_getcld( );
 	if ( ! cldp ) {
@@ -91,22 +90,22 @@ cldmgr_create( int ( * entry )( void *arg1 ),
 	cldp->c_streamix = streamix;
 	cldp->c_entry = entry;
 	cldp->c_arg1 = arg1;
-	cldpid = ( pid_t )sproc( cldmgr_entry, inh, ( void * )cldp );
-	if ( cldpid < 0 ) {
+	rval = pthread_create( &cldp->c_tid, NULL, cldmgr_entry, cldp );
+	if ( rval ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC, _(
-		      "sproc failed creating %s thread for stream %u: %s\n"),
+		      "failed creating %s thread for stream %u: %s\n"),
 		      descstr,
 		      streamix,
-		      strerror( errno ));
+		      strerror( rval ));
 	} else {
 		mlog( MLOG_NITTY | MLOG_PROC,
-		      "%s thread created for stream %u: pid %d\n",
+		      "%s thread created for stream %u: tid %lu\n",
 		      descstr,
 		      streamix,
-		      cldpid );
+		      cldp->c_tid );
 	}
 
-	return cldpid < 0 ? BOOL_FALSE : BOOL_TRUE;
+	return rval ? BOOL_FALSE : BOOL_TRUE;
 }
 
 void
@@ -119,16 +118,16 @@ cldmgr_stop( void )
 }
 
 void
-cldmgr_died( pid_t pid )
+cldmgr_died( pthread_t tid )
 {
-	cld_t *cldp = cldmgr_findbypid( pid );
+	cld_t *cldp = cldmgr_findbytid( tid );
 
 	if ( ! cldp ) {
 		return;
 	}
 	cldp->c_busy = BOOL_FALSE;
 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
-		stream_dead( pid );
+		stream_dead( tid );
 	}
 }
 
@@ -194,13 +193,13 @@ cldmgr_getcld( void )
 }
 
 static cld_t *
-cldmgr_findbypid( pid_t pid )
+cldmgr_findbytid( pthread_t tid )
 {
 	cld_t *p = cld;
 	cld_t *ep = cld + sizeof( cld ) / sizeof( cld[ 0 ] );
 
 	for ( ; p < ep ; p++ ) {
-		if ( p->c_busy && p->c_pid == pid ) {
+		if ( p->c_busy && pthread_equal( p->c_tid, tid )) {
 			break;
 		}
 	}
@@ -208,19 +207,20 @@ cldmgr_findbypid( pid_t pid )
 	return ( p < ep ) ? p : 0;
 }
 
-static int
+static void *
 cldmgr_entry( void *arg1 )
 {
 	cld_t *cldp = ( cld_t * )arg1;
-	pid_t pid = getpid( );
+	pthread_t tid = pthread_self( );
 
-	cldp->c_pid = pid;
 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
-		stream_register( pid, ( intgen_t )cldp->c_streamix );
+		stream_register( tid, ( intgen_t )cldp->c_streamix );
 	}
 	mlog( MLOG_DEBUG | MLOG_PROC,
-	      "child %d created for stream %d\n",
-	      pid,
+	      "thread %lu created for stream %d\n",
+	      tid,
 	      cldp->c_streamix );
-	return ( * cldp->c_entry )( cldp->c_arg1 );
+
+	( * cldp->c_entry )( cldp->c_arg1 );
+	return NULL;
 }

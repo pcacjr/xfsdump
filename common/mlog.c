@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <getopt.h>
+#include <pthread.h>
 
 #include "types.h"
 #include "qlock.h"
@@ -40,7 +41,7 @@
 
 extern char *progname;
 extern void usage( void );
-extern pid_t parentpid;
+extern pthread_t parenttid;
 
 #ifdef DUMP
 static FILE *mlog_fp = NULL; /* stderr */;
@@ -385,7 +386,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 
 	if ( ! ( levelarg & MLOG_BARE )) {
 		intgen_t streamix;
-		streamix = stream_getix( getpid() );
+		streamix = stream_getix( pthread_self( ) );
 
 		if ( mlog_showss ) {
 			sprintf( mlog_ssstr, ":%s", mlog_ss_names[ ss ] );
@@ -568,10 +569,10 @@ rv_getdesc(rv_t rv)
 int
 _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 {
-	pid_t pid;
+	pthread_t tid;
 	const struct rv_map *rvp;
 
-	pid = getpid();
+	tid = pthread_self();
 	rvp = rv_getdesc(rv);
 
 
@@ -595,7 +596,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 	 * most accurate information about the termination condition.
 	 */
 
-	if (pid == parentpid) {
+	if ( pthread_equal( tid, parenttid ) ) {
 		if (mlog_main_exit_code == -1) {
 			mlog_main_exit_code = exit_code;
 			mlog_main_exit_return = rv;
@@ -608,7 +609,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 		int exit_code;
 		rv_t exit_return, exit_hint;
 
-		if (stream_get_exit_status(pid,
+		if (stream_get_exit_status(tid,
 					   states,
 					   N(states),
 					   &state,
@@ -618,8 +619,8 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 					   &exit_hint))
 		{
 			if (exit_code == -1) {
-				stream_set_code(pid, exit_code);
-				stream_set_return(pid, rv);
+				stream_set_code(tid, exit_code);
+				stream_set_return(tid, rv);
 			}
 		}
 	}
@@ -630,10 +631,10 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 void
 _mlog_exit_hint( const char *file, int line, rv_t rv )
 {
-	pid_t pid;
+	pthread_t tid;
 	const struct rv_map *rvp;
 
-	pid = getpid();
+	tid = pthread_self();
 	rvp = rv_getdesc(rv);
 	
 	mlog( MLOG_DEBUG | MLOG_NOLOCK,
@@ -655,10 +656,10 @@ _mlog_exit_hint( const char *file, int line, rv_t rv )
 	 * information about the termination condition.
 	 */
 
-	if (pid == parentpid)
+	if ( pthread_equal( tid, parenttid ) )
 		mlog_main_exit_hint = rv;
 	else 
-		stream_set_hint( pid, rv );
+		stream_set_hint( tid, rv );
 
 }
 
@@ -670,10 +671,10 @@ mlog_get_hint( void )
 	bool_t ok;
 	rv_t hint;
 
-	if (getpid() == parentpid)
+	if ( pthread_equal( pthread_self(), parenttid ) )
 		return mlog_main_exit_hint;
 
-	ok = stream_get_exit_status(getpid(), states, N(states),
+	ok = stream_get_exit_status(pthread_self(), states, N(states),
 				    NULL, NULL, NULL, NULL, &hint);
 	ASSERT(ok);
 	return hint;
@@ -697,8 +698,8 @@ mlog_get_hint( void )
 void
 mlog_exit_flush(void)
 {
-	pid_t pids[STREAM_SIMMAX];
-	int i, npids;
+	pthread_t tids[STREAM_SIMMAX];
+	int i, ntids;
 	const struct rv_map *rvp;
 	stream_state_t states[] = { S_RUNNING, S_ZOMBIE };
 	bool_t incomplete = BOOL_FALSE;
@@ -713,13 +714,13 @@ mlog_exit_flush(void)
 	if (mlog_main_exit_hint == RV_USAGE)
 		return;
 
-	npids = stream_find_all(states, N(states), pids, STREAM_SIMMAX);
-	if (npids > 0) {
+	ntids = stream_find_all(states, N(states), tids, STREAM_SIMMAX);
+	if (ntids > 0) {
 
 		/* print the state of all the streams */
 		fprintf(mlog_fp, _("%s: %s Summary:\n"), progname, PROGSTR_CAPS );
 
-		for (i = 0; i < npids; i++) {
+		for (i = 0; i < ntids; i++) {
 			stream_state_t state;
 			intgen_t streamix;
 			int exit_code;
@@ -727,7 +728,7 @@ mlog_exit_flush(void)
 			/* REFERENCED */
 			bool_t ok;
 
-			ok = stream_get_exit_status(pids[i],
+			ok = stream_get_exit_status(tids[i],
 						    states,
 						    N(states),
 						    &state,
@@ -743,11 +744,10 @@ mlog_exit_flush(void)
 			/* print status of this stream */
 			rvp = rv_getdesc(rv);
 			fprintf(mlog_fp,
-				_("%s:   stream %d (pid %d) %s "
+				_("%s:   stream %d %s "
 				"%s (%s)\n"),
 				progname,
 				streamix,
-				pids[i],
 				drivepp[streamix]->d_pathname,
 				rvp->rv_string,
 				rvp->rv_desc);

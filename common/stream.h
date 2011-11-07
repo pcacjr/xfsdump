@@ -42,19 +42,19 @@
 typedef enum { S_FREE, S_RUNNING, S_ZOMBIE } stream_state_t;
 
 extern void stream_init( void );
-extern void stream_register( pid_t pid, intgen_t streamix );
-extern void stream_dead( pid_t pid );
-extern void stream_free( pid_t pid );
+extern void stream_register( pthread_t tid, intgen_t streamix );
+extern void stream_dead( pthread_t tid );
+extern void stream_free( pthread_t tid );
 extern int stream_find_all( stream_state_t states[],
 			    int nstates,
-			    pid_t pids[],
-			    int npids );
-extern intgen_t stream_getix( pid_t pid );
-extern void stream_set_code( pid_t pid, int code );
-extern void stream_set_return( pid_t pid, rv_t rv );
-extern void stream_set_hint( pid_t pid, rv_t rv );
-extern bool_t stream_exists( pid_t pid );
-extern bool_t stream_get_exit_status( pid_t pid,
+			    pthread_t tids[],
+			    int ntids );
+extern intgen_t stream_getix( pthread_t tid );
+extern void stream_set_code( pthread_t tid, int code );
+extern void stream_set_return( pthread_t tid, rv_t rv );
+extern void stream_set_hint( pthread_t tid, rv_t rv );
+extern bool_t stream_exists( pthread_t tid );
+extern bool_t stream_get_exit_status( pthread_t tid,
 				      stream_state_t states[],
 				      int nstates,
 				      stream_state_t *state,

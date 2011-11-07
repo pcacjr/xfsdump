@@ -25,7 +25,6 @@ COMMINCL = \
 	qlock.h \
 	rec_hdr.h \
 	ring.h \
-	sproc.h \
 	stream.h \
 	timeutil.h \
 	ts_mtio.h \
@@ -64,7 +63,6 @@ COMMON = \
 	path.c \
 	qlock.c \
 	ring.c \
-	sproc.c \
 	stream.c \
 	timeutil.c \
 	util.c

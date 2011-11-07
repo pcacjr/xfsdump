@@ -1666,12 +1666,12 @@ baseuuidbypass:
 		sigaddset( &tty_set, SIGINT );
 		sigaddset( &tty_set, SIGQUIT );
 		sigaddset( &tty_set, SIGHUP );
-		sigprocmask( SIG_BLOCK, &tty_set, &orig_set );
+		pthread_sigmask( SIG_BLOCK, &tty_set, &orig_set );
 
 		result = create_inv_session( gwhdrtemplatep, &fsid, mntpnt,
 					     fsdevice, subtreecnt, strmix );
 
-		sigprocmask( SIG_SETMASK, &orig_set, NULL );
+		pthread_sigmask( SIG_SETMASK, &orig_set, NULL );
 
 		if ( !result ) {
 			return BOOL_FALSE;

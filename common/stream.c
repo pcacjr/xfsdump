@@ -19,18 +19,19 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <pthread.h>
+
 #include "types.h"
 #include "exit.h"
 #include "stream.h"
 #include "lock.h"
 #include "mlog.h"
 
-#define PROCMAX	( STREAM_SIMMAX * 2 + 1 )
 #define N(a) (sizeof((a)) / sizeof((a)[0]))
 
 struct spm {
 	stream_state_t	s_state;
-	pid_t		s_pid;
+	pthread_t	s_tid;
 	intgen_t	s_ix;
 	int		s_exit_code;
 	rv_t		s_exit_return;
@@ -38,37 +39,28 @@ struct spm {
 };
 
 typedef struct spm spm_t;
-extern pid_t parentpid;
 static spm_t spm[ STREAM_SIMMAX * 3 ];
 static bool_t initialized = BOOL_FALSE;
 
 void
 stream_init( void )
 {
-#ifdef HIDDEN
-	/* REFERENCED */
-	intgen_t rval;
-
-	rval = ( intgen_t )usconfig( CONF_INITUSERS, PROCMAX );
-	ASSERT( rval >= 0 );
-#endif /* HIDDEN */
-
 	( void )memset( ( void * )spm, 0, sizeof( spm ));
 	initialized = BOOL_TRUE;
 }
 
 /*
  * Note that the stream list structure (updated via the stream_* functions)
- * is indexed by pid. Multiple processes can be registered against the same
- * stream index, typically: the primary content process that does the work;
- * and the drive slave process, which just processes stuff off the ring buffer.
- * In general having multiple pids registered per stream is not an issue for
- * termination status reporting, as the mlog_exit* logging functions only
+ * is indexed by pthread_t (tid). Multiple processes can be registered against
+ * the same stream index, typically: the primary content process that does the
+ * work; and the drive slave process, which just processes stuff off the ring
+ * buffer. In general having multiple tids registered per stream is not an issue
+ * for termination status reporting, as the mlog_exit* logging functions only
  * ever get called out of the primary content process.
  */
 
 void
-stream_register( pid_t pid, intgen_t streamix )
+stream_register( pthread_t tid, intgen_t streamix )
 {
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
@@ -87,7 +79,7 @@ stream_register( pid_t pid, intgen_t streamix )
 
 	if ( p >= ep ) return;
 
-	p->s_pid = pid;
+	p->s_tid = tid;
 	p->s_ix = streamix;
 	p->s_exit_code = -1;
 	p->s_exit_return = RV_NONE;
@@ -95,14 +87,14 @@ stream_register( pid_t pid, intgen_t streamix )
 }
 
 void
-stream_dead( pid_t pid )
+stream_dead( pthread_t tid )
 {
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
 	lock();
 	for ( ; p < ep ; p++ )
-		if ( p->s_pid == pid ) {
+		if ( pthread_equal( p->s_tid, tid ) ) {
 			p->s_state = S_ZOMBIE;
 			break;
 		}
@@ -111,14 +103,14 @@ stream_dead( pid_t pid )
 }
 
 void
-stream_free( pid_t pid )
+stream_free( pthread_t tid )
 {
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
 	lock();
 	for ( ; p < ep ; p++ ) {
-		if ( p->s_pid == pid ) {
+		if ( pthread_equal( p->s_tid, tid ) ) {
 			(void) memset( (void *) p, 0, sizeof(spm_t) );
 			p->s_state = S_FREE;
 			break;
@@ -130,22 +122,22 @@ stream_free( pid_t pid )
 
 int
 stream_find_all( stream_state_t states[], int nstates,
-		 pid_t pids[], int npids )
+		 pthread_t tids[], int ntids )
 {
 	int i, count = 0;
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
-	ASSERT(nstates > 0 && npids > 0);
+	ASSERT(nstates > 0 && ntids > 0);
 
 	if (!initialized)
 		return 0;
 
 	/* lock - make sure we get a consistent snapshot of the stream status */
 	lock();
-	for ( ; p < ep && count < npids; p++ )
+	for ( ; p < ep && count < ntids; p++ )
 		for (i = 0; i < nstates; i++)
 			if (p->s_state == states[i]) {
-				pids[count++] = p->s_pid;
+				tids[count++] = p->s_tid;
 				break;
 			}
 	unlock();
@@ -153,7 +145,7 @@ stream_find_all( stream_state_t states[], int nstates,
 }
 
 static spm_t *
-stream_find( pid_t pid, stream_state_t s[], int nstates )
+stream_find( pthread_t tid, stream_state_t s[], int nstates )
 {
 	int i;
 	spm_t *p = spm;
@@ -163,7 +155,7 @@ stream_find( pid_t pid, stream_state_t s[], int nstates )
 
 	/* note we don't lock the stream array in this function */
 	for ( ; p < ep ; p++ )
-		if ( p->s_pid == pid ) {
+		if ( pthread_equal( p->s_tid, tid ) ) {
 			/* check state */
 			for (i = 0; i < nstates; i++)
 				if (p->s_state == s[i])
@@ -174,8 +166,8 @@ stream_find( pid_t pid, stream_state_t s[], int nstates )
 	{
 		static const char *state_strings[] = { "S_FREE", "S_RUNNING", "S_ZOMBIE" };
 		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
-		      "stream_find(): no stream with pid: %d and state%s:",
-		      pid, nstates == 1 ? "" : "s" );
+		      "stream_find(): no stream with tid: %lu and state%s:",
+		      tid, nstates == 1 ? "" : "s" );
 		for (i = 0; i < nstates; i++)
 			mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
 			      " %s", state_strings[s[i]]);
@@ -187,20 +179,18 @@ stream_find( pid_t pid, stream_state_t s[], int nstates )
 }
 
 /*
- * Note, the following function is called from two places:
- * main.c:sighandler(), and mlog.c:mlog_va() in the first case we
- * aren't allowed to take locks, and in the second locking may be
- * disabled and we are already protected by another lock. So no
- * locking is done in this function.
+ * Note, the following function is called from mlog.c:mlog_va(),
+ * where locking may be disabled and we are already protected by
+ * another lock. So no locking is done in this function.
  */
 
 intgen_t
-stream_getix( pid_t pid )
+stream_getix( pthread_t tid )
 {
 	stream_state_t states[] = { S_RUNNING };
 	spm_t *p;
 	intgen_t ix;
-	p = stream_find( pid, states, N(states) );
+	p = stream_find( tid, states, N(states) );
 	ix = p ? p->s_ix : -1;
 	return ix;
 }
@@ -213,43 +203,43 @@ stream_getix( pid_t pid )
  * streams.
  */
 
-#define stream_set(field_name, pid, value)				\
+#define stream_set(field_name, tid, value)				\
 	stream_state_t states[] = { S_RUNNING };			\
 	spm_t *p;							\
-	pid_t mypid = getpid();						\
+	pthread_t mytid = pthread_self();				\
 									\
-	if (mypid != (pid)) {						\
+	if ( !pthread_equal(mytid, (tid))) {				\
 		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,		\
 		      "stream_set_" #field_name "(): "			\
-		      "foreign stream (pid %d) "			\
-		      "not permitted to update this stream (pid %d)\n",	\
-		      mypid, (pid));					\
+		      "foreign stream (tid %lu) "			\
+		      "not permitted to update this stream (tid %lu)\n",\
+		      mytid, (tid));					\
 		return;							\
 	}								\
 									\
 	lock();								\
-	p = stream_find( (pid), states, N(states) );			\
+	p = stream_find( (tid), states, N(states) );			\
 	if (p) p->s_exit_ ## field_name = (value);			\
 	unlock();
 
-void stream_set_code( pid_t pid, int exit_code )
+void stream_set_code( pthread_t tid, int exit_code )
 {
-	stream_set( code, pid, exit_code );
+	stream_set( code, tid, exit_code );
 }
 
-void stream_set_return( pid_t pid, rv_t rv )
+void stream_set_return( pthread_t tid, rv_t rv )
 {
-	stream_set( return, pid, rv );
+	stream_set( return, tid, rv );
 }
 
-void stream_set_hint( pid_t pid, rv_t rv )
+void stream_set_hint( pthread_t tid, rv_t rv )
 {
-	stream_set( hint, pid, rv );
+	stream_set( hint, tid, rv );
 }
 
 
 bool_t
-stream_get_exit_status( pid_t pid,
+stream_get_exit_status( pthread_t tid,
 			stream_state_t states[],
 			int nstates,
 			stream_state_t *state,
@@ -262,7 +252,7 @@ stream_get_exit_status( pid_t pid,
 	spm_t *p;
 
 	lock();
-	p = stream_find( pid, states, nstates );
+	p = stream_find( tid, states, nstates );
 	if (! p) goto unlock;
 
 	if (state) *state = p->s_state;

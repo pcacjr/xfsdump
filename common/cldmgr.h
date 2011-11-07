@@ -30,7 +30,6 @@ extern bool_t cldmgr_init( void );
  * encountered
  */
 extern bool_t cldmgr_create( int ( * entry )( void *arg1 ),
-			     u_intgen_t inh,
 			     ix_t streamix,
 			     char *descstr,
 			     void *arg1 );
@@ -42,17 +41,12 @@ extern void cldmgr_stop( void );
 
 /* cldmgr_died - tells the child manager that the child died
  */
-extern void cldmgr_died( pid_t pid );
+extern void cldmgr_died( pthread_t tid );
 
 /* cldmgr_stop_requested - returns TRUE if the child should gracefully
  * terminate.
  */
 extern bool_t cldmgr_stop_requested( void );
-
-/* cldmgr_pid2streamix - retrieves the stream index. returns -1 if
- * not associated with any stream.
- */
-extern intgen_t cldmgr_pid2streamix( pid_t pid );
 
 /* cldmgr_remainingcnt - returns number of children remaining
  */

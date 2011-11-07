@@ -32,6 +32,7 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <sched.h>
+#include <pthread.h>
 
 #include "exit.h"
 #include "types.h"
@@ -117,7 +118,7 @@ bool_t miniroot = BOOL_TRUE;
 #endif /* HIDDEN */
 bool_t pipeline = BOOL_FALSE;
 bool_t stdoutpiped = BOOL_FALSE;
-pid_t parentpid;
+pthread_t parenttid;
 char *sistr;
 size_t pgsz;
 size_t pgmask;
@@ -195,10 +196,10 @@ main( int argc, char *argv[] )
 	*/
 	mlog_init0();
 
-	/* Get the parent's pid. will be used in signal handling
+	/* Get the parent's pthread id. will be used
 	 * to differentiate parent from children.
 	 */
-	parentpid = getpid( );
+	parenttid = pthread_self( );
 	rval = atexit(mlog_exit_flush);
 	assert(rval == 0);
 
@@ -395,11 +396,11 @@ main( int argc, char *argv[] )
 	ASSERT( ( intgen_t )pgsz > 0 );
 	pgmask = pgsz - 1;
 
-	/* report parent pid
+	/* report parent tid
          */
 	mlog( MLOG_DEBUG | MLOG_PROC,
-	      "parent pid is %d\n",
-	      parentpid );
+	      "parent tid is %lu\n",
+	      parenttid );
 
 	/* get the current working directory: this is where we will dump
 	 * core, if necessary. some tmp files may be placed here as well.
@@ -572,7 +573,7 @@ main( int argc, char *argv[] )
 		sigaddset( &blocked_set, SIGTERM );
 		sigaddset( &blocked_set, SIGQUIT );
 		sigaddset( &blocked_set, SIGALRM );
-		sigprocmask( SIG_SETMASK, &blocked_set, NULL );
+		pthread_sigmask( SIG_SETMASK, &blocked_set, NULL );
 
 		sa.sa_handler = sighandler;
 		sigaction( SIGINT, &sa, NULL );
@@ -676,7 +677,6 @@ main( int argc, char *argv[] )
 	if ( ! init_error ) {
 		for ( stix = 0 ; stix < drivecnt ; stix++ ) {
 			ok = cldmgr_create( childmain,
-					    CLONE_VM,
 					    stix,
 					    "child",
 					    ( void * )stix );
@@ -895,7 +895,7 @@ main( int argc, char *argv[] )
 	if ( coredump_requested ) {
 		mlog( MLOG_DEBUG | MLOG_PROC,
 		      "core dump requested, aborting (pid %d)\n",
-		      parentpid );
+		      getpid() );
 		abort();
 	}
 
@@ -1560,7 +1560,7 @@ childmain( void *arg1 )
 	drivep = drivepp[ stix ];
 	( * drivep->d_opsp->do_quit )( drivep );
 
-	exit( exitcode );
+	return exitcode;
 }
 
 

@@ -123,7 +123,6 @@ ring_create( size_t ringlen,
 	/* kick off the slave thread
 	 */
 	ok = cldmgr_create( ring_slave_entry,
-			    CLONE_VM,
 			    drive_index,
 			    _("slave"),
 			    ringp );
@@ -417,11 +416,7 @@ ring_slave_entry( void *ringctxp )
 	sigaddset( &blocked_set, SIGTERM );
 	sigaddset( &blocked_set, SIGQUIT );
 	sigaddset( &blocked_set, SIGALRM );
-	sigprocmask( SIG_SETMASK, &blocked_set, NULL );
-
-	/* record slave pid to be used to kill slave
-	 */
-	ringp->r_slavepid = getpid( );
+	pthread_sigmask( SIG_SETMASK, &blocked_set, NULL );
 
 	/* loop reading and precessing messages until told to die
 	 */
@@ -494,5 +489,5 @@ ring_slave_entry( void *ringctxp )
 		ring_slave_put( ringp, msgp );
 	}
 
-	exit( 0 );
+	return 0;
 }

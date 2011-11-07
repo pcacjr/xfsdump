@@ -667,7 +667,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
 	drivep->d_cap_est  = -1;
 	drivep->d_rate_est = -1;
 
-	/* if sproc not allowed, allocate a record buffer. otherwise
+	/* if threads not allowed, allocate a record buffer. otherwise
 	 * create a ring, from which buffers will be taken.
 	 */
 	if ( singlethreaded ) {

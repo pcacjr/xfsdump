@@ -429,7 +429,7 @@ promptinput( char *buf,
 		sigaddset( &dlog_registered_sigs, SIGQUIT );
 	}
 
-	sigprocmask( SIG_UNBLOCK, &dlog_registered_sigs, &orig_set );
+	pthread_sigmask( SIG_UNBLOCK, &dlog_registered_sigs, &orig_set );
 
 	/* wait for input, timeout, or interrupt.
 	 * note we come out of the select() frequently in order to
@@ -455,7 +455,7 @@ promptinput( char *buf,
 
 	/* restore signal handling
 	 */
-	sigprocmask( SIG_SETMASK, &orig_set, NULL );
+	pthread_sigmask( SIG_SETMASK, &orig_set, NULL );
 	sigemptyset( &dlog_registered_sigs );
 	
 	/* check for timeout or interrupt
