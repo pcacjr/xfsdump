@@ -382,6 +382,7 @@ promptinput( char *buf,
 	time32_t now = time( NULL );
 	intgen_t nread = -1;
 	sigset_t orig_set;
+	char *bufp = buf;
 
 	/* display the pre-prompt
 	 */
@@ -447,8 +448,27 @@ promptinput( char *buf,
 
 		rc = select( dlog_ttyfd + 1, &rfds, NULL, NULL, &tv );
 		if ( rc > 0 && FD_ISSET( dlog_ttyfd, &rfds ) ) {
-			nread = read( dlog_ttyfd, buf, bufsz - 1 );
-			break;
+			nread = read( dlog_ttyfd, bufp, bufsz );
+			if ( nread < 0 ) {
+				break; // error handled below
+			} else if ( nread == 0 && buf == bufp ) {
+				mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, "\n" );
+				*bufp = 0;
+				break; // no input, return an empty string
+			} else if ( nread > 0 && bufp[nread-1] == '\n' ) {
+				// received a full line, chomp the newline
+				bufp[nread-1] = 0;
+				break;
+			} else if ( nread == bufsz ) {
+				// no more room, truncate and return
+				bufp[nread-1] = 0;
+				break;
+			}
+
+			// keep waiting for a full line of input
+			bufp += nread;
+			bufsz -= nread;
+			nread = -1;
 		}
 		now = time( NULL );
 	}
@@ -489,17 +509,8 @@ promptinput( char *buf,
 			*exceptionixp = sigquitix;
 		}
 		return BOOL_FALSE;
-	} else if ( nread == 0 ) {
-		*exceptionixp = timeoutix;
-		if ( bufsz > 0 ) {
-			buf[ 0 ] = 0;
-		}
-		return BOOL_FALSE;
 	} else {
 		ASSERT( dlog_signo_received == -1 );
-		ASSERT( ( size_t )nread < bufsz );
-		ASSERT( buf[ nread - 1 ] == '\n' );
-		buf[ nread - 1 ] = 0;
 		*exceptionixp = 0;
 		return BOOL_TRUE;
 	}
