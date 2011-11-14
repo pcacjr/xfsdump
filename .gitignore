@@ -33,6 +33,7 @@ ltmain.sh
 *.lo
 *.la
 .libs
+.ltdep
 
 # gettext
 po/xfsdump.pot
