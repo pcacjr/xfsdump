@@ -595,44 +595,6 @@ cb_add( void *arg1,
 					    MAP_NDR_NOCHNG );
 				inomap_exclude_skipattr++;
 				return 0;
-			} else if (allowexcludefiles_pr &&
-					(statp->bs_xflags & XFS_XFLAG_HASATTR)) {
-				int rval;
-				attr_multiop_t attrop;
-				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
-				static int deprecated_msg_issued = 0;
-
-				attrop.am_attrname  = skip_attr_name;
-				attrop.am_attrvalue = NULL;
-				attrop.am_length    = 0;
-				attrop.am_error     = 0;
-				attrop.am_flags     = 0;
-				attrop.am_opcode    = ATTR_OP_GET;
-                                
-				rval = jdm_attr_multi( fshandlep,
-						       statp,
-						       (char *)&attrop,
-						       1,
-						       0 );
-				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG || attrop.am_error == ERANGE) ) {
-					mlog( MLOG_DEBUG | MLOG_EXCLFILES,
-					      "pruned ino %llu, owner %u, estimated size %llu: skip attribute set\n",
-					      statp->bs_ino,
-					      statp->bs_uid,
-					      estimated_size );
-					if ( !deprecated_msg_issued ) {
-						deprecated_msg_issued = 1;
-						mlog( MLOG_SILENT | MLOG_WARNING,
-						      "excluding files using %s attribute is deprecated\n",
-						      skip_attr_name );
-					}
-					inomap_add( cb_inomap_contextp,
-						    ino,
-						    (gen_t)statp->bs_gen,
-						    MAP_NDR_NOCHNG );
-					inomap_exclude_skipattr++;
-					return 0;
-				}
 			}
 
 			inomap_add( cb_inomap_contextp,
