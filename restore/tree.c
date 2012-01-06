@@ -3414,7 +3414,7 @@ static bool_t
 Node2path( nh_t nh, char *path, char *errmsg )
 {
 	intgen_t remainingcnt;
-	path[ 0 ] = 0; /* in case root node passed in */
+	strcpy(path, "."); /* in case root node passed in */
 	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN, 0 );
 	if ( remainingcnt <= 0 ) {
 		node_t *np = Node_map( nh );
