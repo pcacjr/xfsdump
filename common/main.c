@@ -507,6 +507,13 @@ main( int argc, char *argv[] )
 	 * want to exit when a signal is received. otherwise, hold signals so
 	 * they don't interfere with sys calls; they will be released at
 	 * pre-emption points and upon pausing in the main loop.
+	 *
+	 * note that since we're multi-threaded, handling SIGCHLD causes
+	 * problems with system()'s ability to obtain a child's exit status
+	 * (because the main thread may process SIGCHLD before the thread
+	 * running system() calls waitpid()). likewise explicitly ignoring
+	 * SIGCHLD also prevents system() from getting an exit status.
+	 * therefore we don't do anything with SIGCHLD.
 	 */
 
 	sigfillset(&sa.sa_mask);
@@ -514,13 +521,9 @@ main( int argc, char *argv[] )
 
 	/* always ignore SIGPIPE, instead handle EPIPE as part
 	 * of normal sys call error handling.
-	 *
-	 * explicitly ignore SIGCHLD so that if librmt rsh sessions
-	 * exit early they do not become zombies.
 	 */
 	sa.sa_handler = SIG_IGN;
 	sigaction( SIGPIPE, &sa, NULL );
-	sigaction( SIGCHLD, &sa, NULL );
 
 	if ( ! pipeline ) {
 		sigset_t blocked_set;
