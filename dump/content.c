@@ -270,7 +270,8 @@ static rv_t dump_file_reg( drive_t *drivep,
 			   context_t *contextp,
 			   content_inode_hdr_t *scwhdrp,
 			   jdm_fshandle_t *,
-			   xfs_bstat_t * );
+			   xfs_bstat_t *,
+			   bool_t *);
 static rv_t dump_file_spec( drive_t *drivep,
 			    context_t *contextp,
 			    jdm_fshandle_t *,
@@ -3698,6 +3699,7 @@ dump_file( void *arg1,
 				       cwhdrp->ch_specific;
 	startpt_t *startptp = &scwhdrp->cih_startpt;
 	startpt_t *endptp = &scwhdrp->cih_endpt;
+	bool_t file_skipped = BOOL_FALSE;
 	intgen_t state;
 	rv_t rv;
 
@@ -3843,7 +3845,8 @@ dump_file( void *arg1,
 				    contextp,
 				    scwhdrp,
 				    fshandlep,
-				    statp );
+				    statp,
+				    &file_skipped );
 		if ( statp->bs_ino > contextp->cc_stat_lastino ) {
 			lock( );
 			sc_stat_nondirdone++;
@@ -3891,6 +3894,8 @@ dump_file( void *arg1,
 
 	if ( rv == RV_OK
 	     &&
+	     file_skipped == BOOL_FALSE
+	     &&
 	     sc_dumpextattrpr
 	     &&
 	     ( statp->bs_xflags & XFS_XFLAG_HASATTR )) {
@@ -3911,7 +3916,8 @@ dump_file_reg( drive_t *drivep,
 	       context_t *contextp,
 	       content_inode_hdr_t *scwhdrp,
 	       jdm_fshandle_t *fshandlep,
-	       xfs_bstat_t *statp )
+	       xfs_bstat_t *statp,
+	       bool_t *file_skippedp )
 {
 	startpt_t *startptp = &scwhdrp->cih_startpt;
 	startpt_t *endptp = &scwhdrp->cih_endpt;
@@ -4004,6 +4010,7 @@ dump_file_reg( drive_t *drivep,
 		      statp->bs_ino,
 		      statp->bs_mode,
 		      strerror( errno ));
+		*file_skippedp = BOOL_TRUE;
 		return RV_OK;
 	}
 

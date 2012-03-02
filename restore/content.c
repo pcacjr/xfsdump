@@ -768,6 +768,7 @@ static rv_t read_filehdr( drive_t *drivep, filehdr_t *fhdrp, bool_t fhcs );
 static rv_t restore_file( drive_t *drivep,
 			  filehdr_t *fhdrp,
 			  bool_t ehcs,
+			  bool_t ahcs,
 			  char *path1,
 			  char *path2 );
 static bool_t restore_reg( drive_t *drivep,
@@ -3455,7 +3456,7 @@ applynondirdump( drive_t *drivep,
 			strctxp->sc_path[0] = '\0';
 			strctxp->sc_fd = -1;
 
-			rv = restore_file( drivep, fhdrp, ehcs, path1, path2 );
+			rv = restore_file( drivep, fhdrp, ehcs, ahcs, path1, path2 );
 
 		} else if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
 			rv = restore_extattr( drivep,
@@ -7183,6 +7184,7 @@ struct cb_context {
 	filehdr_t *cb_fhdrp;
 	rv_t cb_rv;
 	bool_t cb_ehcs;
+	bool_t cb_ahcs;
 	char *cb_path1;
 	char *cb_path2;
 };
@@ -7195,6 +7197,7 @@ static rv_t
 restore_file( drive_t *drivep,
 	      filehdr_t *fhdrp,
 	      bool_t ehcs,
+	      bool_t ahcs,
 	      char *path1,
 	      char *path2 )
 {
@@ -7210,6 +7213,7 @@ restore_file( drive_t *drivep,
 	context.cb_fhdrp = fhdrp;
 	context.cb_rv = RV_OK;
 	context.cb_ehcs = ehcs;
+	context.cb_ahcs = ahcs;
 	context.cb_path1 = path1;
 	context.cb_path2 = path2;
 	rv = tree_cb_links( bstatp->bs_ino,
@@ -7242,6 +7246,7 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 	bstat_t *bstatp = &fhdrp->fh_stat;
 	rv_t *rvp = &contextp->cb_rv;
 	bool_t ehcs = contextp->cb_ehcs;
+	bool_t ahcs = contextp->cb_ahcs;
 	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
 
 	int rval;
@@ -7267,12 +7272,22 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 			ok = restore_reg( drivep, fhdrp, rvp, path1 );
 			if (!ok)
 				return ok;
-			ok = restore_extent_group( drivep,
-						   fhdrp,
-						   path1,
-						   strctxp->sc_fd,
-						   ehcs,
-						   rvp );
+			if ( fhdrp->fh_flags & FILEHDR_FLAGS_EXTATTR ) {
+				*rvp = restore_extattr( drivep,
+							fhdrp,
+							path1,
+							ahcs,
+							BOOL_FALSE, /* isdirpr */
+							BOOL_FALSE, /* onlydoreadpr */
+							DAH_NULL );
+			} else {
+				ok = restore_extent_group( drivep,
+							   fhdrp,
+							   path1,
+							   strctxp->sc_fd,
+							   ehcs,
+							   rvp );
+			}
 			return ok;
 		case S_IFBLK:
 		case S_IFCHR:
