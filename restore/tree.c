@@ -102,6 +102,10 @@ struct treePersStorage {
 	bool_t p_restoredmpr;
 		/* restore DMI event settings
 		 */
+	bool_t p_truncategenpr;
+		/* truncate inode generation number (for compatibility
+		 * with xfsdump format 2 and earlier)
+		 */
 };
 
 typedef struct treePersStorage treepers_t;
@@ -163,7 +167,7 @@ typedef struct tran tran_t;
 
 /* node structure. each node represents a directory entry
  */
-#define NODESZ	48
+#define NODESZ	56
 
 struct node {
 	xfs_ino_t n_ino;	/* 8  8 ino */
@@ -175,9 +179,10 @@ struct node {
 	nh_t n_sibprevh;	/* 4 36 prev sibling list - dbl link list */
 	nh_t n_cldh;		/* 4 40 children list */
 	nh_t n_lnkh;		/* 4 44 hard link list */
-	gen_t n_gen;		/* 2 46 generation count mod 0x10000 */
-	u_char_t n_flags;	/* 1 47 action and state flags */
-	u_char_t n_nodehkbyte;	/* 1 48 given to node abstraction */
+	gen_t n_gen;		/* 4 48 generation count mod 0x10000 */
+	u_char_t n_flags;	/* 1 49 action and state flags */
+	u_char_t n_nodehkbyte;	/* 1 50 given to node abstraction */
+	char n_pad[6];		/* 6 56 */
 };
 
 typedef struct node node_t;
@@ -335,7 +340,9 @@ tree_init( char *hkdir,
 	   size64_t vmsz,
 	   bool_t fullpr,
 	   bool_t restoredmpr,
-	   bool_t dstdirisxfspr )
+	   bool_t dstdirisxfspr,
+	   u_int32_t dumpformat,
+	   bool_t truncategenpr )
 {
 	off64_t nodeoff;
 	char *perspath;
@@ -496,6 +503,21 @@ tree_init( char *hkdir,
 	 */
 	persp->p_restoredmpr = restoredmpr;
 
+	/* record if truncated generation numbers are required
+	 */
+	if ( dumpformat < GLOBAL_HDR_VERSION_3 ) {
+		persp->p_truncategenpr = BOOL_TRUE;
+		mlog( MLOG_NORMAL | MLOG_DEBUG | MLOG_TREE, _(
+		      "dump format version %u used truncated inode generation numbers\n"),
+			dumpformat );
+	} else if ( truncategenpr ) {
+		persp->p_truncategenpr = BOOL_TRUE;
+		mlog( MLOG_NORMAL | MLOG_DEBUG | MLOG_TREE, _(
+		      "forcing use of truncated inode generation numbers\n"));
+	} else {
+		persp->p_truncategenpr = BOOL_FALSE;
+	}
+
 	return BOOL_TRUE;
 }
 
@@ -596,6 +618,15 @@ tree_sync( char *hkdir,
 	 */
 	persp->p_fullpr = fullpr;
 
+	/* regardless of the format of this dump, if the previously applied
+	 * dump used truncated generation numbers, then we need to as well.
+	 */
+	if ( persp->p_truncategenpr ) {
+		mlog( MLOG_NORMAL | MLOG_DEBUG | MLOG_TREE, _(
+		      "using truncated inode generation numbers for "
+		      "compatibility with previously applied restore\n") );
+	}
+
 	/* rsynchronize with the hash abstraction. it will map more of the
 	 * persistent state file.
 	 */
@@ -618,6 +649,24 @@ tree_sync( char *hkdir,
 	 * in the hash list. make the orphanage a child of
 	 * root, and indicate he is real.
 	 */
+	return BOOL_TRUE;
+}
+
+bool_t
+tree_check_dump_format( u_int32_t dumpformat )
+{
+	if ( dumpformat < GLOBAL_HDR_VERSION_3 && !persp->p_truncategenpr ) {
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "encountered dump format %d after a "
+		      "restore of format %d or newer\n"),
+			dumpformat, GLOBAL_HDR_VERSION_3 );
+		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
+		      "to restore this series of dumps, use the -%c "
+		      "option on the first restore\n"),
+			GETOPT_FMT2COMPAT );
+		return BOOL_FALSE;
+	}
+
 	return BOOL_TRUE;
 }
 
@@ -682,9 +731,12 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 {
 	nh_t hardh;
 	xfs_ino_t ino = fhdrp->fh_stat.bs_ino;
-	u_int32_t biggen = fhdrp->fh_stat.bs_gen;
-	gen_t gen = BIGGEN2GEN( biggen );
+	gen_t gen = fhdrp->fh_stat.bs_gen;
 	dah_t dah;
+
+	if ( persp->p_truncategenpr ) {
+		gen = BIGGEN2GEN( gen );
+	}
 
 	/* sanity check - orphino is supposed to be an unused ino!
 	 */
@@ -708,7 +760,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 			      "upgrading to dir\n",
 			      ino,
 			      gen,
-			      biggen );
+			      fhdrp->fh_stat.bs_gen );
 			if ( ! tranp->t_toconlypr ) {
 				ASSERT( hardp->n_dah == DAH_NULL );
 				hardp->n_dah = dirattr_add( fhdrp );
@@ -721,7 +773,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 			      "updating\n",
 			      ino,
 			      gen,
-			      biggen );
+			      fhdrp->fh_stat.bs_gen );
 			hardp->n_dah = dirattr_add( fhdrp );
 		} else {
 			/* case 3: already has dirattr; must be restart
@@ -731,7 +783,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 			      "retaining\n",
 			      ino,
 			      gen,
-			      biggen );
+			      fhdrp->fh_stat.bs_gen );
 		}
 		hardp->n_flags |= NF_ISDIR;
 		hardp->n_flags |= NF_DUMPEDDIR;
@@ -745,7 +797,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 		      "new\n",
 		      ino,
 		      gen,
-		      biggen );
+		      fhdrp->fh_stat.bs_gen );
 		if ( ! tranp->t_toconlypr ) {
 			dah = dirattr_add( fhdrp );
 		} else {
@@ -767,10 +819,13 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 }
 
 rv_t
-tree_addent( nh_t parh, xfs_ino_t ino, size_t g, char *name, size_t namelen )
+tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 {
-	gen_t gen = BIGGEN2GEN( g );
 	nh_t hardh;
+
+	if ( persp->p_truncategenpr ) {
+		gen = BIGGEN2GEN( gen );
+	}
 
 	/* sanity check - orphino is supposed to be an unused ino!
 	 */
@@ -1677,7 +1732,7 @@ rename_dirs( nh_t cldh,
  */
 rv_t
 tree_cb_links( xfs_ino_t ino,
-	       u_int32_t biggen,
+	       gen_t gen,
 	       int32_t ctime,
 	       int32_t mtime,
 	       bool_t ( * funcp )( void *contextp,
@@ -1688,12 +1743,15 @@ tree_cb_links( xfs_ino_t ino,
 	       char *path1,
 	       char *path2 )
 {
-	gen_t gen = BIGGEN2GEN( biggen );
 	nh_t hardh;
 	nh_t nh;
 	char *path;
 	bool_t ok;
 	int  rval;
+
+	if ( persp->p_truncategenpr ) {
+		gen = BIGGEN2GEN( gen );
+	}
 
 	/* find the hardhead
 	 */
@@ -1887,7 +1945,7 @@ tree_cb_links( xfs_ino_t ino,
 			      "ino %llu gen %u not referenced: "
 			      "placing in orphanage\n"),
 			      ino,
-			      biggen );
+			      gen );
 			nh = Node_alloc( ino,
 					 gen,
 					 NRH_NULL,
@@ -3357,6 +3415,7 @@ Node_alloc( xfs_ino_t ino, gen_t gen, nrh_t nrh, dah_t dah, size_t flags )
 	np->n_lnkh = NH_NULL;
 	np->n_gen = gen;
 	np->n_flags = ( u_char_t )flags;
+	memset(np->n_pad, 0, sizeof(np->n_pad));
 	Node_unmap( nh, &np  );
 	return nh;
 }

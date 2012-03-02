@@ -73,8 +73,10 @@
 #define HOUSEKEEPING_MAGIC	0x686b6d61
 	/* "hkma" - see the housekeeping_magic field of pers_t below.
 	 */
-#define HOUSEKEEPING_VERSION	1
+#define HOUSEKEEPING_VERSION	2
 	/* see the housekeeping_version field of pers_t below.
+	 * version 2 changed the size of a gen_t, which caused node_t
+	 * to change in size. also p_truncategenpr was added to treepers_t.
 	 */
 
 #define WRITE_TRIES_MAX	3
@@ -629,6 +631,9 @@ struct tran {
 	size64_t t_dirdumps;
 		/* bitset of streams which contain a directory dump
 		 */
+	bool_t t_truncategenpr;
+		/* force use of truncated generation numbers
+		 */
 	sync_t t_sync1;
 		/* to single-thread attempt to validate command line
 		 * selection of dump with online inventory
@@ -1165,6 +1170,9 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 		case GETOPT_ROOTPERM:
 			restore_rootdir_permissions = BOOL_TRUE;
 			break;
+		case GETOPT_FMT2COMPAT:
+			tranp->t_truncategenpr = BOOL_TRUE;
+			break;
 		}
 	}
 
@@ -1473,6 +1481,13 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			      GETOPT_NOSUBTREE );
 			return BOOL_FALSE;
 		}
+		if ( tranp->t_truncategenpr ) {
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating "
+			      "cumulative restore\n"),
+			      GETOPT_FMT2COMPAT );
+			return BOOL_FALSE;
+		}
 	} else {
 		if ( ! resumepr && ! sesscpltpr ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
@@ -1532,6 +1547,12 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
 			     "-%c and -%c valid only when initiating restore\n"),
 			      GETOPT_SUBTREE,
 			      GETOPT_NOSUBTREE );
+			return BOOL_FALSE;
+		}
+		if ( tranp->t_truncategenpr ) {
+			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+			      "-%c valid only when initiating restore\n"),
+			      GETOPT_FMT2COMPAT );
 			return BOOL_FALSE;
 		}
 	}
@@ -2328,12 +2349,21 @@ content_stream_restore( ix_t thrdix )
 					tranp->t_vmsz,
 					fullpr,
 					persp->a.restoredmpr,
-					persp->a.dstdirisxfspr );
+					persp->a.dstdirisxfspr,
+					grhdrp->gh_version,
+					tranp->t_truncategenpr );
 			if ( ! ok ) {
 				Media_end( Mediap );
 				return mlog_exit(EXIT_ERROR, RV_ERROR);
 			}
 			tranp->t_treeinitdonepr = BOOL_TRUE;
+
+		} else {
+			ok = tree_check_dump_format( grhdrp->gh_version );
+			if ( ! ok ) {
+				Media_end( Mediap );
+				return mlog_exit(EXIT_ERROR, RV_ERROR);
+			}
 		}
 
 		/* commit the session and accumulative state
@@ -3071,7 +3101,7 @@ applydirdump( drive_t *drivep,
 				 */
 				rv = tree_addent( dirh,
 					     dhdrp->dh_ino,
-					     ( size_t )dhdrp->dh_gen,
+					     dhdrp->dh_gen,
 					     dhdrp->dh_name,
 					     namelen );
 				if ( rv != RV_OK ) {
@@ -8109,23 +8139,26 @@ read_dirent( drive_t *drivep,
 	     size_t direntbufsz,
 	     bool_t dhcs )
 {
+	global_hdr_t *grhdrp = drivep->d_greadhdrp;
 	drive_ops_t *dop = drivep->d_opsp;
 	/* REFERENCED */
 	intgen_t nread;
 	intgen_t rval;
 	direnthdr_t tmpdh;
+	char *namep;    // beginning of name following the direnthdr_t
+
+	ASSERT( sizeof( direnthdr_t ) == DIRENTHDR_SZ );
+	ASSERT( sizeof( direnthdr_v1_t ) == DIRENTHDR_SZ );
 
 	/* read the head of the dirent
 	 */
 	nread = read_buf( ( char * )&tmpdh,
-			  sizeof( direnthdr_t ),
+			  DIRENTHDR_SZ,
 			  ( void * )drivep,
 			  ( rfp_t )dop->do_read,
 			  ( rrbfp_t )
 			  dop->do_return_read_buf,
 			  &rval );
-	xlate_direnthdr(&tmpdh, dhdrp, 1);
-
 	switch( rval ) {
 	case 0:
 		break;
@@ -8142,7 +8175,33 @@ read_dirent( drive_t *drivep,
 	default:
 		return RV_CORE;
 	}
-	ASSERT( ( size_t )nread == sizeof( direnthdr_t ));
+	ASSERT( ( size_t )nread == DIRENTHDR_SZ );
+
+	if ( grhdrp->gh_version >= GLOBAL_HDR_VERSION_3 ) {
+		xlate_direnthdr(&tmpdh, dhdrp, 1);
+		namep = dhdrp->dh_name + sizeof(dhdrp->dh_name);
+
+		if ( dhcs && !is_checksum_valid( dhdrp, DIRENTHDR_SZ )) {
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				"bad directory entry header checksum\n") );
+			return RV_CORRUPT;
+		}
+	} else {
+		direnthdr_v1_t dhdr_v1;
+		xlate_direnthdr_v1((direnthdr_v1_t *)&tmpdh, &dhdr_v1, 1);
+		dhdrp->dh_ino = dhdr_v1.dh_ino;
+		dhdrp->dh_gen = BIGGEN2GEN(dhdr_v1.dh_gen);
+		dhdrp->dh_checksum = dhdr_v1.dh_checksum;
+		dhdrp->dh_sz = dhdr_v1.dh_sz;
+		memcpy(dhdrp->dh_name, dhdr_v1.dh_name, sizeof(dhdr_v1.dh_name));
+		namep = dhdrp->dh_name + sizeof(dhdr_v1.dh_name);
+
+		if ( dhcs && !is_checksum_valid( &dhdr_v1, DIRENTHDR_SZ )) {
+			mlog( MLOG_NORMAL | MLOG_WARNING, _(
+				"bad directory entry header checksum\n") );
+			return RV_CORRUPT;
+		}
+	}
 
 	mlog( MLOG_NITTY,
 	      "read dirent hdr ino %llu gen %u size %u\n",
@@ -8150,17 +8209,10 @@ read_dirent( drive_t *drivep,
 	      ( size_t )dhdrp->dh_gen,
 	      ( size_t )dhdrp->dh_sz );
 
-	if ( dhcs ) {
-		if ( dhdrp->dh_sz == 0 ) {
-			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			      "corrupt directory entry header\n") );
-			return RV_CORRUPT;
-		}
-		if ( !is_checksum_valid( dhdrp, DIRENTHDR_SZ )) {
-			mlog( MLOG_NORMAL | MLOG_WARNING, _(
-			      "bad directory entry header checksum\n") );
-			return RV_CORRUPT;
-		}
+	if ( dhdrp->dh_sz == 0 ) {
+		mlog( MLOG_NORMAL | MLOG_WARNING, _(
+			"corrupt directory entry header\n") );
+		return RV_CORRUPT;
 	}
 
 	/* if null, return
@@ -8177,7 +8229,7 @@ read_dirent( drive_t *drivep,
 	ASSERT( ! ( ( size_t )dhdrp->dh_sz & ( DIRENTHDR_ALIGN - 1 )));
 	if ( ( size_t )dhdrp->dh_sz > sizeof( direnthdr_t )) {
 		size_t remsz = ( size_t )dhdrp->dh_sz - sizeof( direnthdr_t );
-		nread = read_buf( ( char * )( dhdrp + 1 ),
+		nread = read_buf( namep,
 				  remsz,
 				  ( void * )drivep,
 				  ( rfp_t )dop->do_read,

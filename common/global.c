@@ -191,6 +191,10 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 			}
 			ghdrp->gh_timestamp = statb.st_mtime;
 			break;
+
+		case GETOPT_FMT2COMPAT:
+			ghdrp->gh_version = GLOBAL_HDR_VERSION_2;
+			break;
 #endif /* DUMP */
 		}
 	}
@@ -276,6 +280,7 @@ global_version_check( u_int32_t version )
 		case GLOBAL_HDR_VERSION_0:
 		case GLOBAL_HDR_VERSION_1:
 		case GLOBAL_HDR_VERSION_2:
+		case GLOBAL_HDR_VERSION_3:
 			return BOOL_TRUE;
 		default:
 			return BOOL_FALSE;

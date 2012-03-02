@@ -103,8 +103,6 @@ static char *strpbrkquotes( char *p, const char *sep );
 
 /* definition of locally defined global variables ****************************/
 
-intgen_t version = 3;
-intgen_t subversion = 0;
 char *progname = 0;			/* used in all error output */
 char *homedir = 0;			/* directory invoked from */
 bool_t pipeline = BOOL_FALSE;
@@ -400,10 +398,8 @@ main( int argc, char *argv[] )
 	 */
 	if ( infoonly ) {
 		mlog( MLOG_NORMAL,
-		      _("version %s (dump format %d.%d)\n"),
-		      VERSION,
-		      version,
-		      subversion );
+		      _("version %s (dump format %d.0)\n"),
+		      VERSION, GLOBAL_HDR_VERSION );
 		usage( );
 		return mlog_exit(EXIT_NORMAL, RV_OK); /* normal termination */
 	}
@@ -475,10 +471,8 @@ main( int argc, char *argv[] )
 	 */
 	sistr = sigintstr( );
 	mlog( MLOG_VERBOSE,
-	      _("version %s (dump format %d.%d)"),
-	      VERSION,
-	      version,
-	      subversion );
+	      _("version %s (dump format %d.0)"),
+	      VERSION, GLOBAL_HDR_VERSION );
 	if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
 		mlog( MLOG_VERBOSE | MLOG_BARE, _(
 		      " - "
@@ -933,6 +927,7 @@ usage( void )
 #endif /* REVEAL */
 	ULO(_("(display dump inventory)"),		GETOPT_INVPRINT );
 	ULO(_("(inhibit inventory update)"),		GETOPT_NOINVUPDATE );
+	ULO(_("(generate format 2 dump)"),		GETOPT_FMT2COMPAT );
 	ULO(_("<session label>"),			GETOPT_DUMPLABEL );
 	ULO(_("<media label> ..."),			GETOPT_MEDIALABEL );
 #ifdef REVEAL
@@ -981,6 +976,7 @@ usage( void )
 	ULO(_("(don't prompt)"),			GETOPT_FORCE );
 	ULO(_("(display dump inventory)"),		GETOPT_INVPRINT );
 	ULO(_("(inhibit inventory update)"),		GETOPT_NOINVUPDATE );
+	ULO(_("(force use of format 2 generation numbers)"),GETOPT_FMT2COMPAT );
 	ULO(_("<session label>"),			GETOPT_DUMPLABEL );
 #ifdef REVEAL
 	ULO(_("(timestamp messages)"),			GETOPT_TIMESTAMP );

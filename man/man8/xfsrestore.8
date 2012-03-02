@@ -339,6 +339,15 @@ when it encounters an on-media session inventory,
 but only if run with an effective user id of root
 and only if this option is not given.
 .TP 5
+.B \-K
+Force
+.I xfsrestore
+to use dump format 2 generation numbers. Normally the need for this is
+determined automatically, but this option is required on the first
+.I xfsrestore
+invocation in the rare case that a cumulative restore begins
+with a format 3 (or newer) dump and will be followed by a format 2 dump.
+.TP 5
 \f3\-L\f1 \f2session_label\f1
 Specifies the label
 of the dump session to be restored.

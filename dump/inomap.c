@@ -940,18 +940,11 @@ cb_startpt( void *arg1,
 /* map context and operators
  */
 
-/* define structure for ino to gen mapping. Allocate 12 bits for the gen
- * instead of the 32-bit gen that XFS uses, as xfsdump currently truncates
- * the gen to 12 bits.
+/* define structure for ino to gen mapping.
  */
-#if DENTGENSZ != 12
-#error DENTGENSZ has changed. i2gseg_t and its users must be updated.
-#endif
-
 struct i2gseg {
 	u_int64_t s_valid;
-	u_char_t s_lower[ INOPERSEG ];
-	u_char_t s_upper[ INOPERSEG / 2 ];
+	gen_t s_gen[ INOPERSEG ];
 };
 typedef struct i2gseg i2gseg_t;
 
@@ -1382,51 +1375,31 @@ inomap_set_gen(void *contextp, xfs_ino_t ino, gen_t gen)
 
 	relino = ino - segp->base;
 	i2gsegp->s_valid |= (u_int64_t)1 << relino;
-	i2gsegp->s_lower[ relino ] = ( u_char_t )( gen & 0xff );
-	if ( relino & 1 ) {
-		/* odd, goes in high nibble */
-		i2gsegp->s_upper[relino / 2] &= ( u_char_t )( 0x0f );
-		i2gsegp->s_upper[relino / 2] |=
-			( u_char_t )( ( gen >> 4 ) & 0xf0 );
-	} else {
-		/* even, goes in low nibble */
-		i2gsegp->s_upper[ relino / 2 ] &= ( u_char_t )( 0xf0 );
-		i2gsegp->s_upper[ relino / 2 ] |=
-			( u_char_t )( ( gen >> 8 ) & 0x0f );
-	}
+	i2gsegp->s_gen[relino] = gen;
 }
 
-gen_t
-inomap_get_gen( void *contextp, xfs_ino_t ino )
+intgen_t
+inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen )
 {
 	seg_addr_t *addrp;
 	seg_addr_t addr;
 	seg_t *segp;
 	i2gseg_t *i2gsegp;
 	xfs_ino_t relino;
-	gen_t gen;
 
 	addrp = contextp ? (seg_addr_t *)contextp : &addr;
 	if ( !inomap_find_seg( addrp, ino ) )
-		return GEN_NULL;
+		return 1;
 
 	segp = inomap_addr2seg( addrp );
 	i2gsegp = &inomap.i2gmap[inomap_addr2segix( addrp )];
 
 	relino = ino - segp->base;
 	if ( ! (i2gsegp->s_valid & ((u_int64_t)1 << relino)) )
-		return GEN_NULL;
+		return 1;
 
-	gen = i2gsegp->s_lower[relino];
-	if (relino & 1) {
-		/* odd, rest of gen in high nibble */
-		gen |= ( (gen_t)i2gsegp->s_upper[relino / 2] & 0xf0 ) << 4;
-	} else {
-		/* even, rest of gen in low nibble */
-		gen |= ( (gen_t)i2gsegp->s_upper[relino / 2] & 0x0f ) << 8;
-	}
-
-	return gen;
+	*gen = i2gsegp->s_gen[relino];
+	return 0;
 }
 
 void

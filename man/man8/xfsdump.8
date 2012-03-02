@@ -333,6 +333,13 @@ Inhibits the normal update of the inventory.
 This is useful when the media being dumped to
 will be discarded or overwritten.
 .TP 5
+.B \-K
+Generate a format 2 dump instead of the current format. This is useful
+if the dump will be restored on a system with an older
+.I xfsrestore
+which does not understand the current dump format. Use of this option
+is otherwise not recommended.
+.TP 5
 \f3\-L\f1 \f2session_label\f1
 Specifies a label for the dump session.
 It can be any arbitrary string up to 255 characters long.

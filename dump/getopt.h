@@ -27,7 +27,7 @@
  * facilitating easy changes.
  */
 
-#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:"
+#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JKL:M:NO:PRSTUVWY:"
 
 #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
 #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
@@ -65,7 +65,7 @@
 #define GETOPT_MAXSTACKSZ	'H'	/* maximum stack size (bytes) */
 #define GETOPT_INVPRINT         'I'     /* just display the inventory */
 #define	GETOPT_NOINVUPDATE	'J'	/* do not update the dump inventory */
-/*				'K'	*/
+#define GETOPT_FMT2COMPAT	'K'	/* use dump format 2 for compat with old restore */
 #define	GETOPT_DUMPLABEL	'L'	/* dump session label (global.c) */
 #define	GETOPT_MEDIALABEL	'M'	/* media object label (media.c) */
 #define	GETOPT_TIMESTAMP	'N'	/* show timestamps in log msgs */

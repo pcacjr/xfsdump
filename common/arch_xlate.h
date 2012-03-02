@@ -98,6 +98,11 @@ void xlate_extenthdr(extenthdr_t *eh1, extenthdr_t *eh2, int dir);
 void xlate_direnthdr(direnthdr_t *dh1, direnthdr_t *dh2, int dir);
 
 /*
+ * xlate_direnthdr_v1 - endian convert struct direnthdr_v1
+ */
+void xlate_direnthdr_v1(direnthdr_v1_t *dh1, direnthdr_v1_t *dh2, int dir);
+
+/*
  * xlate_extattrhdr - endian convert struct extattrhdr
  */
 void xlate_extattrhdr(extattrhdr_t *eh1, extattrhdr_t *eh2, int dir);

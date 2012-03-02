@@ -290,7 +290,7 @@ static rv_t dump_dirent( drive_t *drivep,
 			 context_t *contextp,
 			 xfs_bstat_t *,
 			 xfs_ino_t,
-			 u_int32_t,
+			 gen_t,
 			 char *,
 			 size_t );
 static rv_t init_extent_group_context( jdm_fshandle_t *,
@@ -477,6 +477,10 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
 static bool_t sc_dumpasoffline = BOOL_FALSE;
 	/* dump dual-residency HSM files as offline
 	 */
+static bool_t sc_use_old_direntpr = BOOL_FALSE;
+	/* dump dirents as dirent_v1_t instead of dirent_t
+	 * (for compat with dump format 2)
+	 */
 
 static bool_t sc_savequotas = BOOL_TRUE;
 /* save quota information in dump
@@ -560,6 +564,7 @@ content_init( intgen_t argc,
 	ASSERT( sizeof( filehdr_t ) == FILEHDR_SZ );
 	ASSERT( sizeof( extenthdr_t ) == EXTENTHDR_SZ );
 	ASSERT( sizeof( direnthdr_t ) == DIRENTHDR_SZ );
+	ASSERT( sizeof( direnthdr_v1_t ) == DIRENTHDR_SZ );
 	ASSERT( DIRENTHDR_SZ % DIRENTHDR_ALIGN == 0 );
 	ASSERT( sizeofmember( content_hdr_t, ch_specific )
 		>=
@@ -572,6 +577,10 @@ content_init( intgen_t argc,
 	mwhdrtemplatep = ( media_hdr_t * )dwhdrtemplatep->dh_upper;
 	cwhdrtemplatep = ( content_hdr_t * )mwhdrtemplatep->mh_upper;
 	scwhdrtemplatep = ( content_inode_hdr_t * ) cwhdrtemplatep->ch_specific;
+
+	if ( gwhdrtemplatep->gh_version < GLOBAL_HDR_VERSION_3 ) {
+		sc_use_old_direntpr = BOOL_TRUE;
+	}
 
 	/* process command line args
 	 */
@@ -2902,7 +2911,7 @@ dump_dir( ix_t strmix,
 	struct dirent *gdp = ( struct dirent *)contextp->cc_getdentsbufp;
 	size_t gdsz = contextp->cc_getdentsbufsz;
 	intgen_t gdcnt;
-	u_int32_t gen;
+	gen_t gen;
 	rv_t rv;
 
 	/* no way this can be non-dir, but check anyway
@@ -3073,8 +3082,7 @@ dump_dir( ix_t strmix,
 			/* lookup the gen number in the ino-to-gen map.
 			 * if it's not there, we have to get it the slow way.
 			 */
-			gen = inomap_get_gen( NULL, p->d_ino );
-			if (gen == GEN_NULL) {
+			if ( inomap_get_gen( NULL, p->d_ino, &gen) ) {
 				xfs_bstat_t statbuf;
 				intgen_t scrval;
 				
@@ -5045,19 +5053,25 @@ dump_dirent( drive_t *drivep,
 	     context_t *contextp,
 	     xfs_bstat_t *statp,
 	     xfs_ino_t ino,
-	     u_int32_t gen,
+	     gen_t gen,
 	     char *name,
 	     size_t namelen )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	direnthdr_t *dhdrp = ( direnthdr_t * )contextp->cc_mdirentbufp;
-	direnthdr_t *tmpdhdrp;
+	char *outbufp;
 	size_t direntbufsz = contextp->cc_mdirentbufsz;
 	size_t sz;
+	size_t name_offset;
 	intgen_t rval;
 	rv_t rv;
 
-	sz = offsetofmember( direnthdr_t, dh_name )
+	if ( sc_use_old_direntpr ) {
+		name_offset = offsetofmember( direnthdr_v1_t, dh_name );
+	} else {
+		name_offset = offsetofmember( direnthdr_t, dh_name );
+	}
+
+	sz = name_offset
 	     +
 	     namelen
 	     +
@@ -5081,28 +5095,52 @@ dump_dirent( drive_t *drivep,
 	ASSERT( sz <= UINT16MAX );
 	ASSERT( sz >= DIRENTHDR_SZ );
 
-	memset( ( void * )dhdrp, 0, sz );
-	dhdrp->dh_ino = ino;
-	dhdrp->dh_sz = ( u_int16_t )sz;
-	dhdrp->dh_gen = ( u_int16_t )( gen & DENTGENMASK );
+	outbufp = malloc(sz);
 
-	if ( name ) {
-		strcpy( dhdrp->dh_name, name );
+	if ( sc_use_old_direntpr ) {
+		direnthdr_v1_t *dhdrp = ( direnthdr_v1_t * )contextp->cc_mdirentbufp;
+		direnthdr_v1_t *tmpdhdrp = ( direnthdr_v1_t * )outbufp;
+
+		memset( ( void * )dhdrp, 0, sz );
+		dhdrp->dh_ino = ino;
+		dhdrp->dh_sz = ( u_int16_t )sz;
+		dhdrp->dh_gen = ( u_int16_t )( gen & DENTGENMASK );
+		if ( name ) {
+			strcpy( dhdrp->dh_name, name );
+		}
+
+		dhdrp->dh_checksum = calc_checksum( dhdrp, DIRENTHDR_SZ );
+
+		xlate_direnthdr_v1( dhdrp, tmpdhdrp, 1 );
+		if ( name ) {
+			strcpy( tmpdhdrp->dh_name, name );
+		}
+	} else {
+		direnthdr_t *dhdrp = ( direnthdr_t * )contextp->cc_mdirentbufp;
+		direnthdr_t *tmpdhdrp = ( direnthdr_t * )outbufp;
+
+		memset( ( void * )dhdrp, 0, sz );
+		dhdrp->dh_ino = ino;
+		dhdrp->dh_gen = gen;
+		dhdrp->dh_sz = ( u_int16_t )sz;
+		if ( name ) {
+			strcpy( dhdrp->dh_name, name );
+		}
+
+		dhdrp->dh_checksum = calc_checksum( dhdrp, DIRENTHDR_SZ );
+
+		xlate_direnthdr( dhdrp, tmpdhdrp, 1 );
+		if ( name ) {
+			strcpy( tmpdhdrp->dh_name, name );
+		}
 	}
 
-	dhdrp->dh_checksum = calc_checksum( dhdrp, DIRENTHDR_SZ );
-
-	tmpdhdrp = malloc(sz);
-	xlate_direnthdr(dhdrp, tmpdhdrp, 1);
-	if ( name ) {
-		strcpy( tmpdhdrp->dh_name, name );
-	}
-	rval = write_buf( ( char * )tmpdhdrp,
+	rval = write_buf( outbufp,
 			  sz,
 			  ( void * )drivep,
 			  ( gwbfp_t )dop->do_get_write_buf,
 			  ( wfp_t )dop->do_write );
-	free(tmpdhdrp);
+	free(outbufp);
 	switch ( rval ) {
 	case 0:
 		rv = RV_OK;

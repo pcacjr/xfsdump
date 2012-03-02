@@ -32,7 +32,9 @@ extern bool_t tree_init( char *hkdir,
 			 size64_t vmsz,
 			 bool_t fullpr,
 			 bool_t restoredmpr,
-			 bool_t dstdirisxfspr );
+			 bool_t dstdirisxfspr,
+			 u_int32_t dumpformat,
+			 bool_t truncategenpr );
 
 /* tree_sync - synchronizes with an existing tree abstraction
  */
@@ -41,6 +43,14 @@ extern bool_t tree_sync( char *hkdir,
 			 bool_t toconlypr,
 			 bool_t fullpr,
 			 bool_t dstdirisxfspr );
+
+/* tree_check_dump_format - detect the rare case where a
+ * cumulative restore begins with a format 3 (or newer)
+ * dump, and a later restore in the series encounters
+ * a format 2 dump. the restore will fail unless the
+ * original restore was told to use format 2 gen numbers.
+ */
+extern bool_t tree_check_dump_format( u_int32_t dumpformat );
 
 
 /* tree_begindir - begins application of dumped directory to tree.
@@ -53,7 +63,7 @@ extern nh_t tree_begindir( filehdr_t *fhdrp, dah_t *dahp );
  */
 extern rv_t tree_addent( nh_t dirh,
 			 xfs_ino_t ino,
-			 size_t gen,
+			 gen_t gen,
 			 char *name,
 			 size_t namelen );
 
@@ -84,7 +94,7 @@ extern bool_t tree_subtree_parse( bool_t sensepr, char *path );
 extern bool_t tree_post( char *path1, char *path2 );
 
 extern rv_t tree_cb_links( xfs_ino_t ino,
-			   u_int32_t biggen,
+			   gen_t gen,
 			   int32_t ctime,
 			   int32_t mtime,
 			   bool_t ( * funcp )( void *contextp,

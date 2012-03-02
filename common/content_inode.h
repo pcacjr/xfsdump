@@ -284,11 +284,27 @@ typedef struct extenthdr extenthdr_t;
  * a sequence of directory entries is always terminated with a null direnthdr_t.
  * this is detected by looking for a zero ino.
  */
+typedef u_int32_t gen_t;
+
 #define DIRENTHDR_ALIGN	8
 
 #define DIRENTHDR_SZ	24
 
 struct direnthdr {
+	xfs_ino_t dh_ino;
+	gen_t dh_gen;
+	u_int32_t dh_checksum;
+	u_int16_t dh_sz; /* overall size of record */
+	char dh_name[ 6 ];
+};
+
+typedef struct direnthdr direnthdr_t;
+
+/* the old direnthdr truncated the inode generation number
+ * to the low 12 bits.
+ */
+
+struct direnthdr_v1 {
 	xfs_ino_t dh_ino;
 	u_int16_t dh_gen; /* generation count & DENTGENMASK of ref'ed inode */
 	u_int16_t dh_sz; /* overall size of record */
@@ -296,14 +312,12 @@ struct direnthdr {
 	char dh_name[ 8 ];
 };
 
-typedef struct direnthdr direnthdr_t;
+typedef struct direnthdr_v1 direnthdr_v1_t;
 
 /* truncated generation count
  */
 #define DENTGENSZ		12	/* leave 4 bits for future flags */
 #define DENTGENMASK		(( 1 << DENTGENSZ ) - 1 )
-typedef u_int16_t gen_t;
-#define GEN_NULL		( ( gen_t )UINT16MAX )
 #define BIGGEN2GEN( bg )	( ( gen_t )( bg & DENTGENMASK ))
 
 

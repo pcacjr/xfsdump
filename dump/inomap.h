@@ -132,7 +132,7 @@ extern void *inomap_alloc_context( void );
 extern void inomap_reset_context( void *contextp );
 extern void inomap_free_context( void *contextp );
 extern intgen_t inomap_get_state( void *contextp, xfs_ino_t ino );
-extern gen_t inomap_get_gen( void *contextp, xfs_ino_t ino );
+extern intgen_t inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen );
 
 
 /* generators returning the next dir or non-dir ino selected in this dump.

@@ -26,7 +26,7 @@
  * purpose is to contain that command string.
  */
 
-#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:"
+#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
 
 #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
 #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
@@ -64,7 +64,7 @@
 #define GETOPT_MAXSTACKSZ	'H'	/* maximum stack size (bytes) */
 #define GETOPT_INVPRINT         'I'     /* just display the inventory */
 #define	GETOPT_NOINVUPDATE	'J'	/* do not update the dump inventory */
-/*				'K' */
+#define GETOPT_FMT2COMPAT	'K'	/* force use format 2 gen numbers */
 #define	GETOPT_DUMPLABEL	'L'	/* dump session label (global.c) */
 #define	GETOPT_MEDIALABEL	'M'	/* media object label (media.c) */
 #define	GETOPT_TIMESTAMP	'N'	/* show timestamps in log msgs */
