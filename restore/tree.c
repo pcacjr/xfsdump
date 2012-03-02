@@ -1925,12 +1925,16 @@ tree_cb_links( xfs_ino_t ino,
 					return RV_NOTOK;
 				}
 			} else {
-				char *dir;
-				char tmp[PATH_MAX];
 
-				strcpy(tmp, path);
-				dir = dirname(tmp);
-				mkdir_r(dir);
+				if ( ! tranp->t_toconlypr ) {
+					char *dir;
+					char tmp[PATH_MAX];
+
+					strcpy(tmp, path);
+					dir = dirname(tmp);
+					mkdir_r(dir);
+				}
+
 				mlog (MLOG_VERBOSE | MLOG_NOTE | MLOG_TREE, _(
 				      "ino %llu salvaging file,"
 				      " placing in %s\n"), ino, path1);
