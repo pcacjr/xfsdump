@@ -1,4 +1,4 @@
-xfsdump-3.1.0 (20 March 2012)
+xfsdump-3.1.0 (22 March 2012)
 	- Fix metadata restore on split files.
 	- Add a -D option to skip a recursive scan of the filesystem
 	  when dumping.
