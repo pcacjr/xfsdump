@@ -1,3 +1,18 @@
+xfsdump-3.1.0 (20 March 2012)
+	- Fix metadata restore on split files.
+	- Add a -D option to skip a recursive scan of the filesystem
+	  when dumping.
+	- Fix a 1 byte overflow with empty lists, thanks to Mike Frysinger.
+	- Enable multi-stream support on Linux using pthreads.
+	- Fix handling of Ctrl-D in prompts.
+	- Obsolete SGI_XFSDUMP_SKIP_FILE extended attribute for excluding
+	  files from dump.
+	- Fix restoration of extended attributes on the root directory.
+	- Use the full 32-bit inode generation number instead of 12-bit
+	  generation number.  Bump the dump format version to 3.
+	- Do not create parent directories for orphaned files during
+	  list-only (-t option) restore.
+
 xfsdump-3.0.6 (14 October 2011)
 	- Unconditionally add checksums to various dump headers in
 	  xfsdump.
