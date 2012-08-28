@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: xfsdump 3.0.4\n"
 "Report-Msgid-Bugs-To: Nathan Scott nathans@debian.org\n"
 "POT-Creation-Date: 2010-01-14 13:42+1100\n"
-"PO-Revision-Date: 2010-04-01 19:11+0100\n"
+"PO-Revision-Date: 2012-08-28 10:58+0200\n"
 "Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -65,7 +65,7 @@ msgstr "Tastatur-Unterbrechung\n"
 #: .././common/main.c:2216 .././restore/tree.c:2684 .././restore/tree.c:2725
 #: .././restore/content.c:6871 .././restore/content.c:6907
 msgid "end dialog"
-msgstr "Schlußdialog"
+msgstr "Schlussdialog"
 
 #: .././common/dlog.c:109
 #, c-format
@@ -1220,11 +1220,11 @@ msgstr "Protokollnachrichtenstufen anzeigen"
 
 #: .././common/main.c:2090
 msgid "hide log message subsystems"
-msgstr "Protokollnachrichten des Untersystems verbergen"
+msgstr "Protokollnachrichtenuntersysteme verbergen"
 
 #: .././common/main.c:2092
 msgid "show log message subsystems"
-msgstr "Protokollnachrichten des Untersystems anzeigen"
+msgstr "Protokollnachrichtenuntersysteme anzeigen"
 
 #: .././common/main.c:2096
 msgid "hide log message timestamps"
@@ -1266,11 +1266,11 @@ msgstr "Protokollnachrichtenstufen werden verborgen\n"
 
 #: .././common/main.c:2195
 msgid "showing log message subsystems\n"
-msgstr "Protokollnachrichten des Untersystems werden angezeigt\n"
+msgstr "Protokollnachrichtenuntersysteme werden angezeigt\n"
 
 #: .././common/main.c:2197
 msgid "hiding log message subsystems\n"
-msgstr "Protokollnachrichten des Untersystems werden verborgen\n"
+msgstr "Protokollnachrichtenuntersysteme werden verborgen\n"
 
 #: .././common/main.c:2202
 msgid "showing log message timestamps\n"
@@ -1392,13 +1392,13 @@ msgstr ""
 #, c-format
 msgid "unable to allocate shared arena for thread locks: %s\n"
 msgstr ""
-"es kann kein gemeinsamer Schauplatz für Thread-Sperren reserviert werden: "
+"es kann kein gemeinsamer Speicherplatz für Thread-Sperren reserviert werden: "
 "%s\n"
 
 #: .././common/qlock.c:215
 #, c-format
 msgid "unable to add thread to shared arena: %s\n"
-msgstr "es kann kein Thread zu gemeinsamem Schauplatz hinzugefügt werden: %s\n"
+msgstr "es kann kein Thread zu gemeinsamem Speicherplatz hinzugefügt werden: %s\n"
 
 #: .././common/qlock.c:301
 #, c-format
@@ -1413,12 +1413,12 @@ msgstr "Ordinale Verletzung der Sperre: Thrd %d PID %d Ord %d Map %x\n"
 #: .././common/qlock.c:446
 #, c-format
 msgid "unable to \"P\" semaphore: rval == %d, errno == %d (%s)\n"
-msgstr "»P«-Semaphor nicht möglich: Rval == %d, Fehlernummer == %d (%s)\n"
+msgstr "»P« auf Semaphor nicht möglich: Rval == %d, Fehlernummer == %d (%s)\n"
 
 #: .././common/qlock.c:473
 #, c-format
 msgid "unable to \"V\" semaphore: rval == %d, errno == %d (%s)\n"
-msgstr "»V«-Semaphore nicht möglich: Rval == %d, Fehlernummer == %d (%s)\n"
+msgstr "»V« auf Semaphor nicht möglich: Rval == %d, Fehlernummer == %d (%s)\n"
 
 #: .././common/util.c:188 .././dump/content.c:2943
 #, c-format
@@ -1429,7 +1429,7 @@ msgstr "Bulkstat-Informationen für Inode %llu abfragen fehlgeschlagen\n"
 #, c-format
 msgid "failed to get valid bulkstat information for inode %llu\n"
 msgstr ""
-"gültige Bulkstat-Informationen für Inode %llu abfragen fehlgeschlagen\n"
+"gültige Bulkstat-Informationen für Inode %llu können nicht abgefragt werden\n"
 
 #: .././common/util.c:243
 #, c-format
@@ -2734,7 +2734,7 @@ msgstr ""
 msgid "unable to unlink current file prior to restore: %s: %s: discarding\n"
 msgstr ""
 "aktuelle Datei kann nicht vor der Wiederherstellung gelöscht werden: %s: %s: "
-"Wird ausrangiert\n"
+"Wird verworfen\n"
 
 #: .././restore/tree.c:1871
 #, c-format
@@ -3458,7 +3458,7 @@ msgstr "%s (Versatz %lld)\n"
 #: .././restore/content.c:7292
 #, c-format
 msgid "open of %s failed: %s: discarding ino %llu\n"
-msgstr "Öffnen von %s fehlgeschlagen: %s: Ino %llu wird ausrangiert\n"
+msgstr "Öffnen von %s fehlgeschlagen: %s: Ino %llu wird verworfen\n"
 
 #: .././restore/content.c:7302
 #, c-format
@@ -3545,30 +3545,30 @@ msgstr "%s: Unbekannter Dateityp: Modus 0x%x Ino %llu\n"
 #: .././restore/content.c:7664 .././restore/content.c:7714
 #, c-format
 msgid "unable to create %s ino %llu %s: %s: discarding\n"
-msgstr " %s Ino %llu %s kann nicht erstellt werden: %s: Wird ausrangiert\n"
+msgstr " %s Ino %llu %s kann nicht erstellt werden: %s: Wird verworfen\n"
 
 #: .././restore/content.c:7676
 #, c-format
 msgid "pathname too long for bind of %s ino %llu %s: %s: discarding\n"
 msgstr ""
-"Pfadname zu lang für Verbindung von %s Ino %llu %s: %s: Wird ausrangiert\n"
+"Pfadname zu lang für Verbindung von %s Ino %llu %s: %s: Wird verworfen\n"
 
 #: .././restore/content.c:7693
 #, c-format
 msgid "unable to bind %s ino %llu %s: %s: discarding\n"
-msgstr "%s Ino %llu %s kann nicht verbunden werden: %s: Wird ausrangiert\n"
+msgstr "%s Ino %llu %s kann nicht verbunden werden: %s: Wird verworfen\n"
 
 #: .././restore/content.c:7849
 #, c-format
 msgid "unable to create symlink ino %llu %s: src too long: discarding\n"
 msgstr ""
 "Symlink Ino %llu %s kann nicht erstellt werden: Src zu lang: Wird "
-"ausrangiert\n"
+"verworfen\n"
 
 #: .././restore/content.c:7873
 #, c-format
 msgid "unable to create symlink ino %llu %s: %s: discarding\n"
-msgstr "Symlink Ino %llu %s kann nicht erstellt werden: %s: Wird ausrangiert\n"
+msgstr "Symlink Ino %llu %s kann nicht erstellt werden: %s: Wird verworfen\n"
 
 #: .././restore/content.c:7966
 msgid "corrupt file header\n"
@@ -3614,7 +3614,7 @@ msgstr ""
 #: .././restore/content.c:8303
 #, c-format
 msgid "dioinfo %s failed: %s: discarding ino %llu\n"
-msgstr "»dioinfo %s« fehlgeschlagen: %s: Ino %llu wird ausrangiert\n"
+msgstr "»dioinfo %s« fehlgeschlagen: %s: Ino %llu wird verworfen\n"
 
 #: .././restore/content.c:8331 .././restore/content.c:8347
 #: .././restore/content.c:8351
@@ -3640,7 +3640,7 @@ msgstr "Ausgabe des Kerns"
 #: .././restore/content.c:8360
 #, c-format
 msgid "attempt to read %u bytes failed: %s\n"
-msgstr "Versuch, %u Byte zu lesen fehlgeschlagen: %s\n"
+msgstr "Versuch, %u Bytes zu lesen, fehlgeschlagen: %s\n"
 
 #: .././restore/content.c:8447 .././restore/content.c:8482
 #, c-format
@@ -3669,8 +3669,8 @@ msgstr "erweitertes Attribut %s für %s kann nicht gesetzt werden: %s (%d)\n"
 #: .././restore/content.c:8884
 msgid "partial_reg: Out of records. Extend attrs applied early.\n"
 msgstr ""
-"partial_reg: Außerhalb der Datensätze. Erweiterte »attrs« frühzeitig "
-"angegeben.\n"
+"partial_reg: Keine verbleibenden Datensätze. Erweiterte »attrs« frühzeitig "
+"angewendet.\n"
 
 #: .././restore/content.c:9051
 msgid "overwrites inhibited"
@@ -3918,7 +3918,7 @@ msgid ""
 msgstr ""
 "\n"
 "es gibt nicht identifizierte Medienobjekte, die Mediendateien enthalten, bei "
-"denen noch nicht versucht wurde. die Verzeichnishierarchie "
+"denen noch nicht versucht wurde, die Verzeichnishierarchie "
 "wiederherzustellen:\n"
 
 #: .././restore/content.c:9491
