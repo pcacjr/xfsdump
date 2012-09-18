@@ -434,7 +434,7 @@ dirattr_add( filehdr_t *fhdrp )
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
-	dirattr.d_projid = fhdrp->fh_stat.bs_projid;
+	dirattr.d_projid = bstat_projid(&(fhdrp->fh_stat));
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
 	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
 #ifdef DIRATTRCHK
@@ -812,7 +812,7 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
 	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
-	dirattr.d_projid = fhdrp->fh_stat.bs_projid;
+	dirattr.d_projid = bstat_projid(&(fhdrp->fh_stat));
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
 	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;

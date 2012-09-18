@@ -4927,7 +4927,8 @@ copy_xfs_bstat(bstat_t *dst, xfs_bstat_t *src)
 	dst->bs_extsize = src->bs_extsize;
 	dst->bs_extents = src->bs_extents;
 	dst->bs_gen = src->bs_gen;
-	dst->bs_projid = src->bs_projid;
+	dst->bs_projid_lo = src->bs_projid_lo;
+	dst->bs_projid_hi = src->bs_projid_hi;
 	dst->bs_dmevmask = src->bs_dmevmask;
 	dst->bs_dmstate = src->bs_dmstate;
 }

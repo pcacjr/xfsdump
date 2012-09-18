@@ -28,13 +28,15 @@
 #define GLOBAL_HDR_VERSION_1	1
 #define GLOBAL_HDR_VERSION_2	2
 #define GLOBAL_HDR_VERSION_3	3
-	/* version 3 uses the full 32-bit inode generation number in direnthdr_t.
+#define GLOBAL_HDR_VERSION_4	4
+	/* version 4 adds 32-bit projid (projid_hi)
+	 * version 3 uses the full 32-bit inode generation number in direnthdr_t.
 	 * version 2 adds encoding of holes and a change to on-tape inventory format.
 	 * version 1 adds extended file attribute dumping.
 	 * version 0 xfsrestore can't handle media produced
 	 * by version 1 xfsdump. 
 	 */
-#define GLOBAL_HDR_VERSION	GLOBAL_HDR_VERSION_3
+#define GLOBAL_HDR_VERSION	GLOBAL_HDR_VERSION_4
 
 #define GLOBAL_HDR_STRING_SZ	0x100
 #define GLOBAL_HDR_TIME_SZ	4

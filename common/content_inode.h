@@ -173,8 +173,10 @@ struct bstat {				/*		     bytes accum */
 	int32_t		bs_extsize;	/* extent size		 4    50 */
 	int32_t		bs_extents;	/* number of extents	 4    54 */
 	u_int32_t	bs_gen;		/* generation count	 4    58 */
-	u_int16_t	bs_projid;	/* project id		 2    5a */
-	char		bs_pad[ 14 ];	/* for expansion	 e    68 */
+	u_int16_t	bs_projid_lo;	/* low 16 of project id	 2    5a */
+	u_int16_t	bs_forkoff;	/* inode fork offset	 2    5c */
+	u_int16_t	bs_projid_hi;	/* hi 16 of project id	 2    5e */
+	char		bs_pad[ 10 ];	/* for expansion	 e    68 */
 	u_int32_t	bs_dmevmask;	/* DMI event mask        4    6c */
 	u_int16_t	bs_dmstate;	/* DMI state info        2    6e */
 	char		bs_pad1[ 18 ];	/* for expansion        12    80 */
@@ -183,6 +185,18 @@ struct bstat {				/*		     bytes accum */
 };
 
 typedef struct bstat bstat_t;
+
+/*
+ * Project quota id helpers (previously projid was 16bit only
+ * and using two 16bit values to hold new 32bit projid was choosen
+ * to retain compatibility with "old" filesystems).
+ */
+static inline __uint32_t
+bstat_projid(struct bstat *bs)
+{
+        return (__uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
+}
+
 
 /* extended inode flags that can only be set after all data
  * has been restored to a file.

@@ -7451,7 +7451,7 @@ restore_reg( drive_t *drivep,
 		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
 		fsxattr.fsx_xflags = bstatp->bs_xflags & ~POST_DATA_XFLAGS;
 		fsxattr.fsx_extsize = (u_int32_t) bstatp->bs_extsize;
-		fsxattr.fsx_projid = bstatp->bs_projid;
+		fsxattr.fsx_projid = bstat_projid(bstatp);
 
 		rval = ioctl( *fdp, XFS_IOC_FSSETXATTR, (void *)&fsxattr);
 		if ( rval < 0 ) {
@@ -7702,7 +7702,7 @@ restore_complete_reg(stream_context_t *strcxtp)
 		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
 		fsxattr.fsx_xflags = bstatp->bs_xflags;
 		fsxattr.fsx_extsize = (u_int32_t)bstatp->bs_extsize;
-		fsxattr.fsx_projid = bstatp->bs_projid;
+		fsxattr.fsx_projid = bstat_projid(bstatp);
 
 		rval = ioctl( fd, XFS_IOC_FSSETXATTR, (void *)&fsxattr );
 		if ( rval < 0 ) {
