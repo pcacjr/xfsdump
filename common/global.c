@@ -281,7 +281,6 @@ global_version_check( u_int32_t version )
 		case GLOBAL_HDR_VERSION_1:
 		case GLOBAL_HDR_VERSION_2:
 		case GLOBAL_HDR_VERSION_3:
-		case GLOBAL_HDR_VERSION_4:
 			return BOOL_TRUE;
 		default:
 			return BOOL_FALSE;
