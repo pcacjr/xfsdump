@@ -1,7 +1,8 @@
-AC_INIT(common/main.c)
+AC_INIT([xfsdump], [3.1.0])
 AC_PREREQ(2.50)
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([common/main.c])
 AC_CONFIG_HEADER(include/config.h)
 AC_PREFIX_DEFAULT(/usr)
 
@@ -83,4 +84,5 @@ AC_PACKAGE_NEED_ATTRGET_LIBATTR
 
 AC_MANUAL_FORMAT
 
-AC_OUTPUT(include/builddefs)
+AC_CONFIG_FILES([include/builddefs])
+AC_OUTPUT
