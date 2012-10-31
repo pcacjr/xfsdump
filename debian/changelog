@@ -1,3 +1,10 @@
+xfsdump (3.1.1) unstable; urgency=low
+
+  * New upstream release
+  * Add German translation from Chris Leick (closes: #576257)
+
+ -- Nathan Scott <nathans@debian.org>  Wed, 31 Oct 2012 12:39:11 +1100
+
 xfsdump (3.1.0) unstable; urgency=low
 
   * New upstream release

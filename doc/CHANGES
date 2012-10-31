@@ -1,3 +1,11 @@
+xfsdump-3.1.1 (31 October 2012)
+	- Save and restore 32 bit project ids correctly.
+	- German translation, thanks to Chris Leick.
+	- A few fixups to the German translation, thanks to Stefan Ring.
+	- An initial Polish translation, thanks to Jakub Bogusz.
+	- Various build system cleanups, thanks to Mike Frysinger, and
+	  Jan Engelhardt.
+
 xfsdump-3.1.0 (22 March 2012)
 	- Fix metadata restore on split files.
 	- Add a -D option to skip a recursive scan of the filesystem
