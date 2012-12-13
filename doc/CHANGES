@@ -1,3 +1,6 @@
+xfsdump-3.1.2 (13 December 2012)
+	- Update release script to create a source tarball.
+
 xfsdump-3.1.1 (31 October 2012)
 	- Save and restore 32 bit project ids correctly.
 	- German translation, thanks to Chris Leick.
