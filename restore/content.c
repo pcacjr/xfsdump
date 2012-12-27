@@ -7796,7 +7796,7 @@ restore_spec( filehdr_t *fhdrp, rv_t *rvp, char *path )
 			if ( strlen( path ) >= sizeof( addr.sun_path )) {
 				mlog( MLOG_VERBOSE | MLOG_WARNING, _(
 				      "pathname too long for bind of "
-				      "%s ino %llu %s: %s: discarding\n"),
+				      "%s ino %llu %s: discarding\n"),
 				      printstr,
 				      fhdrp->fh_stat.bs_ino,
 				      path );
