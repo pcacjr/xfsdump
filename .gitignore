@@ -4,6 +4,7 @@
 
 # build system
 .census
+.gitcensus
 /include/config.h
 /include/builddefs
 /install-sh
