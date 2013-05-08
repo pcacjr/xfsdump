@@ -1,3 +1,14 @@
+xfsdump-3.1.3 (08 May 2013)
+	- Fix a segfault in xfsrestore when a path name is too long,
+	  thanks to Nigel Tamplin.
+	- Fix a backward compatibility problem.  Dumps created with
+	  version 3.1.2 where extended attributes are in use failed
+	  to restore with v3.1.0 due to file header checksum errors.
+	  Thanks to Fugazzi for reporting.
+	- Refactored release scripts to conform to using git archive.
+	- Changed the build process so that 'make deb' uses the same
+	  process of creating a source tree as the release script.
+
 xfsdump-3.1.2 (13 December 2012)
 	- Update release script to create a source tarball.
 

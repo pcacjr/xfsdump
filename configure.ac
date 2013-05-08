@@ -1,4 +1,4 @@
-AC_INIT([xfsdump], [3.1.2])
+AC_INIT([xfsdump], [3.1.3])
 AC_PREREQ(2.50)
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
