@@ -7516,6 +7516,11 @@ restore_extent_group( drive_t *drivep,
 		 * we are done.
 		 */
 		if ( ehdr.eh_type == EXTENTHDR_TYPE_LAST ) {
+			/* For a wholly sparse file, there is no HOLE
+			 * record; advance restoredsz to EOF.
+			 */
+			if (!restoredsz)
+				restoredsz = bstatp->bs_size;
 			break;
 		}
 
