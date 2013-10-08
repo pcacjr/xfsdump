@@ -8857,22 +8857,23 @@ dump_partials(void)
 	int i;
 
 	pi_lock();
-	printf("\npartial_reg: count=%d\n", persp->a.parrestcnt);
+	printf("\npartial_reg: count=%d\n", (int)persp->a.parrestcnt);
 	if (persp->a.parrestcnt > 0) {
 		for (i=0; i < partialmax; i++ ) {
 			if (persp->a.parrest[i].is_ino > 0) {
 				int j;
 
 				isptr = &persp->a.parrest[i];
-				printf( "\tino=%lld ", isptr->is_ino);
+				printf("\tino=%llu ",
+				       (unsigned long long)isptr->is_ino);
 				for (j=0, bsptr=isptr->is_bs;
 				     j < drivecnt; 
 				     j++, bsptr++)
 				{
 					if (bsptr->endoffset > 0) {
 						printf("%d:%lld-%lld ",
-						     j, bsptr->offset, 
-						     bsptr->endoffset);
+						   j, (long long)bsptr->offset,
+						   (long long)bsptr->endoffset);
 					} 
 				}
 				printf( "\n");
@@ -8892,13 +8893,17 @@ dump_partials(void)
 void
 check_valid_partials(void)
 {
-        int num_partials[STREAM_MAX]; /* sum of partials for a given drive */
+	int *num_partials; /* array for sum of partials for a given drive */
 	partial_rest_t *isptr = NULL;
 	bytespan_t *bsptr = NULL;
 	int i;
 
 	/* zero the sums for each stream */
-        memset(num_partials, 0, sizeof(num_partials));
+	num_partials = calloc(drivecnt, sizeof(int));
+	if (!num_partials) {
+		perror("num_partials array allocation");
+		return;
+	}
 
 	pi_lock();
 	if (persp->a.parrestcnt > 0) {
@@ -8926,6 +8931,7 @@ check_valid_partials(void)
 		}
 	}
 	pi_unlock();
+	free(num_partials);
 }
 #endif
 
