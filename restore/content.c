@@ -9007,6 +9007,7 @@ partial_reg( ix_t d_index,
 #ifdef DEBUGPARTIALS
 		dump_partials();
 #endif
+		return;
 	}
 
 found:
