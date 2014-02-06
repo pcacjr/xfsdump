@@ -362,6 +362,15 @@ struct stream_context {
 	char       sc_path[2 * MAXPATHLEN];
 	intgen_t   sc_fd;
 	intgen_t   sc_hsmflags;
+
+	/*
+	 * we have to set the owner before we set extended attributes otherwise
+	 * capabilities will not be restored correctly as setting the owner with
+	 * fchmod will strip the capability attribute from the file. Hence we
+	 * need to do this before restoring xattrs and record it so we don't do
+	 * it again on completion of file restoration.
+	 */
+	bool_t	   sc_ownerset;
 };
 
 typedef struct stream_context stream_context_t;
@@ -3429,6 +3438,8 @@ applynondirdump( drive_t *drivep,
 	memset(&strctxp->sc_bstat, 0, sizeof(bstat_t));
 	strctxp->sc_path[0] = '\0';
 	strctxp->sc_fd = -1;
+	strctxp->sc_ownerset = BOOL_FALSE;
+
 
 	for ( ; ; ) {
 		drive_ops_t *dop = drivep->d_opsp;
@@ -3455,6 +3466,7 @@ applynondirdump( drive_t *drivep,
 			memcpy(&strctxp->sc_bstat, bstatp, sizeof(bstat_t));
 			strctxp->sc_path[0] = '\0';
 			strctxp->sc_fd = -1;
+			strctxp->sc_ownerset = BOOL_FALSE;
 
 			rv = restore_file( drivep, fhdrp, ehcs, ahcs, path1, path2 );
 
@@ -7351,6 +7363,61 @@ restore_file_cb( void *cp, bool_t linkpr, char *path1, char *path2 )
 	}
 }
 
+/*
+ * Set the file owner and strip suid/sgid if necessary. On failure, it will
+ * close the file descriptor, unlink the file and return -1. On success,
+ * it will mark the stream contexts as having set the owner and return 0.
+ */
+static int
+set_file_owner(
+	char		 *path,
+	intgen_t	 *fdp,
+	stream_context_t *strcxtp)
+{
+	bstat_t		*bstatp = &strcxtp->sc_bstat;
+	mode_t		mode = (mode_t)bstatp->bs_mode;
+	int		rval;
+
+	rval = fchown(*fdp, (uid_t)bstatp->bs_uid, (gid_t)bstatp->bs_gid );
+	if (!rval)
+		goto done;
+
+	mlog(MLOG_VERBOSE | MLOG_WARNING,
+	     _("chown (uid=%u, gid=%u) %s failed: %s\n"),
+	     bstatp->bs_uid, bstatp->bs_gid, path, strerror(errno));
+
+	if (mode & S_ISUID) {
+		mlog(MLOG_VERBOSE | MLOG_WARNING,
+		     _("stripping setuid bit on %s since chown failed\n"),
+		     path);
+		mode &= ~S_ISUID;
+	}
+
+	if ((mode & (S_ISGID|S_IXGRP)) == (S_ISGID|S_IXGRP)) {
+		mlog(MLOG_VERBOSE | MLOG_WARNING,
+		     _("stripping setgid bit on %s since chown failed\n"),
+		     path);
+		mode &= ~S_ISGID;
+	}
+
+	if (mode == (mode_t)bstatp->bs_mode)
+		goto done;
+
+	rval = fchmod(*fdp, mode);
+	if (rval) {
+		mlog(MLOG_VERBOSE | MLOG_ERROR,
+		     _("unable to strip setuid/setgid on %s, unlinking file.\n"),
+		     path);
+		unlink(path);
+		close(*fdp);
+		*fdp = -1;
+		return -1;
+	}
+done:
+	strcxtp->sc_ownerset = BOOL_TRUE;
+	return 0;
+}
+
 /* called to begin a regular file. if no path given, or if just toc,
  * don't actually write, just read. also get into that situation if
  * cannot prepare destination. fd == -1 signifies no write. *statp
@@ -7440,6 +7507,12 @@ restore_reg( drive_t *drivep,
 				      strerror( errno ));
 			}
 		}
+	}
+
+	if (strctxp->sc_ownerset == BOOL_FALSE && persp->a.ownerpr) {
+		rval = set_file_owner(path, fdp, strctxp);
+		if (rval)
+			return BOOL_TRUE;
 	}
 
 	if ( persp->a.dstdirisxfspr ) {
@@ -7628,45 +7701,10 @@ restore_complete_reg(stream_context_t *strcxtp)
 
 	/* set the owner and group (if enabled)
 	 */
-	if ( persp->a.ownerpr ) {
-		rval = fchown( fd,
-			       ( uid_t )bstatp->bs_uid,
-			       ( gid_t )bstatp->bs_gid );
-		if ( rval ) {
-			mode_t mode = (mode_t)bstatp->bs_mode;
-
-			mlog( MLOG_VERBOSE | MLOG_WARNING,
-			      _("chown (uid=%u, gid=%u) %s failed: %s\n"),
-			      bstatp->bs_uid,
-			      bstatp->bs_gid,
-			      path,
-			      strerror( errno ));
-
-			if ( mode & S_ISUID ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
-				      _("stripping setuid bit on %s "
-				      "since chown failed\n"),
-				      path );
-				mode &= ~S_ISUID;
-			}
-			if ( (mode & (S_ISGID|S_IXGRP)) == (S_ISGID|S_IXGRP) ) {
-				mlog( MLOG_VERBOSE | MLOG_WARNING,
-				      _("stripping setgid bit on %s "
-				      "since chown failed\n"),
-				      path );
-				mode &= ~S_ISGID;
-			}
-			if ( mode != (mode_t)bstatp->bs_mode ) {
-				rval = fchmod( fd, mode );
-				if ( rval ) {
-					mlog( MLOG_VERBOSE | MLOG_ERROR,
-					      _("unable to strip setuid/setgid "
-					      "on %s, unlinking file.\n"),
-					      path );
-					unlink( path );
-				}
-			}
-		}
+	if (strcxtp->sc_ownerset == BOOL_FALSE && persp->a.ownerpr) {
+		rval = set_file_owner(path, &fd, strcxtp);
+		if (rval)
+			return BOOL_TRUE;
 	}
 
 	/* set the permissions/mode
