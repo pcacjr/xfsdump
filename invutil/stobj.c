@@ -578,22 +578,23 @@ open_stobj(char *StObjFileName)
 	return fd;
     }
 
-    name = strdup(StObjFileName);
-    if(name == NULL) {
-	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-	exit(1);
-    }
-
     read_n_bytes(fd, &cnt, sizeof(invt_sescounter_t), StObjFileName);
     lseek( fd, 0, SEEK_SET );
     errno = 0;
     if (fstat(fd, &sb) < 0) {
 	fprintf(stderr, "Could not get stat info on %s\n", StObjFileName);
 	perror("fstat");
+	close(fd);
 	return -1;
     }
     size = sb.st_size;
     mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
+
+    name = strdup(StObjFileName);
+    if(name == NULL) {
+	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
+	exit(1);
+    }
 
     return add_stobj(name, fd, size, mapaddr, (invt_sescounter_t *)mapaddr);
 }
