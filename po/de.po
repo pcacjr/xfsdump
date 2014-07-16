@@ -2832,7 +2832,7 @@ msgstr "chmod %s fehlgeschlagen: %s\n"
 #, c-format
 msgid ""
 "attempt to set extended attributes (xflags 0x%x, extsize = 0x%x, projid = 0x%"
-"x)of %s failed: %s\n"
+"x) of %s failed: %s\n"
 msgstr ""
 "Versuch erweiterte Attribute (xflags 0x%x, extsize = 0x%x, projid = 0x%x) "
 "von %s zu setzen fehlgeschlagen: %s\n"

@@ -2617,7 +2617,7 @@ setdirattr( dah_t dah, char *path )
 		       "extended attributes "
 		       "(xflags 0x%x, "
 		       "extsize = 0x%x, "
-		       "projid = 0x%x)"
+		       "projid = 0x%x) "
 		       "of %s failed: "
 		       "%s\n"),
 		     fsxattr.fsx_xflags,
