@@ -10,6 +10,7 @@ msgstr ""
 "PO-Revision-Date: 2012-08-28 10:58+0200\n"
 "Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -3469,15 +3470,6 @@ msgstr "Versuch, %s mit »stat« abzufragen, fehlgeschlagen: %s\n"
 #, c-format
 msgid "attempt to truncate %s failed: %s\n"
 msgstr "Versuch, %s zu kürzen, fehlgeschlagen: %s\n"
-
-#: .././restore/content.c:7337 .././restore/content.c:7585
-#, c-format
-msgid ""
-"attempt to set extended attributes (xflags 0x%x, extsize = 0x%x, projid = 0x%"
-"x) of %s failed: %s\n"
-msgstr ""
-"Versuch, erweiterte Attribute (xflags 0x%x, extsize = 0x%x, projid = 0x%x) "
-"von %s zu setzen, fehlgeschlagen: %s\n"
 
 #: .././restore/content.c:7493 .././restore/content.c:7760
 #, c-format
