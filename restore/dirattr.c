@@ -51,8 +51,6 @@
 
 /* structure definitions used locally ****************************************/
 
-#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
-
 /* node handle limits
  */
 #ifdef DIRATTRCHK

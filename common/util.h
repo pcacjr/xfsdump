@@ -67,9 +67,6 @@ extern intgen_t read_buf( char *bufp,
 			  intgen_t *statp );
 
 
-#define min( a, b )	( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
-#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
-
 
 /* strncpyterm - like strncpy, but guarantees the destination is null-terminated
  */

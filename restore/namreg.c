@@ -34,8 +34,6 @@
 
 /* structure definitions used locally ****************************************/
 
-#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
-
 #define NAMREG_AVGLEN	10
 
 /* persistent context for a namreg - placed in first page

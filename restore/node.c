@@ -30,9 +30,6 @@
 #include "node.h"
 #include "mmap.h"
 
-#define max( a, b )	( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
-#define min( a, b )	( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
-
 extern size_t pgsz;
 extern size_t pgmask;
 
