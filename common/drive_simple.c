@@ -765,18 +765,20 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 	/* use read_buf util func to eat up difference
 	 */
 	nreadneeded64 = mark - strmoff;
-	ASSERT( nreadneeded64 <= INTGENMAX );
-	nreadneeded = ( intgen_t )nreadneeded64;
-	nread = read_buf( 0,
-			  ( size_t )nreadneeded,
-			  ( void * )drivep,
-			  ( rfp_t )drivep->d_opsp->do_read,
-			  ( rrbfp_t )drivep->d_opsp->do_return_read_buf,
-			  &rval );
-	if  ( rval ) {
-		return rval;
+	while ( nreadneeded64 > 0 ) {
+		if ( nreadneeded64 > INTGENMAX )
+			nreadneeded = INTGENMAX;
+		else
+			nreadneeded = ( intgen_t )nreadneeded64;
+		nread = read_buf( 0, nreadneeded, drivep,
+				  ( rfp_t )drivep->d_opsp->do_read,
+				( rrbfp_t )drivep->d_opsp->do_return_read_buf,
+				  &rval );
+		if  ( rval ) {
+			return rval;
+		}
+		nreadneeded64 -= nread;
 	}
-	ASSERT( nread == nreadneeded );
 
 	/* verify we are on the mark
 	 */
