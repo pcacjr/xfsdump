@@ -2,7 +2,7 @@ xfsdump (3.1.5) unstable; urgency=low
 
   * New upstream release (closes: #799201)
 
- -- Nathan Scott <nathans@debian.org> Fri, 25 Sep 2015 08:42:23 +1000
+ -- Nathan Scott <nathans@debian.org> Wed, 14 Oct 2015 12:53:24 +1100
 
 xfsdump (3.1.4) unstable; urgency=low
 
