@@ -163,8 +163,8 @@ extern void fold_init( fold_t fold, char *infostr, char c );
  * Align pointer up to alignment
  */
 #define	ALIGN_PTR(p,a)	\
-	(((__psint_t)(p) & ((a)-1)) ? \
-		((void *)(((__psint_t)(p) + ((a)-1)) & ~((a)-1))) : \
+	(((intptr_t)(p) & ((a)-1)) ? \
+		((void *)(((intptr_t)(p) + ((a)-1)) & ~((a)-1))) : \
 		((void *)(p)))
 
 #endif /* UTIL_H */

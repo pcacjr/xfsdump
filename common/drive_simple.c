@@ -1296,7 +1296,7 @@ static size_t
 do_get_align_cnt( drive_t *drivep )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	__psint_t next_alignment_off;
+	intptr_t next_alignment_off;
 	char *next_alignment_point;
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
@@ -1313,7 +1313,7 @@ do_get_align_cnt( drive_t *drivep )
 	 * the following algorithm works because dc_buf is page-aligned and
 	 * a multiple of PGSZ.
 	 */
-	next_alignment_off = ( __psint_t )contextp->dc_nextp;
+	next_alignment_off = ( intptr_t )contextp->dc_nextp;
 	next_alignment_off +=  PGMASK;
 	next_alignment_off &= ~PGMASK;
 	next_alignment_point = ( char * )next_alignment_off;

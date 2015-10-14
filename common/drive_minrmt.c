@@ -1969,7 +1969,7 @@ static size_t
 do_get_align_cnt( drive_t * drivep )
 {
 	char *next_alignment_point;
-	__psint_t next_alignment_off;
+	intptr_t next_alignment_off;
 	drive_context_t *contextp;
 
 	contextp = ( drive_context_t * )drivep->d_contextp;
@@ -1990,7 +1990,7 @@ do_get_align_cnt( drive_t * drivep )
 	 * the following algorithm works because all buffers are page-aligned
 	 * and a multiple of PGSZ.
 	 */
-	next_alignment_off = ( __psint_t )contextp->dc_nextp;
+	next_alignment_off = ( intptr_t )contextp->dc_nextp;
 	next_alignment_off +=  PGMASK;
 	next_alignment_off &= ~PGMASK;
 	next_alignment_point = ( char * )next_alignment_off;
