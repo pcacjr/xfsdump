@@ -1126,13 +1126,14 @@ cb_add_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
 
 		if (lastsegp->hnkoff == inomap.hnkmaplen) {
 			intgen_t numsegs;
-			intgen_t oldsize;
 
 			inomap.hnkmaplen++;
 			inomap.hnkmap = (hnk_t *)
 				realloc(inomap.hnkmap, inomap.hnkmaplen * HNKSZ);
 
 			numsegs = inomap.hnkmaplen * SEGPERHNK;
+			if (numsegs < 0)
+				return -1;
 			inomap.i2gmap = (i2gseg_t *)
 				realloc(inomap.i2gmap, numsegs * sizeof(i2gseg_t));
 
@@ -1140,10 +1141,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
 				return -1;
 
 			/* zero the new portion of the i2gmap */
-			oldsize = (numsegs - SEGPERHNK) * sizeof(i2gseg_t);
-
-			memset(inomap.i2gmap + oldsize,
-			       0,
+			memset(&inomap.i2gmap[numsegs - SEGPERHNK], 0,
 			       SEGPERHNK * sizeof(i2gseg_t));
 		}
 
