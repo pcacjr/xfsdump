@@ -596,69 +596,78 @@ inv_free_session(
 
 
 /*----------------------------------------------------------------------*/
-/* inventory_lasttime_level_lessthan					*/
-/*                                                                      */
-/* Given a token that refers to a file system, and a level, this returns*/
-/* the last time when a session of a lesser level was done.             */
-/*                                                                      */
-/* returns -1 on error.                                                 */
+/* inv_lasttime_level_lessthan						*/
+/*									*/
+/* Given a file system uuid, token that refers to a file system, and a	*/
+/* level, tm is populated with last time when a session of a lesser	*/
+/* level was done.							*/
+/*									*/
+/* Returns TRUE on success.						*/
 /*----------------------------------------------------------------------*/
 
 bool_t
 inv_lasttime_level_lessthan( 
-	inv_idbtoken_t  tok,
-	u_char level,
-	time32_t **tm )
+	uuid_t		*fsidp,
+	inv_idbtoken_t	tok,
+	u_char		level,
+	time32_t	**tm)
 {
 	int 	rval;
 	if ( tok != INV_TOKEN_NULL ) {
-		rval =  search_invt( tok->d_invindex_fd, &level, (void **) tm,
-				    (search_callback_t) tm_level_lessthan );
+		rval =  search_invt(fsidp, tok->d_invindex_fd, &level,
+				    (void **)tm,
+				    (search_callback_t)tm_level_lessthan);
 
 		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
 	}
 	
-	return invmgr_query_all_sessions((void *) &level, /* in */
-					 (void **) tm,   /* out */
-			       (search_callback_t) tm_level_lessthan); 
+	return invmgr_query_all_sessions(fsidp,		 /* fs uuid ptr */
+					 (void *)&level, /* in */
+					 (void **)tm,	 /* out */
+			       (search_callback_t)tm_level_lessthan);
 }
 
-
-
-
-
 /*----------------------------------------------------------------------*/
-/*                                                                      */
-/*                                                                      */
-/*                                                                      */
+/* inv_lastsession_level_lessthan					*/
+/*									*/
+/* Given a file system uuid, token that refers to a file system, and a	*/
+/* level, ses is populated with a session of lesser than the level	*/
+/* passed in.								*/
+/*									*/
+/* Returns FALSE on an error, TRUE if not. If (*ses) is NULL, then the	*/
+/* search failed.                                                       */
 /*----------------------------------------------------------------------*/
 
 bool_t
 inv_lastsession_level_lessthan( 
-	inv_idbtoken_t 	tok,
+	uuid_t		*fsidp,
+	inv_idbtoken_t	tok,
 	u_char		level,
-	inv_session_t 	**ses )
+	inv_session_t	**ses)
 {
 	int 	rval;
 	if ( tok != INV_TOKEN_NULL ) {
-		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
-				   (search_callback_t) lastsess_level_lessthan );
+		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
+				   (void **)ses,
+				   (search_callback_t)lastsess_level_lessthan);
 
 		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
 	}
 
-	return invmgr_query_all_sessions((void *) &level, /* in */
-					 (void **) ses,   /* out */
-			       (search_callback_t) lastsess_level_lessthan);
+	return invmgr_query_all_sessions(fsidp,		 /* fs uuid */
+					 (void *)&level, /* in */
+					 (void **)ses,	 /* out */
+			       (search_callback_t)lastsess_level_lessthan);
 
 }
 
-
-
-
 /*----------------------------------------------------------------------*/
-/*                                                                      */
-/*                                                                      */
+/* inv_lastsession_level_equalto					*/
+/*									*/
+/* Given a file system uuid, token that refers to a file system, and a	*/
+/* level, this populates ses with last time when a session of a lesser	*/
+/* level was done.							*/
+/*									*/
 /* Return FALSE on an error, TRUE if not. If (*ses) is NULL, then the   */
 /* search failed.                                                       */
 /*----------------------------------------------------------------------*/
@@ -666,21 +675,24 @@ inv_lastsession_level_lessthan(
 
 bool_t
 inv_lastsession_level_equalto( 
-	inv_idbtoken_t 	tok,			    
+	uuid_t		*fsidp,
+	inv_idbtoken_t	tok,
 	u_char		level,
 	inv_session_t	**ses )
 {
 	int 	rval;
 	if ( tok != INV_TOKEN_NULL ) {
-		rval = search_invt( tok->d_invindex_fd, &level, (void **) ses, 
-				   (search_callback_t) lastsess_level_equalto );
+		rval = search_invt(fsidp, tok->d_invindex_fd, &level,
+				   (void **)ses,
+				   (search_callback_t)lastsess_level_equalto);
 
 		return ( rval < 0) ? BOOL_FALSE: BOOL_TRUE;
 	}
 	
-	return invmgr_query_all_sessions((void *) &level, /* in */
-					 (void **) ses,   /* out */
-			       (search_callback_t) lastsess_level_equalto);
+	return invmgr_query_all_sessions(fsidp,		 /* fs uuid */
+					 (void *)&level, /* in */
+					 (void **)ses,	 /* out */
+			       (search_callback_t)lastsess_level_equalto);
 
 }
 
@@ -688,35 +700,45 @@ inv_lastsession_level_equalto(
 /*----------------------------------------------------------------------*/
 /* inv_getsession_byuuid                                                */
 /*                                                                      */
+/* Given a file system uuid and a session uuid , ses is populated with	*/
+/* the session that contains the matching system uuid.			*/
+/*									*/
+/* Returns FALSE on an error, TRUE if the session was found.		*/
 /*----------------------------------------------------------------------*/
 
 bool_t
 inv_get_session_byuuid(
-	uuid_t	*sesid,
-	inv_session_t **ses)
+	uuid_t		*fsidp,
+	uuid_t		*sesid,
+	inv_session_t	**ses)
 {
 
-	return (invmgr_query_all_sessions((void *)sesid, /* in */
-					  (void **) ses, /* out */
-			       (search_callback_t) stobj_getsession_byuuid));
+	return invmgr_query_all_sessions(fsidp,		/* fs uuid */
+					 (void *)sesid, /* in */
+					 (void **)ses,	/* out */
+			       (search_callback_t)stobj_getsession_byuuid);
 }
 
-
-
 /*----------------------------------------------------------------------*/
-/* inv_getsession_byuuid                                                */
+/* inv_getsession_bylabel						*/
 /*                                                                      */
+/* Given a file system uuid and a session uuid, ses is populated with	*/
+/* the session that contains the matching system label.			*/
+/*									*/
+/* Returns FALSE on an error, TRUE if the session was found.		*/
 /*----------------------------------------------------------------------*/
 
 bool_t
 inv_get_session_bylabel(
-	char *session_label,
-	inv_session_t **ses)
+	uuid_t		*fsidp,
+	char		*session_label,
+	inv_session_t	**ses)
 {
 
-	return (invmgr_query_all_sessions((void *)session_label, /* in */
-					  (void **) ses, /* out */
-			       (search_callback_t) stobj_getsession_bylabel));
+	return invmgr_query_all_sessions(fsidp,			/* fs uuid */
+					 (void *)session_label, /* in */
+					 (void **)ses,		/* out */
+			       (search_callback_t)stobj_getsession_bylabel);
 }
 
 
@@ -786,8 +808,8 @@ inv_delete_mediaobj( uuid_t *moid )
 			return BOOL_FALSE;
 		}
 
-		if ( search_invt( invfd, NULL, (void **)&moid, 
-				  (search_callback_t) stobj_delete_mobj )
+		if (search_invt(&arr[i].ft_uuid, invfd, NULL, (void **)&moid,
+				(search_callback_t)stobj_delete_mobj)
 		    < 0 )
 			return BOOL_FALSE;
 		/* we have to delete the session, etc */

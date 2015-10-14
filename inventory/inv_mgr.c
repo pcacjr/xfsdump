@@ -134,8 +134,9 @@ get_sesstoken( inv_idbtoken_t tok )
 /*---------------------------------------------------------------------------*/
 bool_t
 invmgr_query_all_sessions (
-	void *inarg,
-	void **outarg,
+	uuid_t		  *fsidp,
+	void 		  *inarg,
+	void 		  **outarg,
 	search_callback_t func)
 {
 	invt_counter_t *cnt;
@@ -145,6 +146,7 @@ invmgr_query_all_sessions (
 	int result;
 	inv_oflag_t forwhat = INV_SEARCH_ONLY;
 	void *objectfound;
+	bool_t ret = BOOL_FALSE;
 
 	/* if on return, this is still null, the search failed */
 	*outarg = NULL; 
@@ -157,7 +159,7 @@ invmgr_query_all_sessions (
 	}
 	if ( fd < 0 || numfs <= 0 ) {
 		mlog( MLOG_NORMAL | MLOG_INV, _("INV: Error in fstab\n") );
-		return BOOL_FALSE;
+		return ret;
 	}
 	
 	close( fd );
@@ -169,7 +171,7 @@ invmgr_query_all_sessions (
 			mlog( MLOG_NORMAL | MLOG_INV, _(
 			     "INV: Cant get inv-name for uuid\n")
 			     );
-			return BOOL_FALSE;
+			continue;
 		}
 		strcat( fname, INV_INVINDEX_PREFIX );
 		invfd = open( fname, INV_OFLAG(forwhat) );
@@ -178,9 +180,9 @@ invmgr_query_all_sessions (
 			     "INV: Open failed on %s\n"),
 			     fname
 			     );
-			return BOOL_FALSE;
+			continue;
 		}
-		result = search_invt( invfd, inarg, &objectfound, func );
+		result = search_invt(fsidp, invfd, inarg, &objectfound, func);
 		close(invfd);		
 
 		/* if error return BOOL_FALSE */
@@ -192,12 +194,13 @@ invmgr_query_all_sessions (
 			return BOOL_TRUE;
 		} else if (result == 1) {
 			*outarg = objectfound;
+			ret = BOOL_TRUE;
 		}
 	}
 	
 	/* return val indicates if there was an error or not. *buf
 	   says whether the search was successful */
-	return BOOL_TRUE;
+	return ret;
 }
 
 
@@ -213,10 +216,11 @@ invmgr_query_all_sessions (
 
 intgen_t
 search_invt( 
-	int 			invfd,
-	void 			*arg, 
-	void 			**buf,
-	search_callback_t 	do_chkcriteria )
+	uuid_t			*fsidp,
+	int			invfd,
+	void			*arg,
+	void			**buf,
+	search_callback_t	do_chkcriteria)
 {
 
 	int 		fd, i;
@@ -247,7 +251,7 @@ search_invt(
 	/* we need to get all the invindex headers and seshdrs in reverse
 	   order */
 	for (i = nindices - 1; i >= 0; i--) {
-		int 			nsess;
+		int			nsess, j;
 		invt_sescounter_t 	*scnt = NULL;
 		invt_seshdr_t		*harr = NULL;
 		bool_t                  found;
@@ -272,19 +276,34 @@ search_invt(
 		}
 		free ( scnt );
 
-		while ( nsess ) {
+		for (j = nsess - 1; j >= 0; j--) {
+			invt_session_t ses;
+
 			/* fd is kept locked until we return from the 
 			   callback routine */
 
 			/* Check to see if this session has been pruned 
 			 * by xfsinvutil before checking it. 
 			 */
-			if ( harr[nsess - 1].sh_pruned ) {
-				--nsess;
+			if (harr[j].sh_pruned) {
 				continue;
 			}
-			found = (* do_chkcriteria ) ( fd, &harr[ --nsess ],
-						      arg, buf );
+
+			/* if we need to check the fs uuid's and they don't
+			 * match or we fail to get the session record,
+			 * then keep looking
+			 */
+			if (fsidp) {
+				int ret = GET_REC_NOLOCK(fd, &ses,
+						         sizeof(invt_session_t),
+						         harr[j].sh_sess_off);
+				if (ret < 0)
+					return ret;
+				if (uuid_compare(ses.s_fsid, *fsidp))
+					continue;
+			}
+
+			found = (* do_chkcriteria)(fd, &harr[j], arg, buf);
 			if (! found ) continue;
 			
 			/* we found what we need; just return */

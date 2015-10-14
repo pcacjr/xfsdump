@@ -247,32 +247,37 @@ inv_put_mediafile(
  */
 extern bool_t
 inv_lasttime_level_lessthan( 
+	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,
-	u_char  		level,
-	time32_t		**time );/* out */
+	u_char			level,
+	time32_t		**time); /* out */
 
 extern bool_t
 inv_lastsession_level_lessthan( 
+	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,			     
 	u_char  		level,
-	inv_session_t		**ses );/* out */
+	inv_session_t		**ses); /* out */
 
 extern bool_t
 inv_lastsession_level_equalto( 
+	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,			     
 	u_char  		level,
-	inv_session_t		**ses );/* out */
+	inv_session_t		**ses); /* out */
 
 /* Given a uuid of a session, return the session structure.*/
 extern bool_t
 inv_get_session_byuuid(
-	uuid_t	*sesid,
-	inv_session_t **ses);
+	uuid_t		*fsidp,
+	uuid_t		*sesid,
+	inv_session_t	**ses);
 
 extern bool_t
 inv_get_session_bylabel(
-	char *session_label,
-	inv_session_t **ses);
+	uuid_t		*fsidp,
+	char		*session_label,
+	inv_session_t	**ses);
 
 
 /* on return, *ses is NULL */

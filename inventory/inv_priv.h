@@ -548,11 +548,12 @@ get_headerinfo( int fd, void **hdrs, void **cnt,
 	        size_t hdrsz, size_t cntsz, bool_t doblock );
 
 bool_t
-invmgr_query_all_sessions (void *inarg,	void **outarg, search_callback_t func);
+invmgr_query_all_sessions(uuid_t *fsidp, void *inarg, void **outarg,
+			  search_callback_t func);
 
 intgen_t
-search_invt( int invfd, void *arg, void **buf, 
-	    search_callback_t do_chkcriteria );
+search_invt(uuid_t *fsidp, int invfd, void *arg, void **buf,
+	    search_callback_t do_chkcriteria);
 intgen_t
 invmgr_inv_print( int invfd, invt_pr_ctx_t *prctx);
 

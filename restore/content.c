@@ -2179,8 +2179,9 @@ content_stream_restore( ix_t thrdix )
 		if ( ! drivep->d_isnamedpipepr
 		     &&
 		     ! drivep->d_isunnamedpipepr ) {
-			ok = inv_get_session_byuuid( &grhdrp->gh_dumpid,
-						     &sessp );
+			ok = inv_get_session_byuuid(NULL,
+						    &grhdrp->gh_dumpid,
+						    &sessp);
 			if ( ok && sessp ) {
 				mlog( MLOG_VERBOSE, _(
 				      "using online session inventory\n") );
@@ -3736,9 +3737,9 @@ Inv_validate_cmdline( void )
 	ok = BOOL_FALSE;
 	sessp = 0;
 	if ( tranp->t_reqdumpidvalpr ) {
-		ok = inv_get_session_byuuid( &tranp->t_reqdumpid, &sessp );
+		ok = inv_get_session_byuuid(NULL, &tranp->t_reqdumpid, &sessp);
 	} else if ( tranp->t_reqdumplabvalpr ) {
-		ok = inv_get_session_bylabel( tranp->t_reqdumplab, &sessp );
+		ok = inv_get_session_bylabel(NULL, tranp->t_reqdumplab, &sessp);
 	}
 	rok = BOOL_FALSE;
 	if ( ok && sessp ) {
@@ -6812,13 +6813,15 @@ askinvforbaseof( uuid_t baseid, inv_session_t *sessp )
 	/* get the base session
 	 */
 	if ( resumedpr ) {
-		ok = inv_lastsession_level_equalto( invtok,
-						    ( u_char_t )level,
-						    &basesessp );
+		ok = inv_lastsession_level_equalto(&sessp->s_fsid,
+						    invtok,
+						    (u_char_t)level,
+						    &basesessp);
 	} else {
-		ok = inv_lastsession_level_lessthan( invtok,
-						     ( u_char_t )level,
-						     &basesessp );
+		ok = inv_lastsession_level_lessthan(&sessp->s_fsid,
+						     invtok,
+						     (u_char_t)level,
+						     &basesessp);
 	}
 	if ( ! ok ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(

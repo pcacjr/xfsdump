@@ -872,7 +872,7 @@ content_init( intgen_t argc,
 		sameinterruptedpr = BOOL_FALSE;
 		interruptedpr = BOOL_FALSE;
 
-		ok = inv_get_session_byuuid( &baseuuid, &sessp );
+		ok = inv_get_session_byuuid(&fsid, &baseuuid, &sessp);
 		if ( ! ok ) {
 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
 			      "could not find specified base dump (%s) "
@@ -983,9 +983,10 @@ content_init( intgen_t argc,
 			      "online inventory not available\n") );
 			return BOOL_FALSE;
 		}
-		ok = inv_lastsession_level_lessthan( inv_idbt,
-						     ( u_char_t )sc_level,
-						     &sessp );
+		ok = inv_lastsession_level_lessthan(&fsid,
+						    inv_idbt,
+						    (u_char_t)sc_level,
+						    &sessp);
 		if ( ! ok ) {
 			sessp = 0;
 		}
@@ -1022,9 +1023,10 @@ content_init( intgen_t argc,
 	if ( inv_idbt != INV_TOKEN_NULL ) {
 		/* REFERENCED */
 		bool_t ok1;
-		ok = inv_lastsession_level_equalto( inv_idbt,
-						    ( u_char_t )sc_level,
-						    &sessp );
+		ok = inv_lastsession_level_equalto(&fsid,
+						   inv_idbt,
+						   (u_char_t)sc_level,
+						   &sessp);
 		ok1 = inv_close( inv_idbt );
 		ASSERT( ok1 );
 		if ( ! ok ) {
