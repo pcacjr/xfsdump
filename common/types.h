@@ -49,6 +49,8 @@ typedef unsigned long u_long_t;
 typedef size_t ix_t;
 typedef int32_t time32_t;
 
+typedef uint64_t xfs_ino_t;
+
 /* limits
  */
 #define	MKMAX( t, s )	( ( t )						\
