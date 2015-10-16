@@ -29,6 +29,7 @@
 #include <sys/dir.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "config.h"
 

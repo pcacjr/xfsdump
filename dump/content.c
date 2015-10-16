@@ -34,6 +34,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #ifdef linux
 #include <xfs/xqm.h>

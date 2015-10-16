@@ -20,6 +20,7 @@
 #include <xfs/jdm.h>
 #include <ncurses.h>
 #include <ctype.h>
+#include <uuid/uuid.h>
 
 #include "types.h"
 #include "cmenu.h"

@@ -30,6 +30,7 @@
 #include <sys/mman.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "config.h"
 

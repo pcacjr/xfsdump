@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <uuid/uuid.h>
 
 #include "types.h"
 #include "inventory_priv.h"

@@ -25,6 +25,7 @@
 #include <ncurses.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "types.h"
 #include "mlog.h"

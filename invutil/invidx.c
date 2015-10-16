@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "types.h"
 #include "mlog.h"

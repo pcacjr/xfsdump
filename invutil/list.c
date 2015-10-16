@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 #include <ncurses.h>
+#include <uuid/uuid.h>
 
 #include "list.h"
 #include "cmenu.h"
