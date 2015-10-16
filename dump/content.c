@@ -19,6 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/prctl.h>
 #include <time.h>
@@ -31,12 +33,15 @@
 #include <sys/quota.h>
 #include <malloc.h>
 #include <assert.h>
+#include <string.h>
 
 #ifdef linux
 #include <xfs/xqm.h>
 #endif
 
 #include <attr/attributes.h>
+
+#include "config.h"
 
 #include "hsmapi.h"
 

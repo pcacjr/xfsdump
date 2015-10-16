@@ -27,6 +27,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "config.h"
+
 #include "types.h"
 #include "mlog.h"
 #include "qlock.h"

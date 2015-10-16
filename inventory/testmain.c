@@ -19,10 +19,14 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <stdio.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
+
+#include "config.h"
+
 #include "types.h"
 #include "mlog.h"
 #include "getopt.h"

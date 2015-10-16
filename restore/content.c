@@ -19,6 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/mman.h>
@@ -35,6 +37,9 @@
 #include <malloc.h>
 #include <pthread.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "timeutil.h"

@@ -19,10 +19,14 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <errno.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "util.h"

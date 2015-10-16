@@ -29,6 +29,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -37,6 +39,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "util.h"

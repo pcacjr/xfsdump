@@ -22,6 +22,7 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <strings.h>
 #include "types.h"
 #include "global.h"
 #include "content.h"

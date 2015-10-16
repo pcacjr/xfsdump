@@ -21,16 +21,18 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <unistd.h>
 #include <errno.h>
-
-#include "rmtlib.h"
-#include "swap.h"
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
 #include <sys/param.h>
 #include <assert.h>
+
+#include "config.h"
+#include "rmtlib.h"
+#include "swap.h"
+
 
 /*
  * uses old_mtget IRIX structure since we don't bother

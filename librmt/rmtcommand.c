@@ -22,6 +22,8 @@
  */
 
 #include <errno.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "rmtlib.h"
 

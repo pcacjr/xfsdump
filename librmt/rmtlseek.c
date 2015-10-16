@@ -21,7 +21,9 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <stdio.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include "rmtlib.h"
 
 static off_t _rmt_lseek(int, off_t, int);

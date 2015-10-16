@@ -29,6 +29,8 @@
 #include <malloc.h>
 #include <assert.h>
 
+#include "config.h"
+
 #include "types.h"
 #include "qlock.h"
 #include "cldmgr.h"

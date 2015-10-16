@@ -19,6 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -30,6 +32,9 @@
 #include <malloc.h>
 #include <sched.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "util.h"

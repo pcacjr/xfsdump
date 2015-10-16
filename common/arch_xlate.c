@@ -20,6 +20,10 @@
 #include <xfs/jdm.h>
 #include <assert.h>
 
+#include <strings.h>
+
+#include "config.h"
+
 #include "arch_xlate.h"
 #include "types.h"
 #include "global.h"

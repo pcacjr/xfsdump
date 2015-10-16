@@ -22,6 +22,9 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "util.h"

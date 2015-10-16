@@ -20,6 +20,7 @@
 #include <xfs/jdm.h>
 #include "config.h"
 
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <time.h>
@@ -28,6 +29,9 @@
 #include <mntent.h>
 #include <sys/ioctl.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "mlog.h"

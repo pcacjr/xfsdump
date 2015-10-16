@@ -19,6 +19,13 @@
 #include <xfs/xfs.h>
 #include <assert.h>
 
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
+
 #include "path.h"
 
 struct pem {

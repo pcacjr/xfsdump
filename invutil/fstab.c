@@ -19,9 +19,12 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <ncurses.h>
 #include <sys/mman.h>
+#include <string.h>
 
 #include "types.h"
 #include "mlog.h"

@@ -21,6 +21,10 @@
 #include <xfs/jdm.h>
 #include <assert.h>
 
+#include <string.h>
+
+#include "config.h"
+
 #include "hsmapi.h"
 #include "mlog.h"
 

@@ -20,12 +20,17 @@
 #include <xfs/jdm.h>
 #include "config.h"
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "util.h"

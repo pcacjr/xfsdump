@@ -24,6 +24,9 @@
 #include <sys/stat.h>
 #include <sys/dir.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 
 /*----------------------------------------------------------------------*/

@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -26,6 +27,10 @@
 #include <errno.h>
 #include <sys/dir.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
+
 #include "types.h"
 #include "inv_priv.h"
 

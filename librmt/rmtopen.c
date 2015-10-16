@@ -24,13 +24,15 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
+#include "config.h"
 #include "rmtlib.h"
 
 #define RMT_DEBUG_FILE "/tmp/librmt_debug" /* file for debug output on server */

@@ -20,6 +20,8 @@
 #include <xfs/jdm.h>
 #include <assert.h>
 
+#include "config.h"
+
 #include "inv_priv.h"
 #include "inv_oref.h"
 

@@ -23,6 +23,8 @@
 #include <semaphore.h>
 #include <assert.h>
 
+#include "config.h"
+
 #include "types.h"
 #include "qlock.h"
 #include "mlog.h"

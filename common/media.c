@@ -28,6 +28,8 @@
 #include <getopt.h>
 #include <assert.h>
 
+#include "config.h"
+
 #include "types.h"
 #include "util.h"
 #include "mlog.h"

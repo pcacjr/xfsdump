@@ -21,6 +21,9 @@
 
 #include <pthread.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "exit.h"

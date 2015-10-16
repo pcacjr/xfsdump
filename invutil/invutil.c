@@ -19,11 +19,15 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
 #include <sys/mman.h>
+#include <string.h>
+#include <libgen.h>
 
 #include "types.h"
 #include "mlog.h"

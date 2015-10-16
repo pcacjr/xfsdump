@@ -19,6 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -26,6 +28,9 @@
 #include <fcntl.h>
 #include <sys/dir.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "mlog.h"

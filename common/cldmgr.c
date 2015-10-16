@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -26,6 +27,9 @@
 #include <errno.h>
 #include <pthread.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "exit.h"
 #include "types.h"

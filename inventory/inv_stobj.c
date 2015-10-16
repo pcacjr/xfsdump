@@ -19,6 +19,8 @@
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -27,6 +29,9 @@
 #include <sys/dir.h>
 #include <sys/mman.h>
 #include <assert.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "types.h"
 #include "timeutil.h"
