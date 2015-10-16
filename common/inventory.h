@@ -237,7 +237,7 @@ inv_DEBUG_printallsessions(
 
 #endif /* ifdef DEBUG */
 
-extern intgen_t
+extern int
 inv_setup_base( void );
 
 extern char *

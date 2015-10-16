@@ -113,7 +113,7 @@ typedef enum ring_loc ring_loc_t;
 struct ring_msg {
 	ring_op_t rm_op;
 	ring_stat_t rm_stat;
-	intgen_t rm_rval;
+	int rm_rval;
 	off64_t rm_user;
 	char *rm_bufp;
 /* ALL BELOW PRIVATE!!! */
@@ -171,7 +171,7 @@ extern ring_t *ring_create( size_t ringlen,
 			    int ( * readfunc )( void *clientctxp, char *bufp ),
 			    int ( * writefunc )( void *clientctxp, char *bufp ),
 			    void *clientctxp,
-			    intgen_t *rvalp );
+			    int *rvalp );
 
 
 /* ring_get - get a message off the ready queue

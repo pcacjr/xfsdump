@@ -45,7 +45,7 @@
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 get_counters( int fd, void **cntpp, size_t cntsz )
 {
 	/* object must be locked at least SHARED by caller */
@@ -72,7 +72,7 @@ get_counters( int fd, void **cntpp, size_t cntsz )
 			INV_VERSION );
 	} 
 
-	return (intgen_t) num;
+	return (int) num;
 }
 
 
@@ -83,7 +83,7 @@ get_counters( int fd, void **cntpp, size_t cntsz )
 /* get_headers                                                          */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 get_headers( int fd, void **hdrs, size_t bufsz, size_t off )
 {
 
@@ -110,7 +110,7 @@ get_headers( int fd, void **hdrs, size_t bufsz, size_t off )
 /* get_invtrecord                                                       */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
 	        int whence, bool_t dolock )
 {
@@ -153,7 +153,7 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 /* put_invtrecord                                                       */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
 	        int whence, bool_t dolock )
 {
@@ -193,7 +193,7 @@ put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 /*----------------------------------------------------------------------*/
 
 
-intgen_t
+int
 get_headerinfo( int fd, void **hdrs, void **cnt,
 	        size_t hdrsz, size_t cntsz, bool_t dolock )
 {	
@@ -222,7 +222,7 @@ get_headerinfo( int fd, void **hdrs, void **cnt,
 /* get_lastheader                                                       */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 get_lastheader( int fd, void **ent, size_t hdrsz, size_t cntsz )
 {	
 	int	     	 nindices;

@@ -29,7 +29,7 @@ typedef size32_t nh_t;
 /* node_init - creates a new node abstraction.
  * user reserves one byte per node for use by the node abstraction
  */
-extern bool_t node_init( intgen_t fd,		/* backing store */
+extern bool_t node_init( int fd,		/* backing store */
 		         off64_t off,		/* offset into backing store */
 		         size_t nodesz,		/* node size */
 		         ix_t nodehkix,		/* my housekeeping byte */
@@ -39,7 +39,7 @@ extern bool_t node_init( intgen_t fd,		/* backing store */
 
 /* node_sync - syncs up with existing node abstraction persistent state
  */
-extern bool_t node_sync( intgen_t fd, off64_t off );
+extern bool_t node_sync( int fd, off64_t off );
 
 /* node_alloc - allocates a node, returning a handle.
  * returns NULL handle if no space left.

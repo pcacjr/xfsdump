@@ -36,7 +36,7 @@
 struct spm {
 	stream_state_t	s_state;
 	pthread_t	s_tid;
-	intgen_t	s_ix;
+	int	s_ix;
 	int		s_exit_code;
 	rv_t		s_exit_return;
 	rv_t		s_exit_hint;
@@ -64,7 +64,7 @@ stream_init( void )
  */
 
 void
-stream_register( pthread_t tid, intgen_t streamix )
+stream_register( pthread_t tid, int streamix )
 {
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
@@ -187,12 +187,12 @@ stream_find( pthread_t tid, stream_state_t s[], int nstates )
  * another lock. So no locking is done in this function.
  */
 
-intgen_t
+int
 stream_getix( pthread_t tid )
 {
 	stream_state_t states[] = { S_RUNNING };
 	spm_t *p;
-	intgen_t ix;
+	int ix;
 	p = stream_find( tid, states, N(states) );
 	ix = p ? p->s_ix : -1;
 	return ix;
@@ -246,7 +246,7 @@ stream_get_exit_status( pthread_t tid,
 			stream_state_t states[],
 			int nstates,
 			stream_state_t *state,
-			intgen_t *ix,
+			int *ix,
 			int *exit_code,
 			rv_t *exit_return,
 			rv_t *exit_hint)

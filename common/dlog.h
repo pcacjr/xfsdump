@@ -39,7 +39,7 @@ extern void dlog_desist( void );
 
 /* returns the dialog tty file descriptor. returns -1 if none
  */
-extern intgen_t dlog_fd( void );
+extern int dlog_fd( void );
 
 /* returns BOOL_TRUE if a dialog consumed the given signal
  */

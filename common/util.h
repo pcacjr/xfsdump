@@ -33,9 +33,9 @@
  * if bufp is null, writes bufsz zeros.
  */
 typedef char * ( * gwbfp_t )( void *contextp, size_t wantedsz, size_t *szp);
-typedef intgen_t ( * wfp_t )( void *contextp, char *bufp, size_t bufsz );
+typedef int ( * wfp_t )( void *contextp, char *bufp, size_t bufsz );
 
-extern intgen_t write_buf( char *bufp,
+extern int write_buf( char *bufp,
 			   size_t bufsz,
 			   void *contextp,
 			   gwbfp_t get_write_buf_funcp,
@@ -56,15 +56,15 @@ extern intgen_t write_buf( char *bufp,
  * status of the first failure of the read funcp. if no read failures occur,
  * *statp will be zero.
  */
-typedef char * ( *rfp_t )( void *contextp, size_t wantedsz, size_t *szp, intgen_t *statp );
+typedef char * ( *rfp_t )( void *contextp, size_t wantedsz, size_t *szp, int *statp );
 typedef void ( * rrbfp_t )( void *contextp, char *bufp, size_t bufsz );
 
-extern intgen_t read_buf( char *bufp,
+extern int read_buf( char *bufp,
 			  size_t bufsz, 
 			  void *contextp,
 			  rfp_t read_funcp,
 			  rrbfp_t return_read_buf_funcp,
-			  intgen_t *statp );
+			  int *statp );
 
 
 
@@ -84,37 +84,37 @@ extern char *strncpyterm( char *s1, char *s2, size_t n );
 #define BIGSTAT_ITER_NONDIR	( 1 << 1 )
 #define BIGSTAT_ITER_ALL	( ~0 )
 
-typedef intgen_t (*bstat_cbfp_t)(void *arg1,
+typedef int (*bstat_cbfp_t)(void *arg1,
 				 jdm_fshandle_t *fshandlep,
-				 intgen_t fsfd,
+				 int fsfd,
 				 xfs_bstat_t *statp );
 
 typedef xfs_ino_t (*bstat_seekfp_t)(void *arg1,
 				    xfs_ino_t lastino);
 
-extern intgen_t bigstat_iter( jdm_fshandle_t *fshandlep,
-			      intgen_t fsfd,
-			      intgen_t selector,
+extern int bigstat_iter( jdm_fshandle_t *fshandlep,
+			      int fsfd,
+			      int selector,
 			      xfs_ino_t start_ino,
 			      bstat_cbfp_t fp,
 			      void * cb_arg1,
 			      bstat_seekfp_t seekfp,
 			      void * seek_arg1,
-			      intgen_t *statp,
+			      int *statp,
 			      bool_t ( pfp )( int ), /* preemption chk func */
 			      xfs_bstat_t *buf,
 			      size_t buflen );
 
-extern intgen_t bigstat_one( intgen_t fsfd,
+extern int bigstat_one( int fsfd,
 			     xfs_ino_t ino,
 			     xfs_bstat_t *statp );
 
-extern intgen_t inogrp_iter( intgen_t fsfd,
-			     intgen_t ( * fp )( void *arg1,
-				     		intgen_t fsfd,
+extern int inogrp_iter( int fsfd,
+			     int ( * fp )( void *arg1,
+				     		int fsfd,
 						xfs_inogrp_t *inogrp ),
 			     void * arg1,
-			     intgen_t *statp );
+			     int *statp );
 
 /* calls the callback for every entry in the directory specified
  * by the stat buffer. supplies the callback with a file system
@@ -129,16 +129,16 @@ extern intgen_t inogrp_iter( intgen_t fsfd,
  * callback's return value. if syscall fails, returns -1 with errno set.
  * otherwise returns 0.
  */
-extern intgen_t diriter( jdm_fshandle_t *fshandlep,
-			 intgen_t fsfd,
+extern int diriter( jdm_fshandle_t *fshandlep,
+			 int fsfd,
 			 xfs_bstat_t *statp,
-			 intgen_t ( *cbfp )( void *arg1,
+			 int ( *cbfp )( void *arg1,
 					     jdm_fshandle_t *fshandlep,
-					     intgen_t fsfd,
+					     int fsfd,
 					     xfs_bstat_t *statp,
 					     char *namep ),
 			 void *arg1,
-			 intgen_t *cbrvalp,
+			 int *cbrvalp,
 			 char *usrgdp,
 			 size_t usrgdsz );
 

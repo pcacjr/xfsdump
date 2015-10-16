@@ -29,12 +29,12 @@
 /*
  * Resolve a stobj, invidx or fstab
  */
-intgen_t
+int
 oref_resolve_(
 	invt_oref_t 	*obj,
 	invt_objtype_t	type)
 {
-	intgen_t rval;
+	int rval;
 
 	type &= INVT_OTYPE_MASK;
 	assert(type);
@@ -69,12 +69,12 @@ oref_resolve_(
  * Resolve an object reference upto a specified point 
  */
 
-intgen_t
+int
 oref_resolve_upto(
 	invt_oref_t 	*obj, 
 	invt_objtype_t	type)
 {
-	intgen_t rval = INV_OK;
+	int rval = INV_OK;
 
 	assert (OREF_ISRESOLVED(obj, INVT_OTYPE_MASK));
 	assert (OREF_ISLOCKED(obj));
@@ -107,7 +107,7 @@ oref_resolve_upto(
 
 
 
-intgen_t
+int
 oref_resolve_entries(
 	invt_oref_t 	*obj)
 {
@@ -146,7 +146,7 @@ oref_resolve_entries(
 
 
 
-intgen_t
+int
 oref_resolve_counters(
 	invt_oref_t 	*obj)
 {
@@ -179,12 +179,12 @@ oref_resolve_counters(
 
 
 
-intgen_t
+int
 oref_sync(
 	invt_oref_t 	*obj, 
 	invt_objtype_t	type)
 {
-	intgen_t rval;
+	int rval;
 
 	type &= INVT_RES_MASK;
 	assert(type);
@@ -219,14 +219,14 @@ oref_sync(
 	return rval;
 }
 
-intgen_t
+int
 oref_sync_append(
 	invt_oref_t 	*obj, 
 	invt_objtype_t	type,
 	void		*entry,
 	size_t		entsz)
 {
-	intgen_t rval;
+	int rval;
 
 	type &= INVT_RES_MASK;
 	assert(type);
@@ -305,7 +305,7 @@ _oref_free(
  * Also resolves an idb_token as a side effect.
  */
 
-intgen_t
+int
 oref_resolve(
 	invt_oref_t	*invidx,
 	inv_predicate_t bywhat,
@@ -361,7 +361,7 @@ oref_resolve(
 	/* create another storage object ( and, an inv_index entry for it 
 	   too ) if we've filled this one up */
 	if (OREF_CNT_CURNUM(stobj) >= OREF_CNT_MAXNUM(stobj)) {
-		intgen_t 	rval;
+		int 	rval;
 #ifdef INVT_DEBUG
 		mlog( MLOG_DEBUG | MLOG_INV, "$ INV: creating a new storage obj & "
 		      "index entry. \n" );
@@ -390,7 +390,7 @@ oref_resolve(
  * Resolve the invidx entirely, and open the StObj.
  * Invidx is kept locked by caller
  */
-intgen_t
+int
 oref_resolve_child(
 	invt_oref_t 	*invidx,
 	int		*index)
@@ -424,7 +424,7 @@ oref_resolve_child(
 
 
 /* used to be idx_create */
-intgen_t
+int
 oref_resolve_new_invidx(
 	invt_oref_t 	*invidx,
 	char		*fname)
@@ -454,7 +454,7 @@ oref_resolve_new_invidx(
 
 
 /* formerly idx_create_entry() */
-intgen_t
+int
 oref_resolve_new_stobj(
 	invt_oref_t	*invidx,
 	bool_t		firstentry)

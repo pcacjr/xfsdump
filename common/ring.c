@@ -46,7 +46,7 @@ ring_create( size_t ringlen,
 	     int ( *readfunc )( void *clientctxp, char *bufp ),
 	     int ( *writefunc )( void *clientctxp, char *bufp ),
 	     void *clientctxp,
-	     intgen_t *rvalp )
+	     int *rvalp )
 {
 	bool_t ok;
 	ring_t *ringp;
@@ -107,7 +107,7 @@ ring_create( size_t ringlen,
 			return 0;
 		}
 		if ( pinpr ) {
-			intgen_t rval;
+			int rval;
 			rval = mlock( ( void * )msgp->rm_bufp, bufsz );
 			if ( rval ) {
 				if ( errno == ENOMEM ) {

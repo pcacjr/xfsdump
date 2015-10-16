@@ -78,7 +78,7 @@ typedef struct invt_oref {
 
 	/* indicates level of depth this has been resolved to */
 	invt_objtype_t			 type;
-	intgen_t			 lockflag;
+	int			 lockflag;
 	void				 *token;
 } invt_oref_t;
 
@@ -231,22 +231,22 @@ typedef struct invt_oref {
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 oref_resolve(
 	invt_oref_t	*invidx,
 	inv_predicate_t bywhat,
 	void 		*pred);
 
-intgen_t
+int
 oref_resolve_upto(
 	invt_oref_t 	*obj, 
 	invt_objtype_t	type);
 
-intgen_t
+int
 oref_resolve_entries(
 	invt_oref_t 	*obj);
 
-intgen_t
+int
 oref_resolve_counters(
 	invt_oref_t 	*obj);
 

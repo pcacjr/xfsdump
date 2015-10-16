@@ -26,7 +26,7 @@
 #define EXIT_FAULT	4	/* code fault */
 
 static inline const char *
-exit_codestring( intgen_t code )
+exit_codestring( int code )
 {
 	switch ( code ) {
 	case EXIT_NORMAL:    return "SUCCESS";

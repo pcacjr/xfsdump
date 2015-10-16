@@ -232,7 +232,7 @@ inv_writesession_open(
 {
 	invt_session_t *ses;
 	int		fd;
-	intgen_t	rval;
+	int	rval;
 	invt_sescounter_t *sescnt = NULL;
 	invt_seshdr_t  	hdr;
 	inv_sestoken_t	sestok;
@@ -547,7 +547,7 @@ inv_put_mediafile(
 /*          get                                                         */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 inv_get_inolist(
 	inv_inolist_t 	**inolist )
 {

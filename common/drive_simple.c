@@ -84,7 +84,7 @@ struct drive_context {
 	char *dc_nextp;		/* next byte avail. to read/write */
 	char *dc_emptyp;	/* first empty slot in buffer */
 	off64_t dc_bufstroff;	/* offset in stream of top of buf */
-	intgen_t dc_fd;		/* input/output file descriptor */
+	int dc_fd;		/* input/output file descriptor */
 	drive_mark_t dc_firstmark;/* first mark's offset within mfile (dump) */
 	ix_t dc_markcnt;	/* count of marks set (dump) */
 	bool_t dc_rampr;	/* can randomly access file (not a pipe) */
@@ -104,30 +104,30 @@ extern size_t pgsz;
 
 /* strategy functions
  */
-static intgen_t ds_match( int, char *[], drive_t * );
-static intgen_t ds_instantiate( int, char *[], drive_t * );
+static int ds_match( int, char *[], drive_t * );
+static int ds_instantiate( int, char *[], drive_t * );
 
 /* declare manager operators
  */
 static bool_t do_init( drive_t * );
 static bool_t do_sync( drive_t * );
-static intgen_t do_begin_read( drive_t * );
-static char *do_read( drive_t *, size_t , size_t *, intgen_t * );
+static int do_begin_read( drive_t * );
+static char *do_read( drive_t *, size_t , size_t *, int * );
 static void do_return_read_buf( drive_t *, char *, size_t );
 static void do_get_mark( drive_t *, drive_mark_t * );
-static intgen_t do_seek_mark( drive_t *, drive_mark_t * );
-static intgen_t do_next_mark( drive_t * );
+static int do_seek_mark( drive_t *, drive_mark_t * );
+static int do_next_mark( drive_t * );
 static void do_get_mark( drive_t *, drive_mark_t * );
 static void do_end_read( drive_t * );
-static intgen_t do_begin_write( drive_t * );
+static int do_begin_write( drive_t * );
 static void do_set_mark( drive_t *, drive_mcbfp_t, void *, drive_markrec_t * );
 static char * do_get_write_buf( drive_t *, size_t , size_t * );
-static intgen_t do_write( drive_t *, char *, size_t );
+static int do_write( drive_t *, char *, size_t );
 static size_t do_get_align_cnt( drive_t * );
-static intgen_t do_end_write( drive_t *, off64_t * );
-static intgen_t do_rewind( drive_t * );
-static intgen_t do_erase( drive_t * );
-static intgen_t do_get_device_class( drive_t * );
+static int do_end_write( drive_t *, off64_t * );
+static int do_rewind( drive_t * );
+static int do_erase( drive_t * );
+static int do_get_device_class( drive_t * );
 static void do_quit( drive_t * );
 
 
@@ -183,7 +183,7 @@ static drive_ops_t drive_ops = {
 /* strategy match - determines if this is the right strategy
  */
 /* ARGSUSED */
-static intgen_t
+static int
 ds_match( int argc, char *argv[], drive_t *drivep )
 {
 	bool_t isrmtpr;
@@ -265,7 +265,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
 		contextp->dc_fd = 0;
 #endif /* RESTORE */
 	} else if ( contextp->dc_isrmtpr ) {
-		intgen_t oflags;
+		int oflags;
 #ifdef DUMP
 		oflags = O_WRONLY | O_CREAT | O_TRUNC;
 #endif /* DUMP */
@@ -285,9 +285,9 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
 			return BOOL_FALSE;
 		}
 	} else {
-		intgen_t oflags = 0;
+		int oflags = 0;
 		struct stat statbuf;
-		intgen_t rval;
+		int rval;
 		rval = stat( drivep->d_pathname, &statbuf );
 #ifdef DUMP
 		if ( rval ) {
@@ -419,17 +419,17 @@ do_sync( drive_t *drivep )
 /* drive op begin_read - prepare file for reading - main job is to
  * read the media hdr
  */
-static intgen_t
+static int
 do_begin_read( drive_t *drivep )
 {
 #ifdef DEBUG
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 #endif
 	global_hdr_t *grhdrp = drivep->d_greadhdrp;
 	drive_hdr_t *drhdrp = drivep->d_readhdrp;
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t nread;
-	intgen_t rval;
+	int nread;
+	int rval;
 	global_hdr_t		*tmphdr = (global_hdr_t	*)malloc(GLOBAL_HDR_SZ);
 	drive_hdr_t		*tmpdh = (drive_hdr_t *)tmphdr->gh_upper;
 	media_hdr_t		*tmpmh = (media_hdr_t *)tmpdh->dh_upper;
@@ -579,7 +579,7 @@ static char *
 do_read( drive_t *drivep,
          size_t wantedcnt,
          size_t *actualcntp,
-         intgen_t *rvalp )
+         int *rvalp )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	size_t remainingcnt;
@@ -734,7 +734,7 @@ do_get_mark( drive_t *drivep, drive_mark_t *markp )
 /* seek forward to the specified mark. the caller must not have already read
  * past that point.
  */
-static intgen_t
+static int
 do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -742,10 +742,10 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 	off64_t nextoff;
 	off64_t strmoff;
 	/* REFERENCED */
-	intgen_t nread;
+	int nread;
 	off64_t nreadneeded64;
-	intgen_t nreadneeded;
-	intgen_t rval;
+	int nreadneeded;
+	int rval;
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
 	      "drive_simple seek_mark( )\n" );
@@ -775,7 +775,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 		if ( nreadneeded64 > INTGENMAX )
 			nreadneeded = INTGENMAX;
 		else
-			nreadneeded = ( intgen_t )nreadneeded64;
+			nreadneeded = ( int )nreadneeded64;
 		nread = read_buf( 0, nreadneeded, drivep,
 				  ( rfp_t )drivep->d_opsp->do_read,
 				( rrbfp_t )drivep->d_opsp->do_return_read_buf,
@@ -799,15 +799,15 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
  * mark in the media file (recorded in the header). if the caller
  * has already read past that mark, blow up.
  */
-static intgen_t
+static int
 do_next_mark( drive_t *drivep )
 {
 #ifdef DEBUG
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 #endif
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	drive_mark_t mark = contextp->dc_firstmark;
-	intgen_t rval;
+	int rval;
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
 	      "drive_simple next_mark( )\n" );
@@ -854,10 +854,10 @@ do_end_read( drive_t *drivep )
 
 /* begin_write - prepare file for writing
  */
-static intgen_t
+static int
 do_begin_write( drive_t *drivep )
 {
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 	global_hdr_t *gwhdrp = drivep->d_gwritehdrp;
 	drive_hdr_t *dwhdrp = drivep->d_writehdrp;
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -1055,7 +1055,7 @@ do_set_mark( drive_t *drivep,
 			drive_hdr_t		*dwhdrp = drivep->d_writehdrp;
 			off64_t			newoff;
 			/* REFERENCED */
-			intgen_t		nwritten;
+			int		nwritten;
 
 			/* assert the header has been flushed
 			 */
@@ -1219,7 +1219,7 @@ do_get_write_buf( drive_t *drivep, size_t wanted_bufsz, size_t *actual_bufszp )
  * caller.
  */
 /*ARGSUSED*/
-static intgen_t
+static int
 do_write( drive_t *drivep, char *bufp, size_t writesz )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -1265,7 +1265,7 @@ do_write( drive_t *drivep, char *bufp, size_t writesz )
 	/* if buffer is full, flush it
 	 */
 	if ( contextp->dc_nextp == contextp->dc_emptyp ) {
-		intgen_t nwritten;
+		int nwritten;
 
 		mlog( MLOG_DEBUG | MLOG_DRIVE,
 		      "flushing write buf addr 0x%x size 0x%x\n",
@@ -1333,7 +1333,7 @@ do_get_align_cnt( drive_t *drivep )
 /* end_write - flush any buffered data, and return by reference how many
  * bytes were committed.
  */
-static intgen_t
+static int
 do_end_write( drive_t *drivep, off64_t *ncommittedp )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -1402,11 +1402,11 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
 
 /* rewind - return the current file offset to the beginning
  */
-intgen_t
+int
 do_rewind( drive_t *drivep )
 {
 #ifdef DEBUG
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 #endif
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	off64_t newoff;
@@ -1437,15 +1437,15 @@ do_rewind( drive_t *drivep )
 
 /* erase - truncate to zero length
  */
-intgen_t
+int
 do_erase( drive_t *drivep )
 {
 #ifdef DEBUG
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 #endif
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	off64_t newoff;
-	intgen_t rval;
+	int rval;
 
 	mlog( MLOG_NITTY | MLOG_DRIVE,
 	      "drive_simple erase( )\n" );
@@ -1487,7 +1487,7 @@ do_erase( drive_t *drivep )
 /* get_media_class()
  */
 /* ARGSUSED */
-static intgen_t 
+static int 
 do_get_device_class( drive_t *drivep )
 {
 	mlog( MLOG_NITTY | MLOG_DRIVE,

@@ -58,7 +58,7 @@ static char * prompt_label( char *bufp, size_t bufsz );
 /* definition of locally defined global functions ****************************/
 
 global_hdr_t *
-global_hdr_alloc( intgen_t argc, char *argv[ ] )
+global_hdr_alloc( int argc, char *argv[ ] )
 {
 	global_hdr_t *ghdrp;
 	int c;
@@ -68,7 +68,7 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 	struct stat64 statb;
 #endif /* DUMP */
 
-	intgen_t rval;
+	int rval;
 
 	/* sanity checks
 	 */

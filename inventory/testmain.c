@@ -84,7 +84,7 @@ typedef struct ses{
 
 #define SESLIM  240
 
-intgen_t
+int
 recons_test( int howmany )
 {
 	int fd, i, rval = 1;
@@ -120,7 +120,7 @@ recons_test( int howmany )
 
 
 
-intgen_t
+int
 delete_test( int n )
 {
 	int fd, i;
@@ -189,7 +189,7 @@ sess_queries_bylabel(char *lab)
 }
 
 
-intgen_t
+int
 query_test( int level )
 {
 	int i;
@@ -245,7 +245,7 @@ query_test( int level )
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 {
 	int i,j,k,m,fd;

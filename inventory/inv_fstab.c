@@ -47,7 +47,7 @@
 /*----------------------------------------------------------------------*/
 
 
-intgen_t
+int
 fstab_getall( invt_fstab_t **arr, invt_counter_t **cnt, int *numfs,
 	      inv_oflag_t forwhat )
 {
@@ -86,7 +86,7 @@ fstab_getall( invt_fstab_t **arr, invt_counter_t **cnt, int *numfs,
 /*----------------------------------------------------------------------*/
 
 
-intgen_t
+int
 fstab_put_entry( uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat )
 {
 	int numfs, i, fd;
@@ -172,7 +172,7 @@ fstab_put_entry( uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat )
 
 
 
-intgen_t
+int
 fstab_get_fname( void *pred, 
 		 char *fname, 
 		 inv_predicate_t bywhat,

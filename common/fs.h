@@ -32,12 +32,12 @@
  * returns BOOL_FALSE if srcname does not describe a file system.
  */
 extern bool_t fs_info( char *fstype,		/* out: fs type (fsid.h) */
-		       intgen_t fstypesz,	/* in: buffer size */
+		       int fstypesz,	/* in: buffer size */
 		       char *fstypedef,		/* in: default fs type */
 		       char *fsdevice,		/* out: blk spec. dev. file */
-		       intgen_t fsdevicesz,	/* in: buffer size */
+		       int fsdevicesz,	/* in: buffer size */
 		       char *mntpt,		/* out: where fs mounted */
-		       intgen_t mntptsz,	/* in: buffer size */
+		       int mntptsz,	/* in: buffer size */
 		       uuid_t *fsid,		/* out: fs uuid */
 		       char *srcname );		/* in: how user named the fs */
 
@@ -51,7 +51,7 @@ extern bool_t fs_mounted( char *fstype,
 /* fs_getid - retrieves the uuid of the file system containing the named
  * file. returns -1 with errno set on error.
  */
-extern intgen_t fs_getid( char *fullpathname, uuid_t *fsidp );
+extern int fs_getid( char *fullpathname, uuid_t *fsidp );
 
 /* tells how many inos in use
  */

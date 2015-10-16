@@ -111,7 +111,7 @@ extern size_t pgmask;
  */
 #define NODE_HDRSZ	pgsz
 
-typedef intgen_t relnix_t;
+typedef int relnix_t;
 
 struct node_hdr {
 	size_t nh_nodesz;
@@ -144,7 +144,7 @@ struct node_hdr {
 	nh_t nh_virgnh;
 		/* handle of next virgin node
 		 */
-	intgen_t nh_segixshift;
+	int nh_segixshift;
 		/* bitshift used to extract the segment index from an nh_t
 		 */
 	relnix_t nh_relnixmask;
@@ -156,7 +156,7 @@ struct node_hdr {
 typedef struct node_hdr node_hdr_t;
 
 static node_hdr_t *node_hdrp;
-static intgen_t node_fd;
+static int node_fd;
 
 static inline segix_t
 nh2segix( nh_t nh )
@@ -227,7 +227,7 @@ node_unmap_internal( nh_t nh, void **pp, bool_t freepr )
 
 /* ARGSUSED */
 bool_t
-node_init( intgen_t fd,
+node_init( int fd,
 	   off64_t off,
 	   size_t usrnodesz,
 	   ix_t nodehkix,
@@ -241,7 +241,7 @@ node_init( intgen_t fd,
 	size_t max_segments;
 	size_t winmapmax;
 	size_t segcount;
-	intgen_t segixshift;
+	int segixshift;
 
 	/* sanity checks
 	 */
@@ -395,7 +395,7 @@ node_init( intgen_t fd,
 }
 
 bool_t
-node_sync( intgen_t fd, off64_t off )
+node_sync( int fd, off64_t off )
 {
 	/* sanity checks
 	 */
@@ -472,7 +472,7 @@ node_alloc( void )
 	} else {
 		if ( nh2relnix( node_hdrp->nh_virgnh ) == 0 ) {
 			/* need to start a new virgin segment */
-			intgen_t rval;
+			int rval;
 			off64_t new_seg_off =
 				node_hdrp->nh_firstsegoff +
 				( off64_t )nh2segix( node_hdrp->nh_virgnh ) *

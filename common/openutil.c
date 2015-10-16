@@ -73,10 +73,10 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
   	return namebuf;
 }
 
-intgen_t
+int
 open_trwp( char *pathname )
 {
-	intgen_t fd;
+	int fd;
 
 	fd = open( pathname, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
 	if ( fd < 0 ) {
@@ -89,10 +89,10 @@ open_trwp( char *pathname )
 	return fd;
 }
 
-intgen_t
+int
 open_erwp( char *pathname )
 {
-	intgen_t fd;
+	int fd;
 
 	fd = open( pathname, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR );
 	if ( fd < 0 ) {
@@ -105,31 +105,31 @@ open_erwp( char *pathname )
 	return fd;
 }
 
-intgen_t
+int
 open_rwp( char *pathname )
 {
-	intgen_t fd;
+	int fd;
 
 	fd = open( pathname, O_RDWR );
 
 	return fd;
 }
 
-intgen_t
+int
 mkdir_tp( char *pathname )
 {
-	intgen_t rval;
+	int rval;
 
 	rval = mkdir( pathname, S_IRWXU );
 
 	return rval;
 }
 
-intgen_t
+int
 open_trwdb( char *dirname, char *basename, pid_t pid )
 {
 	char *pathname;
-	intgen_t fd;
+	int fd;
 
 	pathname = open_pathalloc( dirname, basename, pid );
 	fd = open_trwp( pathname );
@@ -138,11 +138,11 @@ open_trwdb( char *dirname, char *basename, pid_t pid )
 	return fd;
 }
 
-intgen_t
+int
 open_erwdb( char *dirname, char *basename, pid_t pid )
 {
 	char *pathname;
-	intgen_t fd;
+	int fd;
 
 	pathname = open_pathalloc( dirname, basename, pid );
 	fd = open_erwp( pathname );
@@ -151,11 +151,11 @@ open_erwdb( char *dirname, char *basename, pid_t pid )
 	return fd;
 }
 
-intgen_t
+int
 open_rwdb( char *dirname, char *basename, pid_t pid )
 {
 	char *pathname;
-	intgen_t fd;
+	int fd;
 
 	pathname = open_pathalloc( dirname, basename, pid );
 	fd = open_rwp( pathname );

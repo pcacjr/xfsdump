@@ -89,7 +89,7 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 					     /
 					     sizeof( strategyp[ 0 ] );
 	media_strategy_t *chosen_sp;
-	intgen_t id;
+	int id;
 	bool_t ok;
 
 	/* sanity check asserts

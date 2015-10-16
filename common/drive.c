@@ -87,7 +87,7 @@ static drive_strategy_t *strategypp[] = {
 bool_t
 drive_init1( int argc, char *argv[ ] )
 {
-	intgen_t c;
+	int c;
 	ix_t driveix;
 
 	/* sanity check asserts
@@ -202,7 +202,7 @@ drive_init1( int argc, char *argv[ ] )
 	 */
 	for ( driveix = 0 ; driveix < drivecnt ; driveix++ ) {
 		drive_t *drivep = drivepp[ driveix ];
-		intgen_t bestscore = 0 - INTGENMAX;
+		int bestscore = 0 - INTGENMAX;
 		ix_t six;
 		ix_t scnt = sizeof( strategypp ) / sizeof( strategypp[ 0 ] );
 		drive_strategy_t *bestsp = 0;
@@ -210,7 +210,7 @@ drive_init1( int argc, char *argv[ ] )
 
 		for ( six = 0 ; six < scnt ; six++ ) {
 			drive_strategy_t *sp = strategypp[ six ];
-			intgen_t score;
+			int score;
 			score = ( * sp->ds_match )( argc,
 						    argv,
 						    drivep );

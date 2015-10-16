@@ -176,7 +176,7 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 		{
 		bool_t successpr;
 		unsigned int ioctlcmd;
-		intgen_t loglevel;
+		int loglevel;
 		size_t trycnt;
 
 		for ( trycnt = 0,
@@ -191,7 +191,7 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 		      loglevel = max( MLOG_NORMAL, loglevel - 1 )) {
 			off64_t initsz;
 			struct flock64 flock64;
-			intgen_t rval;
+			int rval;
 
 			if ( ! ioctlcmd ) {
 				continue;
@@ -364,13 +364,13 @@ namreg_flush( void )
 	return RV_OK;
 }
 
-intgen_t
+int
 namreg_get( nrh_t nrh,
 	    char *bufp,
 	    size_t bufsz )
 {
 	off64_t newoff;
-	intgen_t nread;
+	int nread;
 	size_t len;
 	char *in_bufp;
 	static char read_buf[256];
@@ -479,7 +479,7 @@ namreg_get( nrh_t nrh,
 	
 	unlock( );
 
-	return ( intgen_t )len;
+	return ( int )len;
 }
 
 rv_t

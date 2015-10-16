@@ -39,7 +39,7 @@
 
 extern size_t pgsz;
 
-intgen_t
+int
 write_buf( char *bufp,
 	   size_t bufsz,
 	   void *contextp,
@@ -73,17 +73,17 @@ write_buf( char *bufp,
 	return 0;
 }
 
-intgen_t
+int
 read_buf( char *bufp,
 	  size_t bufsz, 
 	  void *contextp,
 	  rfp_t read_funcp,
 	  rrbfp_t return_read_buf_funcp,
-	  intgen_t *statp )
+	  int *statp )
 {
 	char *mbufp;		/* manager's buffer pointer */
 	size_t mbufsz;	/* size of manager's buffer */
-	intgen_t nread;
+	int nread;
 
 	nread = 0;
 	*statp = 0;
@@ -98,7 +98,7 @@ read_buf( char *bufp,
 			bufp += mbufsz;
 		}
 		bufsz -= mbufsz;
-		nread += ( intgen_t )mbufsz;
+		nread += ( int )mbufsz;
 		( * return_read_buf_funcp )( contextp, mbufp, mbufsz );
 	}
 
@@ -116,24 +116,24 @@ char
 	return rval;
 }
 
-intgen_t
+int
 bigstat_iter( jdm_fshandle_t *fshandlep,
-	      intgen_t fsfd,
-	      intgen_t selector,
+	      int fsfd,
+	      int selector,
 	      xfs_ino_t start_ino,
 	      bstat_cbfp_t fp,
 	      void * cb_arg1,
 	      bstat_seekfp_t seekfp,
 	      void * seek_arg1,
-	      intgen_t *statp,
+	      int *statp,
 	      bool_t ( pfp )( int ),
 	      xfs_bstat_t *buf,
 	      size_t buflenin )
 {
 	__s32 buflenout;
 	xfs_ino_t lastino;
-	intgen_t saved_errno;
-	intgen_t bulkstatcnt;
+	int saved_errno;
+	int bulkstatcnt;
         xfs_fsop_bulkreq_t bulkreq;
 
 	/* stat set with return from callback func
@@ -178,7 +178,7 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 		      buflenout,
 		      buf->bs_ino );
 		for ( p = buf, endp = buf + buflenout ; p < endp ; p++ ) {
-			intgen_t rval;
+			int rval;
 
 			if ( p->bs_ino == 0 )
 				continue;
@@ -253,13 +253,13 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
 }
 
 /* ARGSUSED */
-intgen_t
-bigstat_one( intgen_t fsfd,
+int
+bigstat_one( int fsfd,
 	     xfs_ino_t ino,
 	     xfs_bstat_t *statp )
 {
         xfs_fsop_bulkreq_t bulkreq;
-	intgen_t count = 0;
+	int count = 0;
 
 	assert( ino > 0 );
         bulkreq.lastip = (__u64 *)&ino;
@@ -272,16 +272,16 @@ bigstat_one( intgen_t fsfd,
 /* call the given callback for each inode group in the filesystem.
  */
 #define INOGRPLEN	256
-intgen_t
-inogrp_iter( intgen_t fsfd,
-	     intgen_t ( * fp )( void *arg1,
-				intgen_t fsfd,
+int
+inogrp_iter( int fsfd,
+	     int ( * fp )( void *arg1,
+				int fsfd,
 				xfs_inogrp_t *inogrp ),
 	     void * arg1,
-	     intgen_t *statp )
+	     int *statp )
 {
 	xfs_ino_t lastino;
-	intgen_t inogrpcnt;
+	int inogrpcnt;
 	xfs_inogrp_t *igrp;
         xfs_fsop_bulkreq_t bulkreq;
 
@@ -311,7 +311,7 @@ inogrp_iter( intgen_t fsfd,
 			return 0;
 		}
 		for ( p = igrp, endp = igrp + inogrpcnt ; p < endp ; p++ ) {
-			intgen_t rval;
+			int rval;
 
 			rval = ( * fp )( arg1, fsfd, p );
 			if ( rval ) {
@@ -338,26 +338,26 @@ inogrp_iter( intgen_t fsfd,
  *
  * caller may supply a dirent buffer. if not, will malloc one
  */
-intgen_t
+int
 diriter( jdm_fshandle_t *fshandlep,
-	 intgen_t fsfd,
+	 int fsfd,
 	 xfs_bstat_t *statp,
-	 intgen_t ( *cbfp )( void *arg1,
+	 int ( *cbfp )( void *arg1,
 			     jdm_fshandle_t *fshandlep,
-			     intgen_t fsfd,
+			     int fsfd,
 			     xfs_bstat_t *statp,
 			     char *namep ),
 	 void *arg1,
-	 intgen_t *cbrvalp,
+	 int *cbrvalp,
 	 char *usrgdp,
 	 size_t usrgdsz )
 {
 	size_t gdsz;
 	struct dirent *gdp;
-	intgen_t fd;
-	intgen_t gdcnt;
-	intgen_t scrval;
-	intgen_t cbrval;
+	int fd;
+	int gdcnt;
+	int scrval;
+	int cbrval;
 
 	if ( usrgdp ) {
 		assert( usrgdsz >= sizeof( struct dirent ) );
@@ -392,7 +392,7 @@ diriter( jdm_fshandle_t *fshandlep,
 	cbrval = 0;
 	for ( gdcnt = 1 ; ; gdcnt++ ) {
 		struct dirent *p;
-		intgen_t nread;
+		int nread;
 		register size_t reclen;
 
 		assert( scrval == 0 );
@@ -426,7 +426,7 @@ diriter( jdm_fshandle_t *fshandlep,
 		      ;
 		      nread > 0
 		      ;
-		      nread -= ( intgen_t )reclen,
+		      nread -= ( int )reclen,
 		      assert( nread >= 0 ),
 		      p = ( struct dirent * )( ( char * )p + reclen ),
 		      reclen = ( size_t )p->d_reclen ) {

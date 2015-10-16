@@ -103,7 +103,7 @@ static bool_t set_rlimits( void );
 #ifdef RESTORE
 static bool_t set_rlimits( size64_t * );
 #endif /* RESTORE */
-static char *sig_numstring( intgen_t num );
+static char *sig_numstring( int num );
 static char *strpbrkquotes( char *p, const char *sep );
 
 
@@ -133,7 +133,7 @@ static bool_t sigterm_received;
 static bool_t sigquit_received;
 static bool_t sigint_received;
 /* REFERENCED */
-static intgen_t sigstray_received;
+static int sigstray_received;
 static bool_t progrpt_enabledpr;
 static time32_t progrpt_interval;
 static time32_t progrpt_deadline;
@@ -156,11 +156,11 @@ main( int argc, char *argv[] )
 #endif /* DUMP */
 	bool_t init_error;
 	bool_t coredump_requested = BOOL_FALSE;
-	intgen_t exitcode;
+	int exitcode;
 	rlim64_t tmpstacksz;
 	struct sigaction sa;
-	intgen_t prbcld_xc = EXIT_NORMAL;
-	intgen_t xc;
+	int prbcld_xc = EXIT_NORMAL;
+	int xc;
 	bool_t ok;
 	/* REFERENCED */
 	int rval;
@@ -371,7 +371,7 @@ main( int argc, char *argv[] )
 	mlog( MLOG_DEBUG | MLOG_PROC,
 	      "getpagesize( ) returns %u\n",
 	      pgsz );
-	assert( ( intgen_t )pgsz > 0 );
+	assert( ( int )pgsz > 0 );
 	pgmask = pgsz - 1;
 
 	/* report parent tid
@@ -571,7 +571,7 @@ main( int argc, char *argv[] )
 	/* if in a pipeline, go single-threaded with just one stream.
 	 */
 	if ( pipeline ) {
-		intgen_t exitcode;
+		int exitcode;
 
 		sa.sa_handler = sighandler;
 		sigaction( SIGINT, &sa, NULL );
@@ -662,12 +662,12 @@ main( int argc, char *argv[] )
 	 * signals.
 	 */
 	if ( progrpt_enabledpr ) {
-		( void )alarm( ( u_intgen_t )progrpt_interval );
+		( void )alarm( ( u_int )progrpt_interval );
 	}
 	for ( ; ; ) {
 		time32_t now;
 		bool_t stop_requested = BOOL_FALSE;
-		intgen_t stop_timeout = -1;
+		int stop_timeout = -1;
 		sigset_t empty_set;
 
 		/* if there was an initialization error,
@@ -805,7 +805,7 @@ main( int argc, char *argv[] )
 		/* set alarm if needed (note time stands still during dialog)
 		 */
 		if ( stop_in_progress ) {
-			intgen_t timeout = ( intgen_t )( stop_deadline - now );
+			int timeout = ( int )( stop_deadline - now );
 			if ( timeout < 0 ) {
 				timeout = 0;
 			}
@@ -813,7 +813,7 @@ main( int argc, char *argv[] )
 			      "setting alarm for %d second%s\n",
 			      timeout,
 			      timeout == 1 ? "" : "s" );
-			( void )alarm( ( u_intgen_t )timeout );
+			( void )alarm( ( u_int )timeout );
 			if ( timeout == 0 ) {
 				continue;
 			}
@@ -835,7 +835,7 @@ main( int argc, char *argv[] )
 					      statline[ i ] );
 				}
 			}
-			( void )alarm( ( u_intgen_t )( progrpt_deadline
+			( void )alarm( ( u_int )( progrpt_deadline
 						       -
 						       now ));
 		}
@@ -1112,22 +1112,22 @@ preemptchk( int flg )
 /* definition of locally defined static functions ****************************/
 
 static bool_t
-loadoptfile( intgen_t *argcp, char ***argvp )
+loadoptfile( int *argcp, char ***argvp )
 {
 	char *optfilename;
 	ix_t optfileix = 0;
-	intgen_t fd;
+	int fd;
 	size_t sz;
-	intgen_t i;
+	int i;
 	struct stat64 stat;
 	char *argbuf;
 	char *p;
 	size_t tokencnt;
-	intgen_t nread;
+	int nread;
 	const char *sep = " \t\n\r";
 	char **newargv;
-	intgen_t c;
-	intgen_t rval;
+	int c;
+	int rval;
 
 	/* see if option specified
 	 */
@@ -1202,7 +1202,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	 */
 	sz = 0;
 	for ( i =  0 ; i < *argcp ; i++ ) {
-		if ( i == ( intgen_t )optfileix ) {
+		if ( i == ( int )optfileix ) {
 			i++; /* to skip option argument */
 			continue;
 		}
@@ -1246,7 +1246,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* copy the remaining command line args into the buffer
 	 */
 	for ( ; i < *argcp ; i++ ) {
-		if ( i == ( intgen_t )optfileix ) {
+		if ( i == ( int )optfileix ) {
 			i++; /* to skip option argument */
 			continue;
 		}
@@ -1262,7 +1262,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* change newlines and carriage returns into spaces
 	 */
 	for ( p = argbuf ; *p ; p++ ) {
-		if ( strchr( "\n\r", ( intgen_t )( *p ))) {
+		if ( strchr( "\n\r", ( int )( *p ))) {
 			*p = ' ';
 		}
 	}
@@ -1274,7 +1274,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	for ( ; ; ) {
 		/* start at the first non-separator character
 		 */
-		while ( *p && strchr( sep, ( intgen_t )( *p ))) {
+		while ( *p && strchr( sep, ( int )( *p ))) {
 			p++;
 		}
 
@@ -1320,7 +1320,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 
 		/* start at the first non-separator character
 		 */
-		while ( *p && strchr( sep, ( intgen_t )*p )) {
+		while ( *p && strchr( sep, ( int )*p )) {
 			p++;
 		}
 
@@ -1332,7 +1332,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 
 		/* better not disagree with counting scan!
 		 */
-		assert( i < ( intgen_t )tokencnt );
+		assert( i < ( int )tokencnt );
 
 		/* find the end of the first token
 		 */
@@ -1364,7 +1364,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* return new argc anr argv
 	 */
 	close( fd );
-	*argcp = ( intgen_t )tokencnt;
+	*argcp = ( int )tokencnt;
 	*argvp = newargv;
 	return BOOL_TRUE;
 }
@@ -1382,7 +1382,7 @@ sighandler( int signo )
 	/* if in pipeline, don't do anything risky. just quit.
 	 */
 	if ( pipeline ) {
-		intgen_t rval;
+		int rval;
 
 		mlog( MLOG_TRACE | MLOG_NOTE | MLOG_NOLOCK | MLOG_PROC,
 		      _("received signal %d (%s): cleanup and exit\n"),
@@ -1433,7 +1433,7 @@ static int
 childmain( void *arg1 )
 {
 	ix_t stix;
-	intgen_t exitcode;
+	int exitcode;
 	drive_t *drivep;
 
 	/* Determine which stream I am.
@@ -1519,7 +1519,7 @@ sigint_dialog( void )
 	size_t allix;
 	size_t nochangeix;
 	size_t responseix;
-	intgen_t ssselected = 0;
+	int ssselected = 0;
 	bool_t stop_requested = BOOL_FALSE;
 
 	/* preamble: the content status line, indicate if interrupt happening
@@ -1661,7 +1661,7 @@ sigint_dialog( void )
 			ssselected = -1;
 			ackstr[ ackcnt++ ] = _("all subsystems selected\n\n");
 		} else {
-			ssselected = ( intgen_t )responseix;
+			ssselected = ( int )responseix;
 			ackstr[ ackcnt++ ] = "\n";
 		}
 		dlog_multi_ack( ackstr,
@@ -1721,11 +1721,11 @@ sigint_dialog( void )
 					      ;
 					      ssix++ ) {
 						mlog_level_ss[ ssix ] =
-							( intgen_t )responseix;
+							( int )responseix;
 					}
 				} else {
 					mlog_level_ss[ ssselected ] =
-							( intgen_t )responseix;
+							( int )responseix;
 				}
 				ackstr[ ackcnt++ ] = _("level changed\n");
 			}
@@ -1888,7 +1888,7 @@ sigint_dialog( void )
 							ncix,  /* sigquit ix */
 							okix );
 			if ( responseix == okix ) {
-				intgen_t newinterval;
+				int newinterval;
 				newinterval = atoi( buf );
 				if ( ! strlen( buf )) {
 					ackstr[ ackcnt++ ] = _("no change\n");
@@ -1982,11 +1982,11 @@ sigint_dialog( void )
 static char *
 sigintstr( void )
 {
-	intgen_t ttyfd;
+	int ttyfd;
 	static char buf[ 20 ];
 	struct termios termios;
 	cc_t intchr;
-	intgen_t rval;
+	int rval;
 
 	ttyfd = dlog_fd( );
 	if ( ttyfd == -1 ) {
@@ -2034,7 +2034,7 @@ set_rlimits( size64_t *vmszp )
 	size64_t vmsz;
 #endif /* RESTORE */
 	/* REFERENCED */
-	intgen_t rval;
+	int rval;
 
 	assert( minstacksz <= maxstacksz );
 
@@ -2203,7 +2203,7 @@ set_rlimits( size64_t *vmszp )
 }
 
 struct sig_printmap {
-	intgen_t num;
+	int num;
 	char *string;
 };
 
@@ -2240,7 +2240,7 @@ static sig_printmap_t sig_printmap[ ] = {
 };
 
 static char *
-sig_numstring( intgen_t num )
+sig_numstring( int num )
 {
 	sig_printmap_t *p = sig_printmap;
 	sig_printmap_t *endp = sig_printmap
@@ -2291,7 +2291,7 @@ strpbrkquotes( char *p, const char *sep )
 		}
 
 		if ( ! inquotes ) {
-			if ( strchr( sep, ( intgen_t )( *p ))) {
+			if ( strchr( sep, ( int )( *p ))) {
 				return p;
 			}
 		}

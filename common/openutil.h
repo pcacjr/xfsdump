@@ -35,28 +35,28 @@ extern char *open_pathalloc( char *dirname, char *basename, pid_t pid );
  * return the file descriptor, or -1 with errno set. uses mlog( MLOG_NORMAL...
  * if the creation fails.
  */
-extern intgen_t open_trwdb( char *dirname, char *basename, pid_t pid );
-extern intgen_t open_trwp( char *pathname );
+extern int open_trwdb( char *dirname, char *basename, pid_t pid );
+extern int open_trwp( char *pathname );
 
 
 /* open the specified file, with read and write permissions, given a
  * directory and base.* return the file descriptor, or -1 with errno set.
  * uses mlog( MLOG_NORMAL... if the open fails.
  */
-extern intgen_t open_rwdb( char *dirname, char *basename, pid_t pid );
-extern intgen_t open_rwp( char *pathname );
+extern int open_rwdb( char *dirname, char *basename, pid_t pid );
+extern int open_rwp( char *pathname );
 
 
 /* create and open the specified file, failing if already exists
  */
-extern intgen_t open_erwp( char *pathname );
-extern intgen_t open_erwdb( char *dirname, char *basename, pid_t pid );
+extern int open_erwp( char *pathname );
+extern int open_erwdb( char *dirname, char *basename, pid_t pid );
 
 
 /* create the specified directory, guaranteed to be initially empty. returns
  * 0 on success, -1 if trouble. uses mlog( MLOG_NORMAL... if the creation fails.
  */
-extern intgen_t mkdir_tp( char *pathname );
+extern int mkdir_tp( char *pathname );
 
 
 #endif /* UTIL_H */

@@ -263,71 +263,71 @@ extern int rmtwrite( int, const void *, uint);
 
 /* strategy functions
  */
-static intgen_t ds_match( int, char *[], drive_t * );
-static intgen_t ds_instantiate( int, char *[], drive_t * );
+static int ds_match( int, char *[], drive_t * );
+static int ds_instantiate( int, char *[], drive_t * );
 
 /* manager operations
  */
 static bool_t do_init( drive_t * );
 static bool_t do_sync( drive_t * );
-static intgen_t do_begin_read( drive_t * );
-static char *do_read( drive_t *, size_t , size_t *, intgen_t * );
+static int do_begin_read( drive_t * );
+static char *do_read( drive_t *, size_t , size_t *, int * );
 static void do_return_read_buf( drive_t *, char *, size_t );
 static void do_get_mark( drive_t *, drive_mark_t * );
-static intgen_t do_seek_mark( drive_t *, drive_mark_t * );
-static intgen_t do_next_mark( drive_t * );
+static int do_seek_mark( drive_t *, drive_mark_t * );
+static int do_next_mark( drive_t * );
 static void do_get_mark( drive_t *, drive_mark_t * );
 static void do_end_read( drive_t * );
-static intgen_t do_begin_write( drive_t * );
+static int do_begin_write( drive_t * );
 static void do_set_mark( drive_t *, drive_mcbfp_t, void *, drive_markrec_t * );
 static char * do_get_write_buf( drive_t *, size_t , size_t * );
-static intgen_t do_write( drive_t *, char *, size_t );
+static int do_write( drive_t *, char *, size_t );
 static size_t do_get_align_cnt( drive_t * );
-static intgen_t do_end_write( drive_t *, off64_t * );
-static intgen_t do_fsf( drive_t *, intgen_t , intgen_t *);
-static intgen_t do_bsf( drive_t *, intgen_t , intgen_t *);
-static intgen_t do_rewind( drive_t * );
-static intgen_t do_erase( drive_t * );
-static intgen_t do_eject_media( drive_t * );
-static intgen_t do_get_device_class( drive_t * );
+static int do_end_write( drive_t *, off64_t * );
+static int do_fsf( drive_t *, int , int *);
+static int do_bsf( drive_t *, int , int *);
+static int do_rewind( drive_t * );
+static int do_erase( drive_t * );
+static int do_eject_media( drive_t * );
+static int do_get_device_class( drive_t * );
 static void do_display_metrics( drive_t *drivep );
 static void do_quit( drive_t * );
 
 /* misc. local utility funcs
  */
-static intgen_t	mt_op(intgen_t , intgen_t , intgen_t );
-static intgen_t determine_write_error( int, int );
-static intgen_t read_label( drive_t *);
+static int	mt_op(int , int , int );
+static int determine_write_error( int, int );
+static int read_label( drive_t *);
 static bool_t tape_rec_checksum_check( drive_context_t *, char * );
 static void set_recommended_sizes( drive_t * );
 static void display_access_failed_message( drive_t *);
 static bool_t get_tpcaps( drive_t * );
-static intgen_t prepare_drive( drive_t *drivep );
+static int prepare_drive( drive_t *drivep );
 static bool_t Open( drive_t *drivep );
 static void Close( drive_t *drivep );
-static intgen_t Read( drive_t *drivep,
+static int Read( drive_t *drivep,
 		      char *bufp,
 		      size_t cnt,
-		      intgen_t *errnop );
-static intgen_t Write( drive_t *drivep,
+		      int *errnop );
+static int Write( drive_t *drivep,
 		       char *bufp,
 		       size_t cnt,
-		       intgen_t *saved_errnop );
-static intgen_t record_hdr_validate( drive_t *drivep,
+		       int *saved_errnop );
+static int record_hdr_validate( drive_t *drivep,
 				     char *bufp,
 				     bool_t chkoffpr );
 static int ring_read( void *clientctxp, char *bufp );
 static int ring_write( void *clientctxp, char *bufp );
 static double percent64( off64_t num, off64_t denom );
-static intgen_t getrec( drive_t *drivep );
-static intgen_t write_record( drive_t *drivep, char *bufp, bool_t chksumpr,
+static int getrec( drive_t *drivep );
+static int write_record( drive_t *drivep, char *bufp, bool_t chksumpr,
                               bool_t xlatepr );
 static ring_msg_t * Ring_get( ring_t *ringp );
 static void Ring_reset(  ring_t *ringp, ring_msg_t *msgp );
 static void Ring_put(  ring_t *ringp, ring_msg_t *msgp );
-static intgen_t validate_media_file_hdr( drive_t *drivep );
+static int validate_media_file_hdr( drive_t *drivep );
 static void calc_max_lost( drive_t *drivep );
-static void display_ring_metrics( drive_t *drivep, intgen_t mlog_flags );
+static void display_ring_metrics( drive_t *drivep, int mlog_flags );
 #ifdef CLRMTAUD
 static u_int32_t rewind_and_verify( drive_t *drivep );
 static u_int32_t erase_and_verify( drive_t *drivep ); 
@@ -409,11 +409,11 @@ static u_int32_t cmdlineblksize = 0;
 /* strategy match - determines if this is the right strategy
  */
 /* ARGSUSED */
-static intgen_t
+static int
 ds_match( int argc, char *argv[], drive_t *drivep )
 {
-	intgen_t fd;
-	intgen_t c;
+	int fd;
+	int c;
 	bool_t minrmt = BOOL_FALSE;
 
 	/* heuristics to determine if this is a drive.
@@ -473,7 +473,7 @@ static bool_t
 ds_instantiate( int argc, char *argv[], drive_t *drivep )
 {
 	drive_context_t *contextp;
-	intgen_t c;
+	int c;
 
 	/* opportunity for sanity checking
 	 */
@@ -591,7 +591,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
 		contextp->dc_bufp = ( char * )memalign( PGSZ, STAPE_MAX_RECSZ );
 		assert( contextp->dc_bufp );
 	} else {
-		intgen_t rval;
+		int rval;
 		mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
 		      "ring op: create: ringlen == %u\n",
 		      contextp->dc_ringlen );
@@ -712,11 +712,11 @@ do_sync( drive_t *drivep )
  *	DRIVE_ERROR_* on failure
  *
  */
-static intgen_t
+static int
 do_begin_read( drive_t *drivep )
 {
         drive_context_t *contextp;
-        intgen_t rval;
+        int rval;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "rmt drive op: begin read\n" );
@@ -812,12 +812,12 @@ static char *
 do_read( drive_t *drivep,
 	 size_t wantedcnt,
 	 size_t *actualcntp,
-	 intgen_t *rvalp )
+	 int *rvalp )
 {
 	drive_context_t *contextp;
 	size_t availcnt;
 	size_t actualcnt;
-	intgen_t rval;
+	int rval;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "rmt drive op: read: wanted %u (0x%x)\n",
@@ -970,7 +970,7 @@ typedef enum { SEEKMODE_BUF, SEEKMODE_RAW } seekmode_t;
  *	DRIVE_ERROR_* on failure
  *
  */
-static intgen_t
+static int
 do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 {
 	drive_context_t	*contextp;
@@ -1036,7 +1036,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 			size_t wantedcnt;
 			char *dummybufp;
 			size_t actualcnt;
-			intgen_t rval;
+			int rval;
 
 			/* if this is the last record, the wanted offset
 			 * must be just after it.
@@ -1147,15 +1147,15 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 			recskipcnt64 = wantedreccnt - contextp->dc_reccnt;
 			recskipcnt64remaining = recskipcnt64;
 			while ( recskipcnt64remaining ) {
-				intgen_t recskipcnt;
-				intgen_t saved_errno;
-				intgen_t rval;
+				int recskipcnt;
+				int saved_errno;
+				int rval;
 
 				assert( recskipcnt64remaining > 0 );
 				if ( recskipcnt64remaining > INTGENMAX ) {
 					recskipcnt = INTGENMAX;
 				} else {
-					recskipcnt = ( intgen_t )
+					recskipcnt = ( int )
 						     recskipcnt64remaining;
 				}
 				assert( recskipcnt > 0 );
@@ -1194,7 +1194,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 		size_t wantedcnt;
 		char *dummybufp;
 		size_t actualcnt;
-		intgen_t rval;
+		int rval;
 
 		assert( ! contextp->dc_recp );
 
@@ -1253,7 +1253,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 		/* eat that much tape
 		 */
 		if ( wantedcnt > 0 ) {
-		    intgen_t rval;
+		    int rval;
 		    rval = 0;
 		    dummybufp = do_read( drivep, wantedcnt, &actualcnt, &rval );
 		    if ( rval ) {
@@ -1300,7 +1300,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
  *	0 on success
  *	DRIVE_ERROR_* on failure
  */
-static intgen_t
+static int
 do_next_mark( drive_t *drivep )
 {
 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
@@ -1308,11 +1308,11 @@ do_next_mark( drive_t *drivep )
 	char *p;
 	ix_t trycnt;
 	const ix_t maxtrycnt = 5;
-	intgen_t nread;
+	int nread;
 	off64_t markoff;
-	intgen_t saved_errno;
+	int saved_errno;
 	size_t tailsz;
-	intgen_t rval;
+	int rval;
 
 	/* assert protocol being followed.
 	 */
@@ -1418,7 +1418,7 @@ readrecord:
 	goto validateread;
 
 validateread:
-	if ( nread == ( intgen_t )tape_recsz ) {
+	if ( nread == ( int )tape_recsz ) {
 		goto validatehdr;
 	}
 
@@ -1585,7 +1585,7 @@ do_end_read( drive_t *drivep )
  *	0 on success
  * 	DRIVE_ERROR_... on failure
  */
-static intgen_t
+static int
 do_begin_write( drive_t *drivep )
 {
 	drive_context_t		*contextp;
@@ -1593,7 +1593,7 @@ do_begin_write( drive_t *drivep )
 	global_hdr_t		*gwhdrp;
 	rec_hdr_t		*tpwhdrp;
 	rec_hdr_t		*rechdrp;
-	intgen_t		rval;
+	int		rval;
 	media_hdr_t		*mwhdrp;
 	content_hdr_t		*ch;
 	content_inode_hdr_t	*cih;
@@ -1842,7 +1842,7 @@ do_get_write_buf( drive_t *drivep, size_t wantedcnt, size_t *actualcntp )
  *	non 0 on error
  */
 /* ARGSUSED */
-static intgen_t
+static int
 do_write( drive_t *drivep, char *bufp, size_t retcnt )
 {
 	drive_context_t *contextp;
@@ -1850,7 +1850,7 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
 	global_hdr_t *gwhdrp;
 	size_t heldcnt;
 	off64_t last_rec_wrtn_wo_err; /* zero-based index */
-	intgen_t rval;
+	int rval;
 
 	/* get drive context and pointer to global write hdr
 	 */
@@ -2015,7 +2015,7 @@ do_get_align_cnt( drive_t * drivep )
  *	 0 on success
  *	DRIVE_ERROR_* on failure
  */
-static intgen_t
+static int
 do_end_write( drive_t *drivep, off64_t *ncommittedp )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -2024,7 +2024,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
 	off64_t recs_guaranteed;
 	off64_t bytes_committed;
 
-	intgen_t rval;
+	int rval;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "rmt drive op: end write\n" );
@@ -2160,7 +2160,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
 	 * exposing any write errors.
 	 */
 	if ( ! rval ) {
-		intgen_t weofrval;
+		int weofrval;
 
 		weofrval = mt_op( contextp->dc_fd, MTWEOF, 1 );
 		if ( weofrval ) {
@@ -2211,8 +2211,8 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
  *	number of media files skipped
  *	*statp set to zero or DRIVE_ERROR_...
  */
-static intgen_t
-do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
+static int
+do_fsf( drive_t *drivep, int count, int *statp )
 {
 	int 		i, done, op_failed, opcount;
 	drive_context_t *contextp;
@@ -2287,14 +2287,14 @@ do_fsf( drive_t *drivep, intgen_t count, intgen_t *statp )
  *	number of media files skipped
  *	*statp set to zero or DRIVE_ERROR_...
  */
-static intgen_t
-do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
+static int
+do_bsf( drive_t *drivep, int count, int *statp )
 {
 #ifdef DEBUG
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 #endif
-	intgen_t skipped;
-	intgen_t rval;
+	int skipped;
+	int rval;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "rmt drive op: bsf: count %d\n",
@@ -2375,7 +2375,7 @@ do_bsf( drive_t *drivep, intgen_t count, intgen_t *statp )
  *	0 on sucess
  *	DRIVE_ERROR_* on failure
  */
-static intgen_t
+static int
 do_rewind( drive_t *drivep )
 {
 #ifdef DEBUG
@@ -2401,7 +2401,7 @@ do_rewind( drive_t *drivep )
  *	0 on sucess
  *	DRIVE_ERROR_* on failure
  */
-static intgen_t
+static int
 do_erase( drive_t *drivep )
 {
 #ifdef DEBUG
@@ -2439,7 +2439,7 @@ do_erase( drive_t *drivep )
  *	0 on sucess
  *	DRIVE_ERROR_DEVICE on failure
  */
-static intgen_t
+static int
 do_eject_media( drive_t *drivep )
 {
 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
@@ -2472,7 +2472,7 @@ do_eject_media( drive_t *drivep )
  *	always returns DEVICE_TAPE_REMOVABLE
  */
 /* ARGSUSED */
-static intgen_t
+static int
 do_get_device_class( drive_t *drivep)
 {
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
@@ -2547,13 +2547,13 @@ percent64( off64_t num, off64_t denom )
  *	0 on success
  *	DRIVE_ERROR_* on failure
  */
-static intgen_t
+static int
 read_label( drive_t *drivep )
 {
 	drive_context_t *contextp;
-	intgen_t nread;
-	intgen_t saved_errno;
-	intgen_t rval;
+	int nread;
+	int saved_errno;
+	int rval;
 
 	/* initialize context ptr
 	 */
@@ -2568,8 +2568,8 @@ read_label( drive_t *drivep )
 
 	/* if a read error, get status
 	 */
-	if ( nread != ( intgen_t )tape_recsz ) {
-		assert( nread < ( intgen_t )tape_recsz );
+	if ( nread != ( int )tape_recsz ) {
+		assert( nread < ( int )tape_recsz );
 	} 
 
 	/* check for an unexpected errno
@@ -2613,7 +2613,7 @@ read_label( drive_t *drivep )
 	return rval;
 }
 
-static intgen_t
+static int
 validate_media_file_hdr( drive_t *drivep )
 {
 	global_hdr_t		*grhdrp = drivep->d_greadhdrp;
@@ -2792,12 +2792,12 @@ set_recommended_sizes( drive_t *drivep )
  *	0 on sucess
  *	-1 on failure
  */
-static intgen_t
-mt_op(intgen_t fd, intgen_t sub_op, intgen_t param )
+static int
+mt_op(int fd, int sub_op, int param )
 {
 	struct mtop 	mop;
 	char *printstr;
-	intgen_t rval;
+	int rval;
 
 	mop.mt_op   	= (short )sub_op;
 	mop.mt_count	= param;
@@ -2874,10 +2874,10 @@ mt_op(intgen_t fd, intgen_t sub_op, intgen_t param )
  * RETURNS:
  *      DRIVE_ERROR_*
  */
-static intgen_t
+static int
 determine_write_error( int nwritten, int saved_errno )
 {
-	intgen_t        ret = 0;
+	int        ret = 0;
 
 	if ( saved_errno == EACCES ) {
 		mlog(MLOG_NORMAL,
@@ -3059,7 +3059,7 @@ display_access_failed_message( drive_t *drivep )
  * determines other drive attributes. determines if any previous
  * xfsdumps on media.
  */
-static intgen_t
+static int
 prepare_drive( drive_t *drivep )
 {
 	drive_context_t	*contextp;
@@ -3067,7 +3067,7 @@ prepare_drive( drive_t *drivep )
 	ix_t try;
 	ix_t maxtries;
 	bool_t changedblkszpr;
-	intgen_t rval;
+	int rval;
 
 	/* get pointer to drive context
 	 */
@@ -3159,8 +3159,8 @@ prepare_drive( drive_t *drivep )
 	changedblkszpr = BOOL_FALSE;
 
 	for ( try = 1 ; ; try++ ) {
-		intgen_t nread;
-		intgen_t saved_errno;
+		int nread;
+		int saved_errno;
 
 		if ( cldmgr_stop_requested( )) {
 			return DRIVE_ERROR_STOP;
@@ -3264,7 +3264,7 @@ prepare_drive( drive_t *drivep )
 #endif
 		}
 
-		if ( nread == ( intgen_t )tape_recsz ) {
+		if ( nread == ( int )tape_recsz ) {
 			mlog( MLOG_DEBUG | MLOG_DRIVE,
 			  "nread == selected blocksize "
 			  "indicates correct blocksize found\n" );
@@ -3272,7 +3272,7 @@ prepare_drive( drive_t *drivep )
 		}
 
 		/* short read */
-		if (( saved_errno == 0 ) && ( nread < (intgen_t)tape_recsz)) {
+		if (( saved_errno == 0 ) && ( nread < (int)tape_recsz)) {
 			mlog( MLOG_DEBUG | MLOG_DRIVE,
 			  "nread < selected blocksize "
 			  "indicates incorrect blocksize found "
@@ -3404,7 +3404,7 @@ static bool_t
 Open( drive_t *drivep )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t oflags;
+	int oflags;
 
 #ifdef DUMP
 	oflags = O_RDWR;
@@ -3443,11 +3443,11 @@ Close( drive_t *drivep )
 	contextp->dc_fd = -1;
 }
 
-static intgen_t
-Read( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
+static int
+Read( drive_t *drivep, char *bufp, size_t cnt, int *errnop )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t nread;
+	int nread;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "tape op: reading %u bytes\n",
@@ -3465,7 +3465,7 @@ Read( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
 		      cnt,
 		      errno,
 		      strerror( errno ));
-	} else if ( nread != ( intgen_t )cnt ) {
+	} else if ( nread != ( int )cnt ) {
 		mlog( MLOG_NITTY | MLOG_DRIVE,
 		      "tape op read of %u bytes short: nread == %d\n",
 		      cnt,
@@ -3479,11 +3479,11 @@ Read( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
 	return nread;
 }
 
-static intgen_t
-Write( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
+static int
+Write( drive_t *drivep, char *bufp, size_t cnt, int *errnop )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t nwritten;
+	int nwritten;
 
 	mlog( MLOG_DEBUG | MLOG_DRIVE,
 	      "tape op: writing %u bytes\n",
@@ -3501,7 +3501,7 @@ Write( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
 		      cnt,
 		      errno,
 		      strerror( errno ));
-	} else if ( nwritten != ( intgen_t )cnt ) {
+	} else if ( nwritten != ( int )cnt ) {
 		mlog( MLOG_NITTY | MLOG_DRIVE,
 		      "tape op write of %u bytes short: nwritten == %d\n",
 		      cnt,
@@ -3518,7 +3518,7 @@ Write( drive_t *drivep, char *bufp, size_t cnt, intgen_t *errnop )
 /* validate a record header, log any anomolies, and return appropriate
  * indication.
  */
-static intgen_t
+static int
 record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
@@ -3617,17 +3617,17 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
 /* do a read, determine DRIVE_ERROR_... if failure, and return failure code.
  * return 0 on success.
  */
-static intgen_t
+static int
 read_record(  drive_t *drivep, char *bufp )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t nread;
-	intgen_t saved_errno;
-	intgen_t rval;
+	int nread;
+	int saved_errno;
+	int rval;
 
 	nread = Read( drivep, bufp, tape_recsz, &saved_errno );
 
-	if ( nread == ( intgen_t )tape_recsz ) {
+	if ( nread == ( int )tape_recsz ) {
 		contextp->dc_iocnt++;
 		rval = record_hdr_validate( drivep, bufp, BOOL_TRUE );
 		return rval;
@@ -3670,7 +3670,7 @@ read_record(  drive_t *drivep, char *bufp )
 	/* short read
 	 */
 	if ( nread >= 0 ) {
-		assert( nread <= ( intgen_t )tape_recsz );
+		assert( nread <= ( int )tape_recsz );
 		mlog( MLOG_DEBUG | MLOG_DRIVE,
 		      "short read record %lld (nread == %d)\n",
 		      contextp->dc_iocnt,
@@ -3698,7 +3698,7 @@ ring_read( void *clientctxp, char *bufp )
 
 /* gets another record IF dc_recp is NULL
  */
-static intgen_t
+static int
 getrec( drive_t *drivep )
 {
 	drive_context_t *contextp;
@@ -3707,7 +3707,7 @@ getrec( drive_t *drivep )
 	while ( ! contextp->dc_recp ) {
 		rec_hdr_t *rechdrp;
 		if ( contextp->dc_singlethreadedpr ) {
-			intgen_t rval;
+			int rval;
 			contextp->dc_recp = contextp->dc_bufp;
 			rval = read_record( drivep, contextp->dc_recp );
 			if ( rval ) {
@@ -3755,13 +3755,13 @@ getrec( drive_t *drivep )
  * return 0 on success.
  */
 /*ARGSUSED*/
-static intgen_t
+static int
 write_record(  drive_t *drivep, char *bufp, bool_t chksumpr, bool_t xlatepr )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
-	intgen_t nwritten;
-	intgen_t saved_errno;
-	intgen_t rval;
+	int nwritten;
+	int saved_errno;
+	int rval;
 
         if ( xlatepr ) {
 		rec_hdr_t rechdr;
@@ -3775,7 +3775,7 @@ write_record(  drive_t *drivep, char *bufp, bool_t chksumpr, bool_t xlatepr )
 
 	nwritten = Write( drivep, bufp, tape_recsz, &saved_errno );
 
-	if ( nwritten == ( intgen_t )tape_recsz ) {
+	if ( nwritten == ( int )tape_recsz ) {
 		contextp->dc_iocnt++;
 		return 0;
 	}
@@ -3843,7 +3843,7 @@ calc_max_lost( drive_t *drivep )
 }
 
 static void
-display_ring_metrics( drive_t *drivep, intgen_t mlog_flags )
+display_ring_metrics( drive_t *drivep, int mlog_flags )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	ring_t *ringp = contextp->dc_ringp;
@@ -3894,7 +3894,7 @@ rewind_and_verify( drive_t *drivep )
 {
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 	ix_t try;
-	intgen_t rval;
+	int rval;
 
 	rval = mt_op( contextp->dc_fd, MTREW, 0 );
 	for ( try = 1 ; ; try++ ) {
@@ -3920,7 +3920,7 @@ static short
 erase_and_verify( drive_t *drivep ) 
 {
 	char *tempbufp;
-	intgen_t saved_errno;
+	int saved_errno;
 
 	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
 

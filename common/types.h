@@ -38,7 +38,7 @@ typedef u_int32_t size32_t;
 typedef u_int64_t size64_t;
 typedef char char_t;
 typedef unsigned char u_char_t;
-typedef unsigned int u_intgen_t;
+typedef unsigned int u_int;
 typedef long long_t;
 typedef unsigned long u_long_t;
 typedef size_t ix_t;
@@ -70,8 +70,8 @@ typedef int32_t time32_t;
 #define SIZE64MAX	MKUMAX( size64_t )
 #define INO64MAX	MKUMAX( xfs_ino_t )
 #define OFF64MAX	MKSMAX( off64_t )
-#define INTGENMAX	MKSMAX( intgen_t )
-#define UINTGENMAX	MKUMAX( u_intgen_t )
+#define INTGENMAX	MKSMAX( int )
+#define UINTGENMAX	MKUMAX( u_int )
 #define OFFMAX		MKSMAX( off_t )
 #define SIZEMAX		MKUMAX( size_t )
 #define IXMAX		MKUMAX( size_t )

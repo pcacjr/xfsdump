@@ -80,13 +80,13 @@
 /* mlog_level - set during initialization, exported to facilitate
  * message logging decisions. one per subsystem (see above)
  */
-extern intgen_t mlog_level_ss[ MLOG_SS_CNT ];
+extern int mlog_level_ss[ MLOG_SS_CNT ];
 
 /* made external so main.c sigint dialog can change
  */
-extern intgen_t mlog_showlevel;
-extern intgen_t mlog_showss;
-extern intgen_t mlog_timestamp;
+extern int mlog_showlevel;
+extern int mlog_showss;
+extern int mlog_timestamp;
 
 /* mlog_ss_name - so main.c sigint dialog can allow changes
  */
@@ -96,7 +96,7 @@ extern char *mlog_ss_names[ MLOG_SS_CNT ];
  * unravel some initialization sequencing problems.
  */
 extern void mlog_init0( void );
-extern bool_t mlog_init1( intgen_t argc, char *argv[ ] );
+extern bool_t mlog_init1( int argc, char *argv[ ] );
 extern bool_t mlog_init2( void );
 
 /* post-initialization, to tell mlog how many streams
@@ -105,12 +105,12 @@ extern void mlog_tell_streamcnt( size_t streamcnt );
 
 /* override the -v option
  */
-void mlog_override_level( intgen_t levelarg );
+void mlog_override_level( int levelarg );
 
 /* vprintf-based message format
  */
-extern void mlog( intgen_t level, char *fmt, ... );
-extern void mlog_va( intgen_t levelarg, char *fmt, va_list args );
+extern void mlog( int level, char *fmt, ... );
+extern void mlog_va( int levelarg, char *fmt, va_list args );
 #define mlog_exit( e, r ) _mlog_exit( __FILE__, __LINE__, (e), (r) )
 extern int  _mlog_exit( const char *file, int line, int exit_code, rv_t return_code );
 #define mlog_exit_hint( r ) _mlog_exit_hint( __FILE__, __LINE__, (r) )

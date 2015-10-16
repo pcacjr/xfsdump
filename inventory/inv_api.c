@@ -170,7 +170,7 @@ inv_writesession_open(
 {
 	invt_session_t  ses;
 	int		fd;
-	intgen_t	rval;
+	int	rval;
 	invt_sescounter_t *sescnt = NULL;
 	invt_seshdr_t  	hdr;
 	inv_sestoken_t	sestok;
@@ -867,10 +867,10 @@ static const char *myopts[] = {
 };
 
 
-intgen_t
+int
 inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx) 
 {
-	intgen_t rval = 0;
+	int rval = 0;
 	void *fs = 0;
 	char *options, *value;
 	extern char *optarg;

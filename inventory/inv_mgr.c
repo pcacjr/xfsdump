@@ -220,7 +220,7 @@ invmgr_query_all_sessions (
 /* comparison/check.                                                    */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 search_invt( 
 	uuid_t			*fsidp,
 	int			invfd,
@@ -336,7 +336,7 @@ search_invt(
 /*---------------------------------------------------------------------------*/
 
 
-intgen_t
+int
 invmgr_inv_print(
 	int 		invfd, 
 	invt_pr_ctx_t 	*prctx)
@@ -427,7 +427,7 @@ invmgr_inv_print(
 /*---------------------------------------------------------------------------*/
 
 
-intgen_t
+int
 invmgr_inv_check(
 	int invfd)
 {
@@ -670,7 +670,7 @@ insert_session( invt_sessinfo_t *s)
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 make_invdirectory( inv_oflag_t forwhat )
 {
 	struct stat64 st;

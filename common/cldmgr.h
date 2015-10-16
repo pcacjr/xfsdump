@@ -44,7 +44,7 @@ extern void cldmgr_stop( void );
  * EXIT_FAULT if any threads requested a core dump, or another EXIT_*
  * value if any threads exited abnormally.
  */
-extern intgen_t cldmgr_join( void );
+extern int cldmgr_join( void );
 
 /* cldmgr_stop_requested - returns TRUE if the child should gracefully
  * terminate.

@@ -261,7 +261,7 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 		{
 		bool_t successpr;
 		unsigned int ioctlcmd;
-		intgen_t loglevel;
+		int loglevel;
 		size_t trycnt;
 
 		for ( trycnt = 0,
@@ -276,7 +276,7 @@ dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
 		      loglevel = max( MLOG_NORMAL, loglevel - 1 )) {
 			off64_t initsz;
 			struct flock64 flock64;
-			intgen_t rval;
+			int rval;
 
 			if ( ! ioctlcmd ) {
 				continue;
@@ -354,7 +354,7 @@ void
 dirattr_cleanup( void )
 {
 	/* REFERENCED */
-	intgen_t rval;
+	int rval;
 
 	if ( ! dtp ) {
 		return;
@@ -474,8 +474,8 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	off64_t off;
 	off64_t seekoff;
 	off64_t nulloff;
-	intgen_t nread;
-	intgen_t nwritten;
+	int nread;
+	int nwritten;
 
 	/* pull the selected dir attributes into the cache
 	 */
@@ -527,7 +527,7 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 		nread = read( dtp->dt_extattrfd,
 			      ( void * )&off,
 			      sizeof( off ));
-		if ( nread != ( intgen_t )sizeof( off )) {
+		if ( nread != ( int )sizeof( off )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
@@ -558,7 +558,7 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 	nwritten = write( dtp->dt_extattrfd,
 			  ( void * )&nulloff,
 			  sizeof( nulloff ));
-	if ( nwritten != ( intgen_t )sizeof( nulloff )) {
+	if ( nwritten != ( int )sizeof( nulloff )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not write extended attributes "
 		      "file %s: "
@@ -570,7 +570,7 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 		return;
 	}
 	nwritten = write( dtp->dt_extattrfd, ( void * )ahdrp, ahdrp->ah_sz );
-	if ( nwritten != ( intgen_t )( ahdrp->ah_sz )) {
+	if ( nwritten != ( int )( ahdrp->ah_sz )) {
 		mlog( MLOG_NORMAL | MLOG_WARNING, _(
 		      "could not write at end of extended attributes "
 		      "file %s: "
@@ -605,7 +605,7 @@ dirattr_addextattr( dah_t dah, extattrhdr_t *ahdrp )
 		nwritten = write( dtp->dt_extattrfd,
 				  ( void * )&off,
 				  sizeof( off ));
-		if ( nwritten != ( intgen_t )sizeof( off )) {
+		if ( nwritten != ( int )sizeof( off )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not write extended attributes "
 			      "file %s: "
@@ -659,7 +659,7 @@ dirattr_cb_extattr( dah_t dah,
 	off = dtp->dt_cached_dirattr.d_extattroff;
 	while ( off != DIRATTR_EXTATTROFFNULL ) {
 		off64_t seekoff;
-		intgen_t nread;
+		int nread;
 		off64_t nextoff;
 		size_t recsz;
 		bool_t ok;
@@ -685,7 +685,7 @@ dirattr_cb_extattr( dah_t dah,
 		nread = read( dtp->dt_extattrfd,
 			      ( void * )&nextoff,
 			      sizeof( nextoff ));
-		if ( nread != ( intgen_t )sizeof( nextoff )) {
+		if ( nread != ( int )sizeof( nextoff )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
@@ -721,7 +721,7 @@ dirattr_cb_extattr( dah_t dah,
 		nread = read( dtp->dt_extattrfd,
 			      ( void * )&ahdrp[ 1 ],
 			      recsz - EXTATTRHDR_SZ );
-		if ( nread != ( intgen_t )( recsz - EXTATTRHDR_SZ )) {
+		if ( nread != ( int )( recsz - EXTATTRHDR_SZ )) {
 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
 			      "could not read extended attributes "
 			      "file %s: "
@@ -758,7 +758,7 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	off64_t argoff;
 	off64_t newoff;
 	dirattr_t dirattr;
-	intgen_t nwritten;
+	int nwritten;
 
 	/* sanity checks
 	 */
@@ -958,7 +958,7 @@ dirattr_get( dah_t dah )
 	dix_t dix;
 	off64_t argoff;
 	off64_t newoff;
-	intgen_t nread;
+	int nread;
 #ifdef DIRATTRCHK
 	u_int16_t sum;
 #endif /* DIRATTRCHK */
@@ -1040,7 +1040,7 @@ dirattr_cacheflush( void )
 #endif /* DIRATTRCHK */
 	off64_t argoff;
 	off64_t newoff;
-	intgen_t nwritten;
+	int nwritten;
 
 	/* sanity checks
 	 */

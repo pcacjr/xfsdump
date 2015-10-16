@@ -21,11 +21,11 @@
 /* win.[ch] - windows into a very large file
  */
 
-typedef intgen_t segix_t;
+typedef int segix_t;
 
 /* initialize the window abstraction
  */
-void win_init( intgen_t fd,
+void win_init( int fd,
 	       off64_t rngoff,		/* offset into file of windowing */
 	       size64_t winsz,		/* window size */
 	       size_t wincntmax );	/* max number of windows to manage */

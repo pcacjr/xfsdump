@@ -621,7 +621,7 @@ stobj_create( char *fname )
     return fd;
 }
 
-intgen_t
+int
 stobj_put_streams( int fd, invt_seshdr_t *hdr, invt_session_t *ses, 
 		   invt_stream_t *strms,
 		   invt_mediafile_t *mfiles )

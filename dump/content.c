@@ -199,9 +199,9 @@ struct extent_group_context {
 	getbmapx_t eg_bmap[ BMAP_LEN ];
 	getbmapx_t *eg_nextbmapp;	/* ptr to the next extent to dump */
 	getbmapx_t *eg_endbmapp;		/* to detect extent exhaustion */
-	intgen_t eg_fd;			/* file desc. */
-	intgen_t eg_bmapix;		/* debug info only, not used */
-	intgen_t eg_gbmcnt;		/* debug, counts getbmapx calls for ino*/
+	int eg_fd;			/* file desc. */
+	int eg_bmapix;		/* debug info only, not used */
+	int eg_gbmcnt;		/* debug, counts getbmapx calls for ino*/
 };
 
 typedef struct extent_group_context extent_group_context_t;
@@ -266,11 +266,11 @@ static rv_t dump_dirs( ix_t strmix,
 		       void *inomap_contextp );
 static rv_t dump_dir( ix_t strmix,
 		      jdm_fshandle_t *,
-		      intgen_t,
+		      int,
 		      xfs_bstat_t * );
 static rv_t dump_file( void *,
 		       jdm_fshandle_t *,
-		       intgen_t,
+		       int,
 		       xfs_bstat_t * );
 static rv_t dump_file_reg( drive_t *drivep,
 			   context_t *contextp,
@@ -286,7 +286,7 @@ static rv_t dump_filehdr( drive_t *drivep,
 			  context_t *contextp,
 			  xfs_bstat_t *,
 			  off64_t,
-			  intgen_t );
+			  int );
 static rv_t dump_extenthdr( drive_t *drivep,
 			    context_t *contextp,
 			    int32_t,
@@ -336,7 +336,7 @@ static rv_t Media_mfile_end( drive_t *drivep,
 			     bool_t hit_eom );
 static bool_t Media_prompt_overwrite( drive_t *drivep );
 static rv_t Media_erasechk( drive_t *drivep,
-			    intgen_t dcaps,
+			    int dcaps,
 			    bool_t intr_allowed,
 			    bool_t prevmediapresentpr );
 static bool_t Media_prompt_erase( drive_t *drivep );
@@ -511,7 +511,7 @@ static bool_t create_inv_session(
 		size_t strmix);
 
 bool_t
-content_init( intgen_t argc,
+content_init( int argc,
 	      char *argv[ ],
 	      global_hdr_t *gwhdrtemplatep )
 {
@@ -544,10 +544,10 @@ content_init( intgen_t argc,
 	bool_t samepartialpr = BOOL_FALSE;
 	bool_t sameinterruptedpr = BOOL_FALSE;
 	size_t strmix;
-	intgen_t c;
-	intgen_t i;
-	intgen_t qstat;
-	intgen_t rval;
+	int c;
+	int i;
+	int qstat;
+	int rval;
 	bool_t ok;
 	extern char *optarg;
 	extern int optind, opterr, optopt;
@@ -1905,7 +1905,7 @@ create_inv_session(
 		ix_t subtreecnt,
 		size_t strmix)
 {
-	intgen_t rval;
+	int rval;
 	char *qmntpnt;
 	char *qfsdevice;
 
@@ -2086,7 +2086,7 @@ mark_callback( void *p, drive_markrec_t *dmp, bool_t committed )
 
 /* begin - called by stream process to invoke the dump stream
  */
-intgen_t
+int
 content_stream_dump( ix_t strmix )
 {
 	context_t *contextp = &sc_contextp[ strmix ];
@@ -2103,7 +2103,7 @@ content_stream_dump( ix_t strmix )
 	inv_stmtoken_t inv_stmt;
 	xfs_bstat_t *bstatbufp;
 	const size_t bstatbuflen = BSTATBUFLEN;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	/* sanity checks
@@ -2368,7 +2368,7 @@ content_stream_dump( ix_t strmix )
 					     ( void * )strmix,
 					     inomap_next_nondir,
 					     inomap_contextp,
-					     ( intgen_t * )&rv,
+					     ( int * )&rv,
 					     pipeline ?
 					       (bool_t (*)(int))preemptchk : 0,
 					     bstatbufp,
@@ -2563,7 +2563,7 @@ decision_more:
 			ok = inv_put_mediafile( inv_stmt,
 						&mwhdrp->mh_mediaid,
 						mwhdrp->mh_medialabel,
-					( u_intgen_t )mwhdrp->mh_mediafileix,
+					( u_int )mwhdrp->mh_mediafileix,
 						startino,
 						startoffset,
 						scwhdrp->cih_startpt.sp_ino,
@@ -2652,7 +2652,7 @@ content_complete( void )
 {
 	time_t elapsed;
 	bool_t completepr;
-	intgen_t i;
+	int i;
 
 	completepr = check_complete_flags( );
 
@@ -2769,7 +2769,7 @@ content_mediachange_query( void )
 static void
 update_cc_Media_useterminatorpr( drive_t *drivep, context_t *contextp )
 {
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 
 	contextp->cc_Media_useterminatorpr = BOOL_TRUE;
 	if ( ! ( dcaps & DRIVE_CAP_FILES )) {
@@ -2805,7 +2805,7 @@ dump_dirs( ix_t strmix,
 		xfs_bstat_t *p;
 		xfs_bstat_t *endp;
 		__s32 buflenout;
-		intgen_t rval;
+		int rval;
 
 		if ( bulkstatcallcnt == 0 ) {
 			mlog( MLOG_VERBOSE, _(
@@ -2909,17 +2909,17 @@ dump_dirs( ix_t strmix,
 static rv_t
 dump_dir( ix_t strmix,
 	  jdm_fshandle_t *fshandlep,
-	  intgen_t fsfd,
+	  int fsfd,
 	  xfs_bstat_t *statp )
 {
 	context_t *contextp = &sc_contextp[ strmix ];
 	drive_t *drivep = drivepp[ strmix ];
 	void *inomap_contextp = contextp->cc_inomap_contextp;
-	intgen_t state;
-	intgen_t fd;
+	int state;
+	int fd;
 	struct dirent *gdp = ( struct dirent *)contextp->cc_getdentsbufp;
 	size_t gdsz = contextp->cc_getdentsbufsz;
-	intgen_t gdcnt;
+	int gdcnt;
 	gen_t gen;
 	rv_t rv;
 
@@ -3008,7 +3008,7 @@ dump_dir( ix_t strmix,
 	 */
 	for ( gdcnt = 1, rv = RV_OK ; rv == RV_OK ; gdcnt++ ) {
 		struct dirent *p;
-		intgen_t nread;
+		int nread;
 		register size_t reclen;
 
 		nread = getdents_wrap( fd, (char *)gdp, gdsz );
@@ -3046,7 +3046,7 @@ dump_dir( ix_t strmix,
 		      ;
 		      nread > 0
 		      ;
-		      nread -= ( intgen_t )reclen,
+		      nread -= ( int )reclen,
 		      assert( nread >= 0 ),
 		      p = ( struct dirent * )( ( char * )p + reclen ),
 		      reclen = ( size_t )p->d_reclen ) {
@@ -3093,7 +3093,7 @@ dump_dir( ix_t strmix,
 			 */
 			if ( inomap_get_gen( NULL, p->d_ino, &gen) ) {
 				xfs_bstat_t statbuf;
-				intgen_t scrval;
+				int scrval;
 				
 				scrval = bigstat_one( fsfd,
 						      p->d_ino,
@@ -3261,7 +3261,7 @@ dump_extattr_list( drive_t *drivep,
 	char *dumpbufp;
 	char *endp;
 	size_t bufsz;
-	intgen_t rval = 0;
+	int rval = 0;
 	rv_t rv;
 	char *dumpbufendp = contextp->cc_extattrdumpbufp
 			    +
@@ -3645,7 +3645,7 @@ dump_extattrhdr( drive_t *drivep,
 {
 	extattrhdr_t ahdr;
 	extattrhdr_t tmpahdr;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	memset( ( void * )&ahdr, 0, sizeof( ahdr ));
@@ -3693,7 +3693,7 @@ dump_extattrhdr( drive_t *drivep,
 static rv_t
 dump_file( void *arg1,
 	   jdm_fshandle_t *fshandlep,
-	   intgen_t fsfd,
+	   int fsfd,
 	   xfs_bstat_t *statp )
 {
 	ix_t strmix = ( ix_t )arg1;
@@ -3708,7 +3708,7 @@ dump_file( void *arg1,
 	startpt_t *startptp = &scwhdrp->cih_startpt;
 	startpt_t *endptp = &scwhdrp->cih_endpt;
 	bool_t file_skipped = BOOL_FALSE;
-	intgen_t state;
+	int state;
 	rv_t rv;
 
 	/* skip if no links
@@ -4147,7 +4147,7 @@ dump_file_spec( drive_t *drivep,
 		jdm_fshandle_t *fshandlep,
 		xfs_bstat_t *statp )
 {
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	mlog( MLOG_TRACE,
@@ -4178,7 +4178,7 @@ dump_file_spec( drive_t *drivep,
 	 * the symlink pathname char string will always  be NULL-terminated.
 	 */
 	if ( ( statp->bs_mode & S_IFMT ) == S_IFLNK ) {
-		intgen_t nread;
+		int nread;
 		size_t extentsz;
 
 		/* read the link path. if error, dump a zero-length
@@ -4263,7 +4263,7 @@ init_extent_group_context( jdm_fshandle_t *fshandlep,
 			   extent_group_context_t *gcp )
 {
 	bool_t isrealtime;
-	intgen_t oflags;
+	int oflags;
 	struct flock fl;
 
 	isrealtime = ( bool_t )(statp->bs_xflags & XFS_XFLAG_REALTIME );
@@ -4338,7 +4338,7 @@ dump_extent_group( drive_t *drivep,
 					XFS_XFLAG_REALTIME );
 	off64_t nextoffset;
 	off64_t bytecnt;	/* accumulates total bytes sent to media */
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	/*
@@ -4402,7 +4402,7 @@ dump_extent_group( drive_t *drivep,
 		 * get one.
 		 */
 		if ( gcp->eg_nextbmapp >= gcp->eg_endbmapp ) {
-			intgen_t entrycnt; /* entries in new bmap */
+			int entrycnt; /* entries in new bmap */
 
 			assert( gcp->eg_nextbmapp == gcp->eg_endbmapp );
 
@@ -4779,7 +4779,7 @@ dump_extent_group( drive_t *drivep,
 		 */
 		while ( extsz ) {
 			off64_t new_off;
-			intgen_t nread;
+			int nread;
 			size_t reqsz;
 			size_t actualsz;
 			char *bufp;
@@ -4947,12 +4947,12 @@ dump_filehdr( drive_t *drivep,
 	      context_t *contextp,
 	      xfs_bstat_t *statp,
 	      off64_t offset,
-	      intgen_t flags )
+	      int flags )
 {
 	drive_ops_t *dop = drivep->d_opsp;
 	register filehdr_t *fhdrp = contextp->cc_filehdrp;
 	filehdr_t tmpfhdrp;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	( void )memset( ( void * )fhdrp, 0, sizeof( *fhdrp ));
@@ -5004,7 +5004,7 @@ dump_extenthdr( drive_t *drivep,
 	drive_ops_t *dop = drivep->d_opsp;
 	register extenthdr_t *ehdrp = contextp->cc_extenthdrp;
 	extenthdr_t tmpehdrp;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 	char typestr[20];
 
@@ -5079,7 +5079,7 @@ dump_dirent( drive_t *drivep,
 	size_t direntbufsz = contextp->cc_mdirentbufsz;
 	size_t sz;
 	size_t name_offset;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	if ( sc_use_old_direntpr ) {
@@ -5226,8 +5226,8 @@ dump_session_inv( drive_t *drivep,
 		uuid_t mediaid;
 		char medialabel[ GLOBAL_HDR_STRING_SZ ];
 		bool_t partial;
-		intgen_t mediafileix;
-		intgen_t rval;
+		int mediafileix;
+		int rval;
 		rv_t rv;
 
 		mlog( MLOG_VERBOSE, _(
@@ -5265,7 +5265,7 @@ dump_session_inv( drive_t *drivep,
 
 		uuid_copy(mediaid, mwhdrp->mh_mediaid);
 		strcpy( medialabel, mwhdrp->mh_medialabel );
-		mediafileix = ( intgen_t )mwhdrp->mh_mediafileix;
+		mediafileix = ( int )mwhdrp->mh_mediafileix;
 
 		rval = write_buf( inv_sbufp,
 				  inv_sbufsz,
@@ -5327,7 +5327,7 @@ dump_session_inv( drive_t *drivep,
 			ok = inv_put_mediafile( inv_stmt,
 						&mediaid,
 						medialabel,
-						( u_intgen_t )mediafileix,
+						( u_int )mediafileix,
 						(xfs_ino_t )0,
 						( off64_t )0,
 						(xfs_ino_t )0,
@@ -5444,7 +5444,7 @@ static rv_t
 write_pad( drive_t *drivep, size_t sz )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	intgen_t rval;
+	int rval;
 	rv_t rv;
 
 	rval = write_buf( 0,
@@ -5531,7 +5531,7 @@ static rv_t
 Media_mfile_begin( drive_t *drivep, context_t *contextp, bool_t intr_allowed )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	intgen_t dcaps = drivep->d_capabilities;
+	int dcaps = drivep->d_capabilities;
 	global_hdr_t *gwhdrp = drivep->d_gwritehdrp;
 	drive_hdr_t *dwhdrp = drivep->d_writehdrp;
 	media_hdr_t *mwhdrp = ( media_hdr_t * )dwhdrp->dh_upper;
@@ -5543,7 +5543,7 @@ Media_mfile_begin( drive_t *drivep, context_t *contextp, bool_t intr_allowed )
 	bool_t prevmediapresentpr;
 	bool_t mediawrittentopr;
 	global_hdr_t saved_gwhdr;
-	intgen_t rval;
+	int rval;
 	bool_t ok;
 
 	/* sanity checks
@@ -5688,7 +5688,7 @@ position:
 				goto changemedia;
 			}
 			if ( MEDIA_TERMINATOR_CHK( mrhdrp )) {
-				intgen_t status;
+				int status;
 				mlog( MLOG_VERBOSE | MLOG_MEDIA, _(
 				      "stream terminator found\n") );
 				assert( contextp->cc_Media_useterminatorpr );
@@ -5745,7 +5745,7 @@ position:
 				      "unable to overwrite\n") );
 				goto changemedia;
 			} else {
-				intgen_t status;
+				int status;
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
 				      "repositioning to overwrite\n") );
 				assert( dcaps & DRIVE_CAP_BSF );
@@ -5879,7 +5879,7 @@ position:
 				mlog_exit_hint(RV_CORRUPT);
 				goto changemedia;
 			} else {
-				intgen_t status;
+				int status;
 				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA,_(
 				      "encountered corrupt or foreign data: "
 				      "repositioning to overwrite\n") );
@@ -6140,7 +6140,7 @@ Media_mfile_end( drive_t *drivep,
 		 bool_t hit_eom )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	intgen_t rval;
+	int rval;
 
 	mlog( MLOG_DEBUG | MLOG_MEDIA,
 	      "Media op: end media file\n" );
@@ -6280,7 +6280,7 @@ retry:
 
 static rv_t
 Media_erasechk( drive_t *drivep,
-		intgen_t dcaps,
+		int dcaps,
 		bool_t intr_allowed,
 		bool_t prevmediapresentpr )
 {

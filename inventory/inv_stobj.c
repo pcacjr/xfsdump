@@ -47,7 +47,7 @@
 /* Used in reconstruction of the inventory. We add a session to this    */
 /* storage object whether or not it has reached its maximum.            */
 /*----------------------------------------------------------------------*/
-intgen_t
+int
 stobj_insert_session( invt_idxinfo_t *idx,
 		      int fd, /* kept locked EX by caller */
 		      invt_sessinfo_t *s )
@@ -160,7 +160,7 @@ stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time32_t tm )
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_split( invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt, 
 	     invt_sessinfo_t *newsess )
 {
@@ -269,7 +269,7 @@ stobj_split( invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
 
 
 /* ARGSUSED */
-intgen_t
+int
 stobj_delete_mfile( int fd, inv_stream_t *strm, invt_mediafile_t *mf,
 		    off64_t  mfileoff )
 {
@@ -385,7 +385,7 @@ stobj_put_session(
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_sortheaders( int fd, u_int num )
 {
 	size_t sz = sizeof( invt_seshdr_t ) * num;
@@ -435,7 +435,7 @@ stobj_sortheaders( int fd, u_int num )
 /* after adjusting their offsets.                                       */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_put_streams( int fd, invt_seshdr_t *hdr, invt_session_t *ses, 
 		   invt_stream_t *strms,
 		   invt_mediafile_t *mfiles )
@@ -567,7 +567,7 @@ stobj_create( char *fname )
 /*----------------------------------------------------------------------*/
 
 
-intgen_t
+int
 stobj_create_session( 
 	inv_sestoken_t tok, 
 	int fd, /* kept locked EX by caller */
@@ -601,7 +601,7 @@ stobj_create_session(
 /* The stobj_fd in the stream token is kept locked EX by caller.        */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_put_mediafile( inv_stmtoken_t tok, invt_mediafile_t *mf )
 {
 	int  rval;
@@ -707,7 +707,7 @@ stobj_put_mediafile( inv_stmtoken_t tok, invt_mediafile_t *mf )
 /* caller takes the responsibility of locking.                          */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_get_sessinfo ( inv_sestoken_t tok, invt_seshdr_t *hdr, 
 		     invt_session_t *ses )
 {
@@ -1127,7 +1127,7 @@ stobj_unpack_sessinfo(
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_make_invsess( int fd, inv_session_t **buf, invt_seshdr_t *hdr )
 {
 	invt_session_t ses;
@@ -1206,7 +1206,7 @@ stobj_convert_session(inv_session_t *ises, invt_session_t *ses,
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 stobj_copy_invsess(int fd,  
 		   invt_seshdr_t *hdr,
 		   invt_session_t *ses,

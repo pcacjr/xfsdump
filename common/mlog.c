@@ -54,15 +54,15 @@ static FILE *mlog_fp = NULL; /* stderr */;
 static FILE *mlog_fp = NULL; /* stdout */;
 #endif /* RESTORE */
 
-intgen_t mlog_level_ss[ MLOG_SS_CNT ];
+int mlog_level_ss[ MLOG_SS_CNT ];
 
-intgen_t mlog_showlevel = BOOL_FALSE;
+int mlog_showlevel = BOOL_FALSE;
 
-intgen_t mlog_showss = BOOL_FALSE;
+int mlog_showss = BOOL_FALSE;
 
-intgen_t mlog_timestamp = BOOL_FALSE;
+int mlog_timestamp = BOOL_FALSE;
 
-static intgen_t mlog_sym_lookup( char * );
+static int mlog_sym_lookup( char * );
 
 static size_t mlog_streamcnt;
 
@@ -84,7 +84,7 @@ static char mlog_tsstr[ 10 ];
 
 struct mlog_sym {
 	char *sym;
-	intgen_t level;
+	int level;
 };
 
 typedef struct mlog_sym mlog_sym_t;
@@ -146,13 +146,13 @@ mlog_init0( void )
 }
 
 bool_t
-mlog_init1( intgen_t argc, char *argv[ ] )
+mlog_init1( int argc, char *argv[ ] )
 {
 	char **suboptstrs;
 	ix_t ssix;
 	ix_t soix;
 	size_t vsymcnt;
-	intgen_t c;
+	int c;
 
 	/* prepare an array of suboption token strings. this will be the
 	 * concatenation of the subsystem names with the verbosity symbols.
@@ -200,7 +200,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 			}
 			options = optarg;
 			while ( *options ) {
-				intgen_t suboptix;
+				int suboptix;
 				char *valstr;
 
 				suboptix = getsubopt( &options, 
@@ -343,9 +343,9 @@ mlog_unlock( void )
  * too much output.
  */
 void
-mlog_override_level( intgen_t levelarg )
+mlog_override_level( int levelarg )
 {
-	intgen_t level;
+	int level;
 	ix_t ss; /* SubSystem */
 
 	level = levelarg & MLOG_LEVELMASK;
@@ -362,7 +362,7 @@ mlog_override_level( intgen_t levelarg )
 }
 
 void
-mlog( intgen_t levelarg, char *fmt, ... )
+mlog( int levelarg, char *fmt, ... )
 {
 	va_list args;
 	va_start( args, fmt );
@@ -371,9 +371,9 @@ mlog( intgen_t levelarg, char *fmt, ... )
 }
 
 void
-mlog_va( intgen_t levelarg, char *fmt, va_list args )
+mlog_va( int levelarg, char *fmt, va_list args )
 {
-	intgen_t level;
+	int level;
 	ix_t ss;
 
 	level = levelarg & MLOG_LEVELMASK;
@@ -389,7 +389,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 	}
 
 	if ( ! ( levelarg & MLOG_BARE )) {
-		intgen_t streamix;
+		int streamix;
 		streamix = stream_getix( pthread_self( ) );
 
 		if ( mlog_showss ) {
@@ -419,7 +419,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 				mlog_levelstr[ 1 ] = ( char )
 						     ( level
 						       +
-						       ( intgen_t )'0' );
+						       ( int )'0' );
 			}
 		} else {
 			mlog_levelstr[ 0 ] = 0;
@@ -609,7 +609,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
 	else {
 		stream_state_t states[] = { S_RUNNING };
 		stream_state_t state;
-		intgen_t streamix;
+		int streamix;
 		int exit_code;
 		rv_t exit_return, exit_hint;
 
@@ -726,7 +726,7 @@ mlog_exit_flush(void)
 
 		for (i = 0; i < ntids; i++) {
 			stream_state_t state;
-			intgen_t streamix;
+			int streamix;
 			int exit_code;
 			rv_t exit_return, exit_hint;
 			/* REFERENCED */
@@ -786,7 +786,7 @@ mlog_exit_flush(void)
 	fflush(mlog_fp);
 }
 
-static intgen_t
+static int
 mlog_sym_lookup( char *sym )
 {
 	mlog_sym_t *p = mlog_sym;

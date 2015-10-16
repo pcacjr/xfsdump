@@ -58,7 +58,7 @@ static void dlog_string_query_print( void *ctxp, char *fmt, ... );
 bool_t
 dlog_init( int argc, char *argv[ ] )
 {
-	intgen_t c;
+	int c;
 
 	/* can only call once
 	 */
@@ -140,7 +140,7 @@ dlog_desist( void )
 	dlog_allowed_flag = BOOL_FALSE;
 }
 
-intgen_t
+int
 dlog_fd( void )
 {
 	return dlog_ttyfd;
@@ -385,7 +385,7 @@ promptinput( char *buf,
 {
 	va_list args;
 	time32_t now = time( NULL );
-	intgen_t nread = -1;
+	int nread = -1;
 	sigset_t orig_set;
 	char *bufp = buf;
 

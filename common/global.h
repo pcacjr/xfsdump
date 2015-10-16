@@ -73,7 +73,7 @@ typedef struct global_hdr global_hdr_t;
 /* used by main( ) to allocate and populate a global header template.
  * drive managers will copy this into the write header.
  */
-extern global_hdr_t * global_hdr_alloc( intgen_t argc, char *argv[ ] );
+extern global_hdr_t * global_hdr_alloc( int argc, char *argv[ ] );
 
 
 /* used by main( ) to free the global header template after drive ini.

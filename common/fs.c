@@ -109,12 +109,12 @@ static fs_tab_ent_t *fs_tab_lookup_mnt( char * );
 /* ARGSUSED */
 bool_t
 fs_info( char *typb,		/* out */
-	 intgen_t typbz,
+	 int typbz,
 	 char *typd,
 	 char *blkb,		/* out */
-	 intgen_t blkbz,
+	 int blkbz,
 	 char *mntb,		/* out */
-	 intgen_t mntbz,
+	 int mntbz,
 	 uuid_t *idb,		/* out */
 	 char *usrs )		/* in */
 {
@@ -169,7 +169,7 @@ fs_info( char *typb,		/* out */
 	assert( ok != BOOL_UNKNOWN );
 
 	if ( ok == BOOL_TRUE ) {
-		intgen_t rval = fs_getid( mntb, idb );
+		int rval = fs_getid( mntb, idb );
 		if ( rval ) {
 			mlog( MLOG_NORMAL,
 			      _("unable to determine uuid of fs mounted at %s: "
@@ -201,7 +201,7 @@ fs_mounted( char *typs, char *chrs, char *mnts, uuid_t *idp )
 	return strlen( mnts ) > 0 ? BOOL_TRUE : BOOL_FALSE;
 }
 
-intgen_t
+int
 fs_getid( char *mnts, uuid_t *idb )
 {
 	xfs_fsop_geom_v1_t geo;
@@ -227,7 +227,7 @@ size_t
 fs_getinocnt( char *mnts )
 {
 	struct statvfs vfsstat;
-	intgen_t rval;
+	int rval;
 
 	rval = statvfs( mnts, &vfsstat );
 	if ( rval ) {

@@ -69,7 +69,7 @@ extern bool_t allowexcludefiles_pr;
 
 /* inomap construction callbacks
  */
-static intgen_t cb_context( bool_t last,
+static int cb_context( bool_t last,
 			    time32_t,
 			    bool_t,
 			    time32_t,
@@ -77,24 +77,24 @@ static intgen_t cb_context( bool_t last,
 			    drange_t *,
 			    startpt_t *,
 			    size_t,
-			    intgen_t,
+			    int,
 			    bool_t,
 			    bool_t *);
 static void cb_context_free( void );
-static intgen_t cb_count_inogrp( void *, intgen_t, xfs_inogrp_t *);
-static intgen_t cb_add_inogrp( void *, intgen_t, xfs_inogrp_t * );
-static intgen_t cb_add( void *, jdm_fshandle_t *, intgen_t, xfs_bstat_t * );
+static int cb_count_inogrp( void *, int, xfs_inogrp_t *);
+static int cb_add_inogrp( void *, int, xfs_inogrp_t * );
+static int cb_add( void *, jdm_fshandle_t *, int, xfs_bstat_t * );
 static bool_t cb_inoinresumerange( xfs_ino_t );
 static bool_t cb_inoresumed( xfs_ino_t );
 static void cb_accuminit_sz( void );
 static void cb_spinit( void );
-static intgen_t cb_startpt( void *,
+static int cb_startpt( void *,
 			    jdm_fshandle_t *,
-			    intgen_t,
+			    int,
 			    xfs_bstat_t * );
-static intgen_t supprt_prune( void *,
+static int supprt_prune( void *,
 			      jdm_fshandle_t *,
-			      intgen_t,
+			      int,
 			      xfs_bstat_t *,
 			      char * );
 static off64_t quantity2offset( jdm_fshandle_t *, xfs_bstat_t *, off64_t );
@@ -102,25 +102,25 @@ static off64_t estimate_dump_space( xfs_bstat_t * );
 
 /* inomap primitives
  */
-static intgen_t inomap_init( intgen_t igrpcnt );
-static void inomap_add( void *, xfs_ino_t ino, gen_t gen, intgen_t );
-static intgen_t inomap_set_state( void *, xfs_ino_t ino, intgen_t );
+static int inomap_init( int igrpcnt );
+static void inomap_add( void *, xfs_ino_t ino, gen_t gen, int );
+static int inomap_set_state( void *, xfs_ino_t ino, int );
 static void inomap_set_gen(void *, xfs_ino_t, gen_t );
 
 /* subtree abstraction
  */
-static intgen_t subtree_descend_cb( void *,
+static int subtree_descend_cb( void *,
 				    jdm_fshandle_t *,
-				    intgen_t fsfd,
+				    int fsfd,
 				    xfs_bstat_t *,
 				    char * );
-static intgen_t subtreelist_parse_cb( void *,
+static int subtreelist_parse_cb( void *,
 				      jdm_fshandle_t *,
-				      intgen_t fsfd,
+				      int fsfd,
 				      xfs_bstat_t *,
 				      char * );
-static intgen_t subtreelist_parse( jdm_fshandle_t *,
-				   intgen_t,
+static int subtreelist_parse( jdm_fshandle_t *,
+				   int,
 				   xfs_bstat_t *,
 				   char *[],
 				   ix_t );
@@ -145,7 +145,7 @@ static u_int64_t inomap_exclude_skipattr = 0;
 /* ARGSUSED */
 bool_t
 inomap_build( jdm_fshandle_t *fshandlep,
-	      intgen_t fsfd,
+	      int fsfd,
 	      xfs_bstat_t *rootstatp,
 	      bool_t last,
 	      time32_t lasttime,
@@ -166,9 +166,9 @@ inomap_build( jdm_fshandle_t *fshandlep,
 	xfs_bstat_t *bstatbufp;
 	size_t bstatbuflen;
 	bool_t pruneneeded = BOOL_FALSE;
-	intgen_t igrpcnt = 0;
-	intgen_t stat;
-	intgen_t rval;
+	int igrpcnt = 0;
+	int stat;
+	int rval;
 
         /* do a sync so that bulkstat will pick up inode changes
          * that are currently in the inode cache. this is necessary
@@ -403,7 +403,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 void
 inomap_skip( xfs_ino_t ino )
 {
-	intgen_t oldstate;
+	int oldstate;
 
 	oldstate = inomap_get_state( NULL, ino );
 	if ( oldstate == MAP_NDR_CHANGE) {
@@ -446,7 +446,7 @@ static bool_t cb_skip_unchanged_dirs;	/* set by cb_context() */
 /* cb_context - initializes the call back context for the add and prune
  * phases of inomap_build().
  */
-static intgen_t
+static int
 cb_context( bool_t last,
 	    time32_t lasttime,
 	    bool_t resume,
@@ -455,7 +455,7 @@ cb_context( bool_t last,
 	    drange_t *resumerangep,
 	    startpt_t *startptp,
 	    size_t startptcnt,
-	    intgen_t igrpcnt,
+	    int igrpcnt,
 	    bool_t skip_unchanged_dirs,
 	    bool_t *pruneneededp )
 {
@@ -489,10 +489,10 @@ cb_context_free( void )
 	inomap_free_context( cb_inomap_contextp );
 }
 
-static intgen_t
-cb_count_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
+static int
+cb_count_inogrp( void *arg1, int fsfd, xfs_inogrp_t *inogrp )
 {
-	intgen_t *count = (intgen_t *)arg1;
+	int *count = (int *)arg1;
 	(*count)++;
 	return 0;
 }
@@ -503,10 +503,10 @@ cb_count_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
  * files or directories have not been modified.
  */
 /* ARGSUSED */
-static intgen_t
+static int
 cb_add( void *arg1,
 	jdm_fshandle_t *fshandlep,
-	intgen_t fsfd,
+	int fsfd,
 	xfs_bstat_t *statp )
 {
 	register time32_t mtime = statp->bs_mtime.tv_sec;
@@ -692,12 +692,12 @@ cb_inoresumed( xfs_ino_t ino )
 static bool_t			/* false, used as diriter callback */
 supprt_prune( void *arg1,	/* ancestors marked as changed? */
 	      jdm_fshandle_t *fshandlep,
-	      intgen_t fsfd,
+	      int fsfd,
 	      xfs_bstat_t *statp,
 	      char *name )
 {
 	static bool_t cbrval = BOOL_FALSE;
-	intgen_t state;
+	int state;
 
 	if ( ( statp->bs_mode & S_IFMT ) == S_IFDIR ) {
 		bool_t changed_below = BOOL_FALSE;
@@ -810,13 +810,13 @@ typedef enum {
 } action_t;
 
 /* ARGSUSED */
-static intgen_t
+static int
 cb_startpt( void *arg1,
 	    jdm_fshandle_t *fshandlep,
-	    intgen_t fsfd,
+	    int fsfd,
 	    xfs_bstat_t *statp )
 {
-	register intgen_t state;
+	register int state;
 
 	off64_t estimate;
 	off64_t old_accum = cb_accum;
@@ -955,20 +955,20 @@ struct i2gseg {
 typedef struct i2gseg i2gseg_t;
 
 typedef struct seg_addr {
-	intgen_t hnkoff;
-	intgen_t segoff;
-	intgen_t inooff;
+	int hnkoff;
+	int segoff;
+	int inooff;
 } seg_addr_t;
 
 static struct inomap {
 	hnk_t *hnkmap;
-	intgen_t hnkmaplen;
+	int hnkmaplen;
 	i2gseg_t *i2gmap;
 	seg_addr_t lastseg;
 } inomap;
 
 static inline void
-SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
+SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, int state )
 {
 	register xfs_ino_t relino;
 	register u_int64_t mask;
@@ -1020,10 +1020,10 @@ SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, intgen_t state )
 	}
 }
 
-static inline intgen_t
+static inline int
 SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 {
-	intgen_t state;
+	int state;
 	register xfs_ino_t relino;
 	register u_int64_t mask;
 	relino = ino - segp->base;
@@ -1045,8 +1045,8 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 
 /* context for inomap construction - initialized by map_init
  */
-static intgen_t
-inomap_init( intgen_t igrpcnt )
+static int
+inomap_init( int igrpcnt )
 {
 	assert( sizeof( hnk_t ) == HNKSZ );
 
@@ -1072,7 +1072,7 @@ inomap_getsz( void )
 static inline bool_t
 inomap_validaddr( seg_addr_t *addrp )
 {
-	intgen_t maxseg;
+	int maxseg;
 
 	if ( addrp->hnkoff < 0 || addrp->hnkoff > inomap.lastseg.hnkoff )
 		return BOOL_FALSE;
@@ -1099,14 +1099,14 @@ inomap_addr2seg( seg_addr_t *addrp )
 	return &hunkp->seg[addrp->segoff];
 }
 
-static inline intgen_t
+static inline int
 inomap_addr2segix( seg_addr_t *addrp )
 {
 	return ( addrp->hnkoff * SEGPERHNK ) + addrp->segoff;
 }
 
-static inline intgen_t
-inomap_lastseg( intgen_t hnkoff )
+static inline int
+inomap_lastseg( int hnkoff )
 {
 	if ( hnkoff == inomap.lastseg.hnkoff )
 		return inomap.lastseg.segoff;
@@ -1117,8 +1117,8 @@ inomap_lastseg( intgen_t hnkoff )
 /* called for every inode group in the filesystem in increasing inode
  * order. adds a new segment to the inomap and ino-to-gen map.
  */
-static intgen_t
-cb_add_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
+static int
+cb_add_inogrp( void *arg1, int fsfd, xfs_inogrp_t *inogrp )
 {
 	hnk_t *hunk;
 	seg_t *segp;
@@ -1131,7 +1131,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
 		lastsegp->segoff = 0;
 
 		if (lastsegp->hnkoff == inomap.hnkmaplen) {
-			intgen_t numsegs;
+			int numsegs;
 
 			inomap.hnkmaplen++;
 			inomap.hnkmap = (hnk_t *)
@@ -1166,7 +1166,7 @@ cb_add_inogrp( void *arg1, intgen_t fsfd, xfs_inogrp_t *inogrp )
 /* called for every ino to be added to the map.
  */
 static void
-inomap_add( void *contextp, xfs_ino_t ino, gen_t gen, intgen_t state )
+inomap_add( void *contextp, xfs_ino_t ino, gen_t gen, int state )
 {
 	inomap_set_state( contextp, ino, state );
 	inomap_set_gen( contextp, ino, gen );
@@ -1203,8 +1203,8 @@ static bool_t
 inomap_find_hnk( seg_addr_t *addrp, xfs_ino_t ino )
 {
 	hnk_t *hunkp;
-	intgen_t lower;
-	intgen_t upper;
+	int lower;
+	int upper;
 
 	lower = 0;
 	upper = inomap.lastseg.hnkoff;
@@ -1235,8 +1235,8 @@ static bool_t
 inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
 {
 	seg_t *segp;
-	intgen_t lower;
-	intgen_t upper;
+	int lower;
+	int upper;
 
 	if ( !inomap_validaddr( addrp ) ) {
 		inomap_reset_context( addrp );
@@ -1267,7 +1267,7 @@ inomap_find_seg( seg_addr_t *addrp, xfs_ino_t ino )
 }
 
 static xfs_ino_t
-inomap_iter( void *contextp, intgen_t statemask )
+inomap_iter( void *contextp, int statemask )
 {
 	xfs_ino_t ino, endino;
 	seg_t *segp;
@@ -1286,7 +1286,7 @@ inomap_iter( void *contextp, intgen_t statemask )
 			ino = segp->base + addrp->inooff;
 			endino = segp->base + INOPERSEG;
 			for ( ; ino < endino ; ino++, addrp->inooff++ ) {
-				intgen_t st;
+				int st;
 				st = SEG_GET_BITS( segp, ino );
 				if ( statemask & ( 1 << st )) {
 					addrp->inooff++; /* for next call */
@@ -1302,7 +1302,7 @@ inomap_iter( void *contextp, intgen_t statemask )
 xfs_ino_t
 inomap_next_nondir(void *contextp, xfs_ino_t lastino)
 {
-	intgen_t state = 1 << MAP_NDR_CHANGE;
+	int state = 1 << MAP_NDR_CHANGE;
 	xfs_ino_t nextino;
 
 	do {
@@ -1315,7 +1315,7 @@ inomap_next_nondir(void *contextp, xfs_ino_t lastino)
 xfs_ino_t
 inomap_next_dir(void *contextp, xfs_ino_t lastino)
 {
-	intgen_t state = (1 << MAP_DIR_CHANGE) | (1 << MAP_DIR_SUPPRT);
+	int state = (1 << MAP_DIR_CHANGE) | (1 << MAP_DIR_SUPPRT);
 	xfs_ino_t nextino;
 
 	do {
@@ -1325,10 +1325,10 @@ inomap_next_dir(void *contextp, xfs_ino_t lastino)
 	return nextino;
 }
 
-static intgen_t
-inomap_set_state( void *contextp, xfs_ino_t ino, intgen_t state )
+static int
+inomap_set_state( void *contextp, xfs_ino_t ino, int state )
 {
-	intgen_t oldstate;
+	int oldstate;
 	seg_addr_t *addrp;
 	seg_addr_t addr;
 	seg_t *segp;
@@ -1345,7 +1345,7 @@ inomap_set_state( void *contextp, xfs_ino_t ino, intgen_t state )
 	return oldstate;
 }
 
-intgen_t
+int
 inomap_get_state( void *contextp, xfs_ino_t ino )
 {
 	seg_addr_t *addrp;
@@ -1382,7 +1382,7 @@ inomap_set_gen(void *contextp, xfs_ino_t ino, gen_t gen)
 	i2gsegp->s_gen[relino] = gen;
 }
 
-intgen_t
+int
 inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen )
 {
 	seg_addr_t *addrp;
@@ -1432,7 +1432,7 @@ inomap_dump( drive_t *drivep )
 	for ( addr.hnkoff = 0 ;
 	      addr.hnkoff <= inomap.lastseg.hnkoff ;
 	      addr.hnkoff++ ) {
-		intgen_t rval;
+		int rval;
 		rv_t rv;
 		drive_ops_t *dop = drivep->d_opsp;
 
@@ -1471,9 +1471,9 @@ inomap_dump( drive_t *drivep )
 	return RV_OK;
 }
 
-static intgen_t
+static int
 subtreelist_parse( jdm_fshandle_t *fshandlep,
-		   intgen_t fsfd,
+		   int fsfd,
 		   xfs_bstat_t *rootstatp,
 		   char *subtreebuf[],
 		   ix_t subtreecnt )
@@ -1487,7 +1487,7 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 	/* do a recursive descent for each subtree specified
 	 */
 	for ( subtreeix = 0 ; subtreeix < subtreecnt ; subtreeix++ ) {
-		intgen_t cbrval = 0;
+		int cbrval = 0;
 		char *currentpath = subtreebuf[ subtreeix ];
 		assert( *currentpath != '/' );
 		( void )diriter( fshandlep,
@@ -1511,14 +1511,14 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 	return 0;
 }
 
-static intgen_t
+static int
 subtreelist_parse_cb( void *arg1,
 		      jdm_fshandle_t *fshandlep,
-		      intgen_t fsfd,
+		      int fsfd,
 		      xfs_bstat_t *statp,
 		      char *name  )
 {
-	intgen_t cbrval = 0;
+	int cbrval = 0;
 
 	/* arg1 is used to carry the tail of the subtree path
 	 */
@@ -1594,14 +1594,14 @@ subtreelist_parse_cb( void *arg1,
 	}
 }
 
-static intgen_t
+static int
 subtree_descend_cb( void *arg1,
 		    jdm_fshandle_t *fshandlep,
-		    intgen_t fsfd,
+		    int fsfd,
 		    xfs_bstat_t *statp,
 		    char *name  )
 {
-	intgen_t cbrval = 0;
+	int cbrval = 0;
 
 	cb_add( NULL, fshandlep, fsfd, statp );
 
@@ -1628,7 +1628,7 @@ subtree_descend_cb( void *arg1,
 static off64_t
 quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 {
-	intgen_t fd;
+	int fd;
 	getbmapx_t bmap[ BMAP_LEN ];
 	off64_t offset;
 	off64_t offset_next;
@@ -1661,8 +1661,8 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 	}
 
 	for ( ; ; ) {
-		intgen_t eix;
-		intgen_t rval;
+		int eix;
+		int rval;
 
 		rval = ioctl( fd, XFS_IOC_GETBMAPX, bmap );
 		if ( rval ) {

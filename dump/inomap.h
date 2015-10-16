@@ -47,7 +47,7 @@
  * abort the dump; else returns BOOL_TRUE.
  */
 extern bool_t inomap_build( jdm_fshandle_t *fshandlep,
-			    intgen_t fsfd,
+			    int fsfd,
 			    xfs_bstat_t *rootstatp,
 			    bool_t last,
 	      		    time32_t lasttime,
@@ -131,8 +131,8 @@ typedef struct hnk hnk_t;
 extern void *inomap_alloc_context( void );
 extern void inomap_reset_context( void *contextp );
 extern void inomap_free_context( void *contextp );
-extern intgen_t inomap_get_state( void *contextp, xfs_ino_t ino );
-extern intgen_t inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen );
+extern int inomap_get_state( void *contextp, xfs_ino_t ino );
+extern int inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen );
 
 
 /* generators returning the next dir or non-dir ino selected in this dump.

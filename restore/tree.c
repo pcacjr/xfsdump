@@ -156,7 +156,7 @@ struct tran {
 		/* if non-NULL, is path of hkdir relative to dstdir.
 		 * don't restore there.
 		 */
-	intgen_t t_persfd;
+	int t_persfd;
 		/* file descriptor of the persistent state file
 		 */
 	nh_t *t_hashp;
@@ -253,7 +253,7 @@ typedef struct link_iter_context link_iter_context_t;
  */
 struct path_cache {
 	nh_t nh;
-	intgen_t len;
+	int len;
 	char buf[MAXPATHLEN];
 };
 typedef struct path_cache path_cache_t;
@@ -275,8 +275,8 @@ static nh_t Node_alloc( xfs_ino_t ino,
 static void Node_free( nh_t *nhp );
 static node_t * Node_map( nh_t nh );
 static void Node_unmap( nh_t nh, node_t **npp );
-static intgen_t Node2path_recurse( nh_t nh, char *buf,
-				   intgen_t bufsz, intgen_t level );
+static int Node2path_recurse( nh_t nh, char *buf,
+				   int bufsz, int level );
 static void adopt( nh_t parh, nh_t cldh, nrh_t nrh );
 static nrh_t disown( nh_t cldh );
 static void selsubtree( nh_t nh, bool_t sensepr );
@@ -355,7 +355,7 @@ tree_init( char *hkdir,
 	off64_t nodeoff;
 	char *perspath;
 	bool_t ok;
-	intgen_t rval;
+	int rval;
 
 	/* sanity checks
 	 */
@@ -539,7 +539,7 @@ tree_sync( char *hkdir,
 	off64_t nodeoff;
 	char *perspath;
 	bool_t ok;
-	intgen_t rval;
+	int rval;
 
 	if ( persp ) {
 		return BOOL_TRUE;
@@ -874,7 +874,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 			nh_t renameh;
 			node_t *renamep;
 			/* REFERENCED */
-			intgen_t namebuflen; 
+			int namebuflen; 
 
 			hardp->n_flags |= NF_REFED;
 			if ( hardp->n_parh == persp->p_orphh ) {
@@ -1283,7 +1283,7 @@ noref_elim_recurse( nh_t parh,
 		nh_t renameh;
 		nh_t grandcldh;
 		nh_t nextcldh;
-		intgen_t rval;
+		int rval;
 		bool_t ok;
 
 		cldp = Node_map( cldh );
@@ -1600,7 +1600,7 @@ mkdirs_recurse( nh_t parh, nh_t cldh, char *path )
 		/* if needed, create a directory and update real flag
 		 */
 		if ( isdirpr && ! isrealpr && isrefpr && isselpr ) {
-			intgen_t rval;
+			int rval;
 
 			if ( ! Node2path( cldh, path, _("makedir") )) {
 				cldh = nextcldh;
@@ -1674,7 +1674,7 @@ rename_dirs( nh_t cldh,
 
 		if ( isrenamepr ) {
 			node_t *renamep;
-			intgen_t rval;
+			int rval;
 			/* REFERENCED */
 			nrh_t dummynrh;
 			bool_t ok;
@@ -2015,8 +2015,8 @@ tree_adjref_recurse( nh_t cldh,
 		if ( ! pardumpedpr && parrefedpr ) {
 			cldp->n_flags |= NF_REFED;
 		}
-		clddumpedpr = ( intgen_t )cldp->n_flags & NF_DUMPEDDIR;
-		cldrefedpr = ( intgen_t )cldp->n_flags & NF_REFED;
+		clddumpedpr = ( int )cldp->n_flags & NF_DUMPEDDIR;
+		cldrefedpr = ( int )cldp->n_flags & NF_REFED;
 		grandcldh = cldp->n_cldh;
 		Node_unmap( cldh, &cldp  );
 	}
@@ -2177,7 +2177,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 	nh_t nh;
 	link_iter_context_t link_iter_context;
 	bool_t ok;
-	intgen_t rval;
+	int rval;
 
 	/* skip directories
 	 */
@@ -2525,10 +2525,10 @@ setdirattr( dah_t dah, char *path )
 	mode_t mode;
 	struct utimbuf utimbuf;
 	struct fsxattr fsxattr;
-	intgen_t rval;
+	int rval;
 	size_t	hlen;
 	void	*hanp;
-	intgen_t fd = -1;
+	int fd = -1;
 
 	if ( dah == DAH_NULL )
 		return;
@@ -2642,7 +2642,7 @@ setdirattr( dah_t dah, char *path )
 bool_t
 tree_delorph( void )
 {
-	intgen_t rval;
+	int rval;
 
 	rval = rmdir( tranp->t_orphdir );
 	if ( rval ) {
@@ -2851,7 +2851,7 @@ tsi_cmd_pwd_recurse( void *ctxp,
 	node_t *np;
 	register nh_t parh;
 	/* REFERENCED */
-	register intgen_t namelen;
+	register int namelen;
 	nrh_t nrh;
 
 	assert( nh != NH_NULL );
@@ -2937,7 +2937,7 @@ tsi_cmd_ls( void *ctxp,
 		Node_unmap( cldh, &cldp );
 		if ( cldh != persp->p_orphh ) {
 			/* REFERENCED */
-			intgen_t namelen;
+			int namelen;
 			namelen = namreg_get( nrh,
 					      tranp->t_inter.i_name,
 					      sizeof( tranp->t_inter.i_name ));
@@ -3351,7 +3351,7 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 			nh_t nextsibh;
 			nrh_t nrh;
 			/* REFERENCED */
-			intgen_t siblen;
+			int siblen;
 
 			sibp = Node_map( sibh );
 			nrh = sibp->n_nrh;
@@ -3484,7 +3484,7 @@ Node_unmap( nh_t nh, node_t **npp )
 static bool_t
 Node2path( nh_t nh, char *path, char *errmsg )
 {
-	intgen_t remainingcnt;
+	int remainingcnt;
 	strcpy(path, "."); /* in case root node passed in */
 	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN, 0 );
 	if ( remainingcnt <= 0 ) {
@@ -3509,8 +3509,8 @@ Node2path( nh_t nh, char *path, char *errmsg )
  * MAXPATHLEN. always null-terminates, but null char not counted in return.
  * works because the buffer size is secretly 2 * MAXPATHLEN.
  */
-static intgen_t
-Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
+static int
+Node2path_recurse( nh_t nh, char *buf, int bufsz, int level )
 {
 	static __thread path_cache_t cache = { NH_NULL, 0, "" };
 	node_t *np;
@@ -3519,8 +3519,8 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 	gen_t gen;
 	nrh_t nrh;
 	char *oldbuf;
-	intgen_t oldbufsz;
-	intgen_t namelen;
+	int oldbufsz;
+	int namelen;
 
 	/* recursion termination
 	 */
@@ -3869,7 +3869,7 @@ link_matchh( nh_t hardh, nh_t parh, char *name )
 		np = Node_map( hardh );
 		if ( np->n_parh == parh ) {
 			/* REFERENCED */
-			intgen_t namelen;
+			int namelen;
 			namelen = namreg_get( np->n_nrh,
 					      tranp->t_namebuf,
 					      sizeof( tranp->t_namebuf ));
@@ -4462,7 +4462,7 @@ Node_chk( nh_t nh, nh_t *nexthashhp, nh_t *nextlnkhp )
 	}
 
 	if ( n.n_nrh != NRH_NULL ) {
-		intgen_t rval;
+		int rval;
 		rval = namreg_get( n.n_nrh, nambuf, sizeof( nambuf ));
 		assert( rval >= 0 );
 	}
@@ -4573,7 +4573,7 @@ tree_chk2_recurse( nh_t cldh, nh_t parh )
 		} else if ( cldh == persp->p_orphh ) {
 			sprintf( tranp->t_namebuf, "%llu.%u", ino, gen );
 		} else {
-			intgen_t namelen;
+			int namelen;
 			namelen = namreg_get( nrh,
 					      tranp->t_namebuf,
 					      sizeof( tranp->t_namebuf ));

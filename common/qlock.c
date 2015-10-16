@@ -106,7 +106,7 @@ qlock_lock( qlockh_t qlockh )
 	qlock_t *qlockp = ( qlock_t * )qlockh;
 	pthread_t tid;
 	/* REFERENCED */
-	intgen_t rval;
+	int rval;
 	
 	/* get the caller's tid
 	 */
@@ -149,7 +149,7 @@ qlock_unlock( qlockh_t qlockh )
 {
 	qlock_t *qlockp = ( qlock_t * )qlockh;
 	/* REFERENCED */
-	intgen_t rval;
+	int rval;
 	
 	/* verify lock is held by this thread
 	 */
@@ -169,7 +169,7 @@ qsemh_t
 qsem_alloc( ix_t cnt )
 {
 	sem_t *semp;
-	intgen_t rval;
+	int rval;
 
 	/* allocate a semaphore
 	 */
@@ -188,7 +188,7 @@ void
 qsem_free( qsemh_t qsemh )
 {
 	sem_t *semp = ( sem_t * )qsemh;
-	intgen_t rval;
+	int rval;
 
 	/* destroy the mutex and condition
 	 */
@@ -204,7 +204,7 @@ void
 qsemP( qsemh_t qsemh )
 {
 	sem_t *semp = ( sem_t * )qsemh;
-	intgen_t rval;
+	int rval;
 	
 	/* "P" the semaphore
 	 */
@@ -216,7 +216,7 @@ void
 qsemV( qsemh_t qsemh )
 {
 	sem_t *semp = ( sem_t * )qsemh;
-	intgen_t rval;
+	int rval;
 	
 	/* "V" the semaphore
 	 */
@@ -229,7 +229,7 @@ qsemPwouldblock( qsemh_t qsemh )
 {
 	sem_t *semp = ( sem_t * )qsemh;
 	int count;
-	intgen_t rval;
+	int rval;
 
 	rval = sem_getvalue( semp, &count );
 	assert( !rval );
@@ -242,7 +242,7 @@ qsemPavail( qsemh_t qsemh )
 {
 	sem_t *semp = ( sem_t * )qsemh;
 	int count;
-	intgen_t rval;
+	int rval;
 
 	rval = sem_getvalue( semp, &count );
 	assert( !rval );

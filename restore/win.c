@@ -78,7 +78,7 @@ static void win_segmap_resize( segix_t segix );
 /* transient state
  */
 struct tran {
-	intgen_t t_fd;
+	int t_fd;
 		/* file descriptor of backing store to be windowed
 		 */
 	off64_t t_firstoff;
@@ -149,7 +149,7 @@ win_getnum_mmaps(void)
 }
 
 void
-win_init( intgen_t fd,
+win_init( int fd,
 	  off64_t firstoff,
 	  size64_t segsz,
 	  size_t winmax )
@@ -250,7 +250,7 @@ win_map( segix_t segix, void **pp )
 		tranp->t_wincnt++;
 	} else if ( tranp->t_lruheadp ) {
 		/* REFERENCED */
-		intgen_t rval;
+		int rval;
 #ifdef TREE_DEBUG
 		mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
 		     "win_map(): get head from lru freelist & unmap\n");

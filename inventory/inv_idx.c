@@ -153,7 +153,7 @@ idx_insert_newentry( int fd, /* kept locked EX by caller */
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 idx_put_newentry( 
 	invt_idxinfo_t *idx, 
 	invt_entry_t *ient )
@@ -291,7 +291,7 @@ idx_create( char *fname, inv_oflag_t forwhat )
 /*                                                                      */
 /*                                                                      */
 /*----------------------------------------------------------------------*/
-intgen_t
+int
 idx_recons_time( time32_t tm, invt_idxinfo_t *idx )
 {
 	invt_timeperiod_t *tp = &idx->iarr[idx->index].ie_timeperiod;
@@ -316,7 +316,7 @@ idx_recons_time( time32_t tm, invt_idxinfo_t *idx )
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
 {
 	int rval;
@@ -380,7 +380,7 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
 /*                                                                      */
 /*----------------------------------------------------------------------*/
 
-intgen_t
+int
 idx_create_entry(  
 	inv_idbtoken_t *tok, 
 	int invfd, 	/* kept locked EX  by caller */
@@ -495,7 +495,7 @@ idx_get_stobj( int invfd, inv_oflag_t forwhat, int *index )
 }
 
 
-intgen_t
+int
 idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num )
 {
 	u_int i;
@@ -520,7 +520,7 @@ idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num )
 	
 }
 
-intgen_t
+int
 idx_DEBUG_print ( int fd )
 {
 	int nindices;
@@ -542,7 +542,7 @@ idx_DEBUG_print ( int fd )
 
 
 
-intgen_t
+int
 DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, u_int ref,
 			  invt_pr_ctx_t *prctx)
 {

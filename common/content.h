@@ -84,13 +84,13 @@ extern bool_t is_quota_file(ino_t ino);
 #endif /* DUMP */
 
 #ifdef DUMP
-extern bool_t content_init( intgen_t argc,
+extern bool_t content_init( int argc,
 			    char *argv[ ],
 			    global_hdr_t *gwhdrtemplatep );
 	/* prepares for multi-stream dump
 	 */
 
-extern intgen_t content_stream_dump( ix_t strmix );
+extern int content_stream_dump( ix_t strmix );
 	/* does stream dump
 	 */
 
@@ -98,11 +98,11 @@ extern intgen_t content_stream_dump( ix_t strmix );
 #ifdef RESTORE
 extern size_t perssz;
 
-extern bool_t content_init( intgen_t argc, char *argv[ ], size64_t vmsz );
+extern bool_t content_init( int argc, char *argv[ ], size64_t vmsz );
 	/* prepares for multi-thread restore
 	 */
 
-extern intgen_t content_stream_restore( ix_t thrdix );
+extern int content_stream_restore( ix_t thrdix );
 	/* does thread restore
 	 */
 

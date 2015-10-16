@@ -300,7 +300,7 @@ inv_delete_mediaobj( uuid_t *moid );
 extern bool_t
 inv_DEBUG_print( int argc, char **argv );
 
-extern intgen_t
+extern int
 inv_setup_base( void );
 
 extern char *
