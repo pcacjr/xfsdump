@@ -526,10 +526,10 @@ struct pers {
 			/* the following stats are not valid until the
 			 * first media file header has been read.
 			 */
-		u_int64_t stat_inocnt;
+		uint64_t stat_inocnt;
 			/* number of non-dir inos to restore during session
 			 */
-		u_int64_t stat_inodone;
+		uint64_t stat_inodone;
 			/* number of non-dir inos restored so far
 			 */
 		off64_t stat_datacnt;
@@ -1615,11 +1615,11 @@ content_init( int argc, char *argv[ ], size64_t vmsz )
 			      strerror( errno ));
 			return BOOL_FALSE;
 		}
-		ok = dirattr_init( tranp->t_hkdir, BOOL_TRUE, ( u_int64_t )0 );
+		ok = dirattr_init( tranp->t_hkdir, BOOL_TRUE, ( uint64_t )0 );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
-		ok = namreg_init( tranp->t_hkdir, BOOL_TRUE, ( u_int64_t )0 );
+		ok = namreg_init( tranp->t_hkdir, BOOL_TRUE, ( uint64_t )0 );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
@@ -1841,7 +1841,7 @@ content_init( int argc, char *argv[ ], size64_t vmsz )
 	 * determine if full init needed instead.
 	 */
 	if ( persp->a.valpr && persp->s.valpr ) {
-		ok = dirattr_init( tranp->t_hkdir, BOOL_TRUE, ( u_int64_t )0 );
+		ok = dirattr_init( tranp->t_hkdir, BOOL_TRUE, ( uint64_t )0 );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
@@ -1853,7 +1853,7 @@ content_init( int argc, char *argv[ ], size64_t vmsz )
 	 * determine if full init needed instead.
 	 */
 	if ( persp->a.valpr ) {
-		ok = namreg_init( tranp->t_hkdir, BOOL_TRUE, ( u_int64_t )0 );
+		ok = namreg_init( tranp->t_hkdir, BOOL_TRUE, ( uint64_t )0 );
 		if ( ! ok ) {
 			return BOOL_FALSE;
 		}
@@ -7532,7 +7532,7 @@ restore_reg( drive_t *drivep,
 		assert( bstatp->bs_extsize >= 0 );
 		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
 		fsxattr.fsx_xflags = bstatp->bs_xflags & ~POST_DATA_XFLAGS;
-		fsxattr.fsx_extsize = (u_int32_t) bstatp->bs_extsize;
+		fsxattr.fsx_extsize = (uint32_t) bstatp->bs_extsize;
 		fsxattr.fsx_projid = bstat_projid(bstatp);
 
 		rval = ioctl( *fdp, XFS_IOC_FSSETXATTR, (void *)&fsxattr);
@@ -7753,7 +7753,7 @@ restore_complete_reg(stream_context_t *strcxtp)
 		struct fsxattr fsxattr;
 		memset((void *)&fsxattr, 0, sizeof( fsxattr ));
 		fsxattr.fsx_xflags = bstatp->bs_xflags;
-		fsxattr.fsx_extsize = (u_int32_t)bstatp->bs_extsize;
+		fsxattr.fsx_extsize = (uint32_t)bstatp->bs_extsize;
 		fsxattr.fsx_projid = bstat_projid(bstatp);
 
 		rval = ioctl( fd, XFS_IOC_FSSETXATTR, (void *)&fsxattr );
@@ -8364,8 +8364,8 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
 	mlog( MLOG_NITTY,
 	      "read extattr hdr sz %u valoff %u flags 0x%x valsz %u cs 0x%x\n",
 	      ahdrp->ah_sz,
-	      ( u_int )ahdrp->ah_valoff,
-	      ( u_int )ahdrp->ah_flags,
+	      ( uint )ahdrp->ah_valoff,
+	      ( uint )ahdrp->ah_flags,
 	      ahdrp->ah_valsz,
 	      ahdrp->ah_checksum );
 

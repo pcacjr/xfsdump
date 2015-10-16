@@ -137,7 +137,7 @@ typedef	struct	{
 static inline void
 msb_store(
 	u_char		*dest,
-	u_int64_t	src,
+	uint64_t	src,
 	int		length)
 {
         int             i;
@@ -155,12 +155,12 @@ msb_store(
 * Returns
 *	value
 ******************************************************************************/
-static inline u_int64_t
+static inline uint64_t
 msb_load(
 	u_char		*src,
 	int		length)
 {
-        u_int64_t        tmp = 0;
+        uint64_t        tmp = 0;
         int             i;
 
         for (i = 0; i < length; i++) {
@@ -634,7 +634,7 @@ extern int
 HsmFilterExistingAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 const	char		*namep,		/* attribute name */
-	u_int32_t	valuesz,	/* value size */
+	uint32_t	valuesz,	/* value size */
 	int		flag,
 	int		*skip_entry)
 {
@@ -698,7 +698,7 @@ HsmAddNewAttribute(
 	int		flag,
 	char		**namepp,	/* pointer to new attribute name */
 	char		**valuepp,	/* pointer to its value */
-	u_int32_t	*valueszp)	/* pointer to the value size */
+	uint32_t	*valueszp)	/* pointer to the value size */
 {
 	dmf_f_ctxt_t	*dmf_f_ctxtp = (dmf_f_ctxt_t *)hsm_f_ctxtp;
 	XFSattrvalue1_t	*dmfattr1p = (XFSattrvalue1_t *)dmf_f_ctxtp->attrval;

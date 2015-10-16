@@ -145,7 +145,7 @@ delete_test( int n )
 int
 sess_queries_byuuid(char *uu)
 {
-	u_int stat;
+	uint stat;
 	uuid_t uuid;
 	inv_session_t *ses;
 	invt_pr_ctx_t prctx;

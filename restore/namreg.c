@@ -116,7 +116,7 @@ static namreg_pers_t *npp = 0;
 /* definition of locally defined global functions ****************************/
 
 bool_t
-namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
+namreg_init( char *hkdir, bool_t resume, uint64_t inocnt )
 {
 	if ( ntp ) {
 		return BOOL_TRUE;

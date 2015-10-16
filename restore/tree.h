@@ -33,7 +33,7 @@ extern bool_t tree_init( char *hkdir,
 			 bool_t fullpr,
 			 bool_t restoredmpr,
 			 bool_t dstdirisxfspr,
-			 u_int32_t dumpformat,
+			 uint32_t dumpformat,
 			 bool_t truncategenpr );
 
 /* tree_sync - synchronizes with an existing tree abstraction
@@ -50,7 +50,7 @@ extern bool_t tree_sync( char *hkdir,
  * a format 2 dump. the restore will fail unless the
  * original restore was told to use format 2 gen numbers.
  */
-extern bool_t tree_check_dump_format( u_int32_t dumpformat );
+extern bool_t tree_check_dump_format( uint32_t dumpformat );
 
 
 /* tree_begindir - begins application of dumped directory to tree.

@@ -49,7 +49,7 @@ int
 get_counters( int fd, void **cntpp, size_t cntsz )
 {
 	/* object must be locked at least SHARED by caller */
-	u_int num;
+	uint num;
 	assert( cntsz >= sizeof( invt_counter_t ) );
 
 	*cntpp =  calloc( 1, cntsz);
@@ -238,7 +238,7 @@ get_lastheader( int fd, void **ent, size_t hdrsz, size_t cntsz )
 	/* if there's space anywhere at all, then it must be in the last
 	   entry */
 	*ent = malloc( hdrsz );
-	pos = (char *) arr + ( (u_int)nindices - 1 ) * hdrsz;
+	pos = (char *) arr + ( (uint)nindices - 1 ) * hdrsz;
 	memcpy( *ent, pos, hdrsz );
 	free ( arr );
 	free ( cnt );

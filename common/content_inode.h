@@ -88,19 +88,19 @@ struct content_inode_hdr {
 		/* starting point of media file contents */
 	startpt_t cih_endpt;				/*  18  70 */
 		/* starting point of next stream */
-	u_int64_t cih_inomap_hnkcnt;			/*   8  78 */
+	uint64_t cih_inomap_hnkcnt;			/*   8  78 */
 
-	u_int64_t cih_inomap_segcnt;			/*   8  80 */
+	uint64_t cih_inomap_segcnt;			/*   8  80 */
 
-	u_int64_t cih_inomap_dircnt;			/*   8  88 */
+	uint64_t cih_inomap_dircnt;			/*   8  88 */
 
-	u_int64_t cih_inomap_nondircnt;			/*   8  90 */
+	uint64_t cih_inomap_nondircnt;			/*   8  90 */
 
 	xfs_ino_t cih_inomap_firstino;			/*   8  98 */
 
 	xfs_ino_t cih_inomap_lastino;			/*   8  a0 */
 
-	u_int64_t cih_inomap_datasz;			/*   8  a8 */
+	uint64_t cih_inomap_datasz;			/*   8  a8 */
 		/* bytes of non-metadata dumped */
 	char cih_pad2[ CONTENT_INODE_HDR_SZ - 0xa8 ];	/*  18  c0 */
 		/* padding */
@@ -158,27 +158,27 @@ typedef struct timestruct timestruct_t;
 
 struct bstat {				/*		     bytes accum */
 	xfs_ino_t	bs_ino;		/* inode number		 8     8 */
-	u_int32_t	bs_mode;	/* type and mode	 4     c */
-	u_int32_t	bs_nlink;	/* number of links	 4    10 */
+	uint32_t	bs_mode;	/* type and mode	 4     c */
+	uint32_t	bs_nlink;	/* number of links	 4    10 */
 	int32_t		bs_uid;		/* user id		 4    14 */
 	int32_t		bs_gid;		/* group id		 4    18 */
-	u_int32_t	bs_rdev;	/* device value		 4    1c */
+	uint32_t	bs_rdev;	/* device value		 4    1c */
 	int32_t		bs_blksize;	/* block size		 4    20 */
 	off64_t		bs_size;	/* file size		 8    28 */
 	timestruct_t	bs_atime;	/* access time		 8    30 */
 	timestruct_t	bs_mtime;	/* modify time		 8    38 */
 	timestruct_t	bs_ctime;	/* inode change time	 8    40 */
 	int64_t		bs_blocks;	/* number of blocks	 8    48 */
-	u_int32_t	bs_xflags;	/* extended flags	 4    4c */
+	uint32_t	bs_xflags;	/* extended flags	 4    4c */
 	int32_t		bs_extsize;	/* extent size		 4    50 */
 	int32_t		bs_extents;	/* number of extents	 4    54 */
-	u_int32_t	bs_gen;		/* generation count	 4    58 */
-	u_int16_t	bs_projid_lo;	/* low 16 of project id	 2    5a */
-	u_int16_t	bs_forkoff;	/* inode fork offset	 2    5c */
-	u_int16_t	bs_projid_hi;	/* hi 16 of project id	 2    5e */
+	uint32_t	bs_gen;		/* generation count	 4    58 */
+	uint16_t	bs_projid_lo;	/* low 16 of project id	 2    5a */
+	uint16_t	bs_forkoff;	/* inode fork offset	 2    5c */
+	uint16_t	bs_projid_hi;	/* hi 16 of project id	 2    5e */
 	char		bs_pad[ 10 ];	/* for expansion	 e    68 */
-	u_int32_t	bs_dmevmask;	/* DMI event mask        4    6c */
-	u_int16_t	bs_dmstate;	/* DMI state info        2    6e */
+	uint32_t	bs_dmevmask;	/* DMI event mask        4    6c */
+	uint16_t	bs_dmstate;	/* DMI state info        2    6e */
 	char		bs_pad1[ 18 ];	/* for expansion        12    80 */
 					/* NOTE: old dumps didn't always
 					 * zero first 2 bytes of bs_pad1 */
@@ -216,12 +216,12 @@ bstat_projid(struct bstat *bs)
 struct filehdr {
 	int64_t fh_offset;
 	int32_t fh_flags;
-	u_int32_t fh_checksum;
+	uint32_t fh_checksum;
 	bstat_t fh_stat;
 	char fh_pad2[ FILEHDR_SZ
 		      - sizeof( int64_t )
 		      - sizeof( int32_t )
-		      - sizeof( u_int32_t )
+		      - sizeof( uint32_t )
 		      - sizeof( bstat_t ) ];
 };
 
@@ -260,7 +260,7 @@ struct extenthdr {
 	off64_t eh_offset;
 	int32_t eh_type;
 	int32_t eh_flags;
-	u_int32_t eh_checksum;
+	uint32_t eh_checksum;
 	char eh_pad[ 4 ];
 };
 
@@ -298,7 +298,7 @@ typedef struct extenthdr extenthdr_t;
  * a sequence of directory entries is always terminated with a null direnthdr_t.
  * this is detected by looking for a zero ino.
  */
-typedef u_int32_t gen_t;
+typedef uint32_t gen_t;
 
 #define DIRENTHDR_ALIGN	8
 
@@ -307,8 +307,8 @@ typedef u_int32_t gen_t;
 struct direnthdr {
 	xfs_ino_t dh_ino;
 	gen_t dh_gen;
-	u_int32_t dh_checksum;
-	u_int16_t dh_sz; /* overall size of record */
+	uint32_t dh_checksum;
+	uint16_t dh_sz; /* overall size of record */
 	char dh_name[ 6 ];
 };
 
@@ -320,9 +320,9 @@ typedef struct direnthdr direnthdr_t;
 
 struct direnthdr_v1 {
 	xfs_ino_t dh_ino;
-	u_int16_t dh_gen; /* generation count & DENTGENMASK of ref'ed inode */
-	u_int16_t dh_sz; /* overall size of record */
-	u_int32_t dh_checksum;
+	uint16_t dh_gen; /* generation count & DENTGENMASK of ref'ed inode */
+	uint16_t dh_sz; /* overall size of record */
+	uint32_t dh_checksum;
 	char dh_name[ 8 ];
 };
 
@@ -353,11 +353,11 @@ typedef struct direnthdr_v1 direnthdr_v1_t;
 #define EXTATTRHDR_ALIGN	8
 
 struct extattrhdr {
-	u_int32_t ah_sz; /* overall size of extended attribute record */
-	u_int16_t ah_valoff; /* byte offset within record of value */
-	u_int16_t ah_flags; /* see EXTATTRHDR_FLAGS_... below */
-	u_int32_t ah_valsz; /* size of value */
-	u_int32_t ah_checksum; /* hdr checksum */
+	uint32_t ah_sz; /* overall size of extended attribute record */
+	uint16_t ah_valoff; /* byte offset within record of value */
+	uint16_t ah_flags; /* see EXTATTRHDR_FLAGS_... below */
+	uint32_t ah_valsz; /* size of value */
+	uint32_t ah_checksum; /* hdr checksum */
 };
 
 typedef struct extattrhdr extattrhdr_t;
@@ -381,15 +381,15 @@ typedef struct extattrhdr extattrhdr_t;
 	 */
 
 /* Routines for calculating and validating checksums on xfsdump headers.
- * The header length must be an integral number of u_int32_t's.
+ * The header length must be an integral number of uint32_t's.
  */
-static inline u_int32_t
+static inline uint32_t
 calc_checksum(void *bufp, size_t len)
 {
-	u_int32_t sum = 0;
-	u_int32_t *sump = bufp;
-	u_int32_t *endp = sump + len / sizeof(u_int32_t);
-	assert(len % sizeof(u_int32_t) == 0);
+	uint32_t sum = 0;
+	uint32_t *sump = bufp;
+	uint32_t *endp = sump + len / sizeof(uint32_t);
+	assert(len % sizeof(uint32_t) == 0);
 	while (sump < endp)
 		sum += *sump++;
 	return ~sum + 1;
@@ -398,10 +398,10 @@ calc_checksum(void *bufp, size_t len)
 static inline bool_t
 is_checksum_valid(void *bufp, size_t len)
 {
-	u_int32_t sum = 0;
-	u_int32_t *sump = bufp;
-	u_int32_t *endp = sump + len / sizeof(u_int32_t);
-	assert(len % sizeof(u_int32_t) == 0);
+	uint32_t sum = 0;
+	uint32_t *sump = bufp;
+	uint32_t *endp = sump + len / sizeof(uint32_t);
+	assert(len % sizeof(uint32_t) == 0);
 	while (sump < endp)
 		sum += *sump++;
 	return sum == 0 ? BOOL_TRUE : BOOL_FALSE;

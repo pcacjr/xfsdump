@@ -626,11 +626,11 @@ stobj_put_streams( int fd, invt_seshdr_t *hdr, invt_session_t *ses,
 		   invt_stream_t *strms,
 		   invt_mediafile_t *mfiles )
 {
-    u_int	nstm	= ses->s_cur_nstreams;
+    uint	nstm	= ses->s_cur_nstreams;
     off64_t	off	= hdr->sh_streams_off;
     off64_t	mfileoff= off + (off64_t)( nstm * sizeof( invt_stream_t ) );
-    u_int	nmfiles = 0;
-    u_int	i,j;
+    uint	nmfiles = 0;
+    uint	i,j;
 
     /* fix the offsets in streams */
      for ( i = 0; i < nstm; i++ ) {

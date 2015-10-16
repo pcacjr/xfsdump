@@ -115,7 +115,7 @@ typedef enum {
 		     
 typedef struct inv_mediafile {
 	uuid_t		 m_moid;	/* media object id */
-	u_int		 m_mfile_index; /* index within the media object */
+	uint		 m_mfile_index; /* index within the media object */
 	xfs_ino_t	 m_startino;	/* file that we started out with */
 	off64_t		 m_startino_off;
 	xfs_ino_t	 m_endino;	/* the dump file we ended this .. */
@@ -139,7 +139,7 @@ typedef struct inv_stream {
 					   including this breakpoint. */
 	off64_t		st_endino_off;
 	char            st_cmdarg[INV_STRLEN]; /* the driver path user entered */
-	u_int		st_nmediafiles; /* number of mediafiles */
+	uint		st_nmediafiles; /* number of mediafiles */
 	inv_mediafile_t *st_mediafiles; /* array of all media files */
 } inv_stream_t;
 
@@ -161,9 +161,9 @@ typedef struct inv_session {
 	char		 s_label[INV_STRLEN];  /* session label */
 	char		 s_mountpt[INV_STRLEN];/* path to the mount point */
 	char		 s_devpath[INV_STRLEN];/* path to the device */
-	u_int		 s_nstreams;	/* num of media streams recorded */
+	uint		 s_nstreams;	/* num of media streams recorded */
 	inv_stream_t	*s_streams;	/* array of streams */
-        u_int            s_refnum;      /* storage location dependent ref.
+        uint            s_refnum;      /* storage location dependent ref.
 					   used in displaying the session and 
 					   nowhere else */
 					   
@@ -206,7 +206,7 @@ inv_writesession_open(
 	bool_t		ispartial,
         bool_t          isresumed,
 	u_char		level,
-	u_int		nstreams,
+	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
 	char		*devpath );	      
@@ -230,7 +230,7 @@ inv_put_mediafile(
 	inv_stmtoken_t 	tok, 
 	uuid_t 		*moid, 
 	char 		*label,
-	u_int		mfileindex,
+	uint		mfileindex,
 	xfs_ino_t	startino,
 	off64_t		startino_offset,
 	xfs_ino_t	endino,

@@ -33,7 +33,7 @@ typedef size32_t dah_t;
  */
 extern bool_t dirattr_init( char *housekeepingdir,
 			    bool_t resync,
-			    u_int64_t dircnt );
+			    uint64_t dircnt );
 
 
 /* dirattr_cleanup - removes all traces
@@ -62,11 +62,11 @@ gid_t dirattr_get_gid( dah_t dah );
 time32_t dirattr_get_atime( dah_t dah );
 time32_t dirattr_get_mtime( dah_t dah );
 time32_t dirattr_get_ctime( dah_t dah );
-u_int32_t dirattr_get_xflags( dah_t dah );
-u_int32_t dirattr_get_extsize( dah_t dah );
-u_int32_t dirattr_get_projid( dah_t dah );
-u_int32_t dirattr_get_dmevmask( dah_t dah );
-u_int32_t dirattr_get_dmstate( dah_t dah );
+uint32_t dirattr_get_xflags( dah_t dah );
+uint32_t dirattr_get_extsize( dah_t dah );
+uint32_t dirattr_get_projid( dah_t dah );
+uint32_t dirattr_get_dmevmask( dah_t dah );
+uint32_t dirattr_get_dmstate( dah_t dah );
 
 /* dirattr_flush - flush dirattr I/O buffer.  Returns 0 if successful.
  */

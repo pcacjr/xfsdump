@@ -288,7 +288,7 @@ typedef long mtstat_t;
 
 extern void usage( void );
 #ifdef DUMP
-extern u_int64_t hdr_mfilesz;
+extern uint64_t hdr_mfilesz;
 #endif /* DUMP */
 
 /* remote tape protocol declarations (should be a system header file)
@@ -446,7 +446,7 @@ static drive_ops_t drive_ops = {
 	do_quit,		/* do_quit */
 };
 
-static u_int32_t cmdlineblksize = 0;
+static uint32_t cmdlineblksize = 0;
 
 /* definition of locally defined global functions ****************************/
 
@@ -633,7 +633,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
 				    c );
 			    return -10;
 			}
-			cmdlineblksize = ( u_int32_t )atoi( optarg );
+			cmdlineblksize = ( uint32_t )atoi( optarg );
 			break;
 #ifdef DUMP
 		case GETOPT_OVERWRITE:
@@ -1116,13 +1116,13 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 	 */
 	currentoffset = contextp->dc_reccnt * ( off64_t )tape_recsz;
 	if ( contextp->dc_recp ) {
-		u_int32_t recoff;
+		uint32_t recoff;
 #ifdef DEBUG
 		rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
 #endif
 
 		assert( contextp->dc_nextp >= contextp->dc_recp );
-		recoff = ( u_int32_t )( contextp->dc_nextp
+		recoff = ( uint32_t )( contextp->dc_nextp
 					-
 					contextp->dc_recp );
 		assert( recoff <= tape_recsz );
@@ -1145,7 +1145,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 				+
 				( off64_t )rechdrp->rec_used;
 		if ( wantedoffset >= nextrecoffset ) {
-			u_int32_t recoff;
+			uint32_t recoff;
 			size_t wantedcnt;
 			char *dummybufp;
 			size_t actualcnt;
@@ -1161,7 +1161,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 			/* figure how much to ask for
 			 */
 			assert( contextp->dc_nextp >= contextp->dc_recp );
-			recoff = ( u_int32_t )( contextp->dc_nextp
+			recoff = ( uint32_t )( contextp->dc_nextp
 						-
 						contextp->dc_recp );
 			wantedcnt = ( size_t )( rechdrp->rec_used
@@ -1345,11 +1345,11 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 		assert( wantedoffset - currentoffset < ( off64_t )tape_recsz );
 		wantedcnt = ( size_t )( wantedoffset - currentoffset );
 		if ( contextp->dc_recp ) {
-			u_int32_t recoff;
+			uint32_t recoff;
 #ifdef DEBUG
 			rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
 #endif
-			recoff = ( u_int32_t )( contextp->dc_nextp
+			recoff = ( uint32_t )( contextp->dc_nextp
 						-
 						contextp->dc_recp );
 			assert( recoff <= tape_recsz );
@@ -1382,13 +1382,13 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
 	 */
 	currentoffset = contextp->dc_reccnt * ( off64_t )tape_recsz;
 	if ( contextp->dc_recp ) {
-		u_int32_t recoff;
+		uint32_t recoff;
 #ifdef DEBUG
 		rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
 #endif
 
 		assert( contextp->dc_nextp >= contextp->dc_recp );
-		recoff = ( u_int32_t )( contextp->dc_nextp
+		recoff = ( uint32_t )( contextp->dc_nextp
 					-
 					contextp->dc_recp );
 		assert( recoff <= tape_recsz );
@@ -1665,7 +1665,7 @@ huntQIC:
 	      p < contextp->dc_recendp
 	      ;
 	      p += QIC_BLKSZ ) {
-		if ( *( u_int64_t * )p == STAPE_MAGIC ) {
+		if ( *( uint64_t * )p == STAPE_MAGIC ) {
 			goto adjustQIC;
 		}
 	}
@@ -3614,10 +3614,10 @@ static void
 tape_rec_checksum_set( drive_context_t *contextp, char *bufp )
 {
 	rec_hdr_t *rechdrp = ( rec_hdr_t * )bufp;
-	u_int32_t *beginp = ( u_int32_t * )bufp;
-	u_int32_t *endp = ( u_int32_t * )( bufp + tape_recsz );
-	u_int32_t *p;
-	u_int32_t accum;
+	uint32_t *beginp = ( uint32_t * )bufp;
+	uint32_t *endp = ( uint32_t * )( bufp + tape_recsz );
+	uint32_t *p;
+	uint32_t accum;
 
 	if ( ! contextp->dc_recchksumpr ) {
 		return;
@@ -3636,10 +3636,10 @@ static bool_t
 tape_rec_checksum_check( drive_context_t *contextp, char *bufp )
 {
 	rec_hdr_t *rechdrp = ( rec_hdr_t * )bufp;
-	u_int32_t *beginp = ( u_int32_t * )bufp;
-	u_int32_t *endp = ( u_int32_t * )( bufp + tape_recsz );
-	u_int32_t *p;
-	u_int32_t accum;
+	uint32_t *beginp = ( uint32_t * )bufp;
+	uint32_t *endp = ( uint32_t * )( bufp + tape_recsz );
+	uint32_t *p;
+	uint32_t accum;
 
 	if ( contextp->dc_recchksumpr && INT_GET(rechdrp->ischecksum, ARCH_CONVERT)) {
 		accum = 0;

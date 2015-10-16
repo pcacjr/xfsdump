@@ -363,7 +363,7 @@ static char *dump_extattr_buildrecord( xfs_bstat_t *statp,
 				       char *dumpbufp,
 				       char *dumpbufendp,
 				       char *namesrcp,
-				       u_int32_t valuesz,
+				       uint32_t valuesz,
 				       int flag,
 				       char **valuepp );
 static rv_t dump_extattrhdr( drive_t *drivep,
@@ -372,7 +372,7 @@ static rv_t dump_extattrhdr( drive_t *drivep,
 			     size_t recsz,
 			     size_t valoff,
 			     ix_t flags,
-			     u_int32_t valsz );
+			     uint32_t valsz );
 
 static bool_t save_quotas( char *mntpnt,
 			   quota_info_t *quotainfo );
@@ -385,8 +385,8 @@ static int getxfsqstat( char *fsdev );
 bool_t content_media_change_needed;
 char *media_change_alert_program = NULL;
 hsm_fs_ctxt_t *hsm_fs_ctxtp = NULL;
-u_int64_t hdr_mfilesz = 0;
-u_int64_t maxdumpfilesize = 0;
+uint64_t hdr_mfilesz = 0;
+uint64_t maxdumpfilesize = 0;
 bool_t allowexcludefiles_pr = BOOL_FALSE;
 
 /* definition of locally defined static variables *****************************/
@@ -554,14 +554,14 @@ content_init( int argc,
 	char *baseuuidstr = NULL;
 	uuid_t baseuuid;
 	bool_t baseuuidvalpr;
-	u_int64_t dircnt;
-	u_int64_t nondircnt;
-	u_int64_t datasz;
-	u_int64_t inocnt;
-	u_int64_t inomapsz;
-	u_int64_t direntsz;
-	u_int64_t filesz;
-	u_int64_t size_estimate;
+	uint64_t dircnt;
+	uint64_t nondircnt;
+	uint64_t datasz;
+	uint64_t inocnt;
+	uint64_t inomapsz;
+	uint64_t direntsz;
+	uint64_t filesz;
+	uint64_t size_estimate;
 
 	/* basic sanity checks
 	 */
@@ -1517,8 +1517,8 @@ baseuuidbypass:
 	datasz = scwhdrtemplatep->cih_inomap_datasz;
 	inocnt = dircnt + nondircnt;
 	inomapsz = inomap_getsz( );
-	direntsz = inocnt * ( u_int64_t )( DIRENTHDR_SZ + 8 );
-	filesz = inocnt * ( u_int64_t )( FILEHDR_SZ + EXTENTHDR_SZ );
+	direntsz = inocnt * ( uint64_t )( DIRENTHDR_SZ + 8 );
+	filesz = inocnt * ( uint64_t )( FILEHDR_SZ + EXTENTHDR_SZ );
 
 	hdr_mfilesz =	GLOBAL_HDR_SZ
 			+
@@ -2563,7 +2563,7 @@ decision_more:
 			ok = inv_put_mediafile( inv_stmt,
 						&mwhdrp->mh_mediaid,
 						mwhdrp->mh_medialabel,
-					( u_int )mwhdrp->mh_mediafileix,
+					( uint )mwhdrp->mh_mediafileix,
 						startino,
 						startoffset,
 						scwhdrp->cih_startpt.sp_ino,
@@ -3445,7 +3445,7 @@ dump_extattr_list( drive_t *drivep,
 			char	*hsmnamep;
 			char	*hsmvaluep;
 			char	*valuep;
-			u_int32_t	hsmvaluesz;
+			uint32_t	hsmvaluesz;
 
 			if (!HsmAddNewAttribute(contextp->cc_hsm_f_ctxtp,
 						hsmcursor,
@@ -3558,16 +3558,16 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 			  char *dumpbufp,
 			  char *dumpbufendp,
 			  char *namesrcp,
-			  u_int32_t valuesz,
+			  uint32_t valuesz,
 			  int flag,
 			  char **valuepp )
 {
 	extattrhdr_t *ahdrp = ( extattrhdr_t * )dumpbufp;
 	char *namep = dumpbufp + EXTATTRHDR_SZ;
-	u_int32_t namelen = strlen( namesrcp );
-	u_int32_t namesz = namelen + 1;
+	uint32_t namelen = strlen( namesrcp );
+	uint32_t namesz = namelen + 1;
 	char *valuep = namep + namesz;
-	u_int32_t recsz = EXTATTRHDR_SZ + namesz + valuesz;
+	uint32_t recsz = EXTATTRHDR_SZ + namesz + valuesz;
 	extattrhdr_t tmpah;
 
 	recsz = ( recsz + ( EXTATTRHDR_ALIGN - 1 ))
@@ -3620,8 +3620,8 @@ dump_extattr_buildrecord( xfs_bstat_t *statp,
 	memset( ( void * )&tmpah, 0, sizeof( tmpah ));
 	tmpah.ah_sz = recsz;
 	assert( EXTATTRHDR_SZ + namesz < UINT16MAX );
-	tmpah.ah_valoff = ( u_int16_t )( EXTATTRHDR_SZ + namesz );
-	tmpah.ah_flags = ( u_int16_t )
+	tmpah.ah_valoff = ( uint16_t )( EXTATTRHDR_SZ + namesz );
+	tmpah.ah_flags = ( uint16_t )
 		(( flag & ATTR_ROOT ) ? EXTATTRHDR_FLAGS_ROOT :
 		(( flag & ATTR_SECURE ) ? EXTATTRHDR_FLAGS_SECURE : 0));
 	tmpah.ah_valsz = valuesz;
@@ -3641,7 +3641,7 @@ dump_extattrhdr( drive_t *drivep,
 		 size_t recsz,
 		 size_t valoff,
 		 ix_t flags,
-		 u_int32_t valsz )
+		 uint32_t valsz )
 {
 	extattrhdr_t ahdr;
 	extattrhdr_t tmpahdr;
@@ -3651,8 +3651,8 @@ dump_extattrhdr( drive_t *drivep,
 	memset( ( void * )&ahdr, 0, sizeof( ahdr ));
 	ahdr.ah_sz = recsz;
 	assert( valoff < UINT16MAX );
-	ahdr.ah_valoff = ( u_int16_t )valoff;
-	ahdr.ah_flags = ( u_int16_t )flags | EXTATTRHDR_FLAGS_CHECKSUM;
+	ahdr.ah_valoff = ( uint16_t )valoff;
+	ahdr.ah_flags = ( uint16_t )flags | EXTATTRHDR_FLAGS_CHECKSUM;
 	ahdr.ah_valsz = valsz;
 	ahdr.ah_checksum = calc_checksum( &ahdr, EXTATTRHDR_SZ );
 
@@ -5120,8 +5120,8 @@ dump_dirent( drive_t *drivep,
 
 		memset( ( void * )dhdrp, 0, sz );
 		dhdrp->dh_ino = ino;
-		dhdrp->dh_sz = ( u_int16_t )sz;
-		dhdrp->dh_gen = ( u_int16_t )( gen & DENTGENMASK );
+		dhdrp->dh_sz = ( uint16_t )sz;
+		dhdrp->dh_gen = ( uint16_t )( gen & DENTGENMASK );
 		if ( name ) {
 			strcpy( dhdrp->dh_name, name );
 		}
@@ -5139,7 +5139,7 @@ dump_dirent( drive_t *drivep,
 		memset( ( void * )dhdrp, 0, sz );
 		dhdrp->dh_ino = ino;
 		dhdrp->dh_gen = gen;
-		dhdrp->dh_sz = ( u_int16_t )sz;
+		dhdrp->dh_sz = ( uint16_t )sz;
 		if ( name ) {
 			strcpy( dhdrp->dh_name, name );
 		}
@@ -5327,7 +5327,7 @@ dump_session_inv( drive_t *drivep,
 			ok = inv_put_mediafile( inv_stmt,
 						&mediaid,
 						medialabel,
-						( u_int )mediafileix,
+						( uint )mediafileix,
 						(xfs_ino_t )0,
 						( off64_t )0,
 						(xfs_ino_t )0,
@@ -5572,8 +5572,8 @@ Media_mfile_begin( drive_t *drivep, context_t *contextp, bool_t intr_allowed )
 		switch ( entrystate ) {
 		case BES_INIT:
 			mediawrittentopr = BOOL_FALSE;
-			mwhdrp->mh_mediaix = ( u_int32_t )( -1 );
-			mwhdrp->mh_dumpfileix = ( u_int32_t )( -1 );
+			mwhdrp->mh_mediaix = ( uint32_t )( -1 );
+			mwhdrp->mh_dumpfileix = ( uint32_t )( -1 );
 			if ( dcaps & DRIVE_CAP_READ ) {
 				mediapresentpr = BOOL_UNKNOWN;
 				virginmediapr = BOOL_UNKNOWN;
@@ -6030,8 +6030,8 @@ write:
 		mwhdrp->mh_mediaix++; /* pre-initialized to -1 */
 	}
 
-	assert( mwhdrp->mh_mediaix != ( u_int32_t )( -1 ));
-	assert( mwhdrp->mh_dumpfileix != ( u_int32_t )( -1 ));
+	assert( mwhdrp->mh_mediaix != ( uint32_t )( -1 ));
+	assert( mwhdrp->mh_dumpfileix != ( uint32_t )( -1 ));
 
 	/* do not allow interleaving of media files from different xfsdumps.
 	 */

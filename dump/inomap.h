@@ -65,7 +65,7 @@ extern bool_t inomap_build( jdm_fshandle_t *fshandlep,
 			    size64_t statcnt,
 			    size64_t *statdonep );
 
-extern u_int64_t inomap_getsz( void );
+extern uint64_t inomap_getsz( void );
 
 /* inomap_skip - tell inomap about inodes to skip in the dump
  */
@@ -103,9 +103,9 @@ extern rv_t inomap_dump( drive_t *drivep );
  */
 struct seg {
 	xfs_ino_t base;
-	u_int64_t lobits;
-	u_int64_t mebits;
-	u_int64_t hibits;
+	uint64_t lobits;
+	uint64_t mebits;
+	uint64_t hibits;
 };
 
 typedef struct seg seg_t;

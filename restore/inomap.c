@@ -92,8 +92,8 @@ static int pers_fd = -1;
 
 /* context for inomap construction - initialized by inomap_restore_pers
  */
-static u_int64_t hnkcnt;
-static u_int64_t segcnt;
+static uint64_t hnkcnt;
+static uint64_t segcnt;
 static hnk_t *roothnkp = 0;
 static hnk_t *tailhnkp;
 static seg_t *lastsegp;
@@ -106,10 +106,10 @@ static inline void
 SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, int state )
 {
 	register xfs_ino_t relino;
-	register u_int64_t mask;
-	register u_int64_t clrmask;
+	register uint64_t mask;
+	register uint64_t clrmask;
 	relino = ino - segp->base;
-	mask = ( u_int64_t )1 << relino;
+	mask = ( uint64_t )1 << relino;
 	clrmask = ~mask;
 	switch( state ) {
 	case 0:
@@ -160,9 +160,9 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 {
 	int state;
 	register xfs_ino_t relino;
-	register u_int64_t mask;
+	register uint64_t mask;
 	relino = ino - segp->base;
-	mask = ( u_int64_t )1 << relino;
+	mask = ( uint64_t )1 << relino;
 	if ( segp->lobits & mask ) {
 		state = 1;
 	} else {
@@ -310,7 +310,7 @@ rv_t
 inomap_discard( drive_t *drivep, content_inode_hdr_t *scrhdrp )
 {
 	drive_ops_t *dop = drivep->d_opsp;
-	u_int64_t tmphnkcnt;
+	uint64_t tmphnkcnt;
 	/* REFERENCED */
 	int nread;
 	int rval;
@@ -654,10 +654,10 @@ map_getset( xfs_ino_t ino, int newstate, bool_t setflag )
 static seg_t *
 map_getsegment( xfs_ino_t ino )
 {
-	u_int64_t min;
-	u_int64_t max;
-	u_int64_t hnk;
-	u_int64_t seg;
+	uint64_t min;
+	uint64_t max;
+	uint64_t hnk;
+	uint64_t seg;
 
 	/* Use binary search to find the hunk that contains the inode number,
 	 * if any.  This counts on the fact that all the hunks are contiguous

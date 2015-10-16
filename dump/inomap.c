@@ -62,7 +62,7 @@
 extern bool_t preemptchk( int );
 extern size_t pgsz;
 extern hsm_fs_ctxt_t *hsm_fs_ctxtp;
-extern u_int64_t maxdumpfilesize;
+extern uint64_t maxdumpfilesize;
 extern bool_t allowexcludefiles_pr;
 
 /* forward declarations of locally defined static functions ******************/
@@ -133,8 +133,8 @@ static int subtreelist_parse( jdm_fshandle_t *,
 static ix_t *inomap_statphasep;
 static ix_t *inomap_statpassp;
 static size64_t *inomap_statdonep;
-static u_int64_t inomap_exclude_filesize = 0;
-static u_int64_t inomap_exclude_skipattr = 0;
+static uint64_t inomap_exclude_filesize = 0;
+static uint64_t inomap_exclude_skipattr = 0;
 
 /* definition of locally defined global functions ****************************/
 
@@ -949,7 +949,7 @@ cb_startpt( void *arg1,
 /* define structure for ino to gen mapping.
  */
 struct i2gseg {
-	u_int64_t s_valid;
+	uint64_t s_valid;
 	gen_t s_gen[ INOPERSEG ];
 };
 typedef struct i2gseg i2gseg_t;
@@ -971,10 +971,10 @@ static inline void
 SEG_SET_BITS( seg_t *segp, xfs_ino_t ino, int state )
 {
 	register xfs_ino_t relino;
-	register u_int64_t mask;
-	register u_int64_t clrmask;
+	register uint64_t mask;
+	register uint64_t clrmask;
 	relino = ino - segp->base;
-	mask = ( u_int64_t )1 << relino;
+	mask = ( uint64_t )1 << relino;
 	clrmask = ~mask;
 	switch( state ) {
 	case 0:
@@ -1025,9 +1025,9 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 {
 	int state;
 	register xfs_ino_t relino;
-	register u_int64_t mask;
+	register uint64_t mask;
 	relino = ino - segp->base;
-	mask = ( u_int64_t )1 << relino;
+	mask = ( uint64_t )1 << relino;
 	if ( segp->lobits & mask ) {
 		state = 1;
 	} else {
@@ -1063,7 +1063,7 @@ inomap_init( int igrpcnt )
 	return 0;
 }
 
-u_int64_t
+uint64_t
 inomap_getsz( void )
 {
 	return (inomap.lastseg.hnkoff + 1) * HNKSZ;
@@ -1378,7 +1378,7 @@ inomap_set_gen(void *contextp, xfs_ino_t ino, gen_t gen)
 	i2gsegp = &inomap.i2gmap[inomap_addr2segix( addrp )];
 
 	relino = ino - segp->base;
-	i2gsegp->s_valid |= (u_int64_t)1 << relino;
+	i2gsegp->s_valid |= (uint64_t)1 << relino;
 	i2gsegp->s_gen[relino] = gen;
 }
 
@@ -1399,7 +1399,7 @@ inomap_get_gen( void *contextp, xfs_ino_t ino, gen_t *gen )
 	i2gsegp = &inomap.i2gmap[inomap_addr2segix( addrp )];
 
 	relino = ino - segp->base;
-	if ( ! (i2gsegp->s_valid & ((u_int64_t)1 << relino)) )
+	if ( ! (i2gsegp->s_valid & ((uint64_t)1 << relino)) )
 		return 1;
 
 	*gen = i2gsegp->s_gen[relino];
@@ -1413,11 +1413,11 @@ inomap_writehdr( content_inode_hdr_t *scwhdrp )
 	 */
 	scwhdrp->cih_inomap_hnkcnt = inomap.lastseg.hnkoff + 1;
 	scwhdrp->cih_inomap_segcnt = inomap_addr2segix( &inomap.lastseg ) + 1;
-	scwhdrp->cih_inomap_dircnt = ( u_int64_t )cb_dircnt;
-	scwhdrp->cih_inomap_nondircnt = ( u_int64_t )cb_nondircnt;
+	scwhdrp->cih_inomap_dircnt = ( uint64_t )cb_dircnt;
+	scwhdrp->cih_inomap_nondircnt = ( uint64_t )cb_nondircnt;
 	scwhdrp->cih_inomap_firstino = inomap.hnkmap[0].seg[ 0 ].base;
 	scwhdrp->cih_inomap_lastino = inomap.hnkmap[inomap.lastseg.hnkoff].maxino;
-	scwhdrp->cih_inomap_datasz = ( u_int64_t )cb_datasz;
+	scwhdrp->cih_inomap_datasz = ( uint64_t )cb_datasz;
 }
 
 rv_t

@@ -346,7 +346,7 @@ invmgr_inv_print(
 	invt_entry_t	*iarr = NULL;
 	invt_counter_t	*icnt = NULL;
 	int	     	nindices;
-	u_int           ref = 0;
+	uint           ref = 0;
 
 	if (invfd == I_EMPTYINV)
 		return 0;
@@ -363,7 +363,7 @@ invmgr_inv_print(
 	free( icnt );
 
 	if (prctx->invidx) {
-		idx_DEBUG_printinvindices( iarr, (u_int) nindices );
+		idx_DEBUG_printinvindices( iarr, (uint) nindices );
 		free(iarr);
 		return (0);
 	}

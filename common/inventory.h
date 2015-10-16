@@ -98,7 +98,7 @@ typedef struct inv_stream {
 typedef struct inv_session {
 	uuid_t		 s_fsid;	/* file system */
 	uuid_t 		 s_sesid;	/* this dump session's id: 16 bytes*/
-	u_int		 s_nstreams;	/* number of media streams recorded */
+	uint		 s_nstreams;	/* number of media streams recorded */
 	inv_stream_t	*s_streams;	/* array of streams */
 	time32_t	 s_time;   	/* time of the dump */
 	u_char		 s_level;  	/* dump level */
@@ -159,7 +159,7 @@ inv_writesession_open(
 	uuid_t		*sesid,
 	char		*label,
 	u_char		level,
-	u_int		nstreams,
+	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
 	char		*devpath );

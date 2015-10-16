@@ -43,13 +43,13 @@
 /* given a time, find the invindex that has the time-period it can fit  */
 /* into.                                                                */
 /*----------------------------------------------------------------------*/
-u_int
+uint
 idx_insert_newentry( int fd, /* kept locked EX by caller */
 		     int *stobjfd, /* OUT */
 		     invt_entry_t *iarr, invt_counter_t *icnt,
 		     time32_t tm )
 {
-	u_int i;
+	uint i;
 	inv_oflag_t forwhat = INV_SEARCH_N_MOD;
 /*	invt_entry_t ient;
 	ient.ie_timeperiod.tp_start = ient.ie_timeperiod.tp_end = tm; */
@@ -162,7 +162,7 @@ idx_put_newentry(
 	int stobjfd;
 	
 	int fd = idx->invfd; 	/* kept locked EX by caller */
-	u_int index = idx->index + 1;
+	uint index = idx->index + 1;
 	invt_entry_t *iarr = idx->iarr;
 	invt_counter_t *icnt = idx->icnt;
 
@@ -356,7 +356,7 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
 				sizeof( invt_counter_t ))) < 0 ) {
 			return -1;		 
 		}
-		idx_DEBUG_printinvindices( iarr, (u_int) nindices );
+		idx_DEBUG_printinvindices( iarr, (uint) nindices );
 		free( iarr );
 		free( icnt );
 	}
@@ -496,10 +496,10 @@ idx_get_stobj( int invfd, inv_oflag_t forwhat, int *index )
 
 
 int
-idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num )
+idx_DEBUG_printinvindices( invt_entry_t *iarr, uint num )
 {
-	u_int i;
-	u_int k;
+	uint i;
+	uint k;
 
 	char s[9];
 	printf( "\n ==================================\n"
@@ -533,7 +533,7 @@ idx_DEBUG_print ( int fd )
 				         sizeof( invt_counter_t ))) < 0 ) {
 		return -1;		 
 	}
-	idx_DEBUG_printinvindices( iarr, (u_int) nindices );
+	idx_DEBUG_printinvindices( iarr, (uint) nindices );
 	free( iarr );
 	free( icnt );
 
@@ -543,7 +543,7 @@ idx_DEBUG_print ( int fd )
 
 
 int
-DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, u_int ref,
+DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, uint ref,
 			  invt_pr_ctx_t *prctx)
 {
 	inv_session_t *ses;

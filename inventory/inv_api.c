@@ -94,7 +94,7 @@ inv_open( inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred )
 	/* create another storage object ( and, an inv_index entry for it 
 	   too ) if we've filled this one up */
 
-	if ( (u_int) num >= sescnt->ic_maxnum ) {
+	if ( (uint) num >= sescnt->ic_maxnum ) {
 		mlog( MLOG_DEBUG | MLOG_INV, "$ INV: creating a new storage obj & "
 		      "index entry. \n" );
 		INVLOCK( stobjfd, LOCK_UN );
@@ -163,7 +163,7 @@ inv_writesession_open(
 	bool_t		ispartial,
 	bool_t		isresumed,
 	u_char		level,
-	u_int		nstreams,
+	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
 	char		*devpath )
@@ -439,7 +439,7 @@ inv_put_mediafile(
 	inv_stmtoken_t 	tok, 
 	uuid_t 		*moid, 
 	char 		*label,
-	u_int		mfileindex,
+	uint		mfileindex,
 	xfs_ino_t	startino,
 	off64_t		startino_offset,
 	xfs_ino_t	endino,

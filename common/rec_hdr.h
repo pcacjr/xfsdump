@@ -36,7 +36,7 @@
  * structure, and add a endian conversion function to arch_xlate.c 
  */
 struct rec_hdr {
-	u_int64_t magic;			/*   8   8 */
+	uint64_t magic;			/*   8   8 */
 		/* magic number STAPE_MAGIC (see above)
 		 */
 	int32_t version;			/*   4   c */
@@ -62,7 +62,7 @@ struct rec_hdr {
 		/* raw media file byte offset of first mark set
 		 * in this record. set to -1 if no marks in record
 		 */
-	u_int32_t rec_used;			/*   4  34 */
+	uint32_t rec_used;			/*   4  34 */
 		/* portion of record containing user data plus rec hdr (bytes).
 		 * normally set to record size. last record written may
 		 * indicate smaller value. includes record header.

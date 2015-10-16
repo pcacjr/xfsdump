@@ -48,8 +48,8 @@
 #define NEW_INVINDEX		2
 
 /* session flags ( seshdr.sh_flag ) */
-#define INVT_PARTIAL		(u_int)0x0001
-#define INVT_RESUMED            (u_int)0x0002
+#define INVT_PARTIAL		(uint)0x0001
+#define INVT_RESUMED            (uint)0x0002
 
 /* media file flags ( mfile.mf_flag ) */
 #define INVT_MFILE_GOOD         (u_char)0x01
@@ -108,9 +108,9 @@ typedef struct invt_session {
 	char		 s_label[INV_STRLEN];  /* session label */
 	char		 s_mountpt[INV_STRLEN];/* path to the mount point */
 	char		 s_devpath[INV_STRLEN];/* path to the device */
-	u_int		 s_cur_nstreams;/* number of streams created under
+	uint		 s_cur_nstreams;/* number of streams created under
 					   this session so far */
-	u_int		 s_max_nstreams;/* number of media streams in 
+	uint		 s_max_nstreams;/* number of media streams in 
 					   the session */
 	char		 s_padding[16];
 } invt_session_t;			   
@@ -148,7 +148,7 @@ typedef struct invt_stream {
 	off64_t		st_firstmfile;	/*offsets to the start and end of*/
 	off64_t		st_lastmfile;	/* .. linked list of mediafiles */
 	char            st_cmdarg[INV_STRLEN]; /* drive path */
-	u_int		st_nmediafiles; /* number of mediafiles */
+	uint		st_nmediafiles; /* number of mediafiles */
 	bool_t		st_interrupted;	/* was this stream interrupted ? */
 	char		st_padding[16];
 } invt_stream_t;
@@ -163,7 +163,7 @@ typedef struct invt_mediafile {
 					   media file with */
 	off64_t		 mf_nextmf;	/* links to other mfiles */
 	off64_t		 mf_prevmf;
-	u_int		 mf_mfileidx; 	/* index within the media object */
+	uint		 mf_mfileidx; 	/* index within the media object */
 	u_char           mf_flag;       /* Currently MFILE_GOOD, INVDUMP */
 	off64_t		 mf_size;       /* size of the media file */
 	char		 mf_padding[15];
@@ -185,9 +185,9 @@ typedef struct invt_entry {
 /* Cheap Inheritance, and an attempt to avoid a nested type */
 #define INVT_COUNTER_FIELDS  \
         __uint32_t    ic_vernum;/* on disk version number for posterity */\
-	u_int	      ic_curnum;/* number of sessions/invindices recorded \
+	uint	      ic_curnum;/* number of sessions/invindices recorded \
 				   so far */				  \
-	u_int	      ic_maxnum;/* maximum number of sessions/inv_indices \
+	uint	      ic_maxnum;/* maximum number of sessions/inv_indices \
 				   that we can record on this stobj */
 #define INVT_COUNTER_FIELDS_SIZE 0xc
 
@@ -272,7 +272,7 @@ typedef struct invt_idxinfo {
 	int 		invfd;
 	invt_counter_t	*icnt;
 	invt_entry_t	*iarr;
-	u_int		index;
+	uint		index;
 }invt_idxinfo_t;
 
 #define INVT_MOID	1
@@ -366,7 +366,7 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime);
 int
 idx_find_stobj( invt_idxinfo_t *idx, time32_t tm );
 
-u_int
+uint
 idx_insert_newentry( int fd, int *stobjfd, invt_entry_t *iarr, 
 		     invt_counter_t *icnt,
 		     time32_t tm );
@@ -380,7 +380,7 @@ int
 idx_recons_time( time32_t tm, invt_idxinfo_t *idx );
 
 int
-idx_DEBUG_printinvindices( invt_entry_t *iarr, u_int num );
+idx_DEBUG_printinvindices( invt_entry_t *iarr, uint num );
 
 int
 idx_DEBUG_print ( int fd );
@@ -415,10 +415,10 @@ int
 stobj_hdrcmp( const void *h1, const void *h2 );
 
 int
-stobj_sortheaders( int fd, u_int num );
+stobj_sortheaders( int fd, uint num );
 
-u_int
-stobj_find_splitpoint( int fd, invt_seshdr_t *harr, u_int ns, time32_t tm );
+uint
+stobj_find_splitpoint( int fd, invt_seshdr_t *harr, uint ns, time32_t tm );
 
 int
 stobj_split( invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt, 
@@ -467,7 +467,7 @@ stobj_copy_invsess( int fd, invt_seshdr_t *hdr, invt_session_t *ses,
 		    inv_session_t **buf);
 
 void
-DEBUG_sessionprint( inv_session_t *ses, u_int ref, invt_pr_ctx_t *prctx);
+DEBUG_sessionprint( inv_session_t *ses, uint ref, invt_pr_ctx_t *prctx);
 
 void
 DEBUG_sessprint( invt_session_t *ses );
@@ -572,7 +572,7 @@ bool_t
 lastsess_level_equalto( int fd, invt_seshdr_t *hdr,  void *arg, void **buf );
 
 int
-DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, u_int ref, 
+DEBUG_displayallsessions( int fd, invt_seshdr_t *hdr, uint ref, 
 			  invt_pr_ctx_t *prctx);
 
 int

@@ -102,9 +102,9 @@
 #define DRIVE_HDR_SZ		sizeofmember( global_hdr_t, gh_upper )
 
 struct drive_hdr {
-	u_int32_t dh_drivecnt;				/*   4    4 */
+	uint32_t dh_drivecnt;				/*   4    4 */
 		/* number of drives used to dump the fs */
-	u_int32_t dh_driveix;				/*   4    8 */
+	uint32_t dh_driveix;				/*   4    8 */
 		/* 0-based index of the drive used to dump this stream */
 	int32_t dh_strategyid;				/*   4    c */
 		/* ID of the drive strategy used to produce this dump */

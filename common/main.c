@@ -170,10 +170,10 @@ main( int argc, char *argv[] )
 	assert( sizeof( char_t ) == 1 );
 	assert( sizeof( u_char_t ) == 1 );
 	assert( sizeof( int32_t ) == 4 );
-	assert( sizeof( u_int32_t ) == 4 );
+	assert( sizeof( uint32_t ) == 4 );
 	assert( sizeof( size32_t ) == 4 );
 	assert( sizeof( int64_t ) == 8 );
-	assert( sizeof( u_int64_t ) == 8 );
+	assert( sizeof( uint64_t ) == 8 );
 	assert( sizeof( size64_t ) == 8 );
 
 	/* record the command name used to invoke
@@ -662,7 +662,7 @@ main( int argc, char *argv[] )
 	 * signals.
 	 */
 	if ( progrpt_enabledpr ) {
-		( void )alarm( ( u_int )progrpt_interval );
+		( void )alarm( ( uint )progrpt_interval );
 	}
 	for ( ; ; ) {
 		time32_t now;
@@ -813,7 +813,7 @@ main( int argc, char *argv[] )
 			      "setting alarm for %d second%s\n",
 			      timeout,
 			      timeout == 1 ? "" : "s" );
-			( void )alarm( ( u_int )timeout );
+			( void )alarm( ( uint )timeout );
 			if ( timeout == 0 ) {
 				continue;
 			}
@@ -835,7 +835,7 @@ main( int argc, char *argv[] )
 					      statline[ i ] );
 				}
 			}
-			( void )alarm( ( u_int )( progrpt_deadline
+			( void )alarm( ( uint )( progrpt_deadline
 						       -
 						       now ));
 		}

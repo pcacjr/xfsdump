@@ -349,7 +349,7 @@ tree_init( char *hkdir,
 	   bool_t fullpr,
 	   bool_t restoredmpr,
 	   bool_t dstdirisxfspr,
-	   u_int32_t dumpformat,
+	   uint32_t dumpformat,
 	   bool_t truncategenpr )
 {
 	off64_t nodeoff;
@@ -661,7 +661,7 @@ tree_sync( char *hkdir,
 }
 
 bool_t
-tree_check_dump_format( u_int32_t dumpformat )
+tree_check_dump_format( uint32_t dumpformat )
 {
 	if ( dumpformat < GLOBAL_HDR_VERSION_3 && !persp->p_truncategenpr ) {
 		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_TREE, _(
@@ -2554,7 +2554,7 @@ setdirattr( dah_t dah, char *path )
 
 		fssetdm.fsd_dmevmask = dirattr_get_dmevmask( dah );
 		fssetdm.fsd_padding = 0;	/* not used */
-		fssetdm.fsd_dmstate = ( u_int16_t )dirattr_get_dmstate( dah );
+		fssetdm.fsd_dmstate = ( uint16_t )dirattr_get_dmstate( dah );
 
 		/* restore DMAPI event settings etc.
 		 */

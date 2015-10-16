@@ -80,7 +80,7 @@ inv_open( inv_predicate_t bywhat, void *pred )
 	}
 	/* create another storage object ( and, an inv_index entry for it too )
 	   if we've filled this one up */
-	if ( (u_int) num >= sescnt->ic_maxnum ) {
+	if ( (uint) num >= sescnt->ic_maxnum ) {
 #ifdef INVT_DEBUG
 		printf("$ creating a new storage obj & index entry. \n" );
 #endif
@@ -225,7 +225,7 @@ inv_writesession_open(
 	uuid_t		*sesid,
 	char		*label,
 	u_char		level,
-	u_int		nstreams,
+	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
 	char		*devpath )

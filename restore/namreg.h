@@ -36,7 +36,7 @@ typedef size64_t nrh_t;
  */
 extern bool_t namreg_init( char *housekeepingdir,
 			   bool_t resync,
-			   u_int64_t inocnt );
+			   uint64_t inocnt );
 
 
 /* namreg_add - registers a name. name does not need to be null-terminated.

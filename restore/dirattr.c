@@ -71,7 +71,7 @@
 #define	HDLSUMMASK		( HDLSUMLOMASK << HDLSUMSHIFT )
 #define HDLDIXCNT		HDLSUMSHIFT
 #define HDLDIXMASK		( ( 1 << HDLDIXCNT ) - 1 )
-#define HDLGETSUM( h )		( ( u_int16_t )				\
+#define HDLGETSUM( h )		( ( uint16_t )				\
 				  ( ( ( int )h >> HDLSUMSHIFT )		\
 				    &					\
 				    HDLSUMLOMASK ))
@@ -104,8 +104,8 @@
  */
 struct dirattr {
 #ifdef DIRATTRCHK
-	u_int16_t d_unq;
-	u_int16_t d_sum; 
+	uint16_t d_unq;
+	uint16_t d_sum; 
 #endif /* DIRATTRCHK */
 	mode_t d_mode;
 	uid_t d_uid;
@@ -113,11 +113,11 @@ struct dirattr {
 	time32_t d_atime;
 	time32_t d_mtime;
 	time32_t d_ctime;
-	u_int32_t d_xflags;
-	u_int32_t d_extsize;
-	u_int32_t d_projid;
-	u_int32_t d_dmevmask;
-	u_int32_t d_dmstate;
+	uint32_t d_xflags;
+	uint32_t d_extsize;
+	uint32_t d_projid;
+	uint32_t d_dmevmask;
+	uint32_t d_dmstate;
 	off64_t d_extattroff;
 };
 
@@ -181,7 +181,7 @@ extern size_t pgsz;
 static void dirattr_get( dah_t );
 static void dirattr_cacheflush( void );
 #ifdef DIRATTRCHK
-static u_int16_t calcdixcum( dix_t dix );
+static uint16_t calcdixcum( dix_t dix );
 #endif /* DIRATTRCHK */
 
 
@@ -199,7 +199,7 @@ static dirattr_pers_t *dpp = 0;
 /* definition of locally defined global functions ****************************/
 
 bool_t
-dirattr_init( char *hkdir, bool_t resume, u_int64_t dircnt )
+dirattr_init( char *hkdir, bool_t resume, uint64_t dircnt )
 {
 	if ( dtp ) {
 		return BOOL_TRUE;
@@ -392,7 +392,7 @@ dirattr_add( filehdr_t *fhdrp )
 	off64_t oldoff;
 	dix_t dix;
 #ifdef DIRATTRCHK
-	u_int16_t sum;
+	uint16_t sum;
 #endif /* DIRATTRCHK */
 	dah_t dah;
 	
@@ -437,10 +437,10 @@ dirattr_add( filehdr_t *fhdrp )
 	dirattr.d_mtime = ( time32_t )fhdrp->fh_stat.bs_mtime.tv_sec;
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
-	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
+	dirattr.d_extsize = ( uint32_t )fhdrp->fh_stat.bs_extsize;
 	dirattr.d_projid = bstat_projid(&(fhdrp->fh_stat));
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
-	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
+	dirattr.d_dmstate = ( uint32_t )fhdrp->fh_stat.bs_dmstate;
 #ifdef DIRATTRCHK
 	dirattr.d_unq = DIRATTRUNQ;
 	sum = calcdixcum( dix );
@@ -753,7 +753,7 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 {
 	dix_t dix;
 #ifdef DIRATTRCHK
-	u_int16_t sum;
+	uint16_t sum;
 #endif /* DIRATTRCHK */
 	off64_t argoff;
 	off64_t newoff;
@@ -815,10 +815,10 @@ dirattr_update( dah_t dah, filehdr_t *fhdrp )
 	dirattr.d_mtime = ( time32_t )fhdrp->fh_stat.bs_mtime.tv_sec;
 	dirattr.d_ctime = ( time32_t )fhdrp->fh_stat.bs_ctime.tv_sec;
 	dirattr.d_xflags = fhdrp->fh_stat.bs_xflags;
-	dirattr.d_extsize = ( u_int32_t )fhdrp->fh_stat.bs_extsize;
+	dirattr.d_extsize = ( uint32_t )fhdrp->fh_stat.bs_extsize;
 	dirattr.d_projid = bstat_projid(&(fhdrp->fh_stat));
 	dirattr.d_dmevmask = fhdrp->fh_stat.bs_dmevmask;
-	dirattr.d_dmstate = ( u_int32_t )fhdrp->fh_stat.bs_dmstate;
+	dirattr.d_dmstate = ( uint32_t )fhdrp->fh_stat.bs_dmstate;
 	dirattr.d_extattroff = DIRATTR_EXTATTROFFNULL;
 
 	/* write the dirattr
@@ -883,35 +883,35 @@ dirattr_get_ctime( dah_t dah )
 	return dtp->dt_cached_dirattr.d_ctime;
 }
 
-u_int32_t
+uint32_t
 dirattr_get_xflags( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_xflags;
 }
 
-u_int32_t
+uint32_t
 dirattr_get_extsize( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_extsize;
 }
 
-u_int32_t
+uint32_t
 dirattr_get_projid( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_projid;
 }
 
-u_int32_t
+uint32_t
 dirattr_get_dmevmask( dah_t dah )
 {
 	dirattr_get( dah );
 	return dtp->dt_cached_dirattr.d_dmevmask;
 }
 
-u_int32_t
+uint32_t
 dirattr_get_dmstate( dah_t dah )
 {
 	dirattr_get( dah );
@@ -960,7 +960,7 @@ dirattr_get( dah_t dah )
 	off64_t newoff;
 	int nread;
 #ifdef DIRATTRCHK
-	u_int16_t sum;
+	uint16_t sum;
 #endif /* DIRATTRCHK */
 
 	/* sanity checks
@@ -1036,7 +1036,7 @@ dirattr_cacheflush( void )
 	dah_t dah;
 	dix_t dix;
 #ifdef DIRATTRCHK
-	u_int16_t sum;
+	uint16_t sum;
 #endif /* DIRATTRCHK */
 	off64_t argoff;
 	off64_t newoff;
@@ -1103,10 +1103,10 @@ dirattr_cacheflush( void )
 
 #ifdef DIRATTRCHK
 
-static u_int16_t
+static uint16_t
 calcdixcum( dix_t dix )
 {
-	u_int16_t sum;
+	uint16_t sum;
 	ix_t nibcnt;
 	ix_t nibix;
 
@@ -1115,10 +1115,10 @@ calcdixcum( dix_t dix )
 	nibcnt = ( sizeof( dah_t ) / HDLSUMCNT ) - 1;
 	sum = 0;
 	for ( nibix = 0 ; nibix < nibcnt ; nibix++ ) {
-		sum += ( u_int16_t )( dix & HDLSUMLOMASK );
+		sum += ( uint16_t )( dix & HDLSUMLOMASK );
 		dix >>= HDLSUMCNT;
 	}
-	sum = ( u_int16_t )( ( ~sum + 1 ) & HDLSUMLOMASK );
+	sum = ( uint16_t )( ( ~sum + 1 ) & HDLSUMLOMASK );
 
 	return sum;
 }

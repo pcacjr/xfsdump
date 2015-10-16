@@ -18,6 +18,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+/*
+ * Pull in all the standard C types first.
+ */
+#include <stdint.h>
+
 #define XFSDUMP_DIRPATH	inv_basepath()
 
 /*
@@ -34,11 +39,11 @@
 
 /* integers
  */
-typedef u_int32_t size32_t;
-typedef u_int64_t size64_t;
+typedef uint32_t size32_t;
+typedef uint64_t size64_t;
 typedef char char_t;
 typedef unsigned char u_char_t;
-typedef unsigned int u_int;
+typedef unsigned int uint;
 typedef long long_t;
 typedef unsigned long u_long_t;
 typedef size_t ix_t;
@@ -63,15 +68,15 @@ typedef int32_t time32_t;
 #define MKSMAX( t )	MKMAX( t, 1ull )
 #define MKUMAX( t )	MKMAX( t, 0ull )
 #define INT32MAX	MKSMAX( int32_t )
-#define UINT32MAX	MKUMAX( u_int32_t )
+#define UINT32MAX	MKUMAX( uint32_t )
 #define SIZE32MAX	MKUMAX( size32_t )
 #define INT64MAX	MKSMAX( int64_t )
-#define UINT64MAX	MKUMAX( u_int64_t )
+#define UINT64MAX	MKUMAX( uint64_t )
 #define SIZE64MAX	MKUMAX( size64_t )
 #define INO64MAX	MKUMAX( xfs_ino_t )
 #define OFF64MAX	MKSMAX( off64_t )
 #define INTGENMAX	MKSMAX( int )
-#define UINTGENMAX	MKUMAX( u_int )
+#define UINTGENMAX	MKUMAX( uint )
 #define OFFMAX		MKSMAX( off_t )
 #define SIZEMAX		MKUMAX( size_t )
 #define IXMAX		MKUMAX( size_t )

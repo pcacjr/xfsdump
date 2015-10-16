@@ -48,9 +48,9 @@
  */
 struct seg {
 	xfs_ino_t base;
-	u_int64_t lobits;
-	u_int64_t mebits;
-	u_int64_t hibits;
+	uint64_t lobits;
+	uint64_t mebits;
+	uint64_t hibits;
 };
 
 typedef struct seg seg_t;

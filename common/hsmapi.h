@@ -252,7 +252,7 @@ extern int
 HsmFilterExistingAttribute(
 	hsm_f_ctxt_t	*hsm_f_ctxtp,
 const	char		*namep,		/* name of attribute to filter */
-	u_int32_t	valuesz,	/* attribute's current value size */
+	uint32_t	valuesz,	/* attribute's current value size */
 	int		flag,		/* ext attr flags */
 	int		*skip_entry);
 
@@ -290,7 +290,7 @@ HsmAddNewAttribute(
 	int		flag,		/* ext attr flags */
 	char		**namepp,	/* pointer to new attribute name */
 	char		**valuepp,	/* pointer to its value */
-	u_int32_t	*valueszp);	/* pointer to the value size */
+	uint32_t	*valueszp);	/* pointer to the value size */
 
 
 /******************************************************************************

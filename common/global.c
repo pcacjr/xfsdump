@@ -96,7 +96,7 @@ global_hdr_alloc( int argc, char *argv[ ] )
 
 	/* fill in the host id: typecast to fit into a 64 bit field
 	 */
-	ghdrp->gh_ipaddr = ( u_int64_t )( unsigned long )gethostid( );
+	ghdrp->gh_ipaddr = ( uint64_t )( unsigned long )gethostid( );
 
 #ifdef DUMP
 	uuid_generate( ghdrp->gh_dumpid );
@@ -243,10 +243,10 @@ global_hdr_free( global_hdr_t *ghdrp )
 void
 global_hdr_checksum_set( global_hdr_t *hdrp )
 {
-	u_int32_t *beginp = ( u_int32_t * )&hdrp[ 0 ];
-	u_int32_t *endp = ( u_int32_t * )&hdrp[ 1 ];
-	u_int32_t *p;
-	u_int32_t accum;
+	uint32_t *beginp = ( uint32_t * )&hdrp[ 0 ];
+	uint32_t *endp = ( uint32_t * )&hdrp[ 1 ];
+	uint32_t *p;
+	uint32_t accum;
 
 	hdrp->gh_checksum = 0;
 	accum = 0;
@@ -263,10 +263,10 @@ global_hdr_checksum_set( global_hdr_t *hdrp )
 bool_t
 global_hdr_checksum_check( global_hdr_t *hdrp )
 {
-	u_int32_t *beginp = ( u_int32_t * )&hdrp[ 0 ];
-	u_int32_t *endp = ( u_int32_t * )&hdrp[ 1 ];
-	u_int32_t *p;
-	u_int32_t accum;
+	uint32_t *beginp = ( uint32_t * )&hdrp[ 0 ];
+	uint32_t *endp = ( uint32_t * )&hdrp[ 1 ];
+	uint32_t *p;
+	uint32_t accum;
 
 	accum = 0;
 	for ( p = beginp ; p < endp ; p++ ) {
@@ -279,7 +279,7 @@ global_hdr_checksum_check( global_hdr_t *hdrp )
  * else return BOOL_FALSE
  */
 bool_t 
-global_version_check( u_int32_t version )
+global_version_check( uint32_t version )
 {
 	switch (version) {
 		case GLOBAL_HDR_VERSION_0:

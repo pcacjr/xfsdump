@@ -46,15 +46,15 @@ struct media_hdr {
 		/* ID of upstream media object */
 	char mh_pad2[ GLOBAL_HDR_UUID_SZ ];		/*  10  330 */
 		/* in case more IDs needed */
-	u_int32_t mh_mediaix;				/*   4  334 */
+	uint32_t mh_mediaix;				/*   4  334 */
 		/* 0-based index of this media object within the dump stream */
-	u_int32_t mh_mediafileix;			/*   4  338 */
+	uint32_t mh_mediafileix;			/*   4  338 */
 		/* 0-based index of this file within this media object */
-	u_int32_t mh_dumpfileix;			/*   4  33c */
+	uint32_t mh_dumpfileix;			/*   4  33c */
 		/* 0-based index of this file within this dump stream */
-	u_int32_t mh_dumpmediafileix;			/*   4  340 */
+	uint32_t mh_dumpmediafileix;			/*   4  340 */
 		/* 0-based index of file within dump stream and media object */
-	u_int32_t mh_dumpmediaix;			/*   4  344 */
+	uint32_t mh_dumpmediaix;			/*   4  344 */
 		/* 0-based index of this dump within the media object */
 	int32_t mh_strategyid;				/*   4  348 */
 		/* ID of the media strategy used to produce this dump */
