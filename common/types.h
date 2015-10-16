@@ -136,4 +136,9 @@ typedef struct stat64 stat64_t;
 typedef struct getbmapx getbmapx_t;
 typedef struct fsdmidata fsdmidata_t;
 
+/* flg definitions for preemptchk 
+ */
+#define PREEMPT_FULL		0
+#define PREEMPT_PROGRESSONLY	1
+
 #endif /* TYPES_H */

@@ -123,4 +123,10 @@ extern void mlog_exit_flush( void );
 extern void mlog_lock( void );
 extern void mlog_unlock( void );
 
+/* fold_t - a character string made to look like a "fold here"
+ */
+#define FOLD_LEN	79
+typedef char fold_t[ FOLD_LEN + 1 ];
+extern void fold_init( fold_t fold, char *infostr, char c );
+
 #endif /* MLOG_H */

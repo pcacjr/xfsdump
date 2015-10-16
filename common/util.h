@@ -143,21 +143,10 @@ extern int diriter( jdm_fshandle_t *fshandlep,
 			 size_t usrgdsz );
 
 
-/* fold_t - a character string made to look like a "fold here"
- */
-#define FOLD_LEN	79
-typedef char fold_t[ FOLD_LEN + 1 ];
-extern void fold_init( fold_t fold, char *infostr, char c );
-
 
 /* macro to copy uuid structures
  */
 #define COPY_LABEL( lab1, lab2) ( bcopy( lab1, lab2, GLOBAL_HDR_STRING_SZ) )
-
-/* flg definitions for preemptchk 
- */
-#define PREEMPT_FULL		0
-#define PREEMPT_PROGRESSONLY	1
 
 /*
  * Align pointer up to alignment
