@@ -389,7 +389,7 @@ calc_checksum(void *bufp, size_t len)
 	u_int32_t sum = 0;
 	u_int32_t *sump = bufp;
 	u_int32_t *endp = sump + len / sizeof(u_int32_t);
-	ASSERT(len % sizeof(u_int32_t) == 0);
+	assert(len % sizeof(u_int32_t) == 0);
 	while (sump < endp)
 		sum += *sump++;
 	return ~sum + 1;
@@ -401,7 +401,7 @@ is_checksum_valid(void *bufp, size_t len)
 	u_int32_t sum = 0;
 	u_int32_t *sump = bufp;
 	u_int32_t *endp = sump + len / sizeof(u_int32_t);
-	ASSERT(len % sizeof(u_int32_t) == 0);
+	assert(len % sizeof(u_int32_t) == 0);
 	while (sump < endp)
 		sum += *sump++;
 	return sum == 0 ? BOOL_TRUE : BOOL_FALSE;

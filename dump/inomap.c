@@ -25,6 +25,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -185,7 +186,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 					       bstatbuflen
 					       *
 					       sizeof( xfs_bstat_t ));
-	ASSERT( bstatbufp );
+	assert( bstatbufp );
 
 	/* count the number of inode groups, which will serve as a
 	 * starting point for the size of the inomap.
@@ -369,7 +370,7 @@ inomap_build( jdm_fshandle_t *fshandlep,
 			} else {
 				ep = &startptp[ startptix + 1 ];
 			}
-			ASSERT( ! p->sp_flags );
+			assert( ! p->sp_flags );
 			mlog( MLOG_VERBOSE | MLOG_INOMAP,
 			      _("stream %u: ino %llu offset %lld to "),
 			      startptix,
@@ -606,8 +607,8 @@ cb_add( void *arg1,
 			cb_hdrsz += ( EXTENTHDR_SZ * (statp->bs_extents + 1) );
 		}
 	} else if ( resumed ) {
-		ASSERT( mode != S_IFDIR );
-		ASSERT( changed );
+		assert( mode != S_IFDIR );
+		assert( changed );
 	} else {
 		if ( mode == S_IFDIR ) {
 			if ( cb_skip_unchanged_dirs ) {
@@ -832,7 +833,7 @@ cb_startpt( void *arg1,
 		return 0;
 	}
 
-	ASSERT( cb_startptix < cb_startptcnt );
+	assert( cb_startptix < cb_startptcnt );
 
 	estimate = estimate_dump_space( statp );
 	cb_accum += estimate + ( EXTENTHDR_SZ * (statp->bs_extents + 1) );
@@ -929,7 +930,7 @@ cb_startpt( void *arg1,
 			}
 			break;
 		default:
-			ASSERT( 0 );
+			assert( 0 );
 			return 1;
 		}
 	} while ( action == ( action_t )BUMP || action == ( action_t )SPLIT );
@@ -1042,7 +1043,7 @@ SEG_GET_BITS( seg_t *segp, xfs_ino_t ino )
 static intgen_t
 inomap_init( intgen_t igrpcnt )
 {
-	ASSERT( sizeof( hnk_t ) == HNKSZ );
+	assert( sizeof( hnk_t ) == HNKSZ );
 
 	/* lastseg must be initialized with -1 offsets since
 	 * no segments have been added yet */
@@ -1483,7 +1484,7 @@ subtreelist_parse( jdm_fshandle_t *fshandlep,
 	for ( subtreeix = 0 ; subtreeix < subtreecnt ; subtreeix++ ) {
 		intgen_t cbrval = 0;
 		char *currentpath = subtreebuf[ subtreeix ];
-		ASSERT( *currentpath != '/' );
+		assert( *currentpath != '/' );
 		( void )diriter( fshandlep,
 				 fsfd,
 				 rootstatp,
@@ -1669,7 +1670,7 @@ quantity2offset( jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty )
 		}
 
 		if ( bmap[ 0 ].bmv_entries <= 0 ) {
-			ASSERT( bmap[ 0 ].bmv_entries == 0 );
+			assert( bmap[ 0 ].bmv_entries == 0 );
 			( void )close( fd );
 			return offset_next;
 		}

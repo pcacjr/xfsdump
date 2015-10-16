@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "types.h"
 #include "lock.h"
@@ -118,15 +119,15 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 
 	/* sanity checks
 	 */
-	ASSERT( ! ntp );
-	ASSERT( ! npp );
+	assert( ! ntp );
+	assert( ! npp );
 
-	ASSERT( sizeof( namreg_pers_t ) <= NAMREG_PERS_SZ );
+	assert( sizeof( namreg_pers_t ) <= NAMREG_PERS_SZ );
 
 	/* allocate and initialize context
 	 */
 	ntp = ( namreg_tran_t * )calloc( 1, sizeof( namreg_tran_t ));
-	ASSERT( ntp );
+	assert( ntp );
 
 	/* generate a string containing the pathname of the namreg file
 	 */
@@ -223,7 +224,7 @@ namreg_init( char *hkdir, bool_t resume, u_int64_t inocnt )
 
 	/* mmap the persistent descriptor
 	 */
-	ASSERT( ! ( NAMREG_PERS_SZ % pgsz ));
+	assert( ! ( NAMREG_PERS_SZ % pgsz ));
 	npp = ( namreg_pers_t * ) mmap_autogrow(
 				        NAMREG_PERS_SZ,
 				        ntp->nt_fd,
@@ -258,9 +259,9 @@ namreg_add( char *name, size_t namelen )
 	
 	/* sanity checks
 	 */
-	ASSERT( ntp );
-	ASSERT( npp );
-	ASSERT( !ntp->nt_map );
+	assert( ntp );
+	assert( npp );
+	assert( !ntp->nt_map );
 
 	/* make sure file pointer is positioned to append
 	 */
@@ -271,10 +272,10 @@ namreg_add( char *name, size_t namelen )
 			mlog( MLOG_NORMAL, _(
 			      "lseek of namreg failed: %s\n"),
 			      strerror( errno ));
-			ASSERT( 0 );
+			assert( 0 );
 			return NRH_NULL;
 		}
-		ASSERT( npp->np_appendoff == newoff );
+		assert( npp->np_appendoff == newoff );
 		ntp->nt_at_endpr = BOOL_TRUE;
 	}
 
@@ -290,7 +291,7 @@ namreg_add( char *name, size_t namelen )
 
 	/* write a one byte unsigned string length into the buffer.
 	 */
-	ASSERT( namelen < 256 );
+	assert( namelen < 256 );
 	c = ( unsigned char )( namelen & 0xff );
 	ntp->nt_buf[ntp->nt_off++] = c;
 
@@ -300,7 +301,7 @@ namreg_add( char *name, size_t namelen )
 	ntp->nt_off += namelen;
 
 	npp->np_appendoff += ( off64_t )( 1 + namelen );
-	ASSERT( oldoff <= HDLMAX );
+	assert( oldoff <= HDLMAX );
 
 #ifdef NAMREGCHK
 
@@ -375,12 +376,12 @@ namreg_get( nrh_t nrh,
 
 	/* sanity checks
 	 */
-	ASSERT( ntp );
-	ASSERT( npp );
+	assert( ntp );
+	assert( npp );
 
 	/* make sure we aren't being given a NULL handle
 	 */
-	ASSERT( nrh != NRH_NULL );
+	assert( nrh != NRH_NULL );
 
 	/* convert the handle into the offset
 	 */
@@ -397,9 +398,9 @@ namreg_get( nrh_t nrh,
 
 	/* do sanity check on offset
 	 */
-	ASSERT( newoff <= HDLMAX );
-	ASSERT( newoff < npp->np_appendoff );
-	ASSERT( newoff >= ( off64_t )NAMREG_PERS_SZ );
+	assert( newoff <= HDLMAX );
+	assert( newoff < npp->np_appendoff );
+	assert( newoff >= ( off64_t )NAMREG_PERS_SZ );
 
 	lock( );
 
@@ -461,7 +462,7 @@ namreg_get( nrh_t nrh,
 
 	/* validate the checkbit
 	 */
-	ASSERT( chkbit
+	assert( chkbit
 		==
 		( ( ( nrh_t )len + ( nrh_t )bufp[ 0 ] ) & CHKBITLOMASK ));
 

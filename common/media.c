@@ -26,6 +26,7 @@
 #include <sys/dirent.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -91,8 +92,8 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 
 	/* sanity check asserts
 	 */
-	ASSERT( sizeof( media_hdr_t ) == MEDIA_HDR_SZ );
-	ASSERT( MEDIA_MARKLOG_SZ == sizeof( media_marklog_t ));
+	assert( sizeof( media_hdr_t ) == MEDIA_HDR_SZ );
+	assert( MEDIA_MARKLOG_SZ == sizeof( media_marklog_t ));
 
 	/* scan the command line for a media label
 	 */
@@ -143,7 +144,7 @@ media_create( int argc, char *argv[ ], drive_strategy_t *dsp )
 	 */
 	mediacnt = dsp->ds_drivecnt;
 	mediapp = ( media_t ** )calloc( mediacnt, sizeof( media_t * ));
-	ASSERT( mediapp );
+	assert( mediapp );
 	for ( mediaix = 0 ; mediaix < mediacnt ; mediaix++ ) {
 		mediapp[ mediaix ] = media_alloc( dsp->ds_drivep[ mediaix ],
 					 	  medialabel );
@@ -266,7 +267,7 @@ media_alloc( drive_t *drivep,
 	size_t mwhdrsz;
 
 	mediap = ( media_t * )calloc( 1, sizeof( media_t ));
-	ASSERT( mediap );
+	assert( mediap );
 
 	grhdrp = 0;
 	gwhdrp = 0;
@@ -279,12 +280,12 @@ media_alloc( drive_t *drivep,
 			      &gwhdrp,
 			      ( char ** )&mwhdrp,
 			      &mwhdrsz );
-	ASSERT( grhdrp );
-	ASSERT( gwhdrp );
-	ASSERT( mrhdrp );
-	ASSERT( mwhdrp );
-	ASSERT( mrhdrsz == MEDIA_HDR_SZ );
-	ASSERT( mwhdrsz == MEDIA_HDR_SZ );
+	assert( grhdrp );
+	assert( gwhdrp );
+	assert( mrhdrp );
+	assert( mwhdrp );
+	assert( mrhdrsz == MEDIA_HDR_SZ );
+	assert( mwhdrsz == MEDIA_HDR_SZ );
 
 	mediap->m_greadhdrp = grhdrp;
 	mediap->m_gwritehdrp = gwhdrp;

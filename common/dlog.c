@@ -26,6 +26,7 @@
 #include <time.h>
 #include <errno.h>
 #include <signal.h>
+#include <assert.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -57,7 +58,7 @@ dlog_init( int argc, char *argv[ ] )
 
 	/* can only call once
 	 */
-	ASSERT( dlog_ttyfd == -1 );
+	assert( dlog_ttyfd == -1 );
 
 	/* initially allow dialog, use stdin fd
 	 */
@@ -104,7 +105,7 @@ dlog_init( int argc, char *argv[ ] )
 		struct stat statbuf;
 		int rval;
 
-		ASSERT( dlog_ttyfd >= 0 );
+		assert( dlog_ttyfd >= 0 );
 		rval = fstat( dlog_ttyfd, &statbuf );
 		if ( rval ) {
 			mlog( MLOG_VERBOSE | MLOG_WARNING,
@@ -186,7 +187,7 @@ dlog_multi_query( char *querystr[ ],
 
 	/* sanity
 	 */
-	ASSERT( dlog_allowed_flag );
+	assert( dlog_allowed_flag );
 
 	/* display query description strings
 	 */
@@ -295,7 +296,7 @@ dlog_string_query( dlog_ucbp_t ucb, /* user's print func */
 
 	/* sanity
 	 */
-	ASSERT( dlog_allowed_flag );
+	assert( dlog_allowed_flag );
 
 	/* call the caller's callback with his context, print context, and
 	 * print operator
@@ -359,7 +360,7 @@ dlog_string_query_print( void *ctxp, char *fmt, ... )
 {
 	va_list args;
 
-	ASSERT( ! ctxp );
+	assert( ! ctxp );
 
 	va_start( args, fmt );
 	mlog_va( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, fmt, args );
@@ -510,7 +511,7 @@ promptinput( char *buf,
 		}
 		return BOOL_FALSE;
 	} else {
-		ASSERT( dlog_signo_received == -1 );
+		assert( dlog_signo_received == -1 );
 		*exceptionixp = 0;
 		return BOOL_TRUE;
 	}

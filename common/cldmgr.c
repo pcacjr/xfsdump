@@ -25,6 +25,7 @@
 #include <sys/prctl.h>
 #include <errno.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "exit.h"
 #include "types.h"
@@ -79,7 +80,7 @@ cldmgr_create( int ( * entry )( void *arg1 ),
 	cld_t *cldp;
 	intgen_t rval;
 
-	ASSERT( pthread_equal( pthread_self( ), cldmgr_parenttid ) );
+	assert( pthread_equal( pthread_self( ), cldmgr_parenttid ) );
 
 	cldp = cldmgr_getcld( );
 	if ( ! cldp ) {

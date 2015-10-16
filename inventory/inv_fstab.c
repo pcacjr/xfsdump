@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/dir.h>
+#include <assert.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -88,7 +89,7 @@ fstab_put_entry( uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat )
 	invt_fstab_t *arr;
 	int rval = 1;
 
-	ASSERT( forwhat != INV_SEARCH_ONLY );
+	assert( forwhat != INV_SEARCH_ONLY );
 
 	/* fd is locked on succesful return */
 	fd = fstab_getall( &arr, &cnt, &numfs, forwhat );
@@ -229,7 +230,7 @@ fstab_get_fname( void *pred,
 	if ( bywhat != INV_BY_UUID ) 
 		free ( arr );
 
-	ASSERT( (int) strlen( fname ) < INV_STRLEN );
+	assert( (int) strlen( fname ) < INV_STRLEN );
 	return 1;
 }	
 	

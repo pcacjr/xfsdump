@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/dir.h>
+#include <assert.h>
 
 
 /*----------------------------------------------------------------------*/
@@ -50,28 +51,28 @@ static char inv_lockfilep[MGR_PATH_MAX];
 char *
 inv_dirpath( void )
 {
-	ASSERT(inv_base);
+	assert(inv_base);
 	return inv_dirpathp;
 }
 
 char *
 inv_fstab( void )
 {
-	ASSERT(inv_base);
+	assert(inv_base);
 	return inv_fstabp;
 }
 
 char *
 inv_lockfile( void )
 {
-	ASSERT(inv_base);
+	assert(inv_base);
 	return inv_lockfilep;
 }
 
 char *
 inv_basepath( void )
 {
-	ASSERT(inv_base);
+	assert(inv_base);
 	return inv_base;
 }
 

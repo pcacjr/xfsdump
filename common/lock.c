@@ -18,6 +18,7 @@
 
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
+#include <assert.h>
 
 #include "types.h"
 #include "qlock.h"
@@ -30,7 +31,7 @@ lock_init( void )
 {
 	/* initialization sanity checks
 	 */
-	ASSERT( lock_qlockh == QLOCKH_NULL );
+	assert( lock_qlockh == QLOCKH_NULL );
 
 	/* allocate a qlock
 	 */

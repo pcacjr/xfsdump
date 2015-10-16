@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -67,13 +68,13 @@ global_hdr_alloc( intgen_t argc, char *argv[ ] )
 
 	/* sanity checks
 	 */
-	ASSERT( sizeof( time32_t ) == GLOBAL_HDR_TIME_SZ );
-	ASSERT( sizeof( uuid_t ) == GLOBAL_HDR_UUID_SZ );
+	assert( sizeof( time32_t ) == GLOBAL_HDR_TIME_SZ );
+	assert( sizeof( uuid_t ) == GLOBAL_HDR_UUID_SZ );
 
 	/* allocate a global hdr
 	 */
 	ghdrp = ( global_hdr_t * )calloc( 1, sizeof( global_hdr_t ));
-	ASSERT( ghdrp );
+	assert( ghdrp );
 
 	/* fill in the magic number
 	 */
@@ -326,7 +327,7 @@ prompt_label( char *bufp, size_t bufsz )
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
-	ASSERT( preamblecnt <= PREAMBLEMAX );
+	assert( preamblecnt <= PREAMBLEMAX );
 	dlog_begin( preamblestr, preamblecnt );
 
 	responseix = dlog_string_query( prompt_label_cb,
@@ -348,7 +349,7 @@ prompt_label( char *bufp, size_t bufsz )
 		ackstr[ ackcnt++ ] = _("session label left blank\n");
 	}
 
-	ASSERT( ackcnt <= ACKMAX );
+	assert( ackcnt <= ACKMAX );
 	dlog_string_ack( ackstr,
 			 ackcnt );
 
@@ -357,7 +358,7 @@ prompt_label( char *bufp, size_t bufsz )
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
-	ASSERT( postamblecnt <= POSTAMBLEMAX );
+	assert( postamblecnt <= POSTAMBLEMAX );
 	dlog_end( postamblestr,
 		  postamblecnt );
 

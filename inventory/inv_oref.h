@@ -158,48 +158,48 @@ typedef struct invt_oref {
         { (oref)->token = tok; }
 
 #define OREF_SET_CNT(oref, cnt) \
-	{ ASSERT (OREF_ISRESOLVED(oref, INVT_OTYPE_MASK)); \
+	{ assert (OREF_ISRESOLVED(oref, INVT_OTYPE_MASK)); \
 	  ((oref)->type & INVT_OTYPE_STOBJ) ? \
 	  (oref)->cu_sescnt = (cnt): (oref)->cu_cnt = (cnt); \
 	  (oref)->type |= INVT_RES_COUNTERS; }
 
 #define OREF_SET_ENTRIES(oref, ents) \
-        { ASSERT ((oref)->type & (INVT_OTYPE_INVIDX | INVT_OTYPE_FSTAB));\
-	  ASSERT ((oref)->type & INVT_RES_COUNTERS); \
+        { assert ((oref)->type & (INVT_OTYPE_INVIDX | INVT_OTYPE_FSTAB));\
+	  assert ((oref)->type & INVT_RES_COUNTERS); \
 	  ((oref)->type & INVT_OTYPE_INVIDX) ? \
 	  (oref)->eu_ent = ents : (oref)->eu_fstabent = ents; \
 	  (oref)->type |= INVT_RES_ENTRIES; }
 
 #define OREF_SET_HDRS(oref, hdrs) \
-        {  ASSERT ((oref)->type & INVT_OTYPE_STOBJ); \
-	   ASSERT ((oref)->type & INVT_RES_COUNTERS); \
+        {  assert ((oref)->type & INVT_OTYPE_STOBJ); \
+	   assert ((oref)->type & INVT_RES_COUNTERS); \
 	   (oref)->eu_hdr = hdrs; \
 	   (oref)->type |= INVT_STOBJ_RES_HDRS; }
 
 #define OREF_SET_SESSIONS(oref, ses) \
-        {  ASSERT ((oref)->type & INVT_OTYPE_STOBJ); \
-	   ASSERT ((oref)->type & INVT_RES_COUNTERS); \
+        {  assert ((oref)->type & INVT_OTYPE_STOBJ); \
+	   assert ((oref)->type & INVT_RES_COUNTERS); \
 	   (oref)->eu_ses = ses; \
 	   (oref)->type |= INVT_STOBJ_RES_SESSIONS; }
 
 #define OREF_SET_STRMS(oref, strms) \
-        {  ASSERT ((oref)->type & INVT_OTYPE_STOBJ); \
-	   ASSERT ((oref)->type & INVT_RES_COUNTERS); \
+        {  assert ((oref)->type & INVT_OTYPE_STOBJ); \
+	   assert ((oref)->type & INVT_RES_COUNTERS); \
 	   (oref)->eu_strm = strms; \
 	   (oref)->type |= INVT_STOBJ_RES_STRMS; }
 
 #define OREF_SET_CHILD(oref, stobjref) \
-        {  ASSERT (! OREF_ISRESOLVED(oref, INVT_RES_KIN)); \
+        {  assert (! OREF_ISRESOLVED(oref, INVT_RES_KIN)); \
 	   (oref)->ku_child = stobjref; \
 	   (oref)->type |= INVT_RES_CHILD; }
 
 #define OREF_SET_PARENT(oref, invidxref) \
-        {  ASSERT (! OREF_ISRESOLVED(oref, INVT_RES_KIN)); \
+        {  assert (! OREF_ISRESOLVED(oref, INVT_RES_KIN)); \
 	   (oref)->ku_parent = invidxref; \
 	   (oref)->type |= INVT_RES_PARENT; }
 
 #define OREF_UNRESOLVE_CHILD(oref) \
-        {  ASSERT (OREF_ISRESOLVED(oref, INVT_RES_CHILD)); \
+        {  assert (OREF_ISRESOLVED(oref, INVT_RES_CHILD)); \
 	   close((oref)->ku_child->fd); \
 	   OREF_DESTROY((oref)->ku_child); \
 	   (oref)->ku_child = 0; \

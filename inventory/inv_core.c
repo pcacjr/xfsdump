@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/dir.h>
+#include <assert.h>
 #include "types.h"
 #include "inv_priv.h"
 
@@ -44,7 +45,7 @@ get_counters( int fd, void **cntpp, size_t cntsz )
 {
 	/* object must be locked at least SHARED by caller */
 	u_int num;
-	ASSERT( cntsz >= sizeof( invt_counter_t ) );
+	assert( cntsz >= sizeof( invt_counter_t ) );
 
 	*cntpp =  calloc( 1, cntsz);
 
@@ -62,7 +63,7 @@ get_counters( int fd, void **cntpp, size_t cntsz )
 		      "INV : Unknown version %d - Expected version %d\n"),
 		      (int) ( (invt_counter_t *)(*cntpp))->ic_vernum,
 		      (int) INV_VERSION );
-		ASSERT ( ((invt_counter_t *)(*cntpp))->ic_vernum ==
+		assert ( ((invt_counter_t *)(*cntpp))->ic_vernum ==
 			INV_VERSION );
 	} 
 
@@ -110,7 +111,7 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 {
 	int  nread;
 	
-	ASSERT ( fd >= 0 );
+	assert ( fd >= 0 );
 	
 	if ( dolock ) 
 		INVLOCK( fd, LOCK_SH );

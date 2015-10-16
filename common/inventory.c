@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 #include "types.h"
 #include "inventory_priv.h"
@@ -51,7 +52,7 @@ inv_open( inv_predicate_t bywhat, void *pred )
 	
 	int index = 0;
 	
-	ASSERT ( pred );
+	assert ( pred );
 	if ((fd = init_idb ( pred, bywhat, uuname, &tok )) < 0 )
 		return tok;
 
@@ -66,7 +67,7 @@ inv_open( inv_predicate_t bywhat, void *pred )
 		return INV_TOKEN_NULL;
 	}
 
-	ASSERT ( index > 0 );
+	assert ( index > 0 );
 
 	/* Now we need to make sure that this has enough space */
 	num = GET_SESCOUNTERS( stobjfd, &sescnt );
@@ -145,7 +146,7 @@ inv_lasttime_level_lessthan(
 	time32_t **tm )
 {
 	int 	rval;
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 
 	rval =  search_invt( tok, level, (void **) tm,
 			 (search_callback_t) tm_level_lessthan );
@@ -170,7 +171,7 @@ inv_lastsession_level_lessthan(
 	inv_session_t 	**ses )
 {
 	int 	rval;
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 
 	rval = search_invt( tok, level, (void **) ses, 
 			  (search_callback_t) lastsess_level_lessthan );
@@ -197,7 +198,7 @@ inv_lastsession_level_equalto(
 	inv_session_t	**ses )
 {
 	int 	rval;
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 	rval = search_invt( tok, level, (void **) ses, 
 			  (search_callback_t) lastsess_level_equalto );
 
@@ -236,8 +237,8 @@ inv_writesession_open(
 	invt_seshdr_t  	hdr;
 	inv_sestoken_t	sestok;
 
-	ASSERT ( tok != INV_TOKEN_NULL );
-	ASSERT ( sesid && fsid && mntpt && devpath );
+	assert ( tok != INV_TOKEN_NULL );
+	assert ( sesid && fsid && mntpt && devpath );
 
 	if ( ! ( tok->d_update_flag & FSTAB_UPDATED ) ) {
 		if ( put_fstab_entry( fsid, mntpt, devpath ) < 0 ) {
@@ -264,7 +265,7 @@ inv_writesession_open(
 
 	fd = tok->d_stobj_fd;
 	
-	ASSERT ( fd > 0 );
+	assert ( fd > 0 );
 
 	hdr.sh_time = time;
 	hdr.sh_level = level;	
@@ -286,7 +287,7 @@ inv_writesession_open(
 	/* create the writesession, and get ready for the streams to come 
 	   afterwards */
 	rval = create_session( sestok, fd, sescnt, ses, &hdr );
-	ASSERT (rval > 0);
+	assert (rval > 0);
 
 
 	INVLOCK( fd, LOCK_UN );
@@ -324,7 +325,7 @@ inv_writesession_close( inv_sestoken_t tok )
 {
 	int		rval;
 	
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 
 	/* now update end_time in the inv index header */
 	rval = put_sesstime( tok, INVT_ENDTIME );
@@ -354,7 +355,7 @@ inv_stream_open(
 	invt_seshdr_t  seshdr;
 	int fd;
 
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 	 
 	stream.st_nmediafiles = 0;
 	stream.st_interrupted = BOOL_FALSE;
@@ -505,9 +506,9 @@ inv_put_mediafile(
 	int 		 rval;
 
 
-	ASSERT ( tok != INV_TOKEN_NULL );
-	ASSERT ( tok->md_sesstok->sd_invtok->d_update_flag & FSTAB_UPDATED );
-	ASSERT ( tok->md_sesstok->sd_invtok->d_stobj_fd >= 0 );
+	assert ( tok != INV_TOKEN_NULL );
+	assert ( tok->md_sesstok->sd_invtok->d_update_flag & FSTAB_UPDATED );
+	assert ( tok->md_sesstok->sd_invtok->d_stobj_fd >= 0 );
 
 	mf = (invt_mediafile_t *) calloc( 1, sizeof( invt_mediafile_t ) );
 	
@@ -627,8 +628,8 @@ inv_get_session(
 	void		      **bufpp,	/* buf to fill */
 	size_t		       *bufszp )/* size of that buffer */
 {
-	ASSERT( tok != INV_TOKEN_NULL );
-	ASSERT( tok->sd_invtok );
+	assert( tok != INV_TOKEN_NULL );
+	assert( tok->sd_invtok );
 
 	/* First get the session header, and the session information. Then
 	   we can figure out how much space to allocate */

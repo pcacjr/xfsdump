@@ -20,6 +20,7 @@
 #include <xfs/jdm.h>
 
 #include <pthread.h>
+#include <assert.h>
 
 #include "types.h"
 #include "exit.h"
@@ -65,7 +66,7 @@ stream_register( pthread_t tid, intgen_t streamix )
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
-	ASSERT( streamix < STREAM_SIMMAX );
+	assert( streamix < STREAM_SIMMAX );
 
 	lock();
 	for ( ; p < ep ; p++ ) {
@@ -75,7 +76,7 @@ stream_register( pthread_t tid, intgen_t streamix )
 		}
 	}
 	unlock();
-	ASSERT( p < ep );
+	assert( p < ep );
 
 	if ( p >= ep ) return;
 
@@ -98,7 +99,7 @@ stream_dead( pthread_t tid )
 			p->s_state = S_ZOMBIE;
 			break;
 		}
-	ASSERT( p < ep );
+	assert( p < ep );
 }
 
 void
@@ -116,7 +117,7 @@ stream_free( pthread_t tid )
 		}
 	}
 	unlock();
-	ASSERT( p < ep );
+	assert( p < ep );
 }
 
 int
@@ -126,7 +127,7 @@ stream_find_all( stream_state_t states[], int nstates,
 	int i, count = 0;
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
-	ASSERT(nstates > 0 && ntids > 0);
+	assert(nstates > 0 && ntids > 0);
 
 	if (!initialized)
 		return 0;
@@ -150,7 +151,7 @@ stream_find( pthread_t tid, stream_state_t s[], int nstates )
 	spm_t *p = spm;
 	spm_t *ep = spm + N(spm);
 
-	ASSERT(nstates > 0);
+	assert(nstates > 0);
 
 	/* note we don't lock the stream array in this function */
 	for ( ; p < ep ; p++ )
@@ -275,7 +276,7 @@ stream_cnt( void )
 	size_t ixcnt;
 	size_t bitix;
 
-	ASSERT( sizeof( ixmap ) * NBBY >= STREAM_SIMMAX );
+	assert( sizeof( ixmap ) * NBBY >= STREAM_SIMMAX );
 	
 	lock();
 	for ( ; p < ep ; p++ ) {

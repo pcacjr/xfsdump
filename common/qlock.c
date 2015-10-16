@@ -21,6 +21,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
+#include <assert.h>
 
 #include "types.h"
 #include "qlock.h"
@@ -78,13 +79,13 @@ qlock_alloc( ix_t ord )
 
 	/* verify the ordinal is not already taken, and mark as taken
 	 */
-	ASSERT( ! QLOCK_ORDMAP_GET( qlock_ordalloced, ord ));
+	assert( ! QLOCK_ORDMAP_GET( qlock_ordalloced, ord ));
 	QLOCK_ORDMAP_SET( qlock_ordalloced, ord );
 
 	/* allocate lock memory
 	 */
 	qlockp = ( qlock_t * )calloc( 1, sizeof( qlock_t ));
-	ASSERT( qlockp );
+	assert( qlockp );
 
 	/* initialize the mutex
 	 */
@@ -118,7 +119,7 @@ qlock_lock( qlockh_t qlockh )
 		      qlockp->ql_ord,
 		      thread_ordmap );
 	}
-	ASSERT( ! QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
+	assert( ! QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
 
 	/* assert that no locks with a lesser ordinal are held by this thread
 	 */
@@ -129,12 +130,12 @@ qlock_lock( qlockh_t qlockh )
 		      qlockp->ql_ord,
 		      thread_ordmap );
 	}
-	ASSERT( ! QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord ));
+	assert( ! QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord ));
 
 	/* acquire the lock
 	 */
 	rval = pthread_mutex_lock( &qlockp->ql_mutex );
-	ASSERT( !rval );
+	assert( !rval );
 
 	/* add ordinal to this threads ordmap
 	 */
@@ -150,7 +151,7 @@ qlock_unlock( qlockh_t qlockh )
 	
 	/* verify lock is held by this thread
 	 */
-	ASSERT( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
+	assert( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
 
 	/* clear lock's ord from thread's ord map
 	 */
@@ -159,7 +160,7 @@ qlock_unlock( qlockh_t qlockh )
 	/* release the lock
 	 */
 	rval = pthread_mutex_unlock( &qlockp->ql_mutex );
-	ASSERT( ! rval );
+	assert( ! rval );
 }
 
 qsemh_t
@@ -171,12 +172,12 @@ qsem_alloc( ix_t cnt )
 	/* allocate a semaphore
 	 */
 	semp = ( sem_t * )calloc( 1, sizeof( sem_t ));
-	ASSERT( semp );
+	assert( semp );
 
 	/* initialize the semaphore
 	 */
 	rval = sem_init( semp, 0, cnt );
-	ASSERT( !rval );
+	assert( !rval );
 
 	return ( qsemh_t )semp;
 }
@@ -190,7 +191,7 @@ qsem_free( qsemh_t qsemh )
 	/* destroy the mutex and condition
 	 */
 	rval = sem_destroy( semp );
-	ASSERT( !rval );
+	assert( !rval );
 
 	/* free the semaphore
 	 */
@@ -206,7 +207,7 @@ qsemP( qsemh_t qsemh )
 	/* "P" the semaphore
 	 */
 	rval = sem_wait( semp );
-	ASSERT( !rval );
+	assert( !rval );
 }
 
 void
@@ -218,7 +219,7 @@ qsemV( qsemh_t qsemh )
 	/* "V" the semaphore
 	 */
 	rval = sem_post( semp );
-	ASSERT( !rval );
+	assert( !rval );
 }
 
 bool_t
@@ -229,7 +230,7 @@ qsemPwouldblock( qsemh_t qsemh )
 	intgen_t rval;
 
 	rval = sem_getvalue( semp, &count );
-	ASSERT( !rval );
+	assert( !rval );
 
 	return count <= 0 ? BOOL_TRUE : BOOL_FALSE;
 }
@@ -242,7 +243,7 @@ qsemPavail( qsemh_t qsemh )
 	intgen_t rval;
 
 	rval = sem_getvalue( semp, &count );
-	ASSERT( !rval );
+	assert( !rval );
 
 	return count < 0 ? 0 : count;
 }

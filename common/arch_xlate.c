@@ -18,6 +18,7 @@
 
 #include <xfs/xfs.h>
 #include <xfs/jdm.h>
+#include <assert.h>
 
 #include "arch_xlate.h"
 #include "types.h"

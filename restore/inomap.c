@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <time.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -195,9 +196,9 @@ inomap_restore_pers( drive_t *drivep,
 
 	/* sanity checks
 	 */
-	ASSERT( INOPERSEG == ( sizeof( (( seg_t * )0 )->lobits ) * NBBY ));
-	ASSERT( sizeof( hnk_t ) == HNKSZ );
-	ASSERT( sizeof( pers_t ) <= PERSSZ );
+	assert( INOPERSEG == ( sizeof( (( seg_t * )0 )->lobits ) * NBBY ));
+	assert( sizeof( hnk_t ) == HNKSZ );
+	assert( sizeof( pers_t ) <= PERSSZ );
 
 	/* get inomap info from media hdr
 	 */
@@ -243,7 +244,7 @@ inomap_restore_pers( drive_t *drivep,
 	persp->last_ino_added = last_ino_added;
 
 	tmphnkp = ( hnk_t * )calloc( ( size_t )hnkcnt, sizeof( hnk_t ));
-	ASSERT( tmphnkp );
+	assert( tmphnkp );
 
 	/* read the map in from media
 	 */
@@ -268,7 +269,7 @@ inomap_restore_pers( drive_t *drivep,
 		        PERSSZ
 		        +
 		        sizeof( hnk_t ) * ( size_t )hnkcnt );
-	ASSERT( ! rval1 );
+	assert( ! rval1 );
 	( void )close( fd );
 	free( ( void * )perspath );
 
@@ -278,7 +279,7 @@ inomap_restore_pers( drive_t *drivep,
 	 */
 	switch( rval ) {
 	case 0:
-		ASSERT( ( size_t )nread == sizeof( hnk_t ) * ( size_t )hnkcnt );
+		assert( ( size_t )nread == sizeof( hnk_t ) * ( size_t )hnkcnt );
 		ok = inomap_sync_pers( hkdir );
 		if ( ! ok ) {
 			return RV_ERROR;
@@ -325,7 +326,7 @@ inomap_discard( drive_t *drivep, content_inode_hdr_t *scrhdrp )
 	 */
 	switch( rval ) {
 	case 0:
-		ASSERT( ( size_t )nread == sizeof( hnk_t ) * ( size_t )hnkcnt );
+		assert( ( size_t )nread == sizeof( hnk_t ) * ( size_t )hnkcnt );
 		return RV_OK;
 	case DRIVE_ERROR_EOD:
 	case DRIVE_ERROR_EOF:
@@ -350,7 +351,7 @@ inomap_sync_pers( char *hkdir )
 
 	/* sanity checks
 	 */
-	ASSERT( sizeof( hnk_t ) == HNKSZ );
+	assert( sizeof( hnk_t ) == HNKSZ );
 
 	/* only needed once per session
 	 */
@@ -388,7 +389,7 @@ inomap_sync_pers( char *hkdir )
 
 	/* mmap the pers inomap
 	 */
-	ASSERT( hnkcnt * sizeof( hnk_t ) <= ( size64_t )INT32MAX );
+	assert( hnkcnt * sizeof( hnk_t ) <= ( size64_t )INT32MAX );
 	roothnkp = ( hnk_t * ) mmap_autogrow(
 				       sizeof( hnk_t ) * ( size_t )hnkcnt,
 				       pers_fd,
@@ -415,7 +416,7 @@ inomap_sync_pers( char *hkdir )
 	/* calculate the tail pointers
 	 */
 	tailhnkp = hnkp;
-	ASSERT( hnkcnt > 0 );
+	assert( hnkcnt > 0 );
 	lastsegp = &tailhnkp->seg[ ( intgen_t )( segcnt
 						 -
 						 SEGPERHNK * ( hnkcnt - 1 )
@@ -485,7 +486,7 @@ inomap_sanitize( void )
 void
 inomap_rst_add( xfs_ino_t ino )
 {
-		ASSERT( pers_fd >= 0 );
+		assert( pers_fd >= 0 );
 		( void )map_set( ino, MAP_NDR_CHANGE );
 }
 
@@ -494,7 +495,7 @@ inomap_rst_add( xfs_ino_t ino )
 void
 inomap_rst_del( xfs_ino_t ino )
 {
-		ASSERT( pers_fd >= 0 );
+		assert( pers_fd >= 0 );
 		( void )map_set( ino, MAP_NDR_NOREST );
 }
 

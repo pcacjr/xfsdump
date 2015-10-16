@@ -21,6 +21,7 @@
 
 #include <sys/stat.h>
 #include <time.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -88,7 +89,7 @@ drive_init1( int argc, char *argv[ ] )
 
 	/* sanity check asserts
 	 */
-	ASSERT( sizeof( drive_hdr_t ) == DRIVE_HDR_SZ );
+	assert( sizeof( drive_hdr_t ) == DRIVE_HDR_SZ );
 
 	/* count drive arguments
 	 */
@@ -107,7 +108,7 @@ drive_init1( int argc, char *argv[ ] )
 	 */
 	if (drivecnt > 0) {
 		drivepp = ( drive_t ** )calloc( drivecnt, sizeof( drive_t * ));
-		ASSERT( drivepp );
+		assert( drivepp );
 	}
 
 	/* initialize the partialmax value.  Each drive can be completing a file
@@ -142,7 +143,7 @@ drive_init1( int argc, char *argv[ ] )
 			break;
 		}
 	}
-	ASSERT( driveix == drivecnt );
+	assert( driveix == drivecnt );
 
 	/* the user may specify stdin as the source, by
 	 * a single dash ('-') with no option letter. This must appear
@@ -169,7 +170,7 @@ drive_init1( int argc, char *argv[ ] )
 		 * allocate an array to hold ptrs to drive descriptors
 		 */
 		drivepp = ( drive_t ** )calloc( drivecnt, sizeof( drive_t * ));
-		ASSERT( drivepp );
+		assert( drivepp );
 
 		drivepp[ 0 ] = drive_alloc( "stdio", 0 );
 
@@ -215,7 +216,7 @@ drive_init1( int argc, char *argv[ ] )
 				bestscore = score;
 			}
 		}
-		ASSERT( bestsp );
+		assert( bestsp );
 		drivep->d_strategyp = bestsp;
 		drivep->d_recmarksep = bestsp->ds_recmarksep;
 		drivep->d_recmfilesz = bestsp->ds_recmfilesz;
@@ -356,7 +357,7 @@ drive_alloc( char *pathname, ix_t driveix )
 	/* allocate the descriptor
 	 */
 	drivep = ( drive_t * )calloc( 1, sizeof( drive_t ));
-	ASSERT( drivep );
+	assert( drivep );
 
 	/* convert the pathname to an absolute pathname
 	 * NOTE: string "stdio" is reserved to mean send to standard out
@@ -397,7 +398,7 @@ drive_allochdrs( drive_t *drivep, global_hdr_t *gwhdrtemplatep, ix_t driveix )
 	/* allocate the read header
 	 */
 	grhdrp = ( global_hdr_t * )calloc( 1, sizeof( global_hdr_t ));
-	ASSERT( grhdrp );
+	assert( grhdrp );
 	gwhdrp = NULL;
 	dwhdrp = NULL;
 
@@ -411,7 +412,7 @@ drive_allochdrs( drive_t *drivep, global_hdr_t *gwhdrtemplatep, ix_t driveix )
 		/* allocate the write header
 		 */
 		gwhdrp = ( global_hdr_t * )calloc( 1, sizeof( global_hdr_t ));
-		ASSERT( gwhdrp );
+		assert( gwhdrp );
 
 		/* copy the template
 		 */

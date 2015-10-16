@@ -25,6 +25,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/dir.h>
+#include <assert.h>
 #include "types.h"
 #include "mlog.h"
 #include "inv_priv.h"
@@ -119,7 +120,7 @@ idx_insert_newentry( int fd, /* kept locked EX by caller */
 				   We choose the former. */
 				
 				/* the timeperiods had better not overlap */
-				ASSERT(( tm > iarr[i].ie_timeperiod.tp_end ) &&
+				assert(( tm > iarr[i].ie_timeperiod.tp_end ) &&
 				       ( tm < iarr[i+1].ie_timeperiod.tp_start ));
 
 				/* shift everything from (i+1) onwards by 
@@ -134,7 +135,7 @@ idx_insert_newentry( int fd, /* kept locked EX by caller */
 	}		
 
 	/* We couldnt find anything that fits */
-	ASSERT( 0 );	/* We can't get here ! */
+	assert( 0 );	/* We can't get here ! */
 	return -1;
 
 	
@@ -255,7 +256,7 @@ idx_create( char *fname, inv_oflag_t forwhat )
 
 	/* This is not to be called when the user wants to open
 	   the db for SEARCH_ONLY. */
-	ASSERT( forwhat != INV_SEARCH_ONLY );
+	assert( forwhat != INV_SEARCH_ONLY );
 
 	if ((fd = open ( fname , INV_OFLAG(forwhat) | O_CREAT, S_IRUSR|S_IWUSR ) ) < 0 ) {
 		INV_PERROR ( fname );
@@ -477,8 +478,8 @@ idx_get_stobj( int invfd, inv_oflag_t forwhat, int *index )
 		return -1;
 	/* at this point we know that there should be at least one invindex
 	   entry present */
-	ASSERT ( ent != NULL );	
-	ASSERT ( ent->ie_filename );
+	assert ( ent != NULL );	
+	assert ( ent->ie_filename );
 
 	fd = open( ent->ie_filename, INV_OFLAG(forwhat) );
 	if ( fd < 0 )

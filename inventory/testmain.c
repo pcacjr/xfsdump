@@ -22,6 +22,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <assert.h>
 #include "types.h"
 #include "mlog.h"
 #include "getopt.h"
@@ -92,12 +93,12 @@ recons_test( int howmany )
 		rval = get_invtrecord( fd, &sarr[i], 
 				       sizeof( uuid_t ) + sizeof( size_t ), 0,
 				       SEEK_CUR, BOOL_FALSE );
-		ASSERT( rval > 0 );
-		ASSERT( sarr[i].sz > 0 );
+		assert( rval > 0 );
+		assert( sarr[i].sz > 0 );
 		sarr[i].buf = calloc( 1,  sarr[i].sz );
 		rval = get_invtrecord( fd, sarr[i].buf,  sarr[i].sz, 0, SEEK_CUR,
 				       BOOL_FALSE );
-		ASSERT( rval > 0 );
+		assert( rval > 0 );
 	}
 	
 	
@@ -263,9 +264,9 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 	printf("first time!\n");
 	for (i=0; i<8; i++) {
 		uuid_create( &fsidarr[i], &stat );
-		ASSERT ( stat == uuid_s_ok );
+		assert ( stat == uuid_s_ok );
 		uuid_create( &sesidarr[i], &stat );
-		ASSERT ( stat == uuid_s_ok );
+		assert ( stat == uuid_s_ok );
 	}
 	fd = open( "uuids", O_RDWR | O_CREAT );
 	PUT_REC(fd, (void *)fsidarr, sizeof (uuid_t) * 8, 0L );
@@ -289,7 +290,7 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 		dev = dev_str[7];
 		fsidp = &fsidarr[0]; /* j */
 		tok1 = inv_open( INV_BY_UUID, INV_SEARCH_N_MOD, fsidp );
-		ASSERT (tok1 != INV_TOKEN_NULL );
+		assert (tok1 != INV_TOKEN_NULL );
 
 		uuid_create( &labelid, &stat );
 		uuid_to_string( &labelid, &str, &stat );
@@ -306,10 +307,10 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 					     dumplevel, nstreams, 
 					     time(NULL),
 					     mnt, dev );
-		ASSERT (tok2 != INV_TOKEN_NULL );
+		assert (tok2 != INV_TOKEN_NULL );
 		for (m = 0; m<nstreams; m++) {
 			tok3 = inv_stream_open( tok2,"/dev/rmt");
-			ASSERT (tok3 != INV_TOKEN_NULL );
+			assert (tok3 != INV_TOKEN_NULL );
 
 			for (k = 0; k<nmedia; k++ )
 				CREAT_mfiles( tok3, &labelid, k*100,
@@ -353,7 +354,7 @@ mp_test(int nstreams)
 {
 #if 0
 	tok1 = inv_open( INV_BY_UUID, fsidp );
-	ASSERT (tok1 != INV_TOKEN_NULL );
+	assert (tok1 != INV_TOKEN_NULL );
 
 	tok2 = inv_writesession_open(tok1, fsidp,
 				     &labelid,
@@ -363,11 +364,11 @@ mp_test(int nstreams)
 				     dumplevel, nstreams, 
 				     time(NULL),
 				     mnt, dev );
-	ASSERT (tok2 != INV_TOKEN_NULL );
+	assert (tok2 != INV_TOKEN_NULL );
 
 	for (m = 0; m<nstreams; m++) {
 			tok3 = inv_stream_open( tok2,"/dev/rmt");
-			ASSERT (tok3 != INV_TOKEN_NULL );
+			assert (tok3 != INV_TOKEN_NULL );
 
 			for (k = 0; k<nmedia; k++ )
 				CREAT_mfiles( tok3, &labelid, k*100,
@@ -399,7 +400,7 @@ main(int argc, char *argv[])
 
 	progname = argv[0];
 	sesfile = "sessions";
-	ASSERT( argc > 1 );
+	assert( argc > 1 );
 	
 	mlog_init( argc, argv );
 

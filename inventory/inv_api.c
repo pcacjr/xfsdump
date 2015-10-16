@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -48,7 +49,7 @@ inv_open( inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred )
 
 	int index = 0;
 	
-	ASSERT ( pred );
+	assert ( pred );
 	fd = retval = init_idb ( pred, bywhat, forwhat, &tok );
 
 	if ( retval == I_DONE ) 
@@ -72,7 +73,7 @@ inv_open( inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred )
 		return INV_TOKEN_NULL;
 	}
 
-	ASSERT ( index > 0 );
+	assert ( index > 0 );
 
 	/* Now we need to make sure that this has enough space */
 	INVLOCK( stobjfd, LOCK_SH );
@@ -170,12 +171,12 @@ inv_writesession_open(
 	inv_sestoken_t	sestok;
 	inv_oflag_t     forwhat;
 
-	ASSERT ( tok != INV_TOKEN_NULL );
-	ASSERT ( sesid && fsid && mntpt && devpath );
+	assert ( tok != INV_TOKEN_NULL );
+	assert ( sesid && fsid && mntpt && devpath );
 	forwhat = tok->d_oflag;
 	fd = tok->d_stobj_fd;
-	ASSERT ( forwhat != INV_SEARCH_ONLY );
-	ASSERT ( fd > 0 );
+	assert ( forwhat != INV_SEARCH_ONLY );
+	assert ( fd > 0 );
 
 	if ( ! ( tok->d_update_flag & FSTAB_UPDATED ) ) {
 		if ( fstab_put_entry( fsid, mntpt, devpath, forwhat ) < 0 ) {
@@ -218,7 +219,7 @@ inv_writesession_open(
 	/* create the writesession, and get ready for the streams to come 
 	   afterwards */
 	rval = stobj_create_session( sestok, fd, sescnt, &ses, &hdr );
-	ASSERT (rval > 0);
+	assert (rval > 0);
 
 
 	INVLOCK( fd, LOCK_UN );
@@ -256,7 +257,7 @@ inv_writesession_close( inv_sestoken_t tok )
 {
 	int		rval;
 	
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 
 	/* now update end_time in the inv index header */
 	rval = idx_put_sesstime( tok, INVT_ENDTIME );
@@ -287,7 +288,7 @@ inv_stream_open(
 	int fd;
 	bool_t err = BOOL_FALSE;
 
-	ASSERT ( tok != INV_TOKEN_NULL );
+	assert ( tok != INV_TOKEN_NULL );
 	 
 	/* this memset is needed as a dump interrupted/crashed very soon
 	 * after starting results in an inventory with exteremely large
@@ -446,9 +447,9 @@ inv_put_mediafile(
 	int 		 rval;
 
 
-	ASSERT ( tok != INV_TOKEN_NULL );
-	ASSERT ( tok->md_sesstok->sd_invtok->d_update_flag & FSTAB_UPDATED );
-	ASSERT ( tok->md_sesstok->sd_invtok->d_stobj_fd >= 0 );
+	assert ( tok != INV_TOKEN_NULL );
+	assert ( tok->md_sesstok->sd_invtok->d_update_flag & FSTAB_UPDATED );
+	assert ( tok->md_sesstok->sd_invtok->d_stobj_fd >= 0 );
 
 	mf = (invt_mediafile_t *) calloc( 1, sizeof( invt_mediafile_t ) );
 	
@@ -512,8 +513,8 @@ inv_get_sessioninfo(
 	int		fd;
 
 
-	ASSERT( tok != INV_TOKEN_NULL );
-	ASSERT( tok->sd_invtok );
+	assert( tok != INV_TOKEN_NULL );
+	assert( tok->sd_invtok );
 	*bufpp = NULL;
 	*bufszp = 0;
 	fd = tok->sd_invtok->d_stobj_fd;
@@ -579,8 +580,8 @@ inv_free_session(
 {
 	uint i;
 	
-	ASSERT(ses);
-	ASSERT(*ses);
+	assert(ses);
+	assert(*ses);
 
 	for ( i = 0; i < (*ses)->s_nstreams; i++ ) {
 		/* the array of mediafiles is contiguous */

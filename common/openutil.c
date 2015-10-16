@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -56,7 +57,7 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
   	}
 	namelen = dirlen + 1 + strlen( basename ) + pidlen + 1;
 	namebuf = ( char * )calloc( 1, namelen );
-  	ASSERT( namebuf );
+  	assert( namebuf );
 
   	if ( pid ) {
 		( void )snprintf( namebuf, namelen, "%s/%s.%d", dirname, basename, pid );

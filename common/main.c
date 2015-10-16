@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <sched.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "exit.h"
 #include "types.h"
@@ -161,14 +162,14 @@ main( int argc, char *argv[] )
 
 	/* sanity checks
 	 */
-	ASSERT( sizeof( char_t ) == 1 );
-	ASSERT( sizeof( u_char_t ) == 1 );
-	ASSERT( sizeof( int32_t ) == 4 );
-	ASSERT( sizeof( u_int32_t ) == 4 );
-	ASSERT( sizeof( size32_t ) == 4 );
-	ASSERT( sizeof( int64_t ) == 8 );
-	ASSERT( sizeof( u_int64_t ) == 8 );
-	ASSERT( sizeof( size64_t ) == 8 );
+	assert( sizeof( char_t ) == 1 );
+	assert( sizeof( u_char_t ) == 1 );
+	assert( sizeof( int32_t ) == 4 );
+	assert( sizeof( u_int32_t ) == 4 );
+	assert( sizeof( size32_t ) == 4 );
+	assert( sizeof( int64_t ) == 8 );
+	assert( sizeof( u_int64_t ) == 8 );
+	assert( sizeof( size64_t ) == 8 );
 
 	/* record the command name used to invoke
 	 */
@@ -365,7 +366,7 @@ main( int argc, char *argv[] )
 	mlog( MLOG_DEBUG | MLOG_PROC,
 	      "getpagesize( ) returns %u\n",
 	      pgsz );
-	ASSERT( ( intgen_t )pgsz > 0 );
+	assert( ( intgen_t )pgsz > 0 );
 	pgmask = pgsz - 1;
 
 	/* report parent tid
@@ -792,7 +793,7 @@ main( int argc, char *argv[] )
 			mlog_exit_hint(RV_INTR);
 			stop_in_progress = BOOL_TRUE;
 			cldmgr_stop( );
-			ASSERT( stop_timeout >= 0 );
+			assert( stop_timeout >= 0 );
 			stop_deadline = now + ( time32_t )stop_timeout;
 		}
 		
@@ -1146,7 +1147,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 				return BOOL_FALSE;
 			}
 			optfilename = optarg;
-			ASSERT( optind > 2 );
+			assert( optind > 2 );
 			optfileix = ( ix_t )optind - 2;
 			break;
 		}
@@ -1211,7 +1212,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* allocate an argument buffer
 	 */
 	argbuf = ( char * )malloc( sz );
-	ASSERT( argbuf );
+	assert( argbuf );
 
 	/* copy arg0 (the executable's name ) in first
 	 */
@@ -1233,7 +1234,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 		close( fd );
 		return BOOL_FALSE;
 	}
-	ASSERT( ( off64_t )nread == stat.st_size );
+	assert( ( off64_t )nread == stat.st_size );
 	p += ( size_t )stat.st_size;
 	*p++ = ' ';
 
@@ -1251,7 +1252,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* null-terminate the entire buffer
 	 */
 	*p++ = 0;
-	ASSERT( ( size_t )( p - argbuf ) <= sz );
+	assert( ( size_t )( p - argbuf ) <= sz );
 
 	/* change newlines and carriage returns into spaces
 	 */
@@ -1303,7 +1304,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 	/* allocate a new argv array to hold the tokens
 	 */
 	newargv = ( char ** )calloc( tokencnt, sizeof( char * ));
-	ASSERT( newargv );
+	assert( newargv );
 
 	/* null-terminate tokens and place in new argv, after
 	 * extracting quotes and escapes
@@ -1326,7 +1327,7 @@ loadoptfile( intgen_t *argcp, char ***argvp )
 
 		/* better not disagree with counting scan!
 		 */
-		ASSERT( i < ( intgen_t )tokencnt );
+		assert( i < ( intgen_t )tokencnt );
 
 		/* find the end of the first token
 		 */
@@ -1533,7 +1534,7 @@ sigint_dialog( void )
 			_("\nsession interrupt in progress\n");
 	}
 	preamblestr[ preamblecnt++ ] = "\n";
-	ASSERT( preamblecnt <= PREAMBLEMAX );
+	assert( preamblecnt <= PREAMBLEMAX );
 	dlog_begin( preamblestr, preamblecnt );
 
 	/* top-level query: a function of session interrupt status
@@ -1541,7 +1542,7 @@ sigint_dialog( void )
 	querycnt = 0;
 	querystr[ querycnt++ ] = _("please select one of "
 				 "the following operations\n");
-	ASSERT( querycnt <= QUERYMAX );
+	assert( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	if ( ! stop_in_progress ) {
 		interruptix = choicecnt;
@@ -1564,7 +1565,7 @@ sigint_dialog( void )
 	choicestr[ choicecnt++ ] = _("other controls");
 	continueix = choicecnt;
 	choicestr[ choicecnt++ ] = _("continue");
-	ASSERT( choicecnt <= CHOICEMAX );
+	assert( choicecnt <= CHOICEMAX );
 
 	responseix = dlog_multi_query( querystr,
 				       querycnt,
@@ -1586,13 +1587,13 @@ sigint_dialog( void )
 				ackcnt );
 		querycnt = 0;
 		querystr[ querycnt++ ] = _("please confirm\n");
-		ASSERT( querycnt <= QUERYMAX );
+		assert( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		interruptix = choicecnt;
 		choicestr[ choicecnt++ ] = _("interrupt this session");
 		nochangeix = choicecnt;
 		choicestr[ choicecnt++ ] = _("continue");
-		ASSERT( choicecnt <= CHOICEMAX );
+		assert( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
 					       choicestr,
@@ -1623,7 +1624,7 @@ sigint_dialog( void )
 		querycnt = 0;
 		querystr[ querycnt++ ] = _("please select one of "
 					 "the following subsystems\n");
-		ASSERT( querycnt <= QUERYMAX );
+		assert( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		/* number of lines must match number of subsystems
 		 */
@@ -1634,7 +1635,7 @@ sigint_dialog( void )
 		choicestr[ choicecnt++ ] = _("all of the above");
 		nochangeix = choicecnt;
 		choicestr[ choicecnt++ ] = _("no change");
-		ASSERT( choicecnt <= CHOICEMAX );
+		assert( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
 					       choicestr,
@@ -1664,7 +1665,7 @@ sigint_dialog( void )
 			querycnt = 0;
 			querystr[ querycnt++ ] = ("please select one of the "
 						  "following verbosity levels\n");
-			ASSERT( querycnt <= QUERYMAX );
+			assert( querycnt <= QUERYMAX );
 			choicecnt = 0;
 			choicestr[ choicecnt++ ] = _("silent");
 			choicestr[ choicecnt++ ] = _("verbose");
@@ -1674,7 +1675,7 @@ sigint_dialog( void )
 			choicestr[ choicecnt++ ] = _("nitty + 1");
 			nochangeix = choicecnt;
 			choicestr[ choicecnt++ ] = _("no change");
-			ASSERT( choicecnt <= CHOICEMAX );
+			assert( choicecnt <= CHOICEMAX );
 			responseix = dlog_multi_query( querystr,
 						       querycnt,
 						       choicestr,
@@ -1708,7 +1709,7 @@ sigint_dialog( void )
 			} else {
 				if ( ssselected < 0 ) {
 					ix_t ssix;
-					ASSERT( ssselected == -1 );
+					assert( ssselected == -1 );
 					for ( ssix = 0
 					      ;
 					      ssix < MLOG_SS_CNT
@@ -1734,7 +1735,7 @@ sigint_dialog( void )
 		querycnt = 0;
 		querystr[ querycnt++ ] = _("please select one of "
 					  "the following metrics\n");
-		ASSERT( querycnt <= QUERYMAX );
+		assert( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		ioix = choicecnt;
 		choicestr[ choicecnt++ ] = _("I/O");
@@ -1746,7 +1747,7 @@ sigint_dialog( void )
 #endif /* RESTORE */
 		nochangeix = choicecnt;
 		choicestr[ choicecnt++ ] = _("continue");
-		ASSERT( choicecnt <= CHOICEMAX );
+		assert( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
 					       choicestr,
@@ -1779,11 +1780,11 @@ sigint_dialog( void )
 		if ( responseix != nochangeix ) {
 			querycnt = 0;
 			querystr[ querycnt++ ] = "\n";
-			ASSERT( querycnt <= QUERYMAX );
+			assert( querycnt <= QUERYMAX );
 			choicecnt = 0;
 			nochangeix = choicecnt;
 			choicestr[ choicecnt++ ] = _("continue");
-			ASSERT( choicecnt <= CHOICEMAX );
+			assert( choicecnt <= CHOICEMAX );
 			responseix = dlog_multi_query( querystr,
 						       querycnt,
 						       choicestr,
@@ -1818,7 +1819,7 @@ sigint_dialog( void )
 		querycnt = 0;
 		querystr[ querycnt++ ] = _("please select one of "
 					   "the following controls\n");
-		ASSERT( querycnt <= QUERYMAX );
+		assert( querycnt <= QUERYMAX );
 		choicecnt = 0;
 		progix = choicecnt;
 		if ( progrpt_enabledpr ) {
@@ -1847,7 +1848,7 @@ sigint_dialog( void )
 		}
 		nochangeix = choicecnt;
 		choicestr[ choicecnt++ ] = _("continue");
-		ASSERT( choicecnt <= CHOICEMAX );
+		assert( choicecnt <= CHOICEMAX );
 		responseix = dlog_multi_query( querystr,
 					       querycnt,
 					       choicestr,
@@ -1898,7 +1899,7 @@ sigint_dialog( void )
 							sprintf( intervalbuf,
 								 _("%d seconds\n"),
 								 newinterval );
-							ASSERT( strlen( intervalbuf )
+							assert( strlen( intervalbuf )
 								<
 								sizeof( intervalbuf ));
 							ackstr[ ackcnt++ ] = intervalbuf;
@@ -1911,7 +1912,7 @@ sigint_dialog( void )
 						sprintf( intervalbuf,
 							 _("%d second intervals\n"),
 							 newinterval );
-						ASSERT( strlen( intervalbuf )
+						assert( strlen( intervalbuf )
 							<
 							sizeof( intervalbuf ));
 						ackstr[ ackcnt++ ] = intervalbuf;
@@ -1966,7 +1967,7 @@ sigint_dialog( void )
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
-	ASSERT( postamblecnt <= POSTAMBLEMAX );
+	assert( postamblecnt <= POSTAMBLEMAX );
 	dlog_end( postamblestr,
 		  postamblecnt );
 
@@ -2009,7 +2010,7 @@ sigintstr( void )
 	} else {
 		sprintf( buf, "%c", intchr );
 	}
-	ASSERT( strlen( buf ) < sizeof( buf ));
+	assert( strlen( buf ) < sizeof( buf ));
 
 	return buf;
 }
@@ -2030,11 +2031,11 @@ set_rlimits( size64_t *vmszp )
 	/* REFERENCED */
 	intgen_t rval;
 
-	ASSERT( minstacksz <= maxstacksz );
+	assert( minstacksz <= maxstacksz );
 
 	rval = getrlimit64( RLIMIT_AS, &rlimit64 );
 
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_AS org cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
@@ -2044,7 +2045,7 @@ set_rlimits( size64_t *vmszp )
 		rlimit64.rlim_cur = rlimit64.rlim_max;
 		( void )setrlimit64( RLIMIT_AS, &rlimit64 );
 		rval = getrlimit64( RLIMIT_AS, &rlimit64 );
-		ASSERT( ! rval );
+		assert( ! rval );
 		mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 			"RLIMIT_VMEM now cur 0x%llx max 0x%llx\n",
 			rlimit64.rlim_cur,
@@ -2054,9 +2055,9 @@ set_rlimits( size64_t *vmszp )
 	vmsz = ( size64_t )rlimit64.rlim_cur;
 #endif /* RESTORE */
 	
-	ASSERT( minstacksz <= maxstacksz );
+	assert( minstacksz <= maxstacksz );
 	rval = getrlimit64( RLIMIT_STACK, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_STACK org cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
@@ -2076,7 +2077,7 @@ set_rlimits( size64_t *vmszp )
 			rlimit64.rlim_max = minstacksz;
 			( void )setrlimit64( RLIMIT_STACK, &rlimit64 );
 			rval = getrlimit64( RLIMIT_STACK, &rlimit64 );
-			ASSERT( ! rval );
+			assert( ! rval );
 			if ( rlimit64.rlim_cur < minstacksz ) {
 				mlog( MLOG_NORMAL
 				      |
@@ -2103,7 +2104,7 @@ set_rlimits( size64_t *vmszp )
 			rlimit64.rlim_cur = minstacksz;
 			( void )setrlimit64( RLIMIT_STACK, &rlimit64 );
 			rval = getrlimit64( RLIMIT_STACK, &rlimit64 );
-			ASSERT( ! rval );
+			assert( ! rval );
 			if ( rlimit64.rlim_cur < minstacksz ) {
 				mlog( MLOG_NORMAL
 				      |
@@ -2131,7 +2132,7 @@ set_rlimits( size64_t *vmszp )
 		rlimit64.rlim_cur = maxstacksz;
 		( void )setrlimit64( RLIMIT_STACK, &rlimit64 );
 		rval = getrlimit64( RLIMIT_STACK, &rlimit64 );
-		ASSERT( ! rval );
+		assert( ! rval );
 		if ( rlimit64.rlim_cur > maxstacksz ) {
 			mlog( MLOG_NORMAL
 			      |
@@ -2152,14 +2153,14 @@ set_rlimits( size64_t *vmszp )
 	      rlimit64.rlim_max );
 
 	rval = getrlimit64( RLIMIT_DATA, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_DATA org cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
 	      rlimit64.rlim_max );
 	
 	rval = getrlimit64( RLIMIT_FSIZE, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_FSIZE org cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
@@ -2169,14 +2170,14 @@ set_rlimits( size64_t *vmszp )
 	rlimit64.rlim_cur = RLIM64_INFINITY;
 	( void )setrlimit64( RLIMIT_FSIZE, &rlimit64 );
 	rval = getrlimit64( RLIMIT_FSIZE, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_FSIZE now cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
 	      rlimit64.rlim_max );
 	
 	rval = getrlimit64( RLIMIT_CPU, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_CPU cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,
@@ -2184,7 +2185,7 @@ set_rlimits( size64_t *vmszp )
 	rlimit64.rlim_cur = rlimit64.rlim_max;
 	( void )setrlimit64( RLIMIT_CPU, &rlimit64 );
 	rval = getrlimit64( RLIMIT_CPU, &rlimit64 );
-	ASSERT( ! rval );
+	assert( ! rval );
 	mlog( MLOG_NITTY | MLOG_NOLOCK | MLOG_PROC,
 	      "RLIMIT_CPU now cur 0x%llx max 0x%llx\n",
 	      rlimit64.rlim_cur,

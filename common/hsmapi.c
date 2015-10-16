@@ -19,6 +19,7 @@
 #include <xfs/xfs.h>
 #include <attr/attributes.h>
 #include <xfs/jdm.h>
+#include <assert.h>
 
 #include "hsmapi.h"
 #include "mlog.h"

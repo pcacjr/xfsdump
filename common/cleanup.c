@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 
 #include "cleanup.h"
 
@@ -51,7 +52,7 @@ cleanup_register_base( void ( * funcp )( void *arg1, void *arg2 ),
 	cu_t *p;
 
 	p = ( cu_t * )calloc( 1, sizeof( cu_t ));
-	ASSERT( p );
+	assert( p );
 	p->cu_funcp = funcp;
 	p->cu_arg1 = arg1;
 	p->cu_arg2 = arg2;
@@ -94,7 +95,7 @@ cleanup_cancel( cleanup_t *cleanupp )
 	cu_t *nextp;
 	cu_t *prevp;
 
-	ASSERT( cu_rootp );
+	assert( cu_rootp );
 
 	for ( prevp = 0, nextp = cu_rootp
 	      ;
@@ -103,7 +104,7 @@ cleanup_cancel( cleanup_t *cleanupp )
 	      prevp = nextp, nextp = nextp->cu_nextp )
 	;
 
-	ASSERT( nextp );
+	assert( nextp );
 	if ( prevp ) {
 		prevp->cu_nextp = p->cu_nextp;
 	} else {

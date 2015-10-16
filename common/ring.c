@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <malloc.h>
+#include <assert.h>
 
 #include "types.h"
 #include "qlock.h"
@@ -56,7 +57,7 @@ ring_create( size_t ringlen,
 	/* allocate a ring descriptor
 	 */
 	ringp = ( ring_t * )calloc( 1, sizeof( ring_t ));
-	ASSERT( ringp );
+	assert( ringp );
 	ringp->r_len = ringlen;
 	ringp->r_clientctxp = clientctxp;
 	ringp->r_readfunc = readfunc;
@@ -86,7 +87,7 @@ ring_create( size_t ringlen,
 	/* allocate the ring messages
 	 */
 	ringp->r_msgp = ( ring_msg_t * )calloc( ringlen, sizeof( ring_msg_t ));
-	ASSERT( ringp->r_msgp );
+	assert( ringp->r_msgp );
 
 	/* allocate the buffers and initialize the messages
 	 */
@@ -115,7 +116,7 @@ ring_create( size_t ringlen,
 					*rvalp = EPERM;
 					return 0;
 				}
-				ASSERT( 0 );
+				assert( 0 );
 			}
 		}
 	}
@@ -126,7 +127,7 @@ ring_create( size_t ringlen,
 			    drive_index,
 			    _("slave"),
 			    ringp );
-	ASSERT( ok );
+	assert( ok );
 
 	return ringp;
 }
@@ -138,7 +139,7 @@ ring_get( ring_t *ringp )
 
 	/* assert client currently holds no messages
 	 */
-	ASSERT( ringp->r_client_cnt == 0 );
+	assert( ringp->r_client_cnt == 0 );
 
 	/* bump client message count and note if client needs to block
 	 */
@@ -157,11 +158,11 @@ ring_get( ring_t *ringp )
 
 	/* assert the message is where it belongs
 	 */
-	ASSERT( msgp->rm_loc == RING_LOC_READY );
+	assert( msgp->rm_loc == RING_LOC_READY );
 
 	/* verify the message index has not become corrupted
 	 */
-	ASSERT( msgp->rm_mix == ringp->r_ready_out_ix );
+	assert( msgp->rm_mix == ringp->r_ready_out_ix );
 
 	/* bump the output index
 	 */
@@ -187,15 +188,15 @@ ring_put( ring_t *ringp, ring_msg_t *msgp )
 {
 	/* assert the client holds exactly one message
 	 */
-	ASSERT( ringp->r_client_cnt == 1 );
+	assert( ringp->r_client_cnt == 1 );
 
 	/* assert the client is returning the right message
 	 */
-	ASSERT( msgp->rm_mix == ringp->r_active_in_ix );
+	assert( msgp->rm_mix == ringp->r_active_in_ix );
 
 	/* assert the message is where it belongs
 	 */
-	ASSERT( msgp->rm_loc == RING_LOC_CLIENT );
+	assert( msgp->rm_loc == RING_LOC_CLIENT );
 
 	/* decrement the count of messages held by the client
 	 */
@@ -224,13 +225,13 @@ ring_reset( ring_t *ringp, ring_msg_t *msgp )
 	/* if the client is not holding a message, get the next message
 	 */
 	if ( ringp->r_client_cnt == 0 ) {
-		ASSERT( ! msgp );
+		assert( ! msgp );
 		msgp = ring_get( ringp );
-		ASSERT( msgp );
-		ASSERT( ringp->r_client_cnt == 1 );
+		assert( msgp );
+		assert( ringp->r_client_cnt == 1 );
 	} else {
-		ASSERT( msgp );
-		ASSERT( ringp->r_client_cnt == 1 );
+		assert( msgp );
+		assert( ringp->r_client_cnt == 1 );
 	}
 
 	/* tell the slave to abort
@@ -240,24 +241,24 @@ ring_reset( ring_t *ringp, ring_msg_t *msgp )
 
 	/* wait for the reset to be acknowledged
 	 */
-	ASSERT( ringp->r_client_cnt == 0 );
+	assert( ringp->r_client_cnt == 0 );
 	do {
 		/* pull a message from the ready queue
 		 */
 		qsemP( ringp->r_ready_qsemh );
 		msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
-		ASSERT( msgp->rm_loc == RING_LOC_READY );
+		assert( msgp->rm_loc == RING_LOC_READY );
 		ringp->r_ready_out_ix = ( ringp->r_ready_out_ix + 1 )
 					%
 					ringp->r_len;
 		ringp->r_client_cnt++;
 	} while ( msgp->rm_stat != RING_STAT_RESETACK );
-	ASSERT( ringp->r_client_cnt == ringp->r_len );
+	assert( ringp->r_client_cnt == ringp->r_len );
 
 	/* re-initialize the ring
 	 */
-	ASSERT( qsemPavail( ringp->r_ready_qsemh ) == 0 );
-	ASSERT( qsemPavail( ringp->r_active_qsemh ) == 0 );
+	assert( qsemPavail( ringp->r_ready_qsemh ) == 0 );
+	assert( qsemPavail( ringp->r_active_qsemh ) == 0 );
 	ringp->r_ready_in_ix = 0;
 	ringp->r_ready_out_ix = 0;
 	ringp->r_active_in_ix = 0;
@@ -273,8 +274,8 @@ ring_reset( ring_t *ringp, ring_msg_t *msgp )
 		msgp->rm_loc = RING_LOC_READY;
 		qsemV( ringp->r_ready_qsemh );
 	}
-	ASSERT( qsemPavail( ringp->r_ready_qsemh ) == ringp->r_len );
-	ASSERT( qsemPavail( ringp->r_active_qsemh ) == 0 );
+	assert( qsemPavail( ringp->r_ready_qsemh ) == ringp->r_len );
+	assert( qsemPavail( ringp->r_active_qsemh ) == 0 );
 }
 
 void
@@ -284,7 +285,7 @@ ring_destroy( ring_t *ringp )
 
 	/* the client must not be holding a message
 	 */
-	ASSERT( ringp->r_client_cnt == 0 );
+	assert( ringp->r_client_cnt == 0 );
 
 	/* get a message
 	 */
@@ -302,7 +303,7 @@ ring_destroy( ring_t *ringp )
 		 */
 		qsemP( ringp->r_ready_qsemh );
 		msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
-		ASSERT( msgp->rm_loc == RING_LOC_READY );
+		assert( msgp->rm_loc == RING_LOC_READY );
 		ringp->r_ready_out_ix = ( ringp->r_ready_out_ix + 1 )
 					%
 					ringp->r_len;
@@ -323,7 +324,7 @@ ring_slave_get( ring_t *ringp )
 
 	/* assert slave currently holds no messages
 	 */
-	ASSERT( ringp->r_slave_cnt == 0 );
+	assert( ringp->r_slave_cnt == 0 );
 
 	/* bump slave message count and note if slave needs to block
 	 */
@@ -342,11 +343,11 @@ ring_slave_get( ring_t *ringp )
 
 	/* assert the message is where it belongs
 	 */
-	ASSERT( msgp->rm_loc == RING_LOC_ACTIVE );
+	assert( msgp->rm_loc == RING_LOC_ACTIVE );
 
 	/* verify the message index has not become corrupted
 	 */
-	ASSERT( msgp->rm_mix == ringp->r_active_out_ix );
+	assert( msgp->rm_mix == ringp->r_active_out_ix );
 
 	/* bump the output index
 	 */
@@ -372,15 +373,15 @@ ring_slave_put( ring_t *ringp, ring_msg_t *msgp )
 {
 	/* assert the slave holds exactly one message
 	 */
-	ASSERT( ringp->r_slave_cnt == 1 );
+	assert( ringp->r_slave_cnt == 1 );
 
 	/* assert the slave is returning the right message
 	 */
-	ASSERT( msgp->rm_mix == ringp->r_ready_in_ix );
+	assert( msgp->rm_mix == ringp->r_ready_in_ix );
 
 	/* assert the message is where it belongs
 	 */
-	ASSERT( msgp->rm_loc == RING_LOC_SLAVE );
+	assert( msgp->rm_loc == RING_LOC_SLAVE );
 
 	/* decrement the count of messages held by the slave
 	 */
@@ -435,7 +436,7 @@ ring_slave_entry( void *ringctxp )
 			}
 			if ( ! ringp->r_first_io_time ) {
 				ringp->r_first_io_time = time( 0 );
-				ASSERT( ringp->r_first_io_time );
+				assert( ringp->r_first_io_time );
 			}
 			rval = ( ringp->r_readfunc )( ringp->r_clientctxp,
 						      msgp->rm_bufp );
@@ -455,7 +456,7 @@ ring_slave_entry( void *ringctxp )
 			}
 			if ( ! ringp->r_first_io_time ) {
 				ringp->r_first_io_time = time( 0 );
-				ASSERT( ringp->r_first_io_time );
+				assert( ringp->r_first_io_time );
 			}
 			rval = ( ringp->r_writefunc )( ringp->r_clientctxp,
 						       msgp->rm_bufp );

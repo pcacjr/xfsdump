@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <assert.h>
 
 #include "types.h"
 #include "mlog.h"
@@ -33,7 +34,7 @@ bag_alloc( void )
 	bag_t *bagp;
 
 	bagp = ( bag_t * )calloc( 1, sizeof( bag_t ));
-	ASSERT( bagp );
+	assert( bagp );
 	return bagp;
 }
 
@@ -46,9 +47,9 @@ bag_insert( bag_t *bagp,
 	register bagelem_t *nextp;
 	register bagelem_t *prevp;
 
-	ASSERT( ! newp->be_loaded );
+	assert( ! newp->be_loaded );
 	newp->be_loaded = BOOL_TRUE;
-	ASSERT( ! newp->be_bagp );
+	assert( ! newp->be_bagp );
 	newp->be_bagp = bagp;
 
 	newp->be_key = key;
@@ -79,8 +80,8 @@ bag_remove( bag_t *bagp,
 	register bagelem_t *nextp;
 	register bagelem_t *prevp;
 
-	ASSERT( oldp->be_loaded );
-	ASSERT( oldp->be_bagp == bagp );
+	assert( oldp->be_loaded );
+	assert( oldp->be_bagp == bagp );
 
 	nextp = oldp->be_nextp;
 	prevp = oldp->be_prevp;
@@ -90,7 +91,7 @@ bag_remove( bag_t *bagp,
 
 	if ( bagp->b_headp == oldp ) {
 		if ( nextp == oldp ) {
-			ASSERT( prevp == oldp );
+			assert( prevp == oldp );
 			bagp->b_headp = 0;
 		} else {
 			bagp->b_headp = nextp;
@@ -121,8 +122,8 @@ bag_find( bag_t *bagp,
 		*payloadpp = 0;
 		return 0;
 	} else {
-		ASSERT( p->be_loaded );
-		ASSERT( p->be_bagp == bagp );
+		assert( p->be_loaded );
+		assert( p->be_bagp == bagp );
 		*payloadpp = p->be_payloadp;
 		return p;
 	}
@@ -182,7 +183,7 @@ bag_free( bag_t *bagp )
 		if ( p == bagp->b_headp ) {
 			break;
 		}
-		ASSERT( p );
+		assert( p );
 	}
 
 	memset( ( void * )bagp, 0, sizeof( bag_t ));

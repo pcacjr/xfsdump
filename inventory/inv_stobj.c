@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/dir.h>
 #include <sys/mman.h>
+#include <assert.h>
 
 #include "types.h"
 #include "timeutil.h"
@@ -168,7 +169,7 @@ stobj_split( invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
 	if ( GET_SESHEADERS( fd, &harr, ns ) < 0 )
 		return -1;
 	
-	ASSERT( harr != NULL );
+	assert( harr != NULL );
 
 	if ( ( ix = stobj_find_splitpoint( fd, harr, ns, 
 				       newsess->seshdr->sh_time ) ) == 0 )
@@ -390,7 +391,7 @@ stobj_sortheaders( int fd, u_int num )
 	if ( num < 2 ) return 1;
 
 	hdrs = malloc( sz );
-	ASSERT( hdrs );
+	assert( hdrs );
 
 	if ( GET_REC_NOLOCK( fd, hdrs, sz, STOBJ_OFFSET( 0, 0 ) ) < 0 ) {
 		free ( hdrs );
@@ -505,7 +506,7 @@ stobj_makefname( char *fname )
 	strcat( fname, str );
 	strcat( fname, INV_STOBJ_PREFIX );
 
-	ASSERT( (int) strlen( fname ) < INV_STRLEN );
+	assert( (int) strlen( fname ) < INV_STRLEN );
 }
 
 
@@ -571,7 +572,7 @@ stobj_create_session(
 {
 	off64_t hoff;
 	
-	ASSERT( tok && sescnt && ses && hdr );
+	assert( tok && sescnt && ses && hdr );
 
 	hdr->sh_sess_off = -1;
 	ses->s_cur_nstreams = 0;
@@ -759,7 +760,7 @@ stobj_pack_sessinfo( int fd, invt_session_t *ses, invt_seshdr_t *hdr,
 
 	/* Now we know how big this entire thing is going to be */
 	sesbufcp = sesbuf = calloc( 1, sessz );
-	ASSERT( sesbuf );
+	assert( sesbuf );
 
 	/* Copy everything. Note that we don't bother to adjust the offsets
 	   either in the seshdr or in the mediafiles, because we don't need
@@ -801,7 +802,7 @@ stobj_pack_sessinfo( int fd, invt_session_t *ses, invt_seshdr_t *hdr,
 		for ( j = 0; j < strms[i].st_nmediafiles; 
 		     j++, 
 		     off = mf.mf_nextmf ) {
-			ASSERT( off );
+			assert( off );
 			if ( GET_REC_NOLOCK( fd, &mf, 
 					     sizeof( invt_mediafile_t ),
 					     off ) <= 0 ) {
@@ -941,7 +942,7 @@ stobj_delete_mobj(int fd,
 /*  The prob is that we need to keep track of where we got these mfiles from
     as we get them, or we wont know how to put them back if they are dirty.
 */
-			ASSERT( off );
+			assert( off );
 			if ( GET_REC_NOLOCK( fd, mf, 
 					     sizeof( invt_mediafile_t ),
 					     off ) <= 0 ) {
@@ -1005,7 +1006,7 @@ stobj_unpack_sessinfo(
 	char	         *tmpbuf;
 	char 		 *p = (char *)bufp;
 	
-	ASSERT ( bufp );
+	assert ( bufp );
 	
 	tmpbuf = (char *)malloc(bufsz);
 
@@ -1109,7 +1110,7 @@ stobj_unpack_sessinfo(
 		      (int)( p - (char *) bufp ), (int) bufsz,
 	      (int) ( sizeof( invt_entry_t ) ) );
 	}
-	ASSERT( (size_t) ( p - (char *) bufp ) == bufsz );
+	assert( (size_t) ( p - (char *) bufp ) == bufsz );
 	
 	return BOOL_TRUE;
 }
@@ -1238,12 +1239,12 @@ stobj_copy_invsess(int fd,
 		if (nmf)
 			ises->s_streams[i].st_mediafiles = calloc( nmf,
 						    sizeof( inv_mediafile_t ) );
-		ASSERT( !nmf || ises->s_streams[i].st_mediafiles );
+		assert( !nmf || ises->s_streams[i].st_mediafiles );
 
 		for ( j = 0; j < nmf; 
 		      j++, 
 		      off = mf.mf_nextmf ) {
-			ASSERT( off );
+			assert( off );
 			if ( GET_REC_NOLOCK( fd, &mf, 
 					     sizeof( invt_mediafile_t ),
 					     off ) <= 0 ) {

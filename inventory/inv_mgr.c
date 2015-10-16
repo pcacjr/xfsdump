@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/dir.h>
+#include <assert.h>
 #include "types.h"
 #include "mlog.h"
 #include "inv_priv.h"
@@ -150,7 +151,7 @@ invmgr_query_all_sessions (
 
 	/* if on return, this is still null, the search failed */
 	*outarg = NULL; 
-	ASSERT(inarg);
+	assert(inarg);
 
 	fd = fstab_getall( &arr, &cnt, &numfs, forwhat );
 	/* special case missing file: ok, outarg says zero */
@@ -725,7 +726,7 @@ bool_t
 invmgr_trylock( invt_mode_t mode )
 {
 	int md;
-	ASSERT( invlock_fd >= 0 );
+	assert( invlock_fd >= 0 );
 	
 	md = (mode == INVT_RECONSTRUCT) ? LOCK_EX: LOCK_SH;
 
@@ -738,7 +739,7 @@ invmgr_trylock( invt_mode_t mode )
 void
 invmgr_unlock( void )
 {
-	ASSERT( invlock_fd >= 0 );
+	assert( invlock_fd >= 0 );
 	
 	INVLOCK( invlock_fd, LOCK_UN );	
 

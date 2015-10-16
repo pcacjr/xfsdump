@@ -28,6 +28,7 @@
 #include <xfs/handle.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
+#include <assert.h>
 
 #include "types.h"
 #include "exit.h"
@@ -351,16 +352,16 @@ tree_init( char *hkdir,
 
 	/* sanity checks
 	 */
-	ASSERT( ! ( PERSSZ % pgsz ));
-	ASSERT( sizeof( persp ) <= PERSSZ );
-	ASSERT( sizeof( node_t ) <= NODESZ );
-	ASSERT( ! persp );
-	ASSERT( ! tranp );
+	assert( ! ( PERSSZ % pgsz ));
+	assert( sizeof( persp ) <= PERSSZ );
+	assert( sizeof( node_t ) <= NODESZ );
+	assert( ! persp );
+	assert( ! tranp );
 
 	/* allocate transient state
 	 */
 	tranp = ( tran_t * )calloc( 1, sizeof( tran_t ));
-	ASSERT( tranp );
+	assert( tranp );
 
 	tranp->t_toconlypr = toconlypr;
 	tranp->t_hkdir = hkdir;
@@ -425,7 +426,7 @@ tree_init( char *hkdir,
 
 	/* mmap the persistent state
 	 */
-	ASSERT( ! ( PERSSZ % pgsz ));
+	assert( ! ( PERSSZ % pgsz ));
 	persp = ( treepers_t * ) mmap_autogrow(
 				     PERSSZ,
 				     tranp->t_persfd,
@@ -450,9 +451,9 @@ tree_init( char *hkdir,
 	 * begin immediately after the hash abstraction. give it the remainder
 	 * of vm.
 	 */
-	ASSERT( persp->p_hashsz <= ( size64_t )( OFF64MAX - ( off64_t )PERSSZ));
+	assert( persp->p_hashsz <= ( size64_t )( OFF64MAX - ( off64_t )PERSSZ));
 	nodeoff = ( off64_t )PERSSZ + ( off64_t )persp->p_hashsz;
-	ASSERT( vmsz > ( size64_t )nodeoff );
+	assert( vmsz > ( size64_t )nodeoff );
 	ok = node_init( tranp->t_persfd, 
 		        nodeoff,
 		        NODESZ,
@@ -539,16 +540,16 @@ tree_sync( char *hkdir,
 
 	/* sanity checks
 	 */
-	ASSERT( ! ( PERSSZ % pgsz ));
-	ASSERT( sizeof( persp ) <= PERSSZ );
-	ASSERT( sizeof( node_t ) <= NODESZ );
-	ASSERT( ! persp );
-	ASSERT( ! tranp );
+	assert( ! ( PERSSZ % pgsz ));
+	assert( sizeof( persp ) <= PERSSZ );
+	assert( sizeof( node_t ) <= NODESZ );
+	assert( ! persp );
+	assert( ! tranp );
 
 	/* allocate transient state
 	 */
 	tranp = ( tran_t * )calloc( 1, sizeof( tran_t ));
-	ASSERT( tranp );
+	assert( tranp );
 
 	tranp->t_toconlypr = toconlypr;
 	tranp->t_hkdir = hkdir;
@@ -600,7 +601,7 @@ tree_sync( char *hkdir,
 
 	/* mmap the persistent state
 	 */
-	ASSERT( ! ( PERSSZ % pgsz ));
+	assert( ! ( PERSSZ % pgsz ));
 	persp = ( treepers_t * ) mmap_autogrow(
 				     PERSSZ,
 				     tranp->t_persfd,
@@ -637,7 +638,7 @@ tree_sync( char *hkdir,
 
 	/* synchronize with the node abstraction.
 	 */
-	ASSERT( persp->p_hashsz <= ( size64_t )( OFF64MAX - ( off64_t )PERSSZ));
+	assert( persp->p_hashsz <= ( size64_t )( OFF64MAX - ( off64_t )PERSSZ));
 	nodeoff = ( off64_t )PERSSZ + ( off64_t )persp->p_hashsz;
 	ok = node_sync( tranp->t_persfd, nodeoff );
 	if ( ! ok ) {
@@ -687,7 +688,7 @@ tree_marknoref( void )
 		node_t *orphp;
 		orphp = Node_map( persp->p_orphh );
 		orphp->n_flags |= ( NF_REFED | NF_DUMPEDDIR );
-		ASSERT( orphp->n_dah == DAH_NULL );
+		assert( orphp->n_dah == DAH_NULL );
 		Node_unmap( persp->p_orphh, &orphp );
 	}
 }
@@ -740,12 +741,12 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 
 	/* sanity check - orphino is supposed to be an unused ino!
 	 */
-	ASSERT( ino != orphino );
+	assert( ino != orphino );
 
 	/* lookup head of hardlink list
 	 */
 	hardh = link_hardh( ino, gen );
-	ASSERT( ino != persp->p_rootino || hardh == persp->p_rooth );
+	assert( ino != persp->p_rootino || hardh == persp->p_rooth );
 
 	/* already present
 	 */
@@ -762,7 +763,7 @@ tree_begindir( filehdr_t *fhdrp, dah_t *dahp )
 			      gen,
 			      fhdrp->fh_stat.bs_gen );
 			if ( ! tranp->t_toconlypr ) {
-				ASSERT( hardp->n_dah == DAH_NULL );
+				assert( hardp->n_dah == DAH_NULL );
 				hardp->n_dah = dirattr_add( fhdrp );
 			}
 		} else if ( ! tranp->t_toconlypr && hardp->n_dah == DAH_NULL ) {
@@ -829,7 +830,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 
 	/* sanity check - orphino is supposed to be an unused ino!
 	 */
-	ASSERT( ino != orphino );
+	assert( ino != orphino );
 
 	/* don't allow entries named "orphanage" under root to be added
 	 */
@@ -885,7 +886,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 						return RV_ERROR;
 				}
 				if ( hardp->n_lnkh != NH_NULL ) {
-					ASSERT( hardp->n_flags & NF_REAL );
+					assert( hardp->n_flags & NF_REAL );
 					renameh = hardp->n_lnkh;
 					renamep = Node_map( renameh );
 					if ( renamep->n_parh == NH_NULL ) {
@@ -912,7 +913,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 						namreg_get( renamep->n_nrh,
 							    tranp->t_namebuf,
 						    sizeof( tranp->t_namebuf ));
-						ASSERT( namebuflen > 0 );
+						assert( namebuflen > 0 );
 						if ( strcmp( name,
 							   tranp->t_namebuf )) {
 							mlog( MLOG_DEBUG
@@ -944,10 +945,10 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 					nrh_t nrh;
 
 					hardp->n_flags &= ~NF_NEWORPH;
-					ASSERT( hardp->n_nrh == NRH_NULL );
-					ASSERT( hardp->n_parh != NH_NULL );
+					assert( hardp->n_nrh == NRH_NULL );
+					assert( hardp->n_parh != NH_NULL );
 					nrh = disown( hardh );
-					ASSERT( nrh == NRH_NULL );
+					assert( nrh == NRH_NULL );
 					nrh = namreg_add( name, namelen );
 					adopt( parh, hardh, nrh );
 					mlog( MLOG_DEBUG | MLOG_TREE,
@@ -958,13 +959,13 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 					      gen );
 				}
 			} else {
-				ASSERT( hardp->n_nrh != NRH_NULL );
+				assert( hardp->n_nrh != NRH_NULL );
 				namebuflen
 				=
 				namreg_get( hardp->n_nrh,
 					    tranp->t_namebuf,
 					    sizeof( tranp->t_namebuf ));
-				ASSERT( namebuflen > 0 );
+				assert( namebuflen > 0 );
 				if ( hardp->n_parh == parh
 				     &&
 				     ! strcmp( tranp->t_namebuf, name )) {
@@ -1021,7 +1022,7 @@ tree_addent( nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen )
 						Node_unmap( renameh, &renamep );
 					}
 					renamep = Node_map( renameh );
-					ASSERT( hardp->n_parh != NH_NULL );
+					assert( hardp->n_parh != NH_NULL );
 					if ( hardp->n_parh != parh ) {
 						/* different parent
 						 */
@@ -1220,7 +1221,7 @@ tree_post( char *path1, char *path2 )
 	}
 
 #ifdef TREE_CHK
-	ASSERT( tree_chk( ));
+	assert( tree_chk( ));
 #endif /* TREE_CHK */
 
 	/* rename directories
@@ -1238,7 +1239,7 @@ tree_post( char *path1, char *path2 )
 	}
 
 #ifdef TREE_CHK
-	ASSERT( tree_chk( ));
+	assert( tree_chk( ));
 #endif /* TREE_CHK */
 
 	/* process hard links
@@ -1321,7 +1322,7 @@ noref_elim_recurse( nh_t parh,
 			if ( ! isrefpr ) {
 				nrh_t nrh;
 
-				ASSERT( ! isrenamepr );
+				assert( ! isrenamepr );
 				if ( isrealpr ) {
 					ok = Node2path( cldh, path1, _("rmdir") );
 					if ( ! ok ) {
@@ -1346,7 +1347,7 @@ noref_elim_recurse( nh_t parh,
 					}
 				}
 				nrh = disown( cldh );
-				ASSERT( nrh != NRH_NULL );
+				assert( nrh != NRH_NULL );
 				namreg_del( nrh );
 				link_out( cldh );
 				Node_free( &cldh );
@@ -1356,8 +1357,8 @@ noref_elim_recurse( nh_t parh,
 				nrh_t nrh;
 				node_t *renamep;
 
-				ASSERT( isrefpr );
-				ASSERT( isrealpr );
+				assert( isrefpr );
+				assert( isrealpr );
 				ok = Node2path( cldh,
 						path1,
 						_("tmp dir rename src") );
@@ -1366,7 +1367,7 @@ noref_elim_recurse( nh_t parh,
 					continue;
 				}
 				nrh = disown( cldh );
-				ASSERT( nrh != NRH_NULL );
+				assert( nrh != NRH_NULL );
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				ok = Node2path( cldh,
 						path2,
@@ -1375,7 +1376,7 @@ noref_elim_recurse( nh_t parh,
 					/* REFERENCED */
 					nrh_t dummynrh;
 					dummynrh = disown( cldh );
-					ASSERT( dummynrh == NRH_NULL );
+					assert( dummynrh == NRH_NULL );
 					adopt( parh, cldh, nrh );
 					cldh = nextcldh;
 					continue;
@@ -1395,7 +1396,7 @@ noref_elim_recurse( nh_t parh,
 					      path2,
 					      strerror( errno ));
 					dummynrh = disown( cldh );
-					ASSERT( dummynrh == NRH_NULL );
+					assert( dummynrh == NRH_NULL );
 					adopt( parh, cldh, nrh );
 					cldh = nextcldh;
 					continue;
@@ -1436,7 +1437,7 @@ noref_elim_recurse( nh_t parh,
 				nh_t hardh;
 				bool_t neededpr;
 				hardh = link_hardh( ino, gen );
-				ASSERT( hardh != NH_NULL );
+				assert( hardh != NH_NULL );
 				canunlinkpr = BOOL_FALSE;
 				neededpr = BOOL_FALSE;
 				/* tes@sgi.com:
@@ -1475,7 +1476,7 @@ noref_elim_recurse( nh_t parh,
 			if ( mustorphpr ) {
 				/* rename file to orphanage */
 				nrh_t nrh;
-				ASSERT( ! canunlinkpr );
+				assert( ! canunlinkpr );
 				ok = Node2path( cldh,
 						path1,
 						_("tmp nondir rename src") );
@@ -1484,7 +1485,7 @@ noref_elim_recurse( nh_t parh,
 					continue;
 				}
 				nrh = disown( cldh );
-				ASSERT( nrh != NRH_NULL );
+				assert( nrh != NRH_NULL );
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				ok = Node2path( cldh,
 						path2,
@@ -1493,7 +1494,7 @@ noref_elim_recurse( nh_t parh,
 					/* REFERENCED */
 					nrh_t dummynrh;
 					dummynrh = disown( cldh );
-					ASSERT( dummynrh == NRH_NULL );
+					assert( dummynrh == NRH_NULL );
 					adopt( parh, cldh, nrh );
 					cldh = nextcldh;
 					continue;
@@ -1513,7 +1514,7 @@ noref_elim_recurse( nh_t parh,
 					      path2,
 					      strerror( errno ));
 					dummynrh = disown( cldh );
-					ASSERT( dummynrh == NRH_NULL );
+					assert( dummynrh == NRH_NULL );
 					adopt( parh, cldh, nrh );
 					cldh = nextcldh;
 					continue;
@@ -1527,7 +1528,7 @@ noref_elim_recurse( nh_t parh,
 				/* REFERENCED */
 				nrh_t nrh;
 
-				ASSERT( ! mustorphpr );
+				assert( ! mustorphpr );
 				if ( isrealpr ) {
 					ok = Node2path( cldh, path1, _("rmdir") );
 					if ( ! ok ) {
@@ -1553,7 +1554,7 @@ noref_elim_recurse( nh_t parh,
 					}
 				}
 				nrh = disown( cldh );
-				ASSERT( nrh != NRH_NULL );
+				assert( nrh != NRH_NULL );
 				link_out( cldh );
 				Node_free( &cldh );
 			}
@@ -1662,7 +1663,7 @@ rename_dirs( nh_t cldh,
 		isrenamepr = isdirpr && renameh != NH_NULL;
 		nextcldh = cldp->n_sibh;
 		Node_unmap( cldh, &cldp );
-		ASSERT( parh == persp->p_orphh );
+		assert( parh == persp->p_orphh );
 
 		if ( isrenamepr ) {
 			node_t *renamep;
@@ -1681,12 +1682,12 @@ rename_dirs( nh_t cldh,
 				continue;
 			}
 			dummynrh = disown( cldh );
-			ASSERT( dummynrh == NRH_NULL );
+			assert( dummynrh == NRH_NULL );
 			adopt( newparh, cldh, newnrh );
 			ok = Node2path( cldh, path2, _("rename dir") );
 			if ( ! ok ) {
 				dummynrh = disown( cldh );
-				ASSERT( dummynrh == newnrh );
+				assert( dummynrh == newnrh );
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				cldp = Node_map( cldh );
 				cldp->n_nrh = NRH_NULL;
@@ -1707,7 +1708,7 @@ rename_dirs( nh_t cldh,
 				      path2,
 				      strerror( errno ));
 				dummynrh = disown( cldh );
-				ASSERT( dummynrh == newnrh );
+				assert( dummynrh == newnrh );
 				adopt( persp->p_orphh, cldh, NRH_NULL );
 				cldh = nextcldh;
 				continue;
@@ -1964,7 +1965,7 @@ tree_cb_links( xfs_ino_t ino,
 			link_in( nh );
 			adopt( persp->p_orphh, nh, NRH_NULL );
 			ok = Node2path( nh, path1, _("orphan") );
-			ASSERT( ok );
+			assert( ok );
 			( void )( * funcp )( contextp, BOOL_FALSE, path1,path2);
 		}
 	}
@@ -2271,7 +2272,7 @@ proc_hardlinks_cb( void *contextp, nh_t hardheadh )
 			}
 			continue;
 		}
-		ASSERT( 0 );
+		assert( 0 );
 	}
 
 	/* now pass through dst list, doing renames if src list not empty,
@@ -2700,7 +2701,7 @@ restart:
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
-	ASSERT( preamblecnt <= PREAMBLEMAX );
+	assert( preamblecnt <= PREAMBLEMAX );
 	dlog_begin( preamblestr, preamblecnt );
 
 	/* execute commands until time to extract or quit. always begin with
@@ -2736,9 +2737,9 @@ restart:
 		} else if ( responseix == abortix ) {
 			ackstr[ ackcnt++ ] = _("abort\n");
 		} else {
-			ASSERT( responseix == okix );
+			assert( responseix == okix );
 		}
-		ASSERT( ackcnt <= ACKMAX );
+		assert( ackcnt <= ACKMAX );
 		dlog_string_ack( ackstr,
 				 ackcnt );
 
@@ -2753,7 +2754,7 @@ restart:
 			postamblestr[ postamblecnt++ ] = "\n";
 			postamblestr[ postamblecnt++ ] = fold;
 			postamblestr[ postamblecnt++ ] = "\n\n";
-			ASSERT( postamblecnt <= POSTAMBLEMAX );
+			assert( postamblecnt <= POSTAMBLEMAX );
 			dlog_end( postamblestr, postamblecnt );
 
 			/* if sighup or sigquit, immediately quit
@@ -2765,7 +2766,7 @@ restart:
 			/* if sigint, allow main thread to decide if
 			 * operator really wants to quit
 			 */
-			ASSERT( responseix == sigintix );
+			assert( responseix == sigintix );
 			if ( cldmgr_stop_requested( )) {
 				return BOOL_FALSE;
 			}
@@ -2794,7 +2795,7 @@ restart:
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
-	ASSERT( postamblecnt <= POSTAMBLEMAX );
+	assert( postamblecnt <= POSTAMBLEMAX );
 	dlog_end( postamblestr, postamblecnt );
 
 	/* pv 773569 - quit is not a reason to consider session
@@ -2846,7 +2847,7 @@ tsi_cmd_pwd_recurse( void *ctxp,
 	register intgen_t namelen;
 	nrh_t nrh;
 
-	ASSERT( nh != NH_NULL );
+	assert( nh != NH_NULL );
 
 	np = Node_map( nh );
 	nrh = np->n_nrh;
@@ -2857,11 +2858,11 @@ tsi_cmd_pwd_recurse( void *ctxp,
 			/* RECURSION */
 		( * pcb )( pctxp, "/" );
 	}
-	ASSERT( nrh != NRH_NULL );
+	assert( nrh != NRH_NULL );
 	namelen = namreg_get( nrh,
 			      tranp->t_inter.i_name,
 			      sizeof( tranp->t_inter.i_name ));
-	ASSERT( namelen > 0 );
+	assert( namelen > 0 );
 	( * pcb )( pctxp, tranp->t_inter.i_name );
 }
 
@@ -2933,7 +2934,7 @@ tsi_cmd_ls( void *ctxp,
 			namelen = namreg_get( nrh,
 					      tranp->t_inter.i_name,
 					      sizeof( tranp->t_inter.i_name ));
-			ASSERT( namelen > 0 );
+			assert( namelen > 0 );
 			( * pcb )( pctxp,
 				   "    %s %10llu %s%s\n",
 				   isselpr ? "*" : " ",
@@ -2983,7 +2984,7 @@ tsi_cmd_cd( void *ctxp,
 	/* if named is not a dir, complain
 	 */
 	if ( ! isdirpr ) {
-		ASSERT( arg );
+		assert( arg );
 		( * pcb )( pctxp,
 			   _("%s is not a directory\n"),
 			   arg );
@@ -3152,7 +3153,7 @@ tsi_cmd_match( void )
 		return 0;
 	}
 
-	ASSERT( tblp->tct_argcmin != 0 );
+	assert( tblp->tct_argcmin != 0 );
 	if ( tranp->t_inter.i_argc < tblp->tct_argcmin ) {
 		return 0;
 	}
@@ -3224,11 +3225,11 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 	 * or at the current working directory
 	 */
 	if ( path && *path == '/' ) {
-		ASSERT( rooth != NH_NULL );
+		assert( rooth != NH_NULL );
 		namedh = rooth;
 		path++;
 	} else {
-		ASSERT( cwdh != NH_NULL );
+		assert( cwdh != NH_NULL );
 		namedh = cwdh;
 	}
 
@@ -3239,7 +3240,7 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 	cldh = namedp->n_cldh;
 	ino = namedp->n_ino;
 	isselpr = ( namedp->n_flags & NF_SUBTREE );
-	ASSERT( namedp->n_flags & NF_ISDIR );
+	assert( namedp->n_flags & NF_ISDIR );
 	Node_unmap( namedh, &namedp );
 	isdirpr = BOOL_TRUE;
 
@@ -3278,12 +3279,12 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 		 * the path pointer.
 		 */
 		namelen = strcspn( path, "/" );
-		ASSERT( namelen < sizeof( nbuf ));
+		assert( namelen < sizeof( nbuf ));
 		strncpy( nbuf, path, namelen );
 		nbuf[ namelen ] = 0;
 		path += namelen;
 		if ( *path ) {
-			ASSERT( *path == '/' );
+			assert( *path == '/' );
 			strpatchp = path;
 			*strpatchp = 0;
 			path++;
@@ -3353,12 +3354,12 @@ tsi_walkpath( char *arg, nh_t rooth, nh_t cwdh,
 			isselpr = ( sibp->n_flags & NF_SUBTREE );
 			isdirpr = ( sibp->n_flags & NF_ISDIR );
 			Node_unmap( sibh, &sibp );
-			ASSERT( nrh != NRH_NULL || sibh == persp->p_orphh );
+			assert( nrh != NRH_NULL || sibh == persp->p_orphh );
 			if ( nrh != NRH_NULL ) {
 				siblen = namreg_get( nrh,
 						     tranp->t_inter.i_name,
 					       sizeof( tranp->t_inter.i_name ));
-				ASSERT( siblen > 0 );
+				assert( siblen > 0 );
 				if ( ! strcmp( nbuf, tranp->t_inter.i_name )) {
 					break;
 				}
@@ -3523,7 +3524,7 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 	/* if we have a cache hit, no need to recurse any further
 	 */
 	if ( nh == cache.nh ) {
-		ASSERT( bufsz > cache.len );
+		assert( bufsz > cache.len );
 		strcpy( buf, cache.buf );
 		return bufsz - cache.len;
 	}
@@ -3550,7 +3551,7 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 	/* insert slash if parent not root
 	 */
 	if ( parh != persp->p_rooth ) {
-		ASSERT( bufsz + MAXPATHLEN >= 2 );
+		assert( bufsz + MAXPATHLEN >= 2 );
 		*buf++ = '/';
 		*( buf + 1 ) = 0;
 		bufsz--;
@@ -3566,15 +3567,15 @@ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
 	} else if ( nh == persp->p_orphh ) {
 		namelen = sprintf( buf, "%s", orphname );
 	} else {
-		ASSERT( nrh != NRH_NULL );
+		assert( nrh != NRH_NULL );
 		namelen = namreg_get( nrh, buf, ( size_t )bufsz + MAXPATHLEN );
-		ASSERT( namelen > 0 );
+		assert( namelen > 0 );
 	}
 
 	/* update remaining buffer size
 	 */
 	bufsz -= namelen;
-	ASSERT( bufsz + MAXPATHLEN > 0 );
+	assert( bufsz + MAXPATHLEN > 0 );
 
 	/* update the cache if we're the target's parent
 	 * (and the pathname is not too long)
@@ -3639,7 +3640,7 @@ disown( nh_t cldh )
 	nrh = cldp->n_nrh;
 
 	parh = cldp->n_parh;
-	ASSERT( parh != NH_NULL );
+	assert( parh != NH_NULL );
 	if ( parh == NH_NULL ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 		      "attempt to disown child "
@@ -3647,7 +3648,7 @@ disown( nh_t cldh )
 		return nrh;
 	}
 	parp = Node_map( parh );
-	ASSERT( parp->n_cldh != NH_NULL );
+	assert( parp->n_cldh != NH_NULL );
 	if ( parp->n_cldh == NH_NULL ) {
 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_TREE, _(
 		      "attempt to disown child "
@@ -3668,7 +3669,7 @@ disown( nh_t cldh )
 		nh_t prevcldh = cldp->n_sibprevh;
 		node_t *prevcldp;
 
-		ASSERT(prevcldh != NH_NULL); /* must be a previous */
+		assert(prevcldh != NH_NULL); /* must be a previous */
 		prevcldp = Node_map( prevcldh );
 
 		/* fix up previous */
@@ -3865,7 +3866,7 @@ link_matchh( nh_t hardh, nh_t parh, char *name )
 			namelen = namreg_get( np->n_nrh,
 					      tranp->t_namebuf,
 					      sizeof( tranp->t_namebuf ));
-			ASSERT( namelen > 0 );
+			assert( namelen > 0 );
 			if ( ! strcmp( name, tranp->t_namebuf )) {
 				Node_unmap( hardh, &np );
 				break;
@@ -3955,7 +3956,7 @@ link_out( nh_t nh )
 	/* get head of hard link list
 	 */
 	hardh = hash_find( ino, gen );
-	ASSERT( hardh != NH_NULL );
+	assert( hardh != NH_NULL );
 
 	/* if node is at head of hard link list, hash it out and
 	 * hash in the following node in link list, if there is one.
@@ -3973,7 +3974,7 @@ link_out( nh_t nh )
 			nh_t nexth = prevp->n_lnkh;
 			Node_unmap( prevh, &prevp  );
 			prevh = nexth;
-			ASSERT( prevh != NH_NULL );
+			assert( prevh != NH_NULL );
 			prevp = Node_map( prevh );
 		}
 		prevp->n_lnkh = np->n_lnkh;
@@ -4033,7 +4034,7 @@ link_iter_next( link_iter_context_t *link_iter_contextp )
 	/* if no last, must be first call
 	 */
 	if ( tmplasth == NH_NULL ) {
-		ASSERT( link_iter_contextp->li_prevh == NH_NULL );
+		assert( link_iter_contextp->li_prevh == NH_NULL );
 		link_iter_contextp->li_lasth = link_iter_contextp->li_headh;
 		return link_iter_contextp->li_lasth;
 	}
@@ -4065,8 +4066,8 @@ link_iter_unlink( link_iter_context_t *link_iter_contextp, nh_t nh )
 
 	/* sanity checks
 	 */
-	ASSERT( link_iter_contextp->li_lasth != NH_NULL );
-	ASSERT( nh == link_iter_contextp->li_lasth );
+	assert( link_iter_contextp->li_lasth != NH_NULL );
+	assert( nh == link_iter_contextp->li_lasth );
 
 	/* get the next node in list
 	 */
@@ -4076,7 +4077,7 @@ link_iter_unlink( link_iter_context_t *link_iter_contextp, nh_t nh )
 	Node_unmap( link_iter_contextp->li_lasth, &lastp );
 
 	if ( link_iter_contextp->li_lasth == link_iter_contextp->li_headh ) {
-		ASSERT( link_iter_contextp->li_prevh == NH_NULL );
+		assert( link_iter_contextp->li_prevh == NH_NULL );
 		hash_out( link_iter_contextp->li_headh );
 		link_iter_contextp->li_headh = nexth;
 		if ( nexth != NH_NULL ) {
@@ -4084,7 +4085,7 @@ link_iter_unlink( link_iter_context_t *link_iter_contextp, nh_t nh )
 		}
 	} else {
 		node_t *prevp;
-		ASSERT( link_iter_contextp->li_prevh != NH_NULL );
+		assert( link_iter_contextp->li_prevh != NH_NULL );
 		prevp = Node_map( link_iter_contextp->li_prevh );
 		prevp->n_lnkh = nexth;
 		Node_unmap( link_iter_contextp->li_prevh, &prevp );
@@ -4112,7 +4113,7 @@ hash_init( size64_t vmsz,
 
 	/* sanity checks
 	 */
-	ASSERT( pgsz % sizeof( nh_t ) == 0 );
+	assert( pgsz % sizeof( nh_t ) == 0 );
 
 	/* calculate the size of the hash array. must be a power of two,
 	 * and a multiple of the page size. don't use more than the available
@@ -4130,11 +4131,11 @@ hash_init( size64_t vmsz,
 	      ;
 	      loghashlen++ )
 		;
-	ASSERT( loghashlen > 0 );
+	assert( loghashlen > 0 );
 	hashlen = ( size64_t )1 << loghashlen;
 	if (hashlen > hashlenmax)
 		hashlen >>= 1;
-	ASSERT( hashlen <= hashlenmax );
+	assert( hashlen <= hashlenmax );
 
 	/* record hash size in persistent state
 	 */
@@ -4142,9 +4143,9 @@ hash_init( size64_t vmsz,
 
 	/* map the hash array just after the persistent state header
 	 */
-	ASSERT( persp->p_hashsz <= SIZEMAX );
-	ASSERT( ! ( persp->p_hashsz % ( size64_t )pgsz ));
-	ASSERT( ! ( PERSSZ % pgsz ));
+	assert( persp->p_hashsz <= SIZEMAX );
+	assert( ! ( persp->p_hashsz % ( size64_t )pgsz ));
+	assert( ! ( PERSSZ % pgsz ));
 	tranp->t_hashp = ( nh_t * ) mmap_autogrow(
 					    ( size_t )persp->p_hashsz,
 					    tranp->t_persfd,
@@ -4166,7 +4167,7 @@ hash_init( size64_t vmsz,
 	/* build a hash mask. this works because hashlen is a power of two.
 	 * record in persistent state.
 	 */
-	ASSERT( hashlen - 1 <= SIZEMAX );
+	assert( hashlen - 1 <= SIZEMAX );
 	persp->p_hashmask = ( size_t )( hashlen - 1 );
 
 	return BOOL_TRUE;
@@ -4179,18 +4180,18 @@ hash_sync( char *perspath )
 
 	/* sanity checks
 	 */
-	ASSERT( pgsz % sizeof( nh_t ) == 0 );
+	assert( pgsz % sizeof( nh_t ) == 0 );
 
 	/* retrieve the hash size from the persistent state
 	 */
 	hashsz = persp->p_hashsz;
-	ASSERT( ! ( hashsz % sizeof( nh_t )));
+	assert( ! ( hashsz % sizeof( nh_t )));
 
 	/* map the hash array just after the persistent state header
 	 */
-	ASSERT( hashsz <= SIZEMAX );
-	ASSERT( ! ( hashsz % ( size64_t )pgsz ));
-	ASSERT( ! ( PERSSZ % pgsz ));
+	assert( hashsz <= SIZEMAX );
+	assert( ! ( hashsz % ( size64_t )pgsz ));
+	assert( ! ( PERSSZ % pgsz ));
 	tranp->t_hashp = ( nh_t * ) mmap_autogrow(
 					    ( size_t )hashsz,
 					    tranp->t_persfd,
@@ -4236,7 +4237,7 @@ hash_in( nh_t nh )
 	
 	/* assert not already in
 	 */
-	ASSERT( hash_find( np->n_ino, np->n_gen ) == NH_NULL );
+	assert( hash_find( np->n_ino, np->n_gen ) == NH_NULL );
 
 	/* calculate the hash index
 	 */
@@ -4248,7 +4249,7 @@ hash_in( nh_t nh )
 
 	/* insert into the list, at the head
 	 */
-	ASSERT( np->n_hashh == NH_NULL );
+	assert( np->n_hashh == NH_NULL );
 	np->n_hashh = *entryp;
 	*entryp = nh;
 
@@ -4282,7 +4283,7 @@ hash_out( nh_t nh )
 	/* get the handle of the first node in the appropriate hash array
 	 */
 	hashheadh = *entryp;
-	ASSERT( hashheadh != NH_NULL );
+	assert( hashheadh != NH_NULL );
 	
 	/* if node is first in list, replace entry with following node.
 	 * otherwise, walk the list until found.
@@ -4296,7 +4297,7 @@ hash_out( nh_t nh )
 			nh_t nexth = prevp->n_hashh;
 			Node_unmap( prevh, &prevp  );
 			prevh = nexth;
-			ASSERT( prevh != NH_NULL );
+			assert( prevh != NH_NULL );
 			prevp = Node_map( prevh );
 		}
 		prevp->n_hashh = np->n_hashh;
@@ -4412,11 +4413,11 @@ Node_chk( nh_t nh, nh_t *nexthashhp, nh_t *nextlnkhp )
 		*nexthashhp = NH_NULL;
 	}
 
-	ASSERT( nextlnkhp );
+	assert( nextlnkhp );
 	*nextlnkhp = NH_NULL;
 
 	np = Node_map( nh );
-	ASSERT( np );
+	assert( np );
 	n = *np;
 	Node_unmap( nh, &np );
 
@@ -4456,7 +4457,7 @@ Node_chk( nh_t nh, nh_t *nexthashhp, nh_t *nextlnkhp )
 	if ( n.n_nrh != NRH_NULL ) {
 		intgen_t rval;
 		rval = namreg_get( n.n_nrh, nambuf, sizeof( nambuf ));
-		ASSERT( rval >= 0 );
+		assert( rval >= 0 );
 	}
 
 	if ( n.n_dah != DAH_NULL ) {
@@ -4539,7 +4540,7 @@ tree_chk2_recurse( nh_t cldh, nh_t parh )
 {
 	bool_t okaccum = BOOL_TRUE;
 
-	ASSERT( parh != NH_NULL );
+	assert( parh != NH_NULL );
 
 	while ( cldh != NH_NULL ) {
 		node_t *cldp;
@@ -4569,7 +4570,7 @@ tree_chk2_recurse( nh_t cldh, nh_t parh )
 			namelen = namreg_get( nrh,
 					      tranp->t_namebuf,
 					      sizeof( tranp->t_namebuf ));
-			ASSERT( namelen >= 0 );
+			assert( namelen >= 0 );
 		}
 
 		if ( nodeparh == NH_NULL ) {
@@ -4631,7 +4632,7 @@ parse( int slotcnt, char **slotbuf, char *string )
 
 	/* sanity checkcs
 	 */
-	ASSERT( slotcnt >= 0 );
+	assert( slotcnt >= 0 );
 
 	/* allocate a companion to the input string for identifying
 	 * characters which are to be interpreted literally.

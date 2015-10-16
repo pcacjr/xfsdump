@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -46,9 +47,9 @@ write_buf( char *bufp,
 	while ( bufsz ) {
 		int rval;
 
-		ASSERT( bufsz > 0 );
+		assert( bufsz > 0 );
 		mbufp = ( *get_write_buf_funcp )( contextp, bufsz, &mbufsz );
-		ASSERT( mbufsz <= bufsz );
+		assert( mbufsz <= bufsz );
 		if ( bufp ) {
 			(void)memcpy( ( void * )mbufp, ( void * )bufp, mbufsz );
 		} else {
@@ -86,7 +87,7 @@ read_buf( char *bufp,
 		if ( *statp ) {
 			break;
 		}
-		ASSERT( mbufsz <= bufsz );
+		assert( mbufsz <= bufsz );
 		if ( bufp ) {
 			( void )memcpy( (void *)bufp, (void *)mbufp, mbufsz );
 			bufp += mbufsz;
@@ -255,7 +256,7 @@ bigstat_one( intgen_t fsfd,
         xfs_fsop_bulkreq_t bulkreq;
 	intgen_t count = 0;
 
-	ASSERT( ino > 0 );
+	assert( ino > 0 );
         bulkreq.lastip = (__u64 *)&ino;
         bulkreq.icount = 1;
         bulkreq.ubuffer = statp;
@@ -354,13 +355,13 @@ diriter( jdm_fshandle_t *fshandlep,
 	intgen_t cbrval;
 
 	if ( usrgdp ) {
-		ASSERT( usrgdsz >= sizeof( struct dirent ) );
+		assert( usrgdsz >= sizeof( struct dirent ) );
 		gdsz = usrgdsz;
 		gdp = ( struct dirent * )usrgdp;
 	} else {
 		gdsz = pgsz;
 		gdp = ( struct dirent * )malloc( gdsz );
-		ASSERT( gdp );
+		assert( gdp );
 	}
 
 	/* open the directory
@@ -377,7 +378,7 @@ diriter( jdm_fshandle_t *fshandlep,
 		}
 		return -1;
 	}
-	ASSERT( ( statp->bs_mode & S_IFMT ) == S_IFDIR );
+	assert( ( statp->bs_mode & S_IFMT ) == S_IFDIR );
 
 	/* lots of buffering done here, to achieve OS-independence.
 	 * if proves to be to much overhead, can streamline.
@@ -389,8 +390,8 @@ diriter( jdm_fshandle_t *fshandlep,
 		intgen_t nread;
 		register size_t reclen;
 
-		ASSERT( scrval == 0 );
-		ASSERT( cbrval == 0 );
+		assert( scrval == 0 );
+		assert( cbrval == 0 );
 
 		nread = getdents_wrap( fd, (char *)gdp, gdsz );
 		
@@ -421,12 +422,12 @@ diriter( jdm_fshandle_t *fshandlep,
 		      nread > 0
 		      ;
 		      nread -= ( intgen_t )reclen,
-		      ASSERT( nread >= 0 ),
+		      assert( nread >= 0 ),
 		      p = ( struct dirent * )( ( char * )p + reclen ),
 		      reclen = ( size_t )p->d_reclen ) {
 			xfs_bstat_t statbuf;
-			ASSERT( scrval == 0 );
-			ASSERT( cbrval == 0 );
+			assert( scrval == 0 );
+			assert( cbrval == 0 );
 
 			/* skip "." and ".."
 			 */
@@ -538,7 +539,7 @@ fold_init( fold_t fold, char *infostr, char c )
 	char *endp;
 	ix_t cnt;
 
-	ASSERT( sizeof( fold_t ) == FOLD_LEN + 1 );
+	assert( sizeof( fold_t ) == FOLD_LEN + 1 );
 
 	infolen = strlen( infostr );
 	if ( infolen > FOLD_LEN - 4 ) {
@@ -551,23 +552,23 @@ fold_init( fold_t fold, char *infostr, char c )
 	p = &fold[ 0 ];
 	endp = &fold[ sizeof( fold_t ) - 1 ];
 
-	ASSERT( p < endp );
+	assert( p < endp );
 	*p++ = ' ';
 	for ( cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++ ) {
 		*p = c;
 	}
-	ASSERT( p < endp );
+	assert( p < endp );
 	*p++ = ' ';
-	ASSERT( p < endp );
-	ASSERT( p + infolen < endp );
+	assert( p < endp );
+	assert( p + infolen < endp );
 	strcpy( p, infostr );
 	p += infolen;
-	ASSERT( p < endp );
+	assert( p < endp );
 	*p++ = ' ';
-	ASSERT( p < endp );
+	assert( p < endp );
 	for ( cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++ ) {
 		*p = c;
 	}
-	ASSERT( p <= endp );
+	assert( p <= endp );
 	*p = 0;
 }

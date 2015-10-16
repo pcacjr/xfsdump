@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
+#include <assert.h>
 
 #include "types.h"
 #include "util.h"
@@ -66,7 +67,7 @@ retry:
 	preamblestr[ preamblecnt++ ] = "\n";
 	preamblestr[ preamblecnt++ ] = fold;
 	preamblestr[ preamblecnt++ ] = "\n\n";
-	ASSERT( preamblecnt <= PREAMBLEMAX );
+	assert( preamblecnt <= PREAMBLEMAX );
 	dlog_begin( preamblestr, preamblecnt );
 
 	/* query: ask if media changed or declined
@@ -77,13 +78,13 @@ retry:
 		 (unsigned int)drivep->d_index );
 	querycnt = 0;
 	querystr[ querycnt++ ] = question;
-	ASSERT( querycnt <= QUERYMAX );
+	assert( querycnt <= QUERYMAX );
 	choicecnt = 0;
 	dontix = choicecnt;
 	choicestr[ choicecnt++ ] = _("media change declined");
 	doix = choicecnt;
 	choicestr[ choicecnt++ ] = _("media changed");
-	ASSERT( choicecnt <= CHOICEMAX );
+	assert( choicecnt <= CHOICEMAX );
 	sigintix = IXMAX - 1;
 
 	responseix = dlog_multi_query( querystr,
@@ -105,11 +106,11 @@ retry:
 	} else if ( responseix == dontix ) {
 		ackstr[ ackcnt++ ] = _("media change aborted\n");
 	} else {
-		ASSERT( responseix == sigintix );
+		assert( responseix == sigintix );
 		ackstr[ ackcnt++ ] = _("keyboard interrupt\n");
 	}
 
-	ASSERT( ackcnt <= ACKMAX );
+	assert( ackcnt <= ACKMAX );
 	dlog_multi_ack( ackstr,
 			ackcnt );
 
@@ -118,7 +119,7 @@ retry:
 	postamblestr[ postamblecnt++ ] = "\n";
 	postamblestr[ postamblecnt++ ] = fold;
 	postamblestr[ postamblecnt++ ] = "\n\n";
-	ASSERT( postamblecnt <= POSTAMBLEMAX );
+	assert( postamblecnt <= POSTAMBLEMAX );
 	dlog_end( postamblestr,
 		  postamblecnt );
 

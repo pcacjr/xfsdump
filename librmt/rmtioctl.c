@@ -30,6 +30,7 @@
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
 #include <sys/param.h>
+#include <assert.h>
 
 /*
  * uses old_mtget IRIX structure since we don't bother

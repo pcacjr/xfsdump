@@ -27,6 +27,7 @@
 #include <time.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "types.h"
 #include "qlock.h"
@@ -157,9 +158,9 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 	vsymcnt = sizeof( mlog_sym ) / sizeof( mlog_sym[ 0 ] );
 	suboptstrs = ( char ** )calloc( MLOG_SS_CNT + vsymcnt + 1,
 					sizeof( char * ));
-	ASSERT( suboptstrs );
+	assert( suboptstrs );
 	for ( soix = 0 ; soix < MLOG_SS_CNT ; soix++ ) {
-		ASSERT( strlen( mlog_ss_names[ soix ] ) <= MLOG_SS_NAME_MAX );
+		assert( strlen( mlog_ss_names[ soix ] ) <= MLOG_SS_NAME_MAX );
 			/* unrelated, but opportunity to chk */
 		suboptstrs[ soix ] = mlog_ss_names[ soix ];
 	}
@@ -210,7 +211,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 					usage( );
 					return BOOL_FALSE;
 				}
-				ASSERT( ( ix_t )suboptix
+				assert( ( ix_t )suboptix
 					<
 					MLOG_SS_CNT + vsymcnt );
 				if ( suboptix < MLOG_SS_CNT ) {
@@ -273,8 +274,8 @@ mlog_init1( intgen_t argc, char *argv[ ] )
 	 */
 	for ( ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++ ) {
 		if ( mlog_level_ss[ ssix ] < 0 ) {
-			ASSERT( mlog_level_ss[ ssix ] == -1 );
-			ASSERT( mlog_level_ss[ MLOG_SS_GEN ] >= 0 );
+			assert( mlog_level_ss[ ssix ] == -1 );
+			assert( mlog_level_ss[ MLOG_SS_GEN ] >= 0 );
 			mlog_level_ss[ ssix ] = mlog_level_ss[ MLOG_SS_GEN ];
 		}
 	}
@@ -375,7 +376,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 	level = levelarg & MLOG_LEVELMASK;
 	ss = ( ix_t )( ( levelarg & MLOG_SS_MASK ) >> MLOG_SS_SHIFT );
 
-	ASSERT( ss < MLOG_SS_CNT );
+	assert( ss < MLOG_SS_CNT );
 	if ( level > mlog_level_ss[ ss ] ) {
 		return;
 	}
@@ -402,7 +403,7 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
 				 tmp->tm_hour,
 				 tmp->tm_min,
 				 tmp->tm_sec );
-			ASSERT( strlen( mlog_tsstr ) < sizeof( mlog_tsstr ));
+			assert( strlen( mlog_tsstr ) < sizeof( mlog_tsstr ));
 		} else {
 			mlog_tsstr[ 0 ] = 0;
 		}
@@ -676,7 +677,7 @@ mlog_get_hint( void )
 
 	ok = stream_get_exit_status(pthread_self(), states, N(states),
 				    NULL, NULL, NULL, NULL, &hint);
-	ASSERT(ok);
+	assert(ok);
 	return hint;
 }
 
@@ -736,7 +737,7 @@ mlog_exit_flush(void)
 						    &exit_code,
 						    &exit_return,
 						    &exit_hint);
-			ASSERT(ok);
+			assert(ok);
 
 			/* hint takes priority over return */
 			rv = (exit_hint != RV_NONE) ? exit_hint : exit_return;
@@ -771,7 +772,7 @@ mlog_exit_flush(void)
 	else if (IS_INCOMPLETE(rv)) incomplete = BOOL_TRUE;
 
 	/* if we don't have an exit code here there is a problem */
-	ASSERT(VALID_EXIT_CODE(mlog_main_exit_code));
+	assert(VALID_EXIT_CODE(mlog_main_exit_code));
 	if (interrupt) status_str = "INTERRUPT";
 	else if (quit) status_str = "QUIT";
 	else if (incomplete) status_str = "INCOMPLETE";
