@@ -1,3 +1,8 @@
+xfsdump-3.1.6 (14 Oct 2015)
+	- fix build issues against xfsprogs 4.2.0 headers
+	- clean up worst of libhandle API abuse
+	- remove all unnecessary build dependencies on xfsprogs headers
+
 xfsdump-3.1.5 (14 Oct 2015)
 	- __psint_t no longer available (Nathan Scott)
 	- restore: fix 2GB directory dump limitation (Rich Johnston)
