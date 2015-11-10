@@ -16,9 +16,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -36,6 +33,8 @@
 #include <string.h>
 #include <uuid/uuid.h>
 
+#include <xfs/xfs.h>
+#include <xfs/jdm.h>
 #ifdef linux
 #include <xfs/xqm.h>
 #endif

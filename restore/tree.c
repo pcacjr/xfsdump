@@ -16,13 +16,13 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -34,12 +34,13 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
+#include <xfs/xfs.h>
 
 #include "config.h"
 
 #include "types.h"
 #include "exit.h"
-#include "util.h"
 #include "cldmgr.h"
 #include "path.h"
 #include "openutil.h"

@@ -16,9 +16,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -26,11 +23,13 @@
 #include <assert.h>
 #include <string.h>
 #include <uuid/uuid.h>
+#include <xfs/xfs.h>
+#include <xfs/jdm.h> /* only for util.h include */
 
 #include "config.h"
 
 #include "types.h"
-#include "util.h"
+#include "util.h" /* only for strncpyterm */
 #include "mlog.h"
 #include "dlog.h"
 #include "global.h"

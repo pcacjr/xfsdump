@@ -23,6 +23,13 @@
  */
 #include <stdint.h>
 
+/*
+ * type macros that were naively put into xfs/jdm.h, then used in places that
+ * have nothing to do with file handle operations.
+ */
+#define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )
+#define offsetofmember( t, m )	( ( size_t )( char * )&( ( ( t * )0 )->m ) )
+
 #define XFSDUMP_DIRPATH	inv_basepath()
 
 /*
@@ -50,6 +57,8 @@ typedef size_t ix_t;
 typedef int32_t time32_t;
 
 typedef uint64_t xfs_ino_t;
+
+#define constpp        char * const *
 
 /* limits
  */

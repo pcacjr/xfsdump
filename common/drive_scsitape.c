@@ -16,12 +16,10 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/prctl.h>
@@ -33,11 +31,11 @@
 #include <sched.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "config.h"
 
 #include "types.h"
-#include "util.h"
 #include "qlock.h"
 #include "cldmgr.h"
 #include "mlog.h"

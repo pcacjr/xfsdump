@@ -19,12 +19,12 @@
 #ifndef HSMAPI_H
 #define HSMAPI_H
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
 #include "types.h"
 #include "global.h"
 #include "content.h"
 #include "content_inode.h"
+
+struct xfs_bstat;
 
 #define	HSM_API_VERSION_1	1	/* only version supported so far */
 
@@ -94,7 +94,7 @@ extern int
 HsmEstimateFileSpace(
 	hsm_fs_ctxt_t	*fscontextp,
 	hsm_f_ctxt_t	*fcontextp,
-const	xfs_bstat_t	*statp,
+const	struct xfs_bstat	*statp,
 	off64_t		*bytes,
 	int		accurate);
 
@@ -117,7 +117,7 @@ const	xfs_bstat_t	*statp,
 extern int
 HsmEstimateFileOffset(
 	hsm_fs_ctxt_t	*contextp,
-const	xfs_bstat_t	*statp,
+const	struct xfs_bstat	*statp,
 	off64_t		bytecount,
 	off64_t		*byteoffset);
 
@@ -181,7 +181,7 @@ HsmDeleteFileContext(
 extern int
 HsmInitFileContext(
 	hsm_f_ctxt_t	*contextp,
-const	xfs_bstat_t	*statp);
+const	struct xfs_bstat	*statp);
 
 
 /******************************************************************************
@@ -201,7 +201,7 @@ const	xfs_bstat_t	*statp);
 extern int
 HsmModifyInode(
 	hsm_f_ctxt_t	*contextp,
-	xfs_bstat_t	*statp);
+	struct xfs_bstat	*statp);
 
 
 /******************************************************************************

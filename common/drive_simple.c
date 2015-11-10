@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <fcntl.h>
 #include <time.h>
 #include <errno.h>
@@ -29,11 +30,14 @@
 #include <sched.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
+#include <xfs/xfs.h>
+#include <xfs/jdm.h>	/* needed only for util.h include */
 
 #include "config.h"
 
 #include "types.h"
-#include "util.h"
+#include "util.h"	/* needed onyl for I/O routines */
 #include "stream.h"
 #include "mlog.h"
 #include "global.h"

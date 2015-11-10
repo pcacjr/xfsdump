@@ -19,9 +19,6 @@
 #ifndef ARCH_XLATE_H
 #define ARCH_XLATE_H
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <strings.h>
 #include "types.h"
 #include "global.h"

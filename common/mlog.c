@@ -16,19 +16,18 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <time.h>
 #include <getopt.h>
 #include <pthread.h>
 #include <assert.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 #include "config.h"
 
@@ -39,7 +38,6 @@
 #include "cldmgr.h"
 #include "getopt.h"
 #include "exit.h"
-#include "util.h"
 #include "global.h"
 #include "drive.h"
 

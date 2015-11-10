@@ -16,9 +16,6 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <xfs/jdm.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -39,12 +36,14 @@
 #include <assert.h>
 #include <string.h>
 #include <uuid/uuid.h>
+#include <xfs/xfs.h>
+#include <xfs/jdm.h>	/* only for util.h */
 
 #include "config.h"
 
 #include "types.h"
 #include "timeutil.h"
-#include "util.h"
+#include "util.h"	/* only for r/w routines, ALIGN_PTR */
 #include "cldmgr.h"
 #include "qlock.h"
 #include "lock.h"

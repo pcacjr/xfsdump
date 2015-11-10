@@ -29,6 +29,7 @@
  * the 64 inos beginning with the starting ino. two bits are available
  * for each ino.
  */
+struct xfs_bstat;
 
 /* inomap_build - this function allocates and constructs an in-memory
  * representation of the bitmap. it prunes from the map inos of files not
@@ -46,9 +47,9 @@
  * fall at file boundaries. returns BOOL_FALSE if error encountered (should
  * abort the dump; else returns BOOL_TRUE.
  */
-extern bool_t inomap_build( jdm_fshandle_t *fshandlep,
+extern bool_t inomap_build( void *fshandlep,
 			    int fsfd,
-			    xfs_bstat_t *rootstatp,
+			    struct xfs_bstat *rootstatp,
 			    bool_t last,
 	      		    time32_t lasttime,
 			    bool_t resume,

@@ -16,15 +16,24 @@
  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <xfs/xfs.h>
-#include <attr/attributes.h>
-#include <xfs/jdm.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 #include <assert.h>
+#include <uuid/uuid.h>
+#include <attr/attributes.h>
+#include <xfs/xfs.h>
+#include <xfs/jdm.h>
 
 #include <string.h>
 
 #include "config.h"
 
+#include "types.h"
 #include "hsmapi.h"
 #include "mlog.h"
 
