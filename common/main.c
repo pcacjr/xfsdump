@@ -163,6 +163,7 @@ main( int argc, char *argv[] )
 	bool_t ok;
 	/* REFERENCED */
 	int rval;
+	int err;
 
 	/* sanity checks
 	 */
@@ -564,7 +565,8 @@ main( int argc, char *argv[] )
 	ok = content_init( argc, argv, vmsz / VMSZ_PER );
 #endif /* RESTORE */
 	if ( ! ok ) {
-		return mlog_exit(EXIT_ERROR, RV_INIT);
+		err = mlog_exit(EXIT_ERROR, RV_INIT);
+		goto err_free;
 	}
 
 	/* if in a pipeline, go single-threaded with just one stream.
@@ -587,11 +589,13 @@ main( int argc, char *argv[] )
 				  ( global_hdr_t * )0 );
 #endif /* RESTORE */
 		if ( ! ok ) {
-			return mlog_exit(EXIT_ERROR, RV_INIT);
+			err = mlog_exit(EXIT_ERROR, RV_INIT);
+			goto err_free;
 		}
 		ok = drive_init3( );
 		if ( ! ok ) {
-			return mlog_exit(EXIT_ERROR, RV_INIT);
+			err = mlog_exit(EXIT_ERROR, RV_INIT);
+			goto err_free;
 		}
 #ifdef DUMP
 		exitcode = content_stream_dump( 0 );
@@ -602,12 +606,13 @@ main( int argc, char *argv[] )
 		if ( exitcode != EXIT_NORMAL ) {
 			( void )content_complete( );
 						/* for cleanup side-effect */
-			return mlog_exit(exitcode, RV_UNKNOWN);
+			err = mlog_exit(exitcode, RV_UNKNOWN);
 		} else if ( content_complete( )) {
-			return mlog_exit(EXIT_NORMAL, RV_OK);
+			err = mlog_exit(EXIT_NORMAL, RV_OK);
 		} else {
-			return mlog_exit(EXIT_INTERRUPT, RV_UNKNOWN);
+			err = mlog_exit(EXIT_INTERRUPT, RV_UNKNOWN);
 		}
+		goto err_free;
 	}
 
 	/* used to skip to end if errors occur during any
@@ -873,7 +878,14 @@ main( int argc, char *argv[] )
 				mlog_exit_hint(RV_INCOMPLETE);
 		}
 	}
-	return mlog_exit(exitcode, RV_UNKNOWN);
+
+	err = mlog_exit(exitcode, RV_UNKNOWN);
+
+err_free:
+#ifdef DUMP
+	global_hdr_free( gwhdrtemplatep );
+#endif /* DUMP */
+	return err;
 }
 
 #define ULO( f, o )	fprintf( stderr,		\
