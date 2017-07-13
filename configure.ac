@@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([common/main.c])
 AC_CONFIG_HEADER(include/config.h)
 AC_PREFIX_DEFAULT(/usr)
 
+AC_SYS_LARGEFILE
+
 AC_PROG_LIBTOOL
 
 AC_ARG_ENABLE(shared,
