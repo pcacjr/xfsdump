@@ -1,3 +1,8 @@
+xfsdump-3.1.7-rc1  (13 Jul 2017)
+	- Fix race condition in multi-stream dump (Eryu Guan)
+	- Fix memory leak (Paulo Alcantara)
+	- Fix 32-bit build with newer xfsprogs (Eric Sandeen)
+
 xfsdump-3.1.6 (14 Oct 2015)
 	- fix build issues against xfsprogs 4.2.0 headers
 	- clean up worst of libhandle API abuse
