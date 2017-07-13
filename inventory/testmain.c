@@ -89,6 +89,7 @@ int
 recons_test( int howmany )
 {
 	int fd, i, rval = 1;
+	off64_t off = 0;
 	
 	ses sarr[ SESLIM];
 	
@@ -96,14 +97,16 @@ recons_test( int howmany )
 	
 	for ( i=0; i<howmany && i < SESLIM; i++ ){
 		rval = get_invtrecord( fd, &sarr[i], 
-				       sizeof( uuid_t ) + sizeof( size_t ), 0,
-				       SEEK_CUR, BOOL_FALSE );
+				       sizeof( uuid_t ) + sizeof( size_t ), off,
+				       BOOL_FALSE );
 		assert( rval > 0 );
 		assert( sarr[i].sz > 0 );
 		sarr[i].buf = calloc( 1,  sarr[i].sz );
-		rval = get_invtrecord( fd, sarr[i].buf,  sarr[i].sz, 0, SEEK_CUR,
+		off += (off64_t)(sizeof(uuid_t) + sizeof(size_t));
+		rval = get_invtrecord( fd, sarr[i].buf,  sarr[i].sz, off,
 				       BOOL_FALSE );
 		assert( rval > 0 );
+		off += sarr[i].sz;
 	}
 	
 	
@@ -132,8 +135,7 @@ delete_test( int n )
 	fd = open( "moids", O_RDONLY );
 	if ( fd < 0 ) return -1;
 	
-	get_invtrecord( fd, &moid, sizeof(uuid_t), (n-1)* sizeof( uuid_t),
-		        SEEK_SET, 0 );
+	get_invtrecord( fd, &moid, sizeof(uuid_t), (n-1)* sizeof( uuid_t), 0 );
 	uuid_to_string( &moid, &str, &stat );
 	printf("Searching for Moid = %s\n", str );
 	free( str );
@@ -263,7 +265,11 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 	char strbuf[128];
 	void *bufp;
 	size_t sz;
+#ifdef RECONS
 	int rfd;
+	off64_t off;
+	struct stat64 statbuf;
+#endif
 
 #ifdef FIRSTTIME
 	printf("first time!\n");
@@ -285,6 +291,11 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 #ifdef RECONS
 	rfd = open( sesfile, O_RDWR | O_CREAT );
 	fchmod( rfd, INV_PERMS );
+	if (fstat64(fd, &statbuf) < 0) {
+		perror("fstat64 session file");
+		return -1;
+	}
+	off = (off64_t)statbuf.st_size;
 #endif
 
 	for ( i = 0; i < nsess; i++ ) {
@@ -325,12 +336,13 @@ write_test( int nsess, int nstreams, int nmedia, int dumplevel )
 	
 #ifdef RECONS
 		if (inv_get_sessioninfo( tok2, &bufp, &sz ) == BOOL_TRUE ) {
-		      put_invtrecord( rfd, fsidp, sizeof( uuid_t ), 0, 
-				        SEEK_END, BOOL_FALSE );
-			
-			put_invtrecord( rfd, &sz, sizeof( size_t ), 0,
-				        SEEK_END, BOOL_FALSE); 
-			put_invtrecord( rfd, bufp, sz, 0, SEEK_END, BOOL_FALSE );
+			put_invtrecord( rfd, fsidp, sizeof( uuid_t ), off,
+					BOOL_FALSE );
+			off += (off64_t)sizeof(uuid_t);
+			put_invtrecord( rfd, &sz, sizeof( size_t ), off,
+					BOOL_FALSE);
+			off += (off64_t)sizeof(size_t);
+			put_invtrecord( rfd, bufp, sz, off, BOOL_FALSE );
 		}
 #endif
 #ifdef NOTDEF

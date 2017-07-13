@@ -298,13 +298,10 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
 
 
 #define GET_REC( fd, buf, sz, off )  \
-                 get_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DOLOCK )
+                 get_invtrecord( fd, buf, sz, off, INVT_DOLOCK )
 
 #define GET_REC_NOLOCK( fd, buf, sz, off )  \
-                 get_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
-
-#define GET_REC_SEEKCUR( fd, buf, sz, off )  \
-                 get_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
+                 get_invtrecord( fd, buf, sz, off, INVT_DONTLOCK )
 
 #define GET_ALLHDRS_N_CNTS( fd, h, c, hsz, csz ) \
                  get_headerinfo( fd, h, c, hsz, csz, INVT_DOLOCK )
@@ -313,16 +310,10 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
                  get_headerinfo( fd, h, c, hsz, csz, INVT_DONTLOCK )
 
 #define PUT_REC( fd, buf, sz, off )  \
-                 put_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DOLOCK )
+                 put_invtrecord( fd, buf, sz, off, INVT_DOLOCK )
 
 #define PUT_REC_NOLOCK( fd, buf, sz, off )  \
-                 put_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
-
-#define PUT_REC_SEEKCUR( fd, buf, sz, off )  \
-                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
-
-#define PUT_REC_NOLOCK_SEEKCUR( fd, buf, sz, off )  \
-                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DONTLOCK )
+                 put_invtrecord( fd, buf, sz, off, INVT_DONTLOCK )
 
 
 #define GET_COUNTERS( fd, cnt ) get_counters( fd, (void **)(cnt), \
@@ -515,10 +506,10 @@ int
 get_invtentry( char *fname, time32_t tm, invt_entry_t *buf, size_t bufsz );
 
 int
-get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, int, bool_t dolock );
+get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock );
 
 int
-put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, int, bool_t dolock );
+put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock );
 
 inv_idbtoken_t
 get_token( int fd, int objfd );

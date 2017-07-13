@@ -112,7 +112,7 @@ get_headers( int fd, void **hdrs, size_t bufsz, size_t off )
 
 int
 get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
-	        int whence, bool_t dolock )
+		bool_t dolock )
 {
 	int  nread;
 	
@@ -121,19 +121,10 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 	if ( dolock ) 
 		INVLOCK( fd, LOCK_SH );
 
-	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
-		INV_PERROR( _("Error in reading inventory record "
-			      "(lseek failed): ") );
-		if ( dolock ) 
-			INVLOCK( fd, LOCK_UN );
-		return -1;
-	}
-	
-	nread = read( fd, buf, bufsz );
-
+	nread = pread(fd, buf, bufsz, (off_t)off);
 	if (  nread != (int) bufsz ) {
 		INV_PERROR( _("Error in reading inventory record :") );
-		if ( dolock ) 
+		if ( dolock )
 			INVLOCK( fd, LOCK_UN );
 		return -1;
 	}
@@ -154,23 +145,15 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
 /*----------------------------------------------------------------------*/
 
 int
-put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, 
-	        int whence, bool_t dolock )
+put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off, bool_t dolock )
 {
 	int nwritten;
 	
 	if ( dolock )
 		INVLOCK( fd, LOCK_EX );
 	
-	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
-		INV_PERROR( _("Error in writing inventory record "
-			      "(lseek failed): ") );
-		if ( dolock ) 
-			INVLOCK( fd, LOCK_UN );
-		return -1;
-	}
-	
-	if (( nwritten = write( fd, buf, bufsz ) ) != (int) bufsz ) {
+	nwritten = pwrite(fd, buf, bufsz, (off_t)off);
+	if (nwritten != (int) bufsz ) {
 		INV_PERROR( _("Error in writing inventory record :") );
 		if ( dolock )
 			INVLOCK( fd, LOCK_UN );

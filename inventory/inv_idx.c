@@ -341,8 +341,8 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
 			      ent.ie_timeperiod.tp_start,
 			      ent.ie_timeperiod.tp_end );
 #endif
-	rval = PUT_REC_NOLOCK_SEEKCUR( fd, &ent, sizeof( invt_entry_t ),
-				      -(off64_t)(sizeof( invt_entry_t )));
+	rval = PUT_REC_NOLOCK(fd, &ent, sizeof(invt_entry_t),
+			      tok->sd_invtok->d_invindex_off);
 	
 #ifdef INVT_DEBUG
 	{

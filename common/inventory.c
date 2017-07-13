@@ -471,8 +471,8 @@ inv_stream_close(
 	}
 			
 	if (dowrite) {
-		rval = PUT_REC_NOLOCK_SEEKCUR( fd, &strm, sizeof( invt_stream_t ),
-					       (off64_t) -(sizeof( invt_stream_t )) );
+		rval = PUT_REC_NOLOCK(fd, &strm, sizeof(invt_stream_t),
+				      tok->md_stream_off);
 	}
  end:
 	INVLOCK( fd, LOCK_UN );
